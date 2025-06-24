@@ -4,15 +4,21 @@ import dotenv from 'dotenv';
 import twilio from 'twilio';
 
 // 環境変数を読み込み
-dotenv.config();
+dotenv.config(); // .env ファイルを読み込み
 
 const app = express();
-const PORT = process.env.PORT || 3001;
+const PORT = process.env.PORT || 8080;
 
 // Twilioクライアントの初期化
 const accountSid = process.env.TWILIO_ACCOUNT_SID;
 const authToken = process.env.TWILIO_AUTH_TOKEN;
 const twilioPhoneNumber = process.env.TWILIO_PHONE_NUMBER;
+
+// デバッグ用: 環境変数の確認
+console.log('環境変数チェック:');
+console.log('- ACCOUNT_SID:', accountSid ? `✅ ${accountSid.substring(0, 10)}...` : '❌ 未設定');
+console.log('- AUTH_TOKEN:', authToken ? `✅ ${authToken.substring(0, 10)}...` : '❌ 未設定');
+console.log('- PHONE_NUMBER:', twilioPhoneNumber ? `✅ ${twilioPhoneNumber}` : '❌ 未設定');
 
 if (!accountSid || !authToken || !twilioPhoneNumber) {
   console.warn('Twilio credentials are not properly configured. SMS functionality will not work.');

@@ -28,7 +28,7 @@ TWILIO_AUTH_TOKEN=your_auth_token_here
 TWILIO_PHONE_NUMBER=+815012345678
 
 # サーバー設定
-PORT=3001
+PORT=3002
 ```
 
 **設定値の取得方法：**
