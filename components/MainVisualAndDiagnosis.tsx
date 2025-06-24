@@ -147,9 +147,18 @@ const MainVisualAndDiagnosis: React.FC<MainVisualAndDiagnosisProps> = ({ onProce
   return (
     <section id="main-visual-section" className="hero-section-premium py-20 px-4">
       <div className="hero-content max-w-7xl mx-auto text-center">
-        <h2 className="heading-display text-5xl md:text-7xl mb-8 text-white">
+        <h2 className="heading-display text-6xl md:text-8xl mb-8 font-bold leading-tight" 
+            style={{ 
+              color: '#f8fafc',
+              textShadow: '0 4px 12px rgba(0, 0, 0, 0.9), 0 2px 6px rgba(0, 0, 0, 0.8)',
+              letterSpacing: '0.02em'
+            }}>
             あなたの資産運用を<br />
-            <span style={{ color: 'var(--accent-gold)' }}>プロフェッショナル</span>が<br />
+            <span style={{ 
+              color: '#fbbf24',
+              textShadow: '0 4px 12px rgba(0, 0, 0, 0.95), 0 2px 6px rgba(0, 0, 0, 0.9)',
+              fontWeight: '800'
+            }}>プロフェッショナル</span>が<br />
             完全サポート
         </h2>
         <p className="text-xl md:text-2xl mb-12 text-gray-200 max-w-3xl mx-auto leading-relaxed">
