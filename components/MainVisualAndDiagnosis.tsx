@@ -136,7 +136,7 @@ const MainVisualAndDiagnosis: React.FC<MainVisualAndDiagnosisProps> = ({ onProce
     if (formData.phoneNumber) {
       try {
         // SMS送信APIを呼び出し
-        const response = await fetch('http://localhost:3001/api/sms/send', {
+        const response = await fetch('http://localhost:8080/api/sms/send', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',

@@ -43,7 +43,7 @@ const PhoneVerificationPage: React.FC<PhoneVerificationPageProps> = ({ phoneNumb
     
     try {
       // SMS検証APIを呼び出し
-      const response = await fetch('http://localhost:3001/api/sms/verify', {
+      const response = await fetch('http://localhost:8080/api/sms/verify', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
