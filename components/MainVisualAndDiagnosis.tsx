@@ -128,12 +128,42 @@ const MainVisualAndDiagnosis: React.FC<MainVisualAndDiagnosisProps> = ({ onProce
     setShowAIConsent(false); 
   };
 
-  const handleSendVerificationCode = () => { 
+  const handleSendVerificationCode = async () => { 
     if (!validateCurrentStep()) {
       return;
     }
+    
     if (formData.phoneNumber) {
-        onProceedToVerification(formData.phoneNumber, formData); 
+      try {
+        // SMS送信APIを呼び出し
+        const response = await fetch('http://localhost:3001/api/sms/send', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            phoneNumber: formData.phoneNumber
+          }),
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+          // デモモードの場合はコンソールに認証コードを表示
+          if (result.demoCode) {
+            console.log(`🚀 デモモード: 認証コードは ${result.demoCode} です`);
+            alert(`デモモード: 認証コードは ${result.demoCode} です（コンソールでも確認できます）`);
+          }
+          
+          // 認証ページに進む
+          onProceedToVerification(formData.phoneNumber, formData);
+        } else {
+          alert('SMS送信に失敗しました: ' + result.error);
+        }
+      } catch (error) {
+        console.error('SMS送信エラー:', error);
+        alert('サーバーとの通信に失敗しました。サーバーが起動しているか確認してください。');
+      }
     }
   };
   

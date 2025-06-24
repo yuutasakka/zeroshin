@@ -40,10 +40,37 @@ const PhoneVerificationPage: React.FC<PhoneVerificationPageProps> = ({ phoneNumb
     }
 
     setIsVerifying(true);
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1500));
-    setIsVerifying(false);
-    onVerificationComplete();
+    
+    try {
+      // SMS検証APIを呼び出し
+      const response = await fetch('http://localhost:3001/api/sms/verify', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          phoneNumber: phoneNumber,
+          code: verificationCode
+        }),
+      });
+
+      const result = await response.json();
+
+      if (result.success && result.verified) {
+        // 認証成功
+        onVerificationComplete();
+      } else {
+        // 認証失敗
+        alert(result.error || '認証に失敗しました');
+        setVerificationCode(''); // コードをクリア
+        document.getElementById('verification-code')?.focus();
+      }
+    } catch (error) {
+      console.error('認証エラー:', error);
+      alert('サーバーとの通信に失敗しました。サーバーが起動しているか確認してください。');
+    } finally {
+      setIsVerifying(false);
+    }
   };
 
   const handleKeyPress = (e: KeyboardEvent<HTMLInputElement>) => {
