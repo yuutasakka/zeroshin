@@ -121,6 +121,11 @@ const App: React.FC = () => {
     window.scrollTo(0,0);
   };
 
+  const navigateToAdminLogin = () => {
+    setCurrentPage('login');
+    window.scrollTo(0,0);
+  };
+
 
   if (currentPage === 'login') {
     return <AdminLoginPage onLoginSuccess={handleAdminLoginSuccess} onNavigateHome={navigateToHome} />;
@@ -159,7 +164,7 @@ const App: React.FC = () => {
       <ReliabilitySection />
       <SecurityTrustSection />
       <CallToActionSection />
-      <Footer />
+      <Footer onNavigateToAdminLogin={navigateToAdminLogin} />
     </>
   );
 };
