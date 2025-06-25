@@ -97,3 +97,13 @@ export interface NotificationSettings {
   line: LineNotificationConfig;
   chatwork: ChatWorkNotificationConfig;
 }
+
+export interface LegalLink {
+  id: number;
+  link_type: 'privacy_policy' | 'terms_of_service' | 'specified_commercial_transactions' | 'company_info';
+  title: string;
+  url: string;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+}

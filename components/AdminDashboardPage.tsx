@@ -1,7 +1,7 @@
 
 
 import React, { useState, useEffect, ChangeEvent, FormEvent } from 'react';
-import { UserSessionData, FinancialProduct, Company, Testimonial, NotificationSettings, EmailNotificationConfig, SlackNotificationConfig, LineNotificationConfig, ChatWorkNotificationConfig } from '../types';
+import { UserSessionData, FinancialProduct, Company, Testimonial, NotificationSettings, EmailNotificationConfig, SlackNotificationConfig, LineNotificationConfig, ChatWorkNotificationConfig, LegalLink } from '../types';
 import { diagnosisFormMapping } from '../data/diagnosisFormMapping';
 import { allFinancialProducts as defaultFinancialProducts } from '../data/financialProductsData';
 import { defaultTestimonialsData } from '../data/testimonialsData';
@@ -12,7 +12,7 @@ interface AdminDashboardPageProps {
   onNavigateHome: () => void;
 }
 
-type AdminViewMode = 'userHistory' | 'productSettings' | 'testimonialSettings' | 'analyticsSettings' | 'notificationSettings';
+type AdminViewMode = 'userHistory' | 'productSettings' | 'testimonialSettings' | 'analyticsSettings' | 'notificationSettings' | 'legalLinksSettings';
 
 interface DashboardStats {
     totalDiagnoses: number;
@@ -58,6 +58,11 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
   // Notification Settings State
   const [notificationSettings, setNotificationSettings] = useState<NotificationSettings>(initialNotificationSettings);
   const [notificationSettingsStatus, setNotificationSettingsStatus] = useState<string>('');
+
+  // Legal Links Settings State
+  const [legalLinks, setLegalLinks] = useState<LegalLink[]>([]);
+  const [editingLegalLink, setEditingLegalLink] = useState<Partial<LegalLink> | null>(null);
+  const [legalLinksStatus, setLegalLinksStatus] = useState<string>('');
 
 
   useEffect(() => {
@@ -139,6 +144,9 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
     } else {
         setNotificationSettings(initialNotificationSettings);
     }
+
+    // Load legal links
+    loadLegalLinks();
 
   }, []);
 
@@ -387,6 +395,59 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
     }
   };
 
+  // Legal Links Management Functions
+  const loadLegalLinks = async () => {
+    try {
+      const storedLinks = localStorage.getItem('customLegalLinks');
+      if (storedLinks) {
+        setLegalLinks(JSON.parse(storedLinks));
+      } else {
+        // デフォルトのリーガルリンク
+        const defaultLinks: LegalLink[] = [
+          { id: 1, link_type: 'privacy_policy', title: 'プライバシーポリシー', url: '#privacy', is_active: true, created_at: '', updated_at: '' },
+          { id: 2, link_type: 'terms_of_service', title: '利用規約', url: '#terms', is_active: true, created_at: '', updated_at: '' },
+          { id: 3, link_type: 'specified_commercial_transactions', title: '特定商取引法', url: '#scta', is_active: true, created_at: '', updated_at: '' },
+          { id: 4, link_type: 'company_info', title: '会社概要', url: '#company', is_active: true, created_at: '', updated_at: '' }
+        ];
+        setLegalLinks(defaultLinks);
+      }
+    } catch (error) {
+      console.error('Error loading legal links:', error);
+    }
+  };
+
+  const handleEditLegalLink = (link: LegalLink) => {
+    setEditingLegalLink({ ...link });
+  };
+
+  const handleLegalLinkFormChange = (e: ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    if (editingLegalLink) {
+      const { name, value, type } = e.target;
+      setEditingLegalLink({
+        ...editingLegalLink,
+        [name]: type === 'checkbox' ? (e.target as HTMLInputElement).checked : value
+      });
+    }
+  };
+
+  const handleSaveLegalLink = () => {
+    if (!editingLegalLink) return;
+
+    const updatedLinks = legalLinks.map(link => 
+      link.id === editingLegalLink.id ? { ...link, ...editingLegalLink } : link
+    );
+    
+    setLegalLinks(updatedLinks);
+    localStorage.setItem('customLegalLinks', JSON.stringify(updatedLinks));
+    setEditingLegalLink(null);
+    setLegalLinksStatus('✅ リーガルリンクを更新しました');
+    setTimeout(() => setLegalLinksStatus(''), 3000);
+  };
+
+  const handleCancelLegalLinkEdit = () => {
+    setEditingLegalLink(null);
+  };
+
 
   return (
     <div className="min-h-screen flex flex-col bg-gray-100">
@@ -451,6 +512,12 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
                     className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${viewMode === 'notificationSettings' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}`}
                 >
                     <i className="fas fa-bell mr-2"></i>通知設定
+                </button>
+                <button 
+                    onClick={() => setViewMode('legalLinksSettings')}
+                    className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${viewMode === 'legalLinksSettings' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}`}
+                >
+                    <i className="fas fa-gavel mr-2"></i>リーガルリンク設定
                 </button>
             </div>
         </div>
@@ -928,6 +995,120 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
                         <div className="flex-shrink-0"><i className="fas fa-exclamation-triangle text-yellow-500 text-xl"></i></div>
                         <div className="ml-3">
                             <p className="text-sm text-yellow-700"><strong>デモに関する注意:</strong> 通知設定はブラウザのローカルストレージに保存されます。実際の通知送信はバックエンドサーバーでの実装が必要です。Webhook URLやAPIトークンなどの機密情報は、本番環境ではフロントエンドに保存せず、必ずバックエンドで安全に管理してください。</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        )}
+
+        {viewMode === 'legalLinksSettings' && (
+            <div className="bg-white p-6 md:p-8 rounded-xl shadow-2xl">
+                <h2 className="text-2xl font-bold text-gray-800 mb-6 flex items-center">
+                    <i className="fas fa-gavel mr-3 text-purple-600"></i>リーガルリンク設定
+                </h2>
+                {legalLinksStatus && (
+                    <div className={`p-3 mb-4 rounded-md text-sm ${legalLinksStatus.includes('エラー') ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'}`}>
+                        {legalLinksStatus}
+                    </div>
+                )}
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {legalLinks.map((link) => (
+                        <div key={link.id} className="p-4 border border-gray-200 rounded-lg bg-gray-50">
+                            <div className="flex justify-between items-start mb-3">
+                                <h3 className="font-semibold text-gray-700">{link.title}</h3>
+                                <button
+                                    onClick={() => handleEditLegalLink(link)}
+                                    className="text-blue-600 hover:text-blue-800 transition-colors"
+                                >
+                                    <i className="fas fa-edit"></i>
+                                </button>
+                            </div>
+                            <p className="text-sm text-gray-600 mb-2">
+                                <span className="font-medium">URL:</span> {link.url}
+                            </p>
+                            <p className="text-sm text-gray-600">
+                                <span className="font-medium">ステータス:</span> 
+                                <span className={`ml-1 ${link.is_active ? 'text-green-600' : 'text-red-600'}`}>
+                                    {link.is_active ? '有効' : '無効'}
+                                </span>
+                            </p>
+                        </div>
+                    ))}
+                </div>
+
+                {editingLegalLink && (
+                    <div className="mt-8 p-6 bg-blue-50 border border-blue-200 rounded-lg">
+                        <h3 className="text-lg font-semibold text-gray-800 mb-4">
+                            <i className="fas fa-edit mr-2"></i>リンク編集
+                        </h3>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">
+                                    タイトル
+                                </label>
+                                <input
+                                    type="text"
+                                    name="title"
+                                    value={editingLegalLink.title || ''}
+                                    onChange={handleLegalLinkFormChange}
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">
+                                    URL
+                                </label>
+                                <input
+                                    type="url"
+                                    name="url"
+                                    value={editingLegalLink.url || ''}
+                                    onChange={handleLegalLinkFormChange}
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                    placeholder="https://example.com/privacy"
+                                />
+                            </div>
+                            <div className="md:col-span-2">
+                                <label className="flex items-center space-x-2">
+                                    <input
+                                        type="checkbox"
+                                        name="is_active"
+                                        checked={editingLegalLink.is_active || false}
+                                        onChange={handleLegalLinkFormChange}
+                                        className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                                    />
+                                    <span className="text-sm font-medium text-gray-700">有効</span>
+                                </label>
+                            </div>
+                        </div>
+                        <div className="flex space-x-4 mt-6">
+                            <button
+                                onClick={handleSaveLegalLink}
+                                className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-lg shadow-md transition duration-150 ease-in-out flex items-center"
+                            >
+                                <i className="fas fa-save mr-2"></i>保存
+                            </button>
+                            <button
+                                onClick={handleCancelLegalLinkEdit}
+                                className="bg-gray-500 hover:bg-gray-600 text-white font-semibold py-2 px-4 rounded-lg shadow-md transition duration-150 ease-in-out flex items-center"
+                            >
+                                <i className="fas fa-times mr-2"></i>キャンセル
+                            </button>
+                        </div>
+                    </div>
+                )}
+
+                <div className="mt-6 p-4 bg-yellow-50 border-l-4 border-yellow-400 rounded-md">
+                    <div className="flex">
+                        <div className="flex-shrink-0"><i className="fas fa-info-circle text-yellow-500 text-xl"></i></div>
+                        <div className="ml-3">
+                            <p className="text-sm text-yellow-700">
+                                <strong>使用方法:</strong> ここで設定したリンクは、サイトフッターに自動的に反映されます。
+                                URLを更新すると、即座にフロントエンドのリンクが変更されます。
+                            </p>
+                            <p className="text-sm text-yellow-700 mt-1">
+                                設定データはブラウザのローカルストレージに保存されます。
+                            </p>
                         </div>
                     </div>
                 </div>
