@@ -448,6 +448,95 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
     setEditingLegalLink(null);
   };
 
+  // 通知テスト機能
+  const handleTestNotification = async (channel: keyof NotificationSettings) => {
+    setNotificationSettingsStatus('通知テスト送信中...');
+    
+    try {
+      const testData = {
+        phoneNumber: '+819012345678',
+        diagnosisAnswers: {
+          age: '30s',
+          experience: 'beginner',
+          purpose: 'retirement',
+          amount: '10k-30k',
+          timing: 'immediately'
+        }
+      };
+
+      // テスト通知メッセージを生成
+      const testMessage = `【テスト通知】新しい診断が完了しました
+電話番号: ${testData.phoneNumber}
+年齢: 30代
+投資経験: 初心者
+投資目的: 老後資金
+月額投資可能額: 1-3万円
+投資開始時期: すぐにでも
+時刻: ${new Date().toLocaleString('ja-JP')}`;
+
+      const config = notificationSettings[channel];
+      
+      if (!config.enabled) {
+        setNotificationSettingsStatus(`${channel}通知が無効になっています。`);
+        return;
+      }
+
+      // チャンネル別のテスト送信
+      switch (channel) {
+        case 'email':
+          if (!config.recipientEmails) {
+            setNotificationSettingsStatus('メールアドレスが設定されていません。');
+            return;
+          }
+          console.log(`📧 Email Test to: ${config.recipientEmails}`);
+          console.log(`Subject: 【マネーチケット】診断完了通知テスト`);
+          console.log(`Body: ${testMessage}`);
+          setNotificationSettingsStatus('✅ メール通知テストを実行しました（コンソールログを確認してください）');
+          break;
+          
+        case 'slack':
+          if (!config.webhookUrl) {
+            setNotificationSettingsStatus('SlackのWebhook URLが設定されていません。');
+            return;
+          }
+          console.log(`💬 Slack Test to: ${config.channel || '#general'}`);
+          console.log(`Webhook: ${config.webhookUrl}`);
+          console.log(`Message: ${testMessage}`);
+          setNotificationSettingsStatus('✅ Slack通知テストを実行しました（コンソールログを確認してください）');
+          break;
+          
+        case 'line':
+          if (!config.accessToken) {
+            setNotificationSettingsStatus('LINE Notifyのアクセストークンが設定されていません。');
+            return;
+          }
+          console.log(`📱 LINE Test`);
+          console.log(`Token: ${config.accessToken.substring(0, 10)}...`);
+          console.log(`Message: ${testMessage}`);
+          setNotificationSettingsStatus('✅ LINE通知テストを実行しました（コンソールログを確認してください）');
+          break;
+          
+        case 'chatwork':
+          if (!config.apiToken || !config.roomId) {
+            setNotificationSettingsStatus('ChatWorkのAPIトークンまたはルームIDが設定されていません。');
+            return;
+          }
+          console.log(`💼 ChatWork Test to Room: ${config.roomId}`);
+          console.log(`Token: ${config.apiToken.substring(0, 10)}...`);
+          console.log(`Message: ${testMessage}`);
+          setNotificationSettingsStatus('✅ ChatWork通知テストを実行しました（コンソールログを確認してください）');
+          break;
+      }
+      
+      setTimeout(() => setNotificationSettingsStatus(''), 5000);
+      
+    } catch (error) {
+      console.error('通知テストエラー:', error);
+      setNotificationSettingsStatus(`❌ ${channel}通知テストでエラーが発生しました: ${error}`);
+      setTimeout(() => setNotificationSettingsStatus(''), 5000);
+    }
+  };
+
 
   return (
     <div className="min-h-screen flex flex-col bg-gray-100">
@@ -630,27 +719,42 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
                     <h3 className="text-lg font-semibold text-gray-700 mb-3">{product.name}</h3>
                     {product.representativeCompanies && product.representativeCompanies.length > 0 ? (
                         product.representativeCompanies.map((company, cIdx) => (
-                        <div key={company.id} className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-3 items-end">
-                            <span className="text-sm font-medium text-gray-600 md:col-span-3">取扱会社: {company.name}</span>
-                            <div>
-                            <label htmlFor={`url-${pIdx}-${cIdx}`} className="block text-xs font-medium text-gray-500">ウェブサイトURL</label>
-                            <input
-                                type="url"
-                                id={`url-${pIdx}-${cIdx}`}
-                                value={company.websiteUrl}
-                                onChange={(e) => handleProductInputChange(pIdx, cIdx, 'websiteUrl', e.target.value)}
-                                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                            />
-                            </div>
-                            <div>
-                            <label htmlFor={`action-${pIdx}-${cIdx}`} className="block text-xs font-medium text-gray-500">アクションテキスト</label>
-                            <input
-                                type="text"
-                                id={`action-${pIdx}-${cIdx}`}
-                                value={company.actionText}
-                                onChange={(e) => handleProductInputChange(pIdx, cIdx, 'actionText', e.target.value)}
-                                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                            />
+                        <div key={company.id} className="border border-blue-200 rounded-lg p-4 mb-4 bg-blue-50">
+                            <h4 className="text-sm font-semibold text-gray-700 mb-3">取扱会社 #{cIdx + 1}</h4>
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                <div>
+                                    <label htmlFor={`name-${pIdx}-${cIdx}`} className="block text-xs font-medium text-gray-500">会社名</label>
+                                    <input
+                                        type="text"
+                                        id={`name-${pIdx}-${cIdx}`}
+                                        value={company.name}
+                                        onChange={(e) => handleProductInputChange(pIdx, cIdx, 'name', e.target.value)}
+                                        className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                                        placeholder="例: SBI証券"
+                                    />
+                                </div>
+                                <div>
+                                    <label htmlFor={`url-${pIdx}-${cIdx}`} className="block text-xs font-medium text-gray-500">ウェブサイトURL</label>
+                                    <input
+                                        type="url"
+                                        id={`url-${pIdx}-${cIdx}`}
+                                        value={company.websiteUrl}
+                                        onChange={(e) => handleProductInputChange(pIdx, cIdx, 'websiteUrl', e.target.value)}
+                                        className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                                        placeholder="https://example.com"
+                                    />
+                                </div>
+                                <div>
+                                    <label htmlFor={`action-${pIdx}-${cIdx}`} className="block text-xs font-medium text-gray-500">アクションテキスト</label>
+                                    <input
+                                        type="text"
+                                        id={`action-${pIdx}-${cIdx}`}
+                                        value={company.actionText}
+                                        onChange={(e) => handleProductInputChange(pIdx, cIdx, 'actionText', e.target.value)}
+                                        className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                                        placeholder="詳しく見る"
+                                    />
+                                </div>
                             </div>
                         </div>
                         ))
@@ -862,14 +966,23 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
                             </label>
                         </div>
                         {notificationSettings.email.enabled && (
-                            <div>
-                                <label htmlFor="emailRecipients" className="block text-sm font-medium text-gray-600">受信者メールアドレス (カンマ区切り)</label>
-                                <input type="text" id="emailRecipients"
-                                    value={notificationSettings.email.recipientEmails}
-                                    onChange={(e) => handleNotificationSettingChange('email', 'recipientEmails', e.target.value)}
-                                    className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                                    placeholder="admin1@example.com,admin2@example.com"
-                                />
+                            <div className="space-y-3">
+                                <div>
+                                    <label htmlFor="emailRecipients" className="block text-sm font-medium text-gray-600">受信者メールアドレス (カンマ区切り)</label>
+                                    <input type="text" id="emailRecipients"
+                                        value={notificationSettings.email.recipientEmails}
+                                        onChange={(e) => handleNotificationSettingChange('email', 'recipientEmails', e.target.value)}
+                                        className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                                        placeholder="admin1@example.com,admin2@example.com"
+                                    />
+                                </div>
+                                <button
+                                    type="button"
+                                    onClick={() => handleTestNotification('email')}
+                                    className="bg-blue-500 hover:bg-blue-600 text-white text-xs px-3 py-1 rounded shadow transition-colors"
+                                >
+                                    <i className="fas fa-paper-plane mr-1"></i>テスト送信
+                                </button>
                             </div>
                         )}
                     </div>
@@ -909,6 +1022,13 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
                                         placeholder="#diagnoses"
                                     />
                                 </div>
+                                <button
+                                    type="button"
+                                    onClick={() => handleTestNotification('slack')}
+                                    className="bg-purple-500 hover:bg-purple-600 text-white text-xs px-3 py-1 rounded shadow transition-colors"
+                                >
+                                    <i className="fab fa-slack mr-1"></i>テスト送信
+                                </button>
                             </div>
                         )}
                     </div>
@@ -938,6 +1058,13 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
                                     placeholder="デモ用: バックエンドで安全に管理"
                                 />
                                 <p className="text-xs text-red-500 mt-1">注意: アクセストークンは機密情報です。このデモでは入力できますが、実際のアプリではバックエンドで安全に保管してください。</p>
+                                <button
+                                    type="button"
+                                    onClick={() => handleTestNotification('line')}
+                                    className="bg-green-500 hover:bg-green-600 text-white text-xs px-3 py-1 rounded shadow transition-colors mt-2"
+                                >
+                                    <i className="fab fa-line mr-1"></i>テスト送信
+                                </button>
                             </div>
                         )}
                     </div>
@@ -979,6 +1106,13 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
                                         placeholder="123456789"
                                     />
                                 </div>
+                                <button
+                                    type="button"
+                                    onClick={() => handleTestNotification('chatwork')}
+                                    className="bg-gray-600 hover:bg-gray-700 text-white text-xs px-3 py-1 rounded shadow transition-colors"
+                                >
+                                    <i className="fas fa-comments mr-1"></i>テスト送信
+                                </button>
                             </div>
                         )}
                     </div>
@@ -990,11 +1124,21 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
                 >
                     <i className="fas fa-save mr-2"></i>通知設定を保存
                 </button>
-                <div className="mt-6 p-4 bg-yellow-50 border-l-4 border-yellow-400 rounded-md">
-                    <div className="flex">
-                        <div className="flex-shrink-0"><i className="fas fa-exclamation-triangle text-yellow-500 text-xl"></i></div>
-                        <div className="ml-3">
-                            <p className="text-sm text-yellow-700"><strong>デモに関する注意:</strong> 通知設定はブラウザのローカルストレージに保存されます。実際の通知送信はバックエンドサーバーでの実装が必要です。Webhook URLやAPIトークンなどの機密情報は、本番環境ではフロントエンドに保存せず、必ずバックエンドで安全に管理してください。</p>
+                <div className="mt-6 space-y-4">
+                    <div className="p-4 bg-blue-50 border-l-4 border-blue-400 rounded-md">
+                        <div className="flex">
+                            <div className="flex-shrink-0"><i className="fas fa-info-circle text-blue-500 text-xl"></i></div>
+                            <div className="ml-3">
+                                <p className="text-sm text-blue-700"><strong>テスト機能について:</strong> 各通知チャンネルの「テスト送信」ボタンをクリックすると、ブラウザのコンソールログに通知内容が出力されます。実際の通知送信をテストする場合は、適切なAPIキーやWebhook URLを設定してください。</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div className="p-4 bg-yellow-50 border-l-4 border-yellow-400 rounded-md">
+                        <div className="flex">
+                            <div className="flex-shrink-0"><i className="fas fa-exclamation-triangle text-yellow-500 text-xl"></i></div>
+                            <div className="ml-3">
+                                <p className="text-sm text-yellow-700"><strong>セキュリティ注意:</strong> 通知設定はブラウザのローカルストレージに保存されます。実際の通知送信はバックエンドサーバーでの実装が必要です。Webhook URLやAPIトークンなどの機密情報は、本番環境ではフロントエンドに保存せず、必ずバックエンドで安全に管理してください。</p>
+                            </div>
                         </div>
                     </div>
                 </div>
