@@ -1,8 +1,10 @@
-
-
 import React from 'react';
 
-const Footer: React.FC = () => {
+interface FooterProps {
+  onNavigateToAdminLogin: () => void;
+}
+
+const Footer: React.FC<FooterProps> = ({ onNavigateToAdminLogin }) => {
   return (
     <footer className="premium-footer py-12 px-4">
       <div className="container mx-auto px-4 max-w-7xl">
@@ -23,11 +25,21 @@ const Footer: React.FC = () => {
             <div className="text-sm text-gray-400 space-y-2">
                 <p>運営会社：株式会社◯◯◯ | 金融商品取引業者 関東財務局長（金商）第◯◯◯号</p>
                 <p>〒XXX-XXXX 東京都○○区○○ X-X-X | TEL：0120-XXX-XXX</p>
-                <nav className="flex justify-center space-x-4 md:space-x-6 mt-6">
+                <nav className="flex flex-wrap justify-center space-x-4 md:space-x-6 mt-6">
                     <a href="#privacy" className="footer-link">プライバシーポリシー</a>
                     <a href="#terms" className="footer-link">利用規約</a>
                     <a href="#scta" className="footer-link">特定商取引法</a>
                     <a href="#company" className="footer-link">会社概要</a>
+                    <a 
+                      href="#admin" 
+                      onClick={(e) => { 
+                        e.preventDefault(); 
+                        onNavigateToAdminLogin(); 
+                      }} 
+                      className="footer-link"
+                    >
+                      管理者ログイン
+                    </a>
                 </nav>
                 <p className="mt-8 text-gray-500">&copy; {new Date().getFullYear()} MoneyTicket. All rights reserved.</p>
             </div>
