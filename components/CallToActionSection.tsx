@@ -1,5 +1,3 @@
-
-
 import React from 'react';
 
 const CallToActionSection: React.FC = () => {
@@ -13,9 +11,22 @@ const CallToActionSection: React.FC = () => {
   return (
     <section id="cta-section" className="py-20 px-4 text-center hero-section-premium">
       <div className="hero-content max-w-4xl mx-auto">
-        <h3 className="heading-display text-4xl md:text-5xl mb-8 text-white">
+        <h3 
+          className="heading-display text-5xl md:text-6xl mb-8 font-bold leading-tight"
+          style={{
+            color: '#f8fafc',
+            textShadow: '0 4px 12px rgba(0, 0, 0, 0.8), 0 2px 6px rgba(0, 0, 0, 0.6)',
+            letterSpacing: '0.02em'
+          }}
+        >
             あなたの理想的な未来を<br />
-            今日から始めませんか？
+            <span style={{ 
+              color: '#fbbf24', 
+              fontWeight: '800',
+              textShadow: '0 4px 12px rgba(0, 0, 0, 0.9), 0 2px 6px rgba(0, 0, 0, 0.7)'
+            }}>
+              今日から始めませんか？
+            </span>
         </h3>
         <p className="text-xl mb-12 text-gray-200 leading-relaxed">
             経験豊富なプロフェッショナルが、あなたの人生設計に合わせた<br />
