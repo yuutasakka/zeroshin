@@ -1,30 +1,34 @@
-import express from 'express';
+import express, { Request, Response } from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import twilio from 'twilio';
 
 // 環境変数を読み込み
-dotenv.config(); // .env ファイルを読み込み
+dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 8080;
 
-// Twilioクライアントの初期化
+// Twilioクライアントの初期化（必須設定）
 const accountSid = process.env.TWILIO_ACCOUNT_SID;
 const authToken = process.env.TWILIO_AUTH_TOKEN;
 const twilioPhoneNumber = process.env.TWILIO_PHONE_NUMBER;
 
-// デバッグ用: 環境変数の確認
-console.log('環境変数チェック:');
-console.log('- ACCOUNT_SID:', accountSid ? `✅ ${accountSid.substring(0, 10)}...` : '❌ 未設定');
-console.log('- AUTH_TOKEN:', authToken ? `✅ ${authToken.substring(0, 10)}...` : '❌ 未設定');
-console.log('- PHONE_NUMBER:', twilioPhoneNumber ? `✅ ${twilioPhoneNumber}` : '❌ 未設定');
-
+// Twilio設定の検証
 if (!accountSid || !authToken || !twilioPhoneNumber) {
-  console.warn('Twilio credentials are not properly configured. SMS functionality will not work.');
+  console.error('❌ Twilioの設定が不完全です。以下の環境変数を設定してください:');
+  console.error('- TWILIO_ACCOUNT_SID');
+  console.error('- TWILIO_AUTH_TOKEN'); 
+  console.error('- TWILIO_PHONE_NUMBER');
+  process.exit(1);
 }
 
-const client = accountSid && authToken ? twilio(accountSid, authToken) : null;
+console.log('✅ Twilio設定確認完了');
+console.log('- ACCOUNT_SID:', accountSid.substring(0, 10) + '...');
+console.log('- AUTH_TOKEN:', authToken.substring(0, 10) + '...');
+console.log('- PHONE_NUMBER:', twilioPhoneNumber);
+
+const client = twilio(accountSid, authToken);
 
 // ミドルウェア
 app.use(cors());
@@ -54,39 +58,18 @@ function normalizeJapanesePhoneNumber(phoneNumber: string): string {
 
 // SMS送信エンドポイント
 app.post('/api/sms/send', async (req, res) => {
+  const { phoneNumber } = req.body;
+
+  if (!phoneNumber) {
+    return res.status(400).json({
+      error: '電話番号が必要です'
+    });
+  }
+
   try {
-    const { phoneNumber } = req.body;
-
-    if (!phoneNumber) {
-      return res.status(400).json({
-        error: '電話番号が必要です'
-      });
-    }
-
-    // Twilioが設定されていない場合のデモモード
-    if (!client) {
-      const verificationCode = Math.floor(1000 + Math.random() * 9000).toString();
-      const normalizedPhoneNumber = normalizeJapanesePhoneNumber(phoneNumber);
-      const expiry = Date.now() + 5 * 60 * 1000;
-      
-      verificationCodes.set(normalizedPhoneNumber, {
-        code: verificationCode,
-        expiry: expiry,
-      });
-
-      console.log(`デモモード: 認証コード ${verificationCode} を ${normalizedPhoneNumber} に送信（実際は送信されません）`);
-      
-      return res.json({
-        success: true,
-        message: 'SMS認証コードを送信しました（デモモード）',
-        phoneNumber: normalizedPhoneNumber,
-        demoCode: verificationCode // デモ用（本番では削除）
-      });
-    }
-
     const normalizedPhoneNumber = normalizeJapanesePhoneNumber(phoneNumber);
     const verificationCode = Math.floor(1000 + Math.random() * 9000).toString();
-    const expiry = Date.now() + 5 * 60 * 1000;
+    const expiry = Date.now() + 5 * 60 * 1000; // 5分後に期限切れ
 
     // 認証コードを一時保存
     verificationCodes.set(normalizedPhoneNumber, {
@@ -114,8 +97,18 @@ app.post('/api/sms/send', async (req, res) => {
 
   } catch (error) {
     console.error('SMS送信エラー:', error);
+    
+    // Twilioエラーの詳細情報を出力
+    if (error && typeof error === 'object') {
+      console.error('- エラーコード:', (error as any).code);
+      console.error('- エラーメッセージ:', (error as any).message);
+      console.error('- ステータス:', (error as any).status);
+      console.error('- 詳細:', (error as any).moreInfo);
+    }
+    
     res.status(500).json({
-      error: 'SMS送信に失敗しました'
+      error: 'SMS送信に失敗しました',
+      details: error instanceof Error ? error.message : 'Unknown error'
     });
   }
 });
@@ -179,7 +172,7 @@ app.post('/api/sms/verify', async (req, res) => {
 app.get('/api/health', (req, res) => {
   res.json({
     status: 'OK',
-    twilioConfigured: !!client,
+    twilioConfigured: true,
     timestamp: new Date().toISOString()
   });
 });
@@ -187,7 +180,7 @@ app.get('/api/health', (req, res) => {
 // サーバー開始
 app.listen(PORT, () => {
   console.log(`🚀 SMS認証サーバーが http://localhost:${PORT} で起動しました`);
-  console.log(`Twilio設定状況: ${client ? '✅ 設定済み' : '❌ 未設定（デモモード）'}`);
+  console.log(`📱 Twilio本番モードで稼働中`);
 });
 
 export default app; 
