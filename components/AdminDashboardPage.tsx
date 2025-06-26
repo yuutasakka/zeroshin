@@ -5,6 +5,68 @@ import { diagnosisFormMapping } from '../data/diagnosisFormMapping';
 import { allFinancialProducts as defaultFinancialProducts } from '../data/financialProductsData';
 import { defaultTestimonialsData } from '../data/testimonialsData';
 
+// Supabaseクライアント設定（AdminLoginPageと同じ）
+const createSupabaseClient = () => {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://eqirzbuqgymrtnfmvwhq.supabase.co';
+  const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVxaXJ6YnVxZ3ltcnRuZm12d2hxIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1MDY3MjE3MCwiZXhwIjoyMDY2MjQ4MTcwfQ.JTjrWFXHn4JKfRFLLV2Mb_xzZOqB7j9OQ4TQo3xgmJE';
+  
+  return {
+    url: supabaseUrl,
+    key: supabaseServiceKey
+  };
+};
+
+const supabaseConfig = createSupabaseClient();
+
+// Supabase API ヘルパー関数（AdminLoginPageと同じ）
+class SupabaseAdminAPI {
+  static async fetchAdminCredentials(username: string = 'admin') {
+    try {
+      const response = await fetch(`${supabaseConfig.url}/rest/v1/admin_credentials?username=eq.${username}`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${supabaseConfig.key}`,
+          'apikey': supabaseConfig.key,
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+
+      const data = await response.json();
+      return data[0] || null;
+    } catch (error) {
+      console.error('Supabase管理者認証情報取得エラー:', error);
+      return null;
+    }
+  }
+
+  static async updateAdminCredentials(id: number, updates: any) {
+    try {
+      const response = await fetch(`${supabaseConfig.url}/rest/v1/admin_credentials?id=eq.${id}`, {
+        method: 'PATCH',
+        headers: {
+          'Authorization': `Bearer ${supabaseConfig.key}`,
+          'apikey': supabaseConfig.key,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(updates),
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+
+      return await response.json();
+    } catch (error) {
+      console.error('Supabase管理者認証情報更新エラー:', error);
+      throw error;
+    }
+  }
+}
+
 // セキュリティ設定（AdminLoginPageと同じ）
 const SECURITY_CONFIG = {
   ENCRYPTION_KEY: 'MoneyTicket-SecureKey-2024',
@@ -205,21 +267,58 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
 
     loadUserSessions();
 
-    // Load admin settings
-    const loadAdminSettings = () => {
+    // Load admin settings from Supabase
+    const loadAdminSettings = async () => {
       try {
+        console.log('管理者設定をSupabaseから読み込み中...');
+        
+        // まずSupabaseから最新データを取得
+        const supabaseCredentials = await SupabaseAdminAPI.fetchAdminCredentials('admin');
+        
+        if (supabaseCredentials) {
+          console.log('Supabaseから管理者設定を取得');
+          setAdminPhoneNumber(supabaseCredentials.phone_number || '+81901234567');
+          setAdminBackupCode(supabaseCredentials.backup_code || 'MT-BACKUP-2024');
+          
+          // ローカルストレージにもバックアップとして保存
+          const localCredentials = {
+            id: supabaseCredentials.id,
+            username: supabaseCredentials.username,
+            password: supabaseCredentials.password_hash,
+            backup_code: supabaseCredentials.backup_code,
+            phone_number: supabaseCredentials.phone_number,
+            is_active: supabaseCredentials.is_active,
+            created_at: supabaseCredentials.created_at,
+            last_updated: supabaseCredentials.updated_at
+          };
+          SecureStorage.setSecureItem('admin_credentials', localCredentials);
+          return;
+        }
+        
+        // Supabaseから取得できない場合はローカルストレージを確認
+        console.log('Supabaseから取得できませんでした。ローカルストレージを確認中...');
         const credentials = SecureStorage.getSecureItem('admin_credentials');
         if (credentials) {
-          setAdminPhoneNumber(credentials.phone_number || '09012345678');
+          console.log('ローカルストレージから管理者設定を取得');
+          setAdminPhoneNumber(credentials.phone_number || '+81901234567');
           setAdminBackupCode(credentials.backup_code || 'MT-BACKUP-2024');
         } else {
-          setAdminPhoneNumber('09012345678');
+          console.log('デフォルト管理者設定を使用');
+          setAdminPhoneNumber('+81901234567');
           setAdminBackupCode('MT-BACKUP-2024');
         }
       } catch (error) {
         console.error('管理者設定の読み込みエラー:', error);
-        setAdminPhoneNumber('09012345678');
-        setAdminBackupCode('MT-BACKUP-2024');
+        
+        // エラー時はローカルストレージをフォールバック
+        const credentials = SecureStorage.getSecureItem('admin_credentials');
+        if (credentials) {
+          setAdminPhoneNumber(credentials.phone_number || '+81901234567');
+          setAdminBackupCode(credentials.backup_code || 'MT-BACKUP-2024');
+        } else {
+          setAdminPhoneNumber('+81901234567');
+          setAdminBackupCode('MT-BACKUP-2024');
+        }
       }
     };
 
@@ -571,7 +670,7 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
     setEditingLegalLink(null);
   };
 
-  // 管理者設定保存機能
+  // 管理者設定保存機能（Supabase連携）
   const handleSaveAdminSettings = async () => {
     setAdminSettingsStatus('保存中...');
     
@@ -591,40 +690,92 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
         return;
       }
 
-      // 既存の認証情報を取得
-      const existingCredentials = localStorage.getItem('admin_credentials');
-      let credentials = {
-        username: "admin",
-        password: "MoneyTicket2024!",
-        backup_code: "MT-BACKUP-2024",
-        phone_number: "+81901234567"
-      };
+      console.log('管理者設定をSupabaseで保存中...');
+      
+      // まずSupabaseから現在のデータを取得
+      const supabaseCredentials = await SupabaseAdminAPI.fetchAdminCredentials('admin');
+      
+      if (supabaseCredentials) {
+        // Supabaseのデータを更新
+        await SupabaseAdminAPI.updateAdminCredentials(supabaseCredentials.id, {
+          phone_number: adminPhoneNumber,
+          backup_code: adminBackupCode,
+          updated_at: new Date().toISOString()
+        });
+        console.log('Supabaseで管理者設定を更新しました');
+        
+        // ローカルストレージも更新（バックアップとして）
+        const localCredentials = SecureStorage.getSecureItem('admin_credentials') || {};
+        localCredentials.phone_number = adminPhoneNumber;
+        localCredentials.backup_code = adminBackupCode;
+        localCredentials.last_updated = new Date().toISOString();
+        SecureStorage.setSecureItem('admin_credentials', localCredentials);
+        
+        setAdminSettingsStatus('✅ 管理者設定が正常に保存されました（Supabase連携済み）');
+      } else {
+        // Supabaseにデータがない場合はローカルのみ更新
+        console.log('Supabaseにデータがないため、ローカルストレージのみ更新');
+        
+        // 既存の認証情報を取得
+        const existingCredentials = SecureStorage.getSecureItem('admin_credentials');
+        let credentials = {
+          username: "admin",
+          password: "MoneyTicket2024!",
+          backup_code: "MT-BACKUP-2024",
+          phone_number: "+81901234567"
+        };
 
-      if (existingCredentials) {
-        try {
-          credentials = { ...credentials, ...JSON.parse(existingCredentials) };
-        } catch (error) {
-          console.error('既存認証情報の解析エラー:', error);
+        if (existingCredentials) {
+          credentials = { ...credentials, ...existingCredentials };
         }
+
+        // 新しい設定で更新
+        const updatedCredentials = {
+          ...credentials,
+          phone_number: adminPhoneNumber,
+          backup_code: adminBackupCode,
+          last_updated: new Date().toISOString()
+        };
+
+        // 保存
+        SecureStorage.setSecureItem('admin_credentials', updatedCredentials);
+        setAdminSettingsStatus('✅ 管理者設定が正常に保存されました（ローカルのみ）');
       }
-
-      // 新しい設定で更新
-      const updatedCredentials = {
-        ...credentials,
-        phone_number: adminPhoneNumber,
-        backup_code: adminBackupCode
-      };
-
-      // 保存
-      localStorage.setItem('admin_credentials', JSON.stringify(updatedCredentials));
-
-      setAdminSettingsStatus('✅ 管理者設定が正常に保存されました');
+      
       setTimeout(() => setAdminSettingsStatus(''), 3000);
 
     } catch (error) {
       console.error('管理者設定保存エラー:', error);
-      setAdminSettingsStatus('❌ 保存中にエラーが発生しました。');
-      setTimeout(() => setAdminSettingsStatus(''), 5000);
+      
+      // エラー時はローカルストレージのみ更新を試行
+      try {
+        const existingCredentials = SecureStorage.getSecureItem('admin_credentials');
+        let credentials = {
+          username: "admin",
+          password: "MoneyTicket2024!",
+          backup_code: "MT-BACKUP-2024",
+          phone_number: "+81901234567"
+        };
+
+        if (existingCredentials) {
+          credentials = { ...credentials, ...existingCredentials };
+        }
+
+        const updatedCredentials = {
+          ...credentials,
+          phone_number: adminPhoneNumber,
+          backup_code: adminBackupCode,
+          last_updated: new Date().toISOString()
+        };
+
+        SecureStorage.setSecureItem('admin_credentials', updatedCredentials);
+        setAdminSettingsStatus('✅ 管理者設定が保存されました（ローカルのみ - Supabase接続エラー）');
+        setTimeout(() => setAdminSettingsStatus(''), 3000);
+      } catch (localError) {
+        console.error('ローカル保存もエラー:', localError);
+        setAdminSettingsStatus('❌ 保存中にエラーが発生しました。');
+        setTimeout(() => setAdminSettingsStatus(''), 5000);
+      }
     }
   };
 
