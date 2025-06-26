@@ -524,6 +524,13 @@ const AdminLoginPage: React.FC<AdminLoginPageProps> = ({ onLoginSuccess, onNavig
 
   // パスワード変更実行
   const updatePassword = async () => {
+    console.log('パスワード変更開始');
+    
+    if (!currentCredentials) {
+      setError('認証情報が読み込まれていません。ページを再読み込みしてください。');
+      return;
+    }
+
     if (newPassword.length < SECURITY_CONFIG.PASSWORD_MIN_LENGTH) {
       setError(`パスワードは${SECURITY_CONFIG.PASSWORD_MIN_LENGTH}文字以上で入力してください。`);
       return;
@@ -540,16 +547,24 @@ const AdminLoginPage: React.FC<AdminLoginPageProps> = ({ onLoginSuccess, onNavig
       return;
     }
 
+    setIsLoading(true);
+    setError('');
+
     try {
+      console.log('パスワードハッシュ化開始...');
       const hashedPassword = await PasswordManager.hashPassword(newPassword);
+      console.log('パスワードハッシュ化完了');
+      
       const newCredentials = {
         ...currentCredentials,
         password: hashedPassword,
         last_updated: Date.now()
       };
       
+      console.log('認証情報保存開始...');
       await saveAdminCredentials(newCredentials);
       setCurrentCredentials(newCredentials);
+      console.log('認証情報保存完了');
 
       // リセット状態をクリア
       setShowPasswordReset(false);
@@ -562,9 +577,14 @@ const AdminLoginPage: React.FC<AdminLoginPageProps> = ({ onLoginSuccess, onNavig
       setIsCodeSent(false);
       setError('');
 
-      alert('パスワードが正常に変更されました。新しいパスワードでログインしてください。');
+      alert('✅ パスワードが正常に変更されました！\n\n新しいパスワードでログインしてください。');
+      console.log('パスワード変更処理完了');
+      
     } catch (error) {
-      setError('パスワード変更中にエラーが発生しました。');
+      console.error('パスワード変更エラー:', error);
+      setError(`パスワード変更中にエラーが発生しました: ${error instanceof Error ? error.message : '不明なエラー'}`);
+    } finally {
+      setIsLoading(false);
     }
   };
 
