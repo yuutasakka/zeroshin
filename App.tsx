@@ -24,6 +24,11 @@ const App: React.FC = () => {
   const [phoneNumberToVerify, setPhoneNumberToVerify] = useState<string | null>(null);
   const [diagnosisData, setDiagnosisData] = useState<DiagnosisFormState | null>(null);
   const [isAdminLoggedIn, setIsAdminLoggedIn] = useState<boolean>(false);
+  
+  // 状態変更を監視するuseEffect
+  useEffect(() => {
+    console.log('📊 State changed - currentPage:', currentPage, 'isAdminLoggedIn:', isAdminLoggedIn);
+  }, [currentPage, isAdminLoggedIn]);
 
 
   useEffect(() => {
@@ -105,9 +110,20 @@ const App: React.FC = () => {
   }
 
   const handleAdminLoginSuccess = () => {
+    console.log('🚀 handleAdminLoginSuccess called');
+    console.log('Before state change - currentPage:', currentPage, 'isAdminLoggedIn:', isAdminLoggedIn);
+    
+    // 状態を強制的に更新
     setIsAdminLoggedIn(true);
     setCurrentPage('adminDashboard');
     window.scrollTo(0,0);
+    
+    console.log('State changes requested - should navigate to adminDashboard');
+    
+    // 状態変更を確認するための遅延ログ
+    setTimeout(() => {
+      console.log('遅延確認 - currentPage should be adminDashboard');
+    }, 200);
   };
 
   const handleAdminLogout = () => {
@@ -127,15 +143,21 @@ const App: React.FC = () => {
   };
 
 
+  console.log('App render - currentPage:', currentPage, 'isAdminLoggedIn:', isAdminLoggedIn);
+
   if (currentPage === 'login') {
+    console.log('Rendering AdminLoginPage');
     return <AdminLoginPage onLoginSuccess={handleAdminLoginSuccess} onNavigateHome={navigateToHome} />;
   }
 
   if (currentPage === 'adminDashboard') {
+    console.log('Rendering AdminDashboard - isAdminLoggedIn:', isAdminLoggedIn);
     if (!isAdminLoggedIn) {
       // Redirect to login if not authenticated
+      console.log('Not authenticated, redirecting to login');
       return <AdminLoginPage onLoginSuccess={handleAdminLoginSuccess} onNavigateHome={navigateToHome} />;
     }
+    console.log('Authenticated, showing AdminDashboard');
     return <AdminDashboardPage onLogout={handleAdminLogout} onNavigateHome={navigateToHome} />;
   }
 

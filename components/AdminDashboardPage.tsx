@@ -1,8 +1,55 @@
 import React, { useState, useEffect, ChangeEvent, FormEvent } from 'react';
+import CryptoJS from 'crypto-js';
 import { UserSessionData, FinancialProduct, Company, Testimonial, NotificationSettings, EmailNotificationConfig, SlackNotificationConfig, LineNotificationConfig, ChatWorkNotificationConfig, LegalLink } from '../types';
 import { diagnosisFormMapping } from '../data/diagnosisFormMapping';
 import { allFinancialProducts as defaultFinancialProducts } from '../data/financialProductsData';
 import { defaultTestimonialsData } from '../data/testimonialsData';
+
+// セキュリティ設定（AdminLoginPageと同じ）
+const SECURITY_CONFIG = {
+  ENCRYPTION_KEY: 'MoneyTicket-SecureKey-2024',
+};
+
+// セキュアなストレージ管理（AdminLoginPageと同じ）
+class SecureStorage {
+  private static encryptionKey = SECURITY_CONFIG.ENCRYPTION_KEY;
+
+  static encrypt(data: any): string {
+    try {
+      const jsonString = JSON.stringify(data);
+      const encrypted = CryptoJS.AES.encrypt(jsonString, this.encryptionKey).toString();
+      return encrypted;
+    } catch (error) {
+      console.error('暗号化エラー:', error);
+      return '';
+    }
+  }
+
+  static decrypt(encryptedData: string): any {
+    try {
+      if (!encryptedData) return null;
+      const decrypted = CryptoJS.AES.decrypt(encryptedData, this.encryptionKey);
+      const jsonString = decrypted.toString(CryptoJS.enc.Utf8);
+      return JSON.parse(jsonString);
+    } catch (error) {
+      console.error('復号化エラー:', error);
+      return null;
+    }
+  }
+
+  static setSecureItem(key: string, value: any): void {
+    const encrypted = this.encrypt(value);
+    if (encrypted) {
+      localStorage.setItem(key, encrypted);
+    }
+  }
+
+  static getSecureItem(key: string): any {
+    const encrypted = localStorage.getItem(key);
+    if (!encrypted) return null;
+    return this.decrypt(encrypted);
+  }
+}
 
 
 interface AdminDashboardPageProps {
@@ -72,14 +119,13 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
 
   // セッション有効性チェック
   const checkSessionValidity = () => {
-    const sessionData = localStorage.getItem('admin_session');
-    if (!sessionData) {
-      setSessionValid(false);
-      return false;
-    }
-
     try {
-      const session = JSON.parse(sessionData);
+      const session = SecureStorage.getSecureItem('admin_session');
+      if (!session) {
+        setSessionValid(false);
+        return false;
+      }
+
       const now = Date.now();
       
       if (now > session.expires) {
@@ -107,16 +153,15 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
 
   // セッション延長
   const extendSession = () => {
-    const sessionData = localStorage.getItem('admin_session');
-    if (sessionData) {
-      try {
-        const session = JSON.parse(sessionData);
+    try {
+      const session = SecureStorage.getSecureItem('admin_session');
+      if (session) {
         session.expires = Date.now() + (30 * 60 * 1000); // 30分延長
-        localStorage.setItem('admin_session', JSON.stringify(session));
+        SecureStorage.setSecureItem('admin_session', session);
         setSessionTimeRemaining(30 * 60 * 1000);
-      } catch (error) {
-        console.error('セッション延長エラー:', error);
       }
+    } catch (error) {
+      console.error('セッション延長エラー:', error);
     }
   };
 
@@ -162,19 +207,18 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
 
     // Load admin settings
     const loadAdminSettings = () => {
-      const storedCredentials = localStorage.getItem('admin_credentials');
-      if (storedCredentials) {
-        try {
-          const credentials = JSON.parse(storedCredentials);
-          setAdminPhoneNumber(credentials.phone_number || '+81901234567');
+      try {
+        const credentials = SecureStorage.getSecureItem('admin_credentials');
+        if (credentials) {
+          setAdminPhoneNumber(credentials.phone_number || '09012345678');
           setAdminBackupCode(credentials.backup_code || 'MT-BACKUP-2024');
-        } catch (error) {
-          console.error('管理者設定の読み込みエラー:', error);
-          setAdminPhoneNumber('+81901234567');
+        } else {
+          setAdminPhoneNumber('09012345678');
           setAdminBackupCode('MT-BACKUP-2024');
         }
-      } else {
-        setAdminPhoneNumber('+81901234567');
+      } catch (error) {
+        console.error('管理者設定の読み込みエラー:', error);
+        setAdminPhoneNumber('09012345678');
         setAdminBackupCode('MT-BACKUP-2024');
       }
     };

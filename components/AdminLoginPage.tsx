@@ -378,34 +378,70 @@ const AdminLoginPage: React.FC<AdminLoginPageProps> = ({ onLoginSuccess, onNavig
 
   // パスワードリセット用SMS送信
   const sendResetSMS = async () => {
-    if (!currentCredentials || resetPhoneNumber !== currentCredentials.phone_number) {
-      setError('登録されている電話番号と一致しません。');
+    console.log('SMS送信開始 - 入力電話番号:', resetPhoneNumber);
+    console.log('登録済み電話番号:', currentCredentials?.phone_number);
+    
+    if (!currentCredentials) {
+      setError('認証情報が読み込まれていません。ページを再読み込みしてください。');
+      return;
+    }
+
+    // 電話番号の正規化（+81を削除、先頭0を追加）
+    const normalizePhoneNumber = (phone: string) => {
+      let normalized = phone.replace(/\D/g, ''); // 数字のみ
+      if (normalized.startsWith('81') && normalized.length === 11) {
+        normalized = '0' + normalized.substring(2); // +81を0に変換
+      }
+      return normalized;
+    };
+
+    const inputNormalized = normalizePhoneNumber(resetPhoneNumber);
+    const registeredNormalized = normalizePhoneNumber(currentCredentials.phone_number);
+    
+    console.log('正規化後 - 入力:', inputNormalized, '登録済み:', registeredNormalized);
+
+    if (inputNormalized !== registeredNormalized) {
+      setError(`登録されている電話番号と一致しません。\n登録番号: ${currentCredentials.phone_number}`);
       return;
     }
 
     setIsLoading(true);
+    setError('');
+    
     try {
+      console.log('SMS API呼び出し開始...');
       const response = await fetch('http://localhost:8080/api/sms/send', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ phoneNumber: resetPhoneNumber }),
+        body: JSON.stringify({ phoneNumber: currentCredentials.phone_number }),
       });
 
+      console.log('SMS API応答ステータス:', response.status);
+      
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+
       const result = await response.json();
+      console.log('SMS API応答:', result);
+      
       if (result.success || result.demoCode) {
         setIsCodeSent(true);
         setResetStep('verify');
         setError('');
         if (result.demoCode) {
-          alert(`認証コード: ${result.demoCode}`);
+          alert(`デモ認証コード: ${result.demoCode}\n\n実際の運用では、このコードがSMSで送信されます。`);
+        } else {
+          alert('認証コードをSMSで送信しました。');
         }
       } else {
         setError(result.error || 'SMS送信に失敗しました。');
       }
     } catch (error) {
-      setError('SMS送信処理中にエラーが発生しました。');
+      console.error('SMS送信エラー:', error);
+      setError(`SMS送信処理中にエラーが発生しました: ${error instanceof Error ? error.message : '不明なエラー'}`);
     } finally {
       setIsLoading(false);
     }
@@ -413,28 +449,48 @@ const AdminLoginPage: React.FC<AdminLoginPageProps> = ({ onLoginSuccess, onNavig
 
   // SMS認証コード検証
   const verifySMSCode = async () => {
+    console.log('SMS認証コード検証開始 - コード:', resetVerificationCode);
+    
+    if (!resetVerificationCode || resetVerificationCode.length < 4) {
+      setError('認証コードを正しく入力してください。');
+      return;
+    }
+
     setIsLoading(true);
+    setError('');
+    
     try {
+      console.log('SMS認証API呼び出し開始...');
       const response = await fetch('http://localhost:8080/api/sms/verify', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({ 
-          phoneNumber: resetPhoneNumber, 
+          phoneNumber: currentCredentials.phone_number, 
           code: resetVerificationCode 
         }),
       });
 
+      console.log('SMS認証API応答ステータス:', response.status);
+      
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+
       const result = await response.json();
+      console.log('SMS認証API応答:', result);
+      
       if (result.success) {
         setResetStep('newpassword');
         setError('');
+        alert('SMS認証が完了しました。新しいパスワードを設定してください。');
       } else {
-        setError(result.error || '認証コードが正しくありません。');
+        setError(result.error || '認証コードが正しくありません。再度確認してください。');
       }
     } catch (error) {
-      setError('認証コード検証中にエラーが発生しました。');
+      console.error('SMS認証エラー:', error);
+      setError(`認証コード検証中にエラーが発生しました: ${error instanceof Error ? error.message : '不明なエラー'}`);
     } finally {
       setIsLoading(false);
     }
@@ -442,12 +498,28 @@ const AdminLoginPage: React.FC<AdminLoginPageProps> = ({ onLoginSuccess, onNavig
 
   // バックアップコード検証
   const verifyResetBackupCode = () => {
-    if (!currentCredentials || resetBackupCode !== currentCredentials.backup_code) {
-      setError('バックアップコードが正しくありません。');
+    console.log('バックアップコード検証開始 - 入力コード:', resetBackupCode);
+    console.log('登録済みバックアップコード:', currentCredentials?.backup_code);
+    
+    if (!currentCredentials) {
+      setError('認証情報が読み込まれていません。ページを再読み込みしてください。');
       return;
     }
+
+    if (!resetBackupCode || resetBackupCode.trim() === '') {
+      setError('バックアップコードを入力してください。');
+      return;
+    }
+
+    if (resetBackupCode.trim() !== currentCredentials.backup_code) {
+      setError('バックアップコードが正しくありません。大文字・小文字を確認してください。');
+      return;
+    }
+    
+    console.log('バックアップコード認証成功');
     setResetStep('newpassword');
     setError('');
+    alert('バックアップコード認証が完了しました。新しいパスワードを設定してください。');
   };
 
   // パスワード変更実行
@@ -528,10 +600,12 @@ const AdminLoginPage: React.FC<AdminLoginPageProps> = ({ onLoginSuccess, onNavig
       }
 
       if (authSuccess) {
+        console.log('🎉 認証成功！');
         LoginAttemptManager.recordAttempt(true);
         const sessionId = SessionManager.createSecureSession(username);
         
         console.log('ログイン成功 - セッションID:', sessionId);
+        console.log('onLoginSuccess関数を呼び出します...');
         
         // デバッグ用アラート
         alert('ログイン成功！管理画面に移動します。');
@@ -542,7 +616,12 @@ const AdminLoginPage: React.FC<AdminLoginPageProps> = ({ onLoginSuccess, onNavig
         setBackupCode('');
         setError('');
         
-        onLoginSuccess();
+        // 少し遅延を入れてから呼び出し
+        setTimeout(() => {
+          console.log('onLoginSuccess実行中...');
+          onLoginSuccess();
+          console.log('onLoginSuccess実行完了');
+        }, 100);
         return;
       } else {
         LoginAttemptManager.recordAttempt(false);
