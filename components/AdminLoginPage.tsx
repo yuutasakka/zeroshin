@@ -1,6 +1,122 @@
 import React, { useState, useEffect, FormEvent } from 'react';
 import CryptoJS from 'crypto-js';
 
+// Supabaseクライアント（環境変数から設定を取得）
+const createSupabaseClient = () => {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://eqirzbuqgymrtnfmvwhq.supabase.co';
+  const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVxaXJ6YnVxZ3ltcnRuZm12d2hxIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1MDY3MjE3MCwiZXhwIjoyMDY2MjQ4MTcwfQ.JTjrWFXHn4JKfRFLLV2Mb_xzZOqB7j9OQ4TQo3xgmJE';
+  
+  // 管理者認証にはサービスロールキーを使用（RLSをバイパス）
+  return {
+    url: supabaseUrl,
+    key: supabaseServiceKey
+  };
+};
+
+const supabaseConfig = createSupabaseClient();
+
+// Supabase API ヘルパー関数
+class SupabaseAdminAPI {
+  static async fetchAdminCredentials(username: string = 'admin') {
+    try {
+      const response = await fetch(`${supabaseConfig.url}/rest/v1/admin_credentials?username=eq.${username}`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${supabaseConfig.key}`,
+          'apikey': supabaseConfig.key,
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+
+      const data = await response.json();
+      return data[0] || null;
+    } catch (error) {
+      console.error('Supabase管理者認証情報取得エラー:', error);
+      return null;
+    }
+  }
+
+  static async updateAdminCredentials(id: number, updates: any) {
+    try {
+      const response = await fetch(`${supabaseConfig.url}/rest/v1/admin_credentials?id=eq.${id}`, {
+        method: 'PATCH',
+        headers: {
+          'Authorization': `Bearer ${supabaseConfig.key}`,
+          'apikey': supabaseConfig.key,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(updates),
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+
+      return await response.json();
+    } catch (error) {
+      console.error('Supabase管理者認証情報更新エラー:', error);
+      throw error;
+    }
+  }
+
+  static async recordLoginAttempt(username: string, success: boolean, failureReason?: string) {
+    try {
+      const response = await fetch(`${supabaseConfig.url}/rest/v1/admin_login_attempts`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${supabaseConfig.key}`,
+          'apikey': supabaseConfig.key,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          username,
+          success,
+          failure_reason: failureReason,
+          ip_address: 'client-side', // クライアントサイドでは制限
+          user_agent: navigator.userAgent.substring(0, 200),
+        }),
+      });
+
+      if (!response.ok) {
+        console.warn('ログイン試行記録の保存に失敗:', response.status);
+      }
+    } catch (error) {
+      console.error('ログイン試行記録エラー:', error);
+    }
+  }
+
+  static async createAdminSession(adminId: number, sessionData: any) {
+    try {
+      const response = await fetch(`${supabaseConfig.url}/rest/v1/admin_sessions`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${supabaseConfig.key}`,
+          'apikey': supabaseConfig.key,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          admin_id: adminId,
+          session_token: sessionData.sessionId,
+          encrypted_session_data: SecureStorage.encrypt(sessionData),
+          ip_address: 'client-side',
+          user_agent: navigator.userAgent.substring(0, 200),
+          expires_at: new Date(sessionData.expires).toISOString(),
+        }),
+      });
+
+      if (!response.ok) {
+        console.warn('セッション作成の保存に失敗:', response.status);
+      }
+    } catch (error) {
+      console.error('セッション作成エラー:', error);
+    }
+  }
+}
+
 // セキュリティ設定
 const SECURITY_CONFIG = {
   MAX_LOGIN_ATTEMPTS: 5,
@@ -97,49 +213,109 @@ class PasswordManager {
   }
 }
 
-// より安全なデフォルト認証情報
+// Supabaseから管理者認証情報を読み込み（ローカルストレージとの併用）
+const loadAdminCredentials = async () => {
+  try {
+    console.log('管理者認証情報をSupabaseから読み込み中...');
+    
+    // まずSupabaseから最新データを取得
+    const supabaseCredentials = await SupabaseAdminAPI.fetchAdminCredentials('admin');
+    
+    if (supabaseCredentials) {
+      console.log('Supabaseから認証情報を取得:', supabaseCredentials.username);
+      
+      // ローカルストレージにもバックアップとして保存
+      const localCredentials = {
+        id: supabaseCredentials.id,
+        username: supabaseCredentials.username,
+        password: supabaseCredentials.password_hash,
+        backup_code: supabaseCredentials.backup_code,
+        phone_number: supabaseCredentials.phone_number,
+        is_active: supabaseCredentials.is_active,
+        created_at: supabaseCredentials.created_at,
+        last_updated: supabaseCredentials.updated_at
+      };
+      
+      SecureStorage.setSecureItem('admin_credentials', localCredentials);
+      return localCredentials;
+    }
+    
+    // Supabaseから取得できない場合はローカルストレージを確認
+    console.log('Supabaseから取得できませんでした。ローカルストレージを確認中...');
+    const stored = SecureStorage.getSecureItem('admin_credentials');
+    if (stored) {
+      console.log('ローカルストレージから認証情報を取得');
+      return stored;
+    }
+
+    // どちらからも取得できない場合はデフォルト値を返す
+    console.log('デフォルト認証情報を使用');
+    return await getDefaultCredentials();
+    
+  } catch (error) {
+    console.error('認証情報読み込みエラー:', error);
+    
+    // エラー時はローカルストレージをフォールバック
+    const stored = SecureStorage.getSecureItem('admin_credentials');
+    if (stored) {
+      return stored;
+    }
+    
+    return await getDefaultCredentials();
+  }
+};
+
+// デフォルト認証情報（フォールバック用）
 const getDefaultCredentials = async () => {
   const defaultPassword = await PasswordManager.hashPassword("MoneyTicket2024!");
   return {
+    id: 1,
     username: "admin",
     password: defaultPassword,
     backup_code: "MT-BACKUP-2024",
     phone_number: "+81901234567",
+    is_active: true,
     created_at: Date.now(),
     last_updated: Date.now()
   };
 };
 
-// セキュアな管理者データの永続化
+// 管理者認証情報をSupabaseに保存
 const saveAdminCredentials = async (newCredentials: any) => {
   try {
+    console.log('管理者認証情報をSupabaseに保存中...');
+    
+    if (newCredentials.id) {
+      // 既存レコードの更新
+      const updates = {
+        password_hash: newCredentials.password,
+        phone_number: newCredentials.phone_number,
+        backup_code: newCredentials.backup_code,
+        updated_at: new Date().toISOString()
+      };
+      
+      await SupabaseAdminAPI.updateAdminCredentials(newCredentials.id, updates);
+      console.log('Supabaseの認証情報を更新しました');
+    }
+    
+    // ローカルストレージにもバックアップとして保存
     const credentialsWithTimestamp = {
       ...newCredentials,
       last_updated: Date.now()
     };
     SecureStorage.setSecureItem('admin_credentials', credentialsWithTimestamp);
     
-    // セキュリティログ
     console.log('管理者認証情報が安全に保存されました');
   } catch (error) {
     console.error('認証情報保存エラー:', error);
-  }
-};
-
-const loadAdminCredentials = async () => {
-  try {
-    const stored = SecureStorage.getSecureItem('admin_credentials');
-    if (stored) {
-      return stored;
-    } else {
-      // 初回起動時のデフォルト認証情報設定
-      const defaultCreds = await getDefaultCredentials();
-      await saveAdminCredentials(defaultCreds);
-      return defaultCreds;
-    }
-  } catch (error) {
-    console.error('認証情報読み込みエラー:', error);
-    return await getDefaultCredentials();
+    
+    // Supabaseへの保存に失敗してもローカルストレージには保存
+    const credentialsWithTimestamp = {
+      ...newCredentials,
+      last_updated: Date.now()
+    };
+    SecureStorage.setSecureItem('admin_credentials', credentialsWithTimestamp);
+    console.log('ローカルストレージに認証情報を保存しました（フォールバック）');
   }
 };
 
@@ -511,15 +687,23 @@ const AdminLoginPage: React.FC<AdminLoginPageProps> = ({ onLoginSuccess, onNavig
       return;
     }
 
-    if (resetBackupCode.trim() !== currentCredentials.backup_code) {
-      setError('バックアップコードが正しくありません。大文字・小文字を確認してください。');
-      return;
-    }
-    
-    console.log('バックアップコード認証成功');
-    setResetStep('newpassword');
+    setIsLoading(true);
     setError('');
-    alert('バックアップコード認証が完了しました。新しいパスワードを設定してください。');
+
+    // セキュリティ遅延を追加
+    setTimeout(() => {
+      if (resetBackupCode.trim() !== currentCredentials.backup_code) {
+        setError('バックアップコードが正しくありません。大文字・小文字を確認してください。');
+        setIsLoading(false);
+        return;
+      }
+      
+      console.log('バックアップコード認証成功');
+      setResetStep('newpassword');
+      setError('');
+      setIsLoading(false);
+      alert('バックアップコード認証が完了しました。新しいパスワードを設定してください。');
+    }, 1000); // 1秒の遅延でセキュリティを向上
   };
 
   // パスワード変更実行
@@ -717,9 +901,20 @@ const AdminLoginPage: React.FC<AdminLoginPageProps> = ({ onLoginSuccess, onNavig
             <div className="space-y-4">
               <h3 className="text-lg font-semibold text-gray-800 mb-4">電話番号認証</h3>
               
+              {currentCredentials?.phone_number && (
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4">
+                  <div className="flex items-center">
+                    <i className="fas fa-info-circle text-blue-500 mr-2"></i>
+                    <span className="text-sm text-blue-700">
+                      登録済み電話番号: <strong>{currentCredentials.phone_number}</strong>
+                    </span>
+                  </div>
+                </div>
+              )}
+              
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  登録済み電話番号
+                  電話番号を入力してください
                 </label>
                 <input
                   type="tel"
@@ -734,7 +929,7 @@ const AdminLoginPage: React.FC<AdminLoginPageProps> = ({ onLoginSuccess, onNavig
                   pattern="[0-9]*"
                 />
                 <p className="text-xs text-gray-500 mt-1">
-                  管理画面に登録されている電話番号を入力してください
+                  上記の登録済み電話番号と同じ番号を入力してください
                 </p>
               </div>
 
@@ -803,11 +998,11 @@ const AdminLoginPage: React.FC<AdminLoginPageProps> = ({ onLoginSuccess, onNavig
 
               <button
                 onClick={verifyResetBackupCode}
-                disabled={!resetBackupCode}
+                disabled={!resetBackupCode || isLoading}
                 className="w-full bg-green-600 hover:bg-green-700 disabled:bg-gray-400 text-white font-semibold py-3 px-4 rounded-lg transition duration-150 ease-in-out"
               >
-                <i className="fas fa-shield-alt mr-2"></i>
-                バックアップコードを確認
+                <i className={`${isLoading ? 'fas fa-spinner fa-spin' : 'fas fa-shield-alt'} mr-2`}></i>
+                {isLoading ? '認証中...' : 'バックアップコードを確認'}
               </button>
             </div>
           )}
@@ -866,11 +1061,11 @@ const AdminLoginPage: React.FC<AdminLoginPageProps> = ({ onLoginSuccess, onNavig
 
               <button
                 onClick={updatePassword}
-                disabled={!newPassword || !confirmNewPassword || newPassword !== confirmNewPassword}
+                disabled={!newPassword || !confirmNewPassword || newPassword !== confirmNewPassword || isLoading}
                 className="w-full bg-purple-600 hover:bg-purple-700 disabled:bg-gray-400 text-white font-semibold py-3 px-4 rounded-lg transition duration-150 ease-in-out"
               >
-                <i className="fas fa-save mr-2"></i>
-                新しい管理者パスワードを設定
+                <i className={`${isLoading ? 'fas fa-spinner fa-spin' : 'fas fa-save'} mr-2`}></i>
+                {isLoading ? 'パスワード変更中...' : '新しい管理者パスワードを設定'}
               </button>
             </div>
           )}
