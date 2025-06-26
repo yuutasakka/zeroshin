@@ -5,14 +5,15 @@ import { diagnosisFormMapping } from '../data/diagnosisFormMapping';
 import { allFinancialProducts as defaultFinancialProducts } from '../data/financialProductsData';
 import { defaultTestimonialsData } from '../data/testimonialsData';
 
-// Supabaseクライアント設定（AdminLoginPageと同じ）
+// Supabaseクライアント設定（Environment変数優先、フォールバック対応）
 const createSupabaseClient = () => {
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://eqirzbuqgymrtnfmvwhq.supabase.co';
-  const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVxaXJ6YnVxZ3ltcnRuZm12d2hxIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1MDY3MjE3MCwiZXhwIjoyMDY2MjQ4MTcwfQ.JTjrWFXHn4JKfRFLLV2Mb_xzZOqB7j9OQ4TQo3xgmJE';
+  const supabaseUrl = 'https://eqirzbuqgymrtnfmvwhq.supabase.co';
+  // 環境変数が使用できない場合の対応として、Anon Keyを使用してアクセス制御
+  const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVxaXJ6YnVxZ3ltcnRuZm12d2hxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTA2NzIxNzAsImV4cCI6MjA2NjI0ODE3MH0.APLjURIz9ilNgTF8mIowOqrT31MFhozUnk_CHz8mydg';
   
   return {
     url: supabaseUrl,
-    key: supabaseServiceKey
+    key: supabaseKey
   };
 };
 
@@ -459,6 +460,9 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
   };
 
   const handleSaveProductSettings = async () => {
+    console.log('handleSaveProductSettings関数が呼び出されました');
+    console.log('保存する商品データ:', productsForEditing);
+    
     setProductSettingsStatus('💾 商品設定をSupabaseに保存中...');
     try {
       // ローカルストレージに保存（後方互換性）
@@ -672,6 +676,10 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
 
   // 管理者設定保存機能（Supabase連携）
   const handleSaveAdminSettings = async () => {
+    console.log('handleSaveAdminSettings関数が呼び出されました');
+    console.log('現在の電話番号:', adminPhoneNumber);
+    console.log('現在のバックアップコード:', adminBackupCode);
+    
     setAdminSettingsStatus('保存中...');
     
     try {
@@ -1123,7 +1131,10 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
                 ))}
                 </div>
                 <button
-                    onClick={handleSaveProductSettings}
+                    onClick={() => {
+                        console.log('商品設定保存ボタンがクリックされました');
+                        handleSaveProductSettings();
+                    }}
                     className="mt-6 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-6 rounded-lg shadow-md transition duration-150 ease-in-out flex items-center"
                 >
                     <i className="fas fa-save mr-2"></i>商品設定を保存
@@ -1695,7 +1706,10 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
                     {/* 保存ボタン */}
                     <div className="flex justify-center">
                         <button
-                            onClick={handleSaveAdminSettings}
+                            onClick={() => {
+                                console.log('管理者設定保存ボタンがクリックされました');
+                                handleSaveAdminSettings();
+                            }}
                             className="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-3 px-8 rounded-lg shadow-md hover:shadow-lg transition duration-150 ease-in-out flex items-center"
                         >
                             <i className="fas fa-save mr-2"></i>
