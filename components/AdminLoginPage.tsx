@@ -273,7 +273,7 @@ const getDefaultCredentials = async () => {
     username: "admin",
     password: defaultPassword,
     backup_code: "MT-BACKUP-2024",
-    phone_number: "+81901234567",
+            phone_number: "09012345678",
     is_active: true,
     created_at: Date.now(),
     last_updated: Date.now()

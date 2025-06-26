@@ -406,7 +406,7 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
         
         if (supabaseCredentials) {
           console.log('Supabaseから管理者設定を取得');
-          setAdminPhoneNumber(supabaseCredentials.phone_number || '+81901234567');
+          setAdminPhoneNumber(supabaseCredentials.phone_number || '09012345678');
           setAdminBackupCode(supabaseCredentials.backup_code || 'MT-BACKUP-2024');
           
           // ローカルストレージにもバックアップとして保存
@@ -425,11 +425,11 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
         const credentials = SecureStorage.getSecureItem('admin_credentials');
         if (credentials) {
           console.log('ローカルストレージから管理者設定を取得');
-          setAdminPhoneNumber(credentials.phone_number || '+81901234567');
+          setAdminPhoneNumber(credentials.phone_number || '09012345678');
           setAdminBackupCode(credentials.backup_code || 'MT-BACKUP-2024');
         } else {
           console.log('デフォルト管理者設定を使用');
-          setAdminPhoneNumber('+81901234567');
+          setAdminPhoneNumber('09012345678');
           setAdminBackupCode('MT-BACKUP-2024');
         }
       } catch (error) {
@@ -438,10 +438,10 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
         // エラー時はローカルストレージをフォールバック
         const credentials = SecureStorage.getSecureItem('admin_credentials');
         if (credentials) {
-          setAdminPhoneNumber(credentials.phone_number || '+81901234567');
+          setAdminPhoneNumber(credentials.phone_number || '09012345678');
           setAdminBackupCode(credentials.backup_code || 'MT-BACKUP-2024');
         } else {
-          setAdminPhoneNumber('+81901234567');
+          setAdminPhoneNumber('09012345678');
           setAdminBackupCode('MT-BACKUP-2024');
         }
       }
@@ -1110,7 +1110,7 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
       // 変更がない場合のチェック
       const existingCredentials = SecureStorage.getSecureItem('admin_credentials');
       if (existingCredentials) {
-        const currentPhone = existingCredentials.phone_number || '+81901234567';
+        const currentPhone = existingCredentials.phone_number || '09012345678';
         const currentBackup = existingCredentials.backup_code || 'MT-BACKUP-2024';
         
         if (adminPhoneNumber === currentPhone && adminBackupCode === currentBackup) {
@@ -1127,7 +1127,7 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
         username: "admin",
         password: "MoneyTicket2024!",
         backup_code: "MT-BACKUP-2024",
-        phone_number: "+81901234567"
+        phone_number: "09012345678"
       };
 
       // 既存認証情報を再取得
