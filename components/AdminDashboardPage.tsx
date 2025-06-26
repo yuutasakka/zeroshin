@@ -4,6 +4,7 @@ import { UserSessionData, FinancialProduct, Company, Testimonial, NotificationSe
 import { diagnosisFormMapping } from '../data/diagnosisFormMapping';
 import { allFinancialProducts as defaultFinancialProducts } from '../data/financialProductsData';
 import { defaultTestimonialsData } from '../data/testimonialsData';
+import { defaultReasonsToChooseData, defaultFirstConsultationOffer, ReasonsToChooseData, FirstConsultationOffer } from '../data/homepageContentData';
 
 // Supabaseクライアント設定（Environment変数優先、フォールバック対応）
 const createSupabaseClient = () => {
@@ -248,7 +249,7 @@ interface AdminDashboardPageProps {
   onNavigateHome: () => void;
 }
 
-type AdminViewMode = 'userHistory' | 'productSettings' | 'testimonialSettings' | 'analyticsSettings' | 'notificationSettings' | 'legalLinksSettings' | 'adminSettings';
+type AdminViewMode = 'userHistory' | 'productSettings' | 'testimonialSettings' | 'analyticsSettings' | 'notificationSettings' | 'legalLinksSettings' | 'adminSettings' | 'homepageContentSettings';
 
 interface DashboardStats {
     totalDiagnoses: number;
@@ -306,6 +307,11 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
   const [adminPhoneNumber, setAdminPhoneNumber] = useState<string>('');
   const [adminBackupCode, setAdminBackupCode] = useState<string>('');
   const [adminSettingsStatus, setAdminSettingsStatus] = useState<string>('');
+
+  // Homepage Content Settings State
+  const [reasonsToChoose, setReasonsToChoose] = useState<ReasonsToChooseData>(defaultReasonsToChooseData);
+  const [firstConsultationOffer, setFirstConsultationOffer] = useState<FirstConsultationOffer>(defaultFirstConsultationOffer);
+  const [homepageContentStatus, setHomepageContentStatus] = useState<string>('');
 
 
   // セッション有効性チェック
@@ -615,6 +621,33 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
 
       // Load legal links
       await loadLegalLinksFromSupabase();
+
+      // Load homepage content settings
+      try {
+        // 選ばれる理由
+        const supabaseReasons = await loadHomepageContentFromSupabase('reasons_to_choose');
+        if (supabaseReasons) {
+          console.log('Supabaseから選ばれる理由を読み込み');
+          setReasonsToChoose(supabaseReasons);
+        } else {
+          console.log('デフォルトの選ばれる理由を使用');
+          setReasonsToChoose(defaultReasonsToChooseData);
+        }
+
+        // 初回相談限定特典
+        const supabaseOffer = await loadHomepageContentFromSupabase('first_consultation_offer');
+        if (supabaseOffer) {
+          console.log('Supabaseから初回相談限定特典を読み込み');
+          setFirstConsultationOffer(supabaseOffer);
+        } else {
+          console.log('デフォルトの初回相談限定特典を使用');
+          setFirstConsultationOffer(defaultFirstConsultationOffer);
+        }
+      } catch (error) {
+        console.warn('ホームページコンテンツの読み込みエラー、デフォルトデータを使用:', error);
+        setReasonsToChoose(defaultReasonsToChooseData);
+        setFirstConsultationOffer(defaultFirstConsultationOffer);
+      }
     };
 
     loadAllSettings();
@@ -970,6 +1003,29 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
   };
 
   // Legal Links Management Functions
+  const loadHomepageContentFromSupabase = async (settingKey: string) => {
+    try {
+      const response = await fetch(`${supabaseConfig.url}/rest/v1/homepage_content_settings?setting_key=eq.${settingKey}`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${supabaseConfig.key}`,
+          'apikey': supabaseConfig.key,
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+
+      const data = await response.json();
+      return data.length > 0 ? data[0].setting_data : null;
+    } catch (error) {
+      console.warn(`ホームページコンテンツ(${settingKey})のSupabase読み込みエラー:`, error);
+      return null;
+    }
+  };
+
   const loadLegalLinksFromSupabase = async () => {
     try {
       const supabaseLegalLinks = await SupabaseAdminAPI.loadAdminSetting('legal_links');
@@ -1175,6 +1231,125 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
   };
 
   // 通知テスト機能
+  // Homepage Content Settings Handlers
+  const saveHomepageContentToSupabase = async (settingKey: string, settingData: any) => {
+    try {
+      const response = await fetch(`${supabaseConfig.url}/rest/v1/homepage_content_settings`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${supabaseConfig.key}`,
+          'apikey': supabaseConfig.key,
+          'Content-Type': 'application/json',
+          'Prefer': 'resolution=merge-duplicates'
+        },
+        body: JSON.stringify({
+          setting_key: settingKey,
+          setting_data: settingData,
+          updated_at: new Date().toISOString()
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+
+      return true;
+    } catch (error) {
+      console.warn(`ホームページコンテンツ(${settingKey})のSupabase保存エラー:`, error);
+      return false;
+    }
+  };
+
+  const handleReasonsToChooseChange = (field: keyof ReasonsToChooseData, value: any) => {
+    setReasonsToChoose(prev => ({ ...prev, [field]: value }));
+  };
+
+  const handleReasonChange = (index: number, field: string, value: string) => {
+    setReasonsToChoose(prev => ({
+      ...prev,
+      reasons: prev.reasons.map((reason, i) => 
+        i === index ? { ...reason, [field]: value } : reason
+      )
+    }));
+  };
+
+  const handleAddReason = () => {
+    setReasonsToChoose(prev => ({
+      ...prev,
+      reasons: [...prev.reasons, {
+        iconClass: "fas fa-star",
+        title: "新しい理由",
+        value: "100%",
+        description: "説明を入力してください",
+        animationDelay: `${prev.reasons.length * 0.5}s`
+      }]
+    }));
+  };
+
+  const handleRemoveReason = (index: number) => {
+    if (reasonsToChoose.reasons.length > 1) {
+      setReasonsToChoose(prev => ({
+        ...prev,
+        reasons: prev.reasons.filter((_, i) => i !== index)
+      }));
+    }
+  };
+
+  const handleFirstConsultationOfferChange = (field: keyof FirstConsultationOffer, value: string) => {
+    setFirstConsultationOffer(prev => ({ ...prev, [field]: value }));
+  };
+
+  const handleSaveHomepageContentSettings = async () => {
+    setHomepageContentStatus('💾 ホームページコンテンツを保存中...');
+    
+    try {
+      // データの基本チェック
+      if (!reasonsToChoose.title || !reasonsToChoose.subtitle || !firstConsultationOffer.title) {
+        setHomepageContentStatus('❌ 必須項目が入力されていません。');
+        setTimeout(() => setHomepageContentStatus(''), 5000);
+        return;
+      }
+
+      let successCount = 0;
+      
+      // 選ばれる理由を保存
+      try {
+        const reasonsSuccess = await saveHomepageContentToSupabase('reasons_to_choose', reasonsToChoose);
+        if (reasonsSuccess) {
+          console.log('選ばれる理由をSupabaseに保存完了');
+          successCount++;
+        }
+      } catch (error) {
+        console.warn('選ばれる理由のSupabase保存エラー:', error);
+      }
+      
+      // 初回相談限定特典を保存
+      try {
+        const offerSuccess = await saveHomepageContentToSupabase('first_consultation_offer', firstConsultationOffer);
+        if (offerSuccess) {
+          console.log('初回相談限定特典をSupabaseに保存完了');
+          successCount++;
+        }
+      } catch (error) {
+        console.warn('初回相談限定特典のSupabase保存エラー:', error);
+      }
+
+      if (successCount === 2) {
+        setHomepageContentStatus('✅ ホームページコンテンツが正常に保存され、データベースに反映されました');
+      } else if (successCount > 0) {
+        setHomepageContentStatus('⚠️ 一部のコンテンツが保存されました（部分的成功）');
+      } else {
+        setHomepageContentStatus('❌ コンテンツの保存に失敗しました');
+      }
+      
+      setTimeout(() => setHomepageContentStatus(''), 3000);
+    } catch (error) {
+      console.error("Error saving homepage content settings:", error);
+      setHomepageContentStatus('❌ 保存中にエラーが発生しました。');
+      setTimeout(() => setHomepageContentStatus(''), 5000);
+    }
+  };
+
   const handleTestNotification = async (channel: keyof NotificationSettings) => {
     try {
       setNotificationSettingsStatus(`🧪 ${channel}通知のテストを実行しています...`);
@@ -1368,6 +1543,12 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
                     className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${viewMode === 'legalLinksSettings' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}`}
                 >
                     <i className="fas fa-gavel mr-2"></i>リーガルリンク設定
+                </button>
+                <button 
+                    onClick={() => setViewMode('homepageContentSettings')}
+                    className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${viewMode === 'homepageContentSettings' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}`}
+                >
+                    <i className="fas fa-home mr-2"></i>ホームページコンテンツ設定
                 </button>
             </div>
         </div>
@@ -1974,6 +2155,226 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
                 )}
 
 
+            </div>
+        )}
+
+        {viewMode === 'homepageContentSettings' && (
+            <div className="bg-white p-6 md:p-8 rounded-xl shadow-2xl">
+                <h2 className="text-2xl font-bold text-gray-800 mb-6 flex items-center">
+                    <i className="fas fa-home mr-3 text-orange-600"></i>ホームページコンテンツ設定
+                </h2>
+                
+                {homepageContentStatus && (
+                    <div className={`p-3 mb-4 rounded-md text-sm ${homepageContentStatus.includes('エラー') ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'}`}>
+                        {homepageContentStatus}
+                    </div>
+                )}
+
+                <div className="space-y-8">
+                    {/* 選ばれる理由設定 */}
+                    <div className="p-6 bg-blue-50 border border-blue-200 rounded-lg">
+                        <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+                            <i className="fas fa-thumbs-up mr-2 text-blue-600"></i>
+                            選ばれる理由セクション
+                        </h3>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-2">
+                                    メインタイトル
+                                </label>
+                                <input
+                                    type="text"
+                                    value={reasonsToChoose.title}
+                                    onChange={(e) => handleReasonsToChooseChange('title', e.target.value)}
+                                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                    placeholder="例: 選ばれる理由があります"
+                                />
+                            </div>
+                            
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-2">
+                                    サブタイトル
+                                </label>
+                                <input
+                                    type="text"
+                                    value={reasonsToChoose.subtitle}
+                                    onChange={(e) => handleReasonsToChooseChange('subtitle', e.target.value)}
+                                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                    placeholder="例: 多くのお客様から信頼をいただいている..."
+                                />
+                            </div>
+                        </div>
+
+                        <div className="space-y-4">
+                            <div className="flex items-center justify-between">
+                                <h4 className="text-md font-semibold text-gray-700">理由項目</h4>
+                                <button
+                                    onClick={handleAddReason}
+                                    className="bg-green-500 hover:bg-green-600 text-white font-semibold py-2 px-4 rounded-lg shadow-md transition duration-150 ease-in-out flex items-center text-sm"
+                                >
+                                    <i className="fas fa-plus mr-2"></i>項目を追加
+                                </button>
+                            </div>
+                            
+                            {reasonsToChoose.reasons.map((reason, index) => (
+                                <div key={index} className="p-4 bg-white border border-gray-300 rounded-lg">
+                                    <div className="flex items-center justify-between mb-3">
+                                        <h5 className="text-sm font-semibold text-gray-700">理由項目 #{index + 1}</h5>
+                                        {reasonsToChoose.reasons.length > 1 && (
+                                            <button
+                                                onClick={() => handleRemoveReason(index)}
+                                                className="bg-red-500 hover:bg-red-600 text-white font-semibold py-1 px-2 rounded text-xs"
+                                            >
+                                                <i className="fas fa-trash"></i>
+                                            </button>
+                                        )}
+                                    </div>
+                                    
+                                    <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                                        <div>
+                                            <label className="block text-xs font-medium text-gray-600 mb-1">
+                                                アイコンクラス
+                                            </label>
+                                            <input
+                                                type="text"
+                                                value={reason.iconClass}
+                                                onChange={(e) => handleReasonChange(index, 'iconClass', e.target.value)}
+                                                className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 text-sm"
+                                                placeholder="fas fa-thumbs-up"
+                                            />
+                                        </div>
+                                        
+                                        <div>
+                                            <label className="block text-xs font-medium text-gray-600 mb-1">
+                                                タイトル
+                                            </label>
+                                            <input
+                                                type="text"
+                                                value={reason.title}
+                                                onChange={(e) => handleReasonChange(index, 'title', e.target.value)}
+                                                className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 text-sm"
+                                                placeholder="お客様満足度"
+                                            />
+                                        </div>
+                                        
+                                        <div>
+                                            <label className="block text-xs font-medium text-gray-600 mb-1">
+                                                数値・データ
+                                            </label>
+                                            <input
+                                                type="text"
+                                                value={reason.value}
+                                                onChange={(e) => handleReasonChange(index, 'value', e.target.value)}
+                                                className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 text-sm"
+                                                placeholder="98.8%"
+                                            />
+                                        </div>
+                                        
+                                        <div>
+                                            <label className="block text-xs font-medium text-gray-600 mb-1">
+                                                説明文
+                                            </label>
+                                            <input
+                                                type="text"
+                                                value={reason.description}
+                                                onChange={(e) => handleReasonChange(index, 'description', e.target.value)}
+                                                className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 text-sm"
+                                                placeholder="継続的なサポートによる..."
+                                            />
+                                        </div>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+
+                    {/* 初回相談限定特典設定 */}
+                    <div className="p-6 bg-yellow-50 border border-yellow-200 rounded-lg">
+                        <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+                            <i className="fas fa-gift mr-2 text-yellow-600"></i>
+                            初回相談限定特典
+                        </h3>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-2">
+                                    特典タイトル
+                                </label>
+                                <input
+                                    type="text"
+                                    value={firstConsultationOffer.title}
+                                    onChange={(e) => handleFirstConsultationOfferChange('title', e.target.value)}
+                                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500"
+                                    placeholder="例: 初回相談限定特典"
+                                />
+                            </div>
+                            
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-2">
+                                    アイコンクラス
+                                </label>
+                                <input
+                                    type="text"
+                                    value={firstConsultationOffer.icon}
+                                    onChange={(e) => handleFirstConsultationOfferChange('icon', e.target.value)}
+                                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500"
+                                    placeholder="fas fa-gift"
+                                />
+                            </div>
+                            
+                            <div className="md:col-span-2">
+                                <label className="block text-sm font-medium text-gray-700 mb-2">
+                                    特典説明
+                                </label>
+                                <textarea
+                                    value={firstConsultationOffer.description}
+                                    onChange={(e) => handleFirstConsultationOfferChange('description', e.target.value)}
+                                    rows={3}
+                                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500"
+                                    placeholder="例: 投資戦略ガイドブック（通常価格2,980円）を無料プレゼント中"
+                                />
+                            </div>
+                            
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-2">
+                                    背景色（CSS）
+                                </label>
+                                <input
+                                    type="text"
+                                    value={firstConsultationOffer.backgroundColor}
+                                    onChange={(e) => handleFirstConsultationOfferChange('backgroundColor', e.target.value)}
+                                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500"
+                                    placeholder="rgba(212, 175, 55, 0.1)"
+                                />
+                            </div>
+                            
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-2">
+                                    ボーダー色（CSS）
+                                </label>
+                                <input
+                                    type="text"
+                                    value={firstConsultationOffer.borderColor}
+                                    onChange={(e) => handleFirstConsultationOfferChange('borderColor', e.target.value)}
+                                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500"
+                                    placeholder="var(--accent-gold)"
+                                />
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* 保存ボタン */}
+                    <div className="flex justify-center">
+                        <button
+                            onClick={handleSaveHomepageContentSettings}
+                            className="bg-orange-600 hover:bg-orange-700 text-white font-semibold py-3 px-8 rounded-lg shadow-md hover:shadow-lg transition duration-150 ease-in-out flex items-center"
+                        >
+                            <i className="fas fa-save mr-2"></i>
+                            ホームページコンテンツを保存
+                        </button>
+                    </div>
+                </div>
             </div>
         )}
 

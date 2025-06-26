@@ -1,6 +1,63 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
+import { defaultFirstConsultationOffer, FirstConsultationOffer } from '../data/homepageContentData';
+
+const createSupabaseClient = () => {
+  const SUPABASE_URL = 'https://xpjkmhnnrwwqcijrqmhv.supabase.co';
+  const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhwamttaG5ucnd3cWNpanJxbWh2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzU4MjIzMzIsImV4cCI6MjA1MTM5ODMzMn0.7KXNTt8dn6Ps3jLRADgp7VdjU5LZDP0qhtx2xClqOy0';
+
+  return {
+    from: (table: string) => ({
+      select: (columns: string = '*') => ({
+        eq: (column: string, value: any) => ({
+          single: async () => {
+            try {
+              const response = await fetch(`${SUPABASE_URL}/rest/v1/${table}?${column}=eq.${value}&select=${columns}`, {
+                headers: {
+                  'apikey': SUPABASE_ANON_KEY,
+                  'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+                  'Content-Type': 'application/json'
+                }
+              });
+              const data = await response.json();
+              return { data: data.length > 0 ? data[0] : null, error: null };
+            } catch (error) {
+              console.error('Supabase fetch error:', error);
+              return { data: null, error };
+            }
+          }
+        })
+      })
+    })
+  };
+};
 
 const CallToActionSection: React.FC = () => {
+  const [consultationOffer, setConsultationOffer] = useState<FirstConsultationOffer>(defaultFirstConsultationOffer);
+
+  useEffect(() => {
+    const loadConsultationOffer = async () => {
+      const supabase = createSupabaseClient();
+      
+      try {
+        const { data: offerResponse, error: offerError } = await supabase
+          .from('homepage_content_settings')
+          .select('setting_data')
+          .eq('setting_key', 'first_consultation_offer')
+          .single();
+
+        if (!offerError && offerResponse?.setting_data) {
+          setConsultationOffer(offerResponse.setting_data);
+        } else {
+          console.log('初回相談限定特典のデータが見つからないため、デフォルトデータを使用します');
+        }
+      } catch (error) {
+        console.warn('初回相談限定特典の読み込みエラー、デフォルトデータを使用:', error);
+      }
+    };
+
+    loadConsultationOffer();
+  }, []);
+
   const scrollToDiagnosis = () => {
     const diagnosisSection = document.getElementById('diagnosis-form-section');
     if (diagnosisSection) {
@@ -37,7 +94,7 @@ const CallToActionSection: React.FC = () => {
           <button
             type="button"
             onClick={scrollToDiagnosis}
-            className="gold-accent-button premium-button text-xl px-12 py-4" // py-4 for larger button
+            className="gold-accent-button premium-button text-xl px-12 py-4"
           >
             <i className="fas fa-comments mr-3"></i>
             今すぐ無料相談を始める
@@ -51,14 +108,17 @@ const CallToActionSection: React.FC = () => {
         
         <div 
           className="mt-12 p-8 rounded-2xl" 
-          style={{ background: 'rgba(212, 175, 55, 0.1)', border: '2px solid var(--accent-gold)' }}
+          style={{ 
+            background: consultationOffer.backgroundColor, 
+            border: `2px solid ${consultationOffer.borderColor}` 
+          }}
         >
             <h4 className="font-bold text-white mb-3 text-xl">
-                <i className="fas fa-gift mr-2"></i>
-                初回相談限定特典
+                <i className={`${consultationOffer.icon} mr-2`}></i>
+                {consultationOffer.title}
             </h4>
             <p className="text-gray-200">
-                投資戦略ガイドブック（通常価格2,980円）を無料プレゼント中
+                {consultationOffer.description}
             </p>
         </div>
       </div>
