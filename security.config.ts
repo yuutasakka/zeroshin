@@ -1,27 +1,30 @@
-// セキュリティ設定の中央管理
+// セキュリティ設定の中央管理（完全Supabaseベース）
 export const SECURITY_CONFIG = {
-  // 暗号化設定
+  // 暗号化設定（本番では必須）
   ENCRYPTION_KEY: process.env.ENCRYPTION_KEY || (() => {
     if (process.env.NODE_ENV === 'production') {
       throw new Error('ENCRYPTION_KEY must be set in production environment');
     }
-    return 'dev-only-key-change-in-production-32';
+    // 開発環境でも予測不可能な一意キーを生成
+    return process.env.DEV_ENCRYPTION_KEY || `dev-${Date.now()}-${Math.random().toString(36).substring(2)}`;
   })(),
   
-  // JWT設定
+  // JWT設定（本番では必須）
   JWT_SECRET: process.env.JWT_SECRET || (() => {
     if (process.env.NODE_ENV === 'production') {
       throw new Error('JWT_SECRET must be set in production environment');
     }
-    return 'dev-only-jwt-secret-32-characters';
+    // 開発環境でも予測不可能な一意キーを生成
+    return process.env.DEV_JWT_SECRET || `dev-jwt-${Date.now()}-${Math.random().toString(36).substring(2)}`;
   })(),
   
-  // セッション設定
+  // セッション設定（本番では必須）
   SESSION_SECRET: process.env.SESSION_SECRET || (() => {
     if (process.env.NODE_ENV === 'production') {
       throw new Error('SESSION_SECRET must be set in production environment');
     }
-    return 'dev-only-session-secret-32-chars';
+    // 開発環境でも予測不可能な一意キーを生成
+    return process.env.DEV_SESSION_SECRET || `dev-session-${Date.now()}-${Math.random().toString(36).substring(2)}`;
   })(),
   SESSION_TIMEOUT: 30 * 60 * 1000, // 30分
   
@@ -30,16 +33,27 @@ export const SECURITY_CONFIG = {
   LOCKOUT_DURATION: 15 * 60 * 1000, // 15分
   
   // パスワード要件
-  PASSWORD_MIN_LENGTH: 8,
+  PASSWORD_MIN_LENGTH: 12, // より強力なパスワード要件
   
   // 2FA設定
-  REQUIRE_2FA: false,
+  REQUIRE_2FA: true, // 本番では2FA必須
   
   // 本番環境判定
   IS_PRODUCTION: process.env.NODE_ENV === 'production',
   
   // デバッグログ制御
   ENABLE_DEBUG_LOGS: process.env.NODE_ENV !== 'production',
+  
+  // IPアドレス制限設定
+  SMS_RATE_LIMIT_PER_IP: 3, // IP毎のSMS送信回数制限
+  SMS_RATE_LIMIT_WINDOW: 60 * 60 * 1000, // 1時間
+  
+  // API設定
+  API_BASE_URL: process.env.API_BASE_URL || (
+    process.env.NODE_ENV === 'production' 
+      ? 'https://your-api-domain.com' 
+      : 'http://localhost:8080'
+  ),
 };
 
 // Supabase設定の中央管理
@@ -67,6 +81,126 @@ export const SUPABASE_CONFIG = {
   })()
 };
 
+// セキュアな設定管理クラス
+export class SecureConfigManager {
+  private static cache = new Map<string, { value: any; expiry: number }>();
+  private static readonly CACHE_TTL = 5 * 60 * 1000; // 5分キャッシュ
+
+  // Supabaseから安全に設定を取得
+  static async getSecureConfig(key: string): Promise<string | null> {
+    try {
+      // キャッシュチェック
+      const cached = this.cache.get(key);
+      if (cached && Date.now() < cached.expiry) {
+        return cached.value;
+      }
+
+      const response = await fetch(`${SUPABASE_CONFIG.url}/rest/v1/secure_config?key=eq.${key}`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${SUPABASE_CONFIG.serviceRoleKey}`,
+          'apikey': SUPABASE_CONFIG.serviceRoleKey,
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error(`Failed to fetch config: ${response.status}`);
+      }
+
+      const data = await response.json();
+      const value = data[0]?.value || null;
+
+      // キャッシュに保存
+      if (value) {
+        this.cache.set(key, { value, expiry: Date.now() + this.CACHE_TTL });
+      }
+
+      return value;
+    } catch (error) {
+      console.error(`Failed to get secure config for key: ${key}`, error);
+      return null;
+    }
+  }
+
+  // 管理者認証情報を安全に取得
+  static async getAdminCredentials(): Promise<any> {
+    try {
+      const response = await fetch(`${SUPABASE_CONFIG.url}/rest/v1/admin_credentials?username=eq.admin`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${SUPABASE_CONFIG.serviceRoleKey}`,
+          'apikey': SUPABASE_CONFIG.serviceRoleKey,
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error(`Failed to fetch admin credentials: ${response.status}`);
+      }
+
+      const data = await response.json();
+      return data[0] || null;
+    } catch (error) {
+      console.error('Failed to get admin credentials:', error);
+      return null;
+    }
+  }
+
+  // 管理者認証情報を安全に更新
+  static async updateAdminCredentials(updates: any): Promise<boolean> {
+    try {
+      const response = await fetch(`${SUPABASE_CONFIG.url}/rest/v1/admin_credentials?username=eq.admin`, {
+        method: 'PATCH',
+        headers: {
+          'Authorization': `Bearer ${SUPABASE_CONFIG.serviceRoleKey}`,
+          'apikey': SUPABASE_CONFIG.serviceRoleKey,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(updates),
+      });
+
+      if (!response.ok) {
+        throw new Error(`Failed to update admin credentials: ${response.status}`);
+      }
+
+      return true;
+    } catch (error) {
+      console.error('Failed to update admin credentials:', error);
+      return false;
+    }
+  }
+
+  // JWT秘密鍵を安全に取得
+  static async getJWTSecret(): Promise<string> {
+    const secret = await this.getSecureConfig('jwt_secret');
+    if (!secret) {
+      if (SECURITY_CONFIG.IS_PRODUCTION) {
+        throw new Error('JWT secret not found in production');
+      }
+      return SECURITY_CONFIG.JWT_SECRET;
+    }
+    return secret;
+  }
+
+  // 暗号化キーを安全に取得
+  static async getEncryptionKey(): Promise<string> {
+    const key = await this.getSecureConfig('encryption_key');
+    if (!key) {
+      if (SECURITY_CONFIG.IS_PRODUCTION) {
+        throw new Error('Encryption key not found in production');
+      }
+      return SECURITY_CONFIG.ENCRYPTION_KEY;
+    }
+    return key;
+  }
+
+  // キャッシュクリア
+  static clearCache(): void {
+    this.cache.clear();
+  }
+}
+
 // セキュアなログ出力関数
 export const secureLog = (message: string, data?: any) => {
   if (SECURITY_CONFIG.ENABLE_DEBUG_LOGS) {
@@ -81,7 +215,7 @@ export const secureLog = (message: string, data?: any) => {
 };
 
 // ログ出力用のデータサニタイズ
-const sensitiveKeys = ['password', 'token', 'key', 'secret', 'auth', 'credential'];
+const sensitiveKeys = ['password', 'token', 'key', 'secret', 'auth', 'credential', 'jwt', 'session'];
 
 const sanitizeForLog = (obj: any): any => {
   if (typeof obj !== 'object' || obj === null) {

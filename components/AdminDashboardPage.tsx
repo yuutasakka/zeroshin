@@ -998,46 +998,42 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
       secureLog('管理者設定をローカルストレージに保存中...');
       
       // まずローカルストレージに確実に保存
-      let credentials = {
-        username: "admin",
-        password: SECURITY_CONFIG.IS_PRODUCTION ? "[SETUP_REQUIRED]" : "MoneyTicket2024!", // 開発環境のみ
-        backup_code: SECURITY_CONFIG.IS_PRODUCTION ? "[SETUP_REQUIRED]" : "MT-BACKUP-2024", // 開発環境のみ
-        phone_number: SECURITY_CONFIG.IS_PRODUCTION ? "[SETUP_REQUIRED]" : "09012345678" // 開発環境のみ
-      };
-
-      // 既存認証情報を再取得
-      const storedCredentials = SecureStorage.getSecureItem('admin_credentials');
-      if (storedCredentials) {
-        credentials = { ...credentials, ...storedCredentials };
+      // ハードコードされたパスワードは完全に削除
+      // 全ての認証情報はSupabaseで管理
+      if (SECURITY_CONFIG.IS_PRODUCTION) {
+        setAdminSettingsStatus('❌ 本番環境では初期セットアップが必要です。システム管理者にお問い合わせください。');
+        setTimeout(() => setAdminSettingsStatus(''), 5000);
+        return;
       }
 
-      // 新しい設定で更新
-      const updatedCredentials = {
-        ...credentials,
-        phone_number: adminPhoneNumber,
-        backup_code: adminBackupCode,
-        last_updated: new Date().toISOString()
-      };
-
-      // ローカルストレージに保存
-      SecureStorage.setSecureItem('admin_credentials', updatedCredentials);
-      secureLog('ローカルストレージに保存完了');
-      
-      // Supabaseへの保存は非同期で試行（Edge Function経由）
+      // Supabaseで管理者設定を更新
       try {
-        secureLog('Supabaseへの保存を試行中...');
-        const supabaseSuccess = await SupabaseAdminAPI.updateAdminCredentialsViaFunction(adminPhoneNumber, adminBackupCode);
+        secureLog('Supabaseで管理者設定を更新中...');
         
-        if (supabaseSuccess) {
-          secureLog('Supabaseにも正常に保存されました');
+        // セキュアなパスワードハッシュ化
+        const encoder = new TextEncoder();
+        const data = encoder.encode(adminPhoneNumber + adminBackupCode + Date.now());
+        const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+        const hashArray = Array.from(new Uint8Array(hashBuffer));
+        const hashedData = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+
+        // Supabaseに安全に保存
+        const updateResult = await SecureConfigManager.updateAdminCredentials({
+          phone_number: adminPhoneNumber,
+          backup_code: adminBackupCode,
+          updated_at: new Date().toISOString(),
+          data_hash: hashedData
+        });
+        
+        if (updateResult) {
+          secureLog('Supabaseに正常に保存されました');
           setAdminSettingsStatus('✅ 管理者設定が正常に保存され、データベースに反映されました');
         } else {
-          secureLog('Supabase保存に失敗しましたが、ローカル保存は成功');
-          setAdminSettingsStatus('✅ 管理者設定が正常に保存されました（ローカル保存）');
+          throw new Error('Supabase更新に失敗しました');
         }
       } catch (supabaseError) {
-        secureLog('Supabase保存でエラーが発生しましたが、ローカル保存は成功:', supabaseError);
-        setAdminSettingsStatus('✅ 管理者設定が正常に保存されました（ローカル保存）');
+        secureLog('Supabase保存エラー:', supabaseError);
+        setAdminSettingsStatus('❌ 設定の保存に失敗しました。システム管理者にお問い合わせください。');
       }
       
       setTimeout(() => setAdminSettingsStatus(''), 3000);
