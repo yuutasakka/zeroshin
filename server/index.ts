@@ -8,6 +8,8 @@ import { body, validationResult } from 'express-validator';
 import winston from 'winston';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
+import * as fs from 'fs';
+import * as path from 'path';
 
 // 環境変数を読み込み
 dotenv.config();
@@ -195,10 +197,11 @@ app.post('/api/sms/send', smsLimiter, phoneValidation, async (req: Request, res:
         errors: errors.array(),
         ip: req.ip
       });
-      return res.status(400).json({
+      res.status(400).json({
         error: '入力データが無効です',
         details: errors.array()
       });
+      return;
     }
 
     const { phoneNumber } = req.body;
@@ -212,9 +215,10 @@ app.post('/api/sms/send', smsLimiter, phoneValidation, async (req: Request, res:
         attempts: existing.attempts,
         ip: req.ip
       });
-      return res.status(429).json({
+      res.status(429).json({
         error: '認証コードの送信回数が上限に達しました。しばらく待ってから再試行してください。'
       });
+      return;
     }
 
     const verificationCode = generateSecureCode();
@@ -276,10 +280,11 @@ app.post('/api/sms/verify', authLimiter, verificationValidation, async (req: Req
         errors: errors.array(),
         ip: req.ip
       });
-      return res.status(400).json({
+      res.status(400).json({
         error: '入力データが無効です',
         details: errors.array()
       });
+      return;
     }
 
     const { phoneNumber, code } = req.body;
@@ -291,10 +296,11 @@ app.post('/api/sms/verify', authLimiter, verificationValidation, async (req: Req
         phoneNumber: normalizedPhoneNumber,
         ip: req.ip
       });
-      return res.status(400).json({
+      res.status(400).json({
         error: '認証コードが見つかりません',
         verified: false
       });
+      return;
     }
     
     // 有効期限をチェック
@@ -304,10 +310,11 @@ app.post('/api/sms/verify', authLimiter, verificationValidation, async (req: Req
         phoneNumber: normalizedPhoneNumber,
         ip: req.ip
       });
-      return res.status(400).json({
+      res.status(400).json({
         error: '認証コードの有効期限が切れています',
         verified: false
       });
+      return;
     }
     
     // コードが一致するかチェック
@@ -328,22 +335,24 @@ app.post('/api/sms/verify', authLimiter, verificationValidation, async (req: Req
 
       console.log(`認証成功: ${normalizedPhoneNumber}`);
       
-      return res.json({
+      res.json({
         success: true,
         message: '認証が完了しました',
         verified: true,
         token: token
       });
+      return;
     } else {
       logger.warn('SMS認証: コード不一致', {
         phoneNumber: normalizedPhoneNumber,
         providedCode: code,
         ip: req.ip
       });
-      return res.status(400).json({
+      res.status(400).json({
         error: '認証コードが正しくありません',
         verified: false
       });
+      return;
     }
 
   } catch (error) {
@@ -375,6 +384,17 @@ app.get('/api/health', (req, res) => {
   });
 });
 
+// ログディレクトリの作成（より安全な方法）
+const logsDir = path.join(process.cwd(), 'logs');
+if (!fs.existsSync(logsDir)) {
+  try {
+    fs.mkdirSync(logsDir, { recursive: true });
+    console.log('✅ ログディレクトリを作成しました:', logsDir);
+  } catch (error) {
+    console.error('❌ ログディレクトリの作成に失敗しました:', error);
+  }
+}
+
 // エラーハンドリングミドルウェア
 app.use((err: Error, req: express.Request, res: express.Response, next: express.NextFunction) => {
   logger.error('Unhandled error', {
@@ -390,12 +410,6 @@ app.use((err: Error, req: express.Request, res: express.Response, next: express.
     message: process.env.NODE_ENV === 'development' ? err.message : 'サーバーエラーが発生しました'
   });
 });
-
-// ログディレクトリの作成
-const fs = require('fs');
-if (!fs.existsSync('logs')) {
-  fs.mkdirSync('logs');
-}
 
 // サーバー開始
 app.listen(PORT, () => {
