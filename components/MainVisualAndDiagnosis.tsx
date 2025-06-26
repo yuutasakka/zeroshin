@@ -149,11 +149,10 @@ const MainVisualAndDiagnosis: React.FC<MainVisualAndDiagnosisProps> = ({ onProce
         const result = await response.json();
 
         if (result.success) {
-          // デモモードの場合はコンソールに認証コードを表示
-          if (result.demoCode) {
-            console.log(`🚀 デモモード: 認証コードは ${result.demoCode} です`);
-            alert(`デモモード: 認証コードは ${result.demoCode} です（コンソールでも確認できます）`);
-          }
+                  // 認証コードの表示
+        if (result.demoCode) {
+          alert(`認証コード: ${result.demoCode}`);
+        }
           
           // 認証ページに進む
           onProceedToVerification(formData.phoneNumber, formData);
