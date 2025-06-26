@@ -20,6 +20,19 @@ export interface FirstConsultationOffer {
   borderColor: string;
 }
 
+// ヘッダー設定の型定義
+export interface HeaderData {
+  title: string;
+  subtitle: string; // モバイル用サブタイトル
+}
+
+// メインビジュアルメッセージの型定義
+export interface MainVisualData {
+  title: string;
+  highlightWord: string; // ハイライトする単語
+  subtitle: string;
+}
+
 export const defaultReasonsToChooseData: ReasonsToChooseData = {
   title: "選ばれる理由があります",
   subtitle: "多くのお客様から信頼をいただいている、確かな実績をご紹介します",
@@ -54,4 +67,17 @@ export const defaultFirstConsultationOffer: FirstConsultationOffer = {
   icon: "fas fa-gift",
   backgroundColor: "rgba(212, 175, 55, 0.1)",
   borderColor: "var(--accent-gold)"
+};
+
+// デフォルトヘッダー情報
+export const defaultHeaderData: HeaderData = {
+  title: "マネーチケット",
+  subtitle: "あなたの資産運用をプロがサポート"
+};
+
+// デフォルトメインビジュアルメッセージ
+export const defaultMainVisualData: MainVisualData = {
+  title: "あなたの資産運用を\nプロフェッショナルが\n完全サポート",
+  highlightWord: "プロフェッショナル",
+  subtitle: "経験豊富なファイナンシャルプランナーが、あなただけの投資戦略を無料でご提案。 安心して始められる資産運用の第一歩を踏み出しませんか。"
 }; 

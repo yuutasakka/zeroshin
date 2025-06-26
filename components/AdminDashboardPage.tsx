@@ -1164,10 +1164,10 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
       }
 
       // 変更がない場合のチェック
-      const existingCredentials = SecureStorage.getSecureItem('admin_credentials');
-      if (existingCredentials) {
-        const currentPhone = existingCredentials.phone_number || '09012345678';
-        const currentBackup = existingCredentials.backup_code || 'MT-BACKUP-2024';
+      const checkCredentials = SecureStorage.getSecureItem('admin_credentials');
+      if (checkCredentials) {
+        const currentPhone = checkCredentials.phone_number || '09012345678';
+        const currentBackup = checkCredentials.backup_code || 'MT-BACKUP-2024';
         
         if (adminPhoneNumber === currentPhone && adminBackupCode === currentBackup) {
           setAdminSettingsStatus('❌ 設定に変更がありません。');
@@ -1187,9 +1187,9 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
       };
 
       // 既存認証情報を再取得
-      const currentCredentials = SecureStorage.getSecureItem('admin_credentials');
-      if (currentCredentials) {
-        credentials = { ...credentials, ...currentCredentials };
+      const storedCredentials = SecureStorage.getSecureItem('admin_credentials');
+      if (storedCredentials) {
+        credentials = { ...credentials, ...storedCredentials };
       }
 
       // 新しい設定で更新
@@ -1504,51 +1504,59 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
             <div className="flex flex-wrap gap-2">
                 <button 
                     onClick={() => setViewMode('userHistory')}
-                    className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${viewMode === 'userHistory' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}`}
+                    className={`admin-nav-button px-4 py-2 rounded-md text-sm font-medium transition-colors ${viewMode === 'userHistory' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}`}
                 >
-                    <i className="fas fa-users-cog mr-2"></i>ユーザー診断履歴
+                    <i className="fas fa-users-cog mr-2"></i>
+                    <span>ユーザー診断履歴</span>
                 </button>
                 <button 
                     onClick={() => setViewMode('productSettings')}
-                    className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${viewMode === 'productSettings' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}`}
+                    className={`admin-nav-button px-4 py-2 rounded-md text-sm font-medium transition-colors ${viewMode === 'productSettings' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}`}
                 >
-                    <i className="fas fa-gifts mr-2"></i>商品リンク設定
+                    <i className="fas fa-gifts mr-2"></i>
+                    <span>商品リンク設定</span>
                 </button>
                 <button 
                     onClick={() => setViewMode('adminSettings')}
-                    className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${viewMode === 'adminSettings' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}`}
+                    className={`admin-nav-button px-4 py-2 rounded-md text-sm font-medium transition-colors ${viewMode === 'adminSettings' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}`}
                 >
-                    <i className="fas fa-user-cog mr-2"></i>管理者設定
+                    <i className="fas fa-user-cog mr-2"></i>
+                    <span>管理者設定</span>
                 </button>
                  <button 
                     onClick={() => setViewMode('testimonialSettings')}
-                    className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${viewMode === 'testimonialSettings' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}`}
+                    className={`admin-nav-button px-4 py-2 rounded-md text-sm font-medium transition-colors ${viewMode === 'testimonialSettings' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}`}
                 >
-                    <i className="fas fa-comments mr-2"></i>お客様の声 管理
+                    <i className="fas fa-comments mr-2"></i>
+                    <span>お客様の声 管理</span>
                 </button>
                 <button 
                     onClick={() => setViewMode('analyticsSettings')}
-                    className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${viewMode === 'analyticsSettings' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}`}
+                    className={`admin-nav-button px-4 py-2 rounded-md text-sm font-medium transition-colors ${viewMode === 'analyticsSettings' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}`}
                 >
-                    <i className="fas fa-chart-line mr-2"></i>アナリティクス設定
+                    <i className="fas fa-chart-line mr-2"></i>
+                    <span>アナリティクス設定</span>
                 </button>
                  <button 
                     onClick={() => setViewMode('notificationSettings')}
-                    className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${viewMode === 'notificationSettings' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}`}
+                    className={`admin-nav-button px-4 py-2 rounded-md text-sm font-medium transition-colors ${viewMode === 'notificationSettings' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}`}
                 >
-                    <i className="fas fa-bell mr-2"></i>通知設定
+                    <i className="fas fa-bell mr-2"></i>
+                    <span>通知設定</span>
                 </button>
                 <button 
                     onClick={() => setViewMode('legalLinksSettings')}
-                    className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${viewMode === 'legalLinksSettings' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}`}
+                    className={`admin-nav-button px-4 py-2 rounded-md text-sm font-medium transition-colors ${viewMode === 'legalLinksSettings' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}`}
                 >
-                    <i className="fas fa-gavel mr-2"></i>リーガルリンク設定
+                    <i className="fas fa-gavel mr-2"></i>
+                    <span>リーガルリンク設定</span>
                 </button>
                 <button 
                     onClick={() => setViewMode('homepageContentSettings')}
-                    className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${viewMode === 'homepageContentSettings' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}`}
+                    className={`admin-nav-button px-4 py-2 rounded-md text-sm font-medium transition-colors ${viewMode === 'homepageContentSettings' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}`}
                 >
-                    <i className="fas fa-home mr-2"></i>ホームページコンテンツ設定
+                    <i className="fas fa-home mr-2"></i>
+                    <span>ホームページコンテンツ設定</span>
                 </button>
             </div>
         </div>
@@ -2163,7 +2171,15 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
                 <h2 className="text-2xl font-bold text-gray-800 mb-6 flex items-center">
                     <i className="fas fa-home mr-3 text-orange-600"></i>ホームページコンテンツ設定
                 </h2>
-                
+
+                {/* デバッグ情報（開発時のみ表示） */}
+                <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg text-sm">
+                    <h4 className="font-semibold text-blue-800 mb-2">🔧 設定確認情報:</h4>
+                    <p className="text-blue-700">選ばれる理由タイトル: {reasonsToChoose?.title || 'データなし'}</p>
+                    <p className="text-blue-700">理由項目数: {reasonsToChoose?.reasons?.length || 0}</p>
+                    <p className="text-blue-700">初回相談特典タイトル: {firstConsultationOffer?.title || 'データなし'}</p>
+                </div>
+
                 {homepageContentStatus && (
                     <div className={`p-3 mb-4 rounded-md text-sm ${homepageContentStatus.includes('エラー') ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'}`}>
                         {homepageContentStatus}
@@ -2368,10 +2384,10 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
                     <div className="flex justify-center">
                         <button
                             onClick={handleSaveHomepageContentSettings}
-                            className="bg-orange-600 hover:bg-orange-700 text-white font-semibold py-3 px-8 rounded-lg shadow-md hover:shadow-lg transition duration-150 ease-in-out flex items-center"
+                            className="bg-orange-600 hover:bg-orange-700 text-white font-semibold py-3 px-8 rounded-lg shadow-md hover:shadow-lg transition duration-150 ease-in-out flex items-center justify-center min-w-max"
                         >
-                            <i className="fas fa-save mr-2"></i>
-                            ホームページコンテンツを保存
+                            <i className="fas fa-save mr-2 text-white"></i>
+                            <span className="text-white">ホームページコンテンツを保存</span>
                         </button>
                     </div>
                 </div>

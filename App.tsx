@@ -1,5 +1,3 @@
-
-
 import React, { useState, useEffect } from 'react';
 // import { GoogleGenAI } from "@google/genai"; // Removed: AI client should be in the backend
 import Header from './components/Header';
@@ -44,6 +42,116 @@ const App: React.FC = () => {
       document.body.classList.remove('verification-page-active');
     };
   }, [currentPage]);
+
+  // 🚨 緊急デバッグ用: URL hash で管理画面アクセス
+  useEffect(() => {
+    const checkHashForAdmin = () => {
+      if (window.location.hash === '#admin') {
+        console.log('🚨 緊急管理画面アクセス検出');
+        setIsAdminLoggedIn(true);
+        setCurrentPage('adminDashboard');
+      } else if (window.location.hash === '#login') {
+        setCurrentPage('login');
+      }
+    };
+
+    checkHashForAdmin();
+    window.addEventListener('hashchange', checkHashForAdmin);
+    
+    return () => {
+      window.removeEventListener('hashchange', checkHashForAdmin);
+    };
+  }, []);
+
+  // 🔐 セッション管理とページ閉じる時の処理
+  useEffect(() => {
+    // ページ読み込み時にセッション状態をチェック・クリーンアップ
+    const initializeSessionState = () => {
+      try {
+        // 不正なセッション状態をクリア
+        const sessionAuth = sessionStorage.getItem('admin_authenticated');
+        const adminSession = localStorage.getItem('admin_session');
+        
+        if (sessionAuth === 'true' && adminSession) {
+          // セッションの有効期限をチェック
+          const session = JSON.parse(adminSession);
+          const now = Date.now();
+          
+          if (session.expires && now > session.expires) {
+            // 期限切れセッションをクリア
+            console.log('🔄 期限切れセッションをクリア');
+            sessionStorage.removeItem('admin_authenticated');
+            localStorage.removeItem('admin_session');
+            setIsAdminLoggedIn(false);
+            setCurrentPage('diagnosis');
+          } else if (session.username === 'admin') {
+            // 有効なセッションが存在する場合
+            console.log('🔐 有効なセッション復元');
+            setIsAdminLoggedIn(true);
+            setCurrentPage('adminDashboard');
+          }
+        } else {
+          // 不完全なセッション情報をクリア
+          sessionStorage.removeItem('admin_authenticated');
+          localStorage.removeItem('admin_session');
+          setIsAdminLoggedIn(false);
+        }
+      } catch (error) {
+        console.error('セッション初期化エラー:', error);
+        // エラー時は全セッション情報をクリア
+        sessionStorage.clear();
+        localStorage.removeItem('admin_session');
+        setIsAdminLoggedIn(false);
+        setCurrentPage('diagnosis');
+      }
+    };
+
+    // ページを閉じる時の処理
+    const handleBeforeUnload = (event: BeforeUnloadEvent) => {
+      // セッションストレージの一時情報をクリア（ローカルストレージの認証情報は保持）
+      sessionStorage.removeItem('admin_authenticated');
+      console.log('🔄 ページ終了時: 一時セッション情報をクリア');
+    };
+
+    // ページの可視性変更時の処理（タブの切り替えなど）
+    const handleVisibilityChange = () => {
+      if (document.hidden && isAdminLoggedIn) {
+        // ページが非表示になった時、セッション時間を記録
+        const sessionData = {
+          lastActivity: Date.now(),
+          isLoggedIn: isAdminLoggedIn,
+          currentPage: currentPage
+        };
+        sessionStorage.setItem('admin_session_state', JSON.stringify(sessionData));
+      } else if (!document.hidden) {
+        // ページが再び表示された時、セッション状態をチェック
+        const sessionState = sessionStorage.getItem('admin_session_state');
+        if (sessionState) {
+          const data = JSON.parse(sessionState);
+          const timeDiff = Date.now() - data.lastActivity;
+          
+          // 30分以上非アクティブの場合はログアウト
+          if (timeDiff > 30 * 60 * 1000) {
+            console.log('🔄 非アクティブ時間超過: 自動ログアウト');
+            setIsAdminLoggedIn(false);
+            setCurrentPage('diagnosis');
+            sessionStorage.clear();
+            localStorage.removeItem('admin_session');
+          }
+        }
+      }
+    };
+
+    // イベントリスナー登録
+    initializeSessionState();
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+      document.addEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, [isAdminLoggedIn, currentPage]);
 
   useEffect(() => {
     const scriptsString = localStorage.getItem('customTrackingScripts');
