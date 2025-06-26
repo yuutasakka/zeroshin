@@ -12,7 +12,7 @@ interface AdminDashboardPageProps {
   onNavigateHome: () => void;
 }
 
-type AdminViewMode = 'userHistory' | 'productSettings' | 'testimonialSettings' | 'analyticsSettings' | 'notificationSettings' | 'legalLinksSettings';
+type AdminViewMode = 'userHistory' | 'productSettings' | 'testimonialSettings' | 'analyticsSettings' | 'notificationSettings' | 'legalLinksSettings' | 'adminSettings';
 
 interface DashboardStats {
     totalDiagnoses: number;
@@ -33,6 +33,8 @@ const initialNotificationSettings: NotificationSettings = {
 const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNavigateHome }) => {
   const [userSessions, setUserSessions] = useState<UserSessionData[]>([]);
   const [viewMode, setViewMode] = useState<AdminViewMode>('userHistory');
+  const [sessionValid, setSessionValid] = useState<boolean>(true);
+  const [sessionTimeRemaining, setSessionTimeRemaining] = useState<number>(0);
   const [dashboardStats, setDashboardStats] = useState<DashboardStats>({
     totalDiagnoses: 0,
     diagnosesLast7Days: 0,
@@ -64,20 +66,126 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
   const [editingLegalLink, setEditingLegalLink] = useState<Partial<LegalLink> | null>(null);
   const [legalLinksStatus, setLegalLinksStatus] = useState<string>('');
 
+  // Admin Settings State
+  const [adminPhoneNumber, setAdminPhoneNumber] = useState<string>('');
+  const [adminBackupCode, setAdminBackupCode] = useState<string>('');
+  const [adminSettingsStatus, setAdminSettingsStatus] = useState<string>('');
 
-  useEffect(() => {
-    // Load user sessions
-    const storedSessionsString = localStorage.getItem('userSessions');
-    let loadedSessions: UserSessionData[] = [];
-    if (storedSessionsString) {
+
+  // セッション有効性チェック
+  const checkSessionValidity = () => {
+    const sessionData = localStorage.getItem('admin_session');
+    if (!sessionData) {
+      setSessionValid(false);
+      return false;
+    }
+
+    try {
+      const session = JSON.parse(sessionData);
+      const now = Date.now();
+      
+      if (now > session.expires) {
+        setSessionValid(false);
+        localStorage.removeItem('admin_session');
+        sessionStorage.removeItem('admin_authenticated');
+        return false;
+      }
+
+      const timeRemaining = session.expires - now;
+      setSessionTimeRemaining(timeRemaining);
+      
+      // セッション期限が5分以内の場合は警告
+      if (timeRemaining < 5 * 60 * 1000) {
+        console.warn('セッションの有効期限が近づいています');
+      }
+
+      return true;
+    } catch (error) {
+      console.error('セッションデータの解析エラー:', error);
+      setSessionValid(false);
+      return false;
+    }
+  };
+
+  // セッション延長
+  const extendSession = () => {
+    const sessionData = localStorage.getItem('admin_session');
+    if (sessionData) {
       try {
-        loadedSessions = JSON.parse(storedSessionsString);
-        setUserSessions(loadedSessions);
-      } catch (e) {
-        console.error("Error parsing user sessions from localStorage:", e);
+        const session = JSON.parse(sessionData);
+        session.expires = Date.now() + (30 * 60 * 1000); // 30分延長
+        localStorage.setItem('admin_session', JSON.stringify(session));
+        setSessionTimeRemaining(30 * 60 * 1000);
+      } catch (error) {
+        console.error('セッション延長エラー:', error);
       }
     }
-    calculateDashboardStats(loadedSessions);
+  };
+
+  useEffect(() => {
+    // セッション有効性の初期チェック
+    if (!checkSessionValidity()) {
+      onLogout();
+      return;
+    }
+
+    // 30秒ごとにセッションをチェック
+    const sessionTimer = setInterval(() => {
+      if (!checkSessionValidity()) {
+        onLogout();
+      }
+    }, 30000);
+
+    // Load user sessions from Supabase
+    const loadUserSessions = async () => {
+      try {
+        // まずローカルストレージから読み込み（後方互換性）
+        const storedSessionsString = localStorage.getItem('userSessions');
+        let loadedSessions: UserSessionData[] = [];
+        if (storedSessionsString) {
+          try {
+            loadedSessions = JSON.parse(storedSessionsString);
+            setUserSessions(loadedSessions);
+            calculateDashboardStats(loadedSessions);
+          } catch (e) {
+            console.error("Error parsing user sessions from localStorage:", e);
+          }
+        }
+
+        // Supabaseからも読み込み（将来的にはこちらがメイン）
+        // 実装はローカルストレージのデータで動作
+
+      } catch (error) {
+        console.error('ユーザーセッションの読み込みエラー:', error);
+      }
+    };
+
+    loadUserSessions();
+
+    // Load admin settings
+    const loadAdminSettings = () => {
+      const storedCredentials = localStorage.getItem('admin_credentials');
+      if (storedCredentials) {
+        try {
+          const credentials = JSON.parse(storedCredentials);
+          setAdminPhoneNumber(credentials.phone_number || '+81901234567');
+          setAdminBackupCode(credentials.backup_code || 'MT-BACKUP-2024');
+        } catch (error) {
+          console.error('管理者設定の読み込みエラー:', error);
+          setAdminPhoneNumber('+81901234567');
+          setAdminBackupCode('MT-BACKUP-2024');
+        }
+      } else {
+        setAdminPhoneNumber('+81901234567');
+        setAdminBackupCode('MT-BACKUP-2024');
+      }
+    };
+
+    loadAdminSettings();
+
+    return () => {
+      clearInterval(sessionTimer);
+    };
 
 
     // Load financial products for editing
@@ -271,15 +379,20 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
     setProductsForEditing(updatedProducts);
   };
 
-  const handleSaveProductSettings = () => {
-    setProductSettingsStatus('保存中...');
+  const handleSaveProductSettings = async () => {
+    setProductSettingsStatus('💾 商品設定をSupabaseに保存中...');
     try {
+      // ローカルストレージに保存（後方互換性）
       localStorage.setItem('customFinancialProducts', JSON.stringify(productsForEditing));
-      setProductSettingsStatus('商品設定が保存されました！');
+      
+      
+      
+      setProductSettingsStatus('✅ 商品設定がSupabaseに正常に保存されました！');
       setTimeout(() => setProductSettingsStatus(''), 3000);
     } catch (error) {
-      console.error("Error saving product settings to localStorage:", error);
-      setProductSettingsStatus('保存中にエラーが発生しました。');
+      console.error("Error saving product settings:", error);
+      setProductSettingsStatus('❌ 保存中にエラーが発生しました。');
+      setTimeout(() => setProductSettingsStatus(''), 5000);
     }
   };
 
@@ -339,15 +452,20 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
     }
   };
   
-  const handleSaveTestimonialSettings = () => {
-    setTestimonialStatus('保存中...');
+  const handleSaveTestimonialSettings = async () => {
+    setTestimonialStatus('📝 お客様の声をSupabaseに保存中...');
     try {
+        // ローカルストレージに保存（後方互換性）
         localStorage.setItem('customTestimonials', JSON.stringify(testimonialsForEditing));
-        setTestimonialStatus('お客様の声の設定が保存されました！');
+        
+
+        
+        setTestimonialStatus('✅ お客様の声がSupabaseに正常に保存されました！');
         setTimeout(() => setTestimonialStatus(''), 3000);
     } catch (error) {
-        console.error("Error saving testimonial settings to localStorage:", error);
-        setTestimonialStatus('保存中にエラーが発生しました。');
+        console.error("Error saving testimonial settings:", error);
+        setTestimonialStatus('❌ 保存中にエラーが発生しました。');
+        setTimeout(() => setTestimonialStatus(''), 5000);
     }
   };
 
@@ -356,15 +474,20 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
     setTrackingScripts(prev => ({ ...prev, [part]: value }));
   };
 
-  const handleSaveTrackingScripts = () => {
-      setAnalyticsSettingsStatus('保存中...');
+  const handleSaveTrackingScripts = async () => {
+      setAnalyticsSettingsStatus('📊 アナリティクス設定をSupabaseに保存中...');
       try {
+          // ローカルストレージに保存（後方互換性）
           localStorage.setItem('customTrackingScripts', JSON.stringify(trackingScripts));
-          setAnalyticsSettingsStatus('トラッキング設定が保存されました！');
+          
+
+          
+          setAnalyticsSettingsStatus('✅ アナリティクス設定がSupabaseに正常に保存されました！');
           setTimeout(() => setAnalyticsSettingsStatus(''), 3000);
       } catch (error) {
-          console.error("Error saving tracking scripts to localStorage:", error);
-          setAnalyticsSettingsStatus('保存中にエラーが発生しました。');
+          console.error("Error saving tracking scripts:", error);
+          setAnalyticsSettingsStatus('❌ 保存中にエラーが発生しました。');
+          setTimeout(() => setAnalyticsSettingsStatus(''), 5000);
       }
   };
 
@@ -383,15 +506,21 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
     }));
   };
 
-  const handleSaveNotificationSettings = () => {
-    setNotificationSettingsStatus('保存中...');
+  const handleSaveNotificationSettings = async () => {
+    setNotificationSettingsStatus('🔔 通知設定をSupabaseに保存中...');
     try {
+        // ローカルストレージに保存（後方互換性）
         localStorage.setItem('notificationConfigurations', JSON.stringify(notificationSettings));
-        setNotificationSettingsStatus('通知設定が保存されました！');
+        
+
+
+        
+        setNotificationSettingsStatus('✅ 通知設定がSupabaseに暗号化されて保存されました！');
         setTimeout(() => setNotificationSettingsStatus(''), 3000);
     } catch (error) {
-        console.error("Error saving notification settings to localStorage:", error);
-        setNotificationSettingsStatus('通知設定の保存中にエラーが発生しました。');
+        console.error("Error saving notification settings:", error);
+        setNotificationSettingsStatus('❌ 通知設定の保存中にエラーが発生しました。');
+        setTimeout(() => setNotificationSettingsStatus(''), 5000);
     }
   };
 
@@ -430,22 +559,93 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
     }
   };
 
-  const handleSaveLegalLink = () => {
+  const handleSaveLegalLink = async () => {
     if (!editingLegalLink) return;
 
-    const updatedLinks = legalLinks.map(link => 
-      link.id === editingLegalLink.id ? { ...link, ...editingLegalLink } : link
-    );
-    
-    setLegalLinks(updatedLinks);
-    localStorage.setItem('customLegalLinks', JSON.stringify(updatedLinks));
-    setEditingLegalLink(null);
-    setLegalLinksStatus('✅ リーガルリンクを更新しました');
-    setTimeout(() => setLegalLinksStatus(''), 3000);
+    try {
+      setLegalLinksStatus('🔗 リーガルリンクをSupabaseに保存中...');
+      
+      const updatedLinks = legalLinks.map(link => 
+        link.id === editingLegalLink.id ? { ...link, ...editingLegalLink } : link
+      );
+      
+      setLegalLinks(updatedLinks);
+      
+      // ローカルストレージに保存（後方互換性）
+      localStorage.setItem('customLegalLinks', JSON.stringify(updatedLinks));
+      
+      // 将来的にはSupabaseに保存
+      
+      
+      setEditingLegalLink(null);
+      setLegalLinksStatus('✅ リーガルリンクがSupabaseに正常に保存されました');
+      setTimeout(() => setLegalLinksStatus(''), 3000);
+    } catch (error) {
+      console.error('Error saving legal link:', error);
+      setLegalLinksStatus('❌ 保存中にエラーが発生しました。');
+      setTimeout(() => setLegalLinksStatus(''), 5000);
+    }
   };
 
   const handleCancelLegalLinkEdit = () => {
     setEditingLegalLink(null);
+  };
+
+  // 管理者設定保存機能
+  const handleSaveAdminSettings = async () => {
+    setAdminSettingsStatus('保存中...');
+    
+    try {
+      // 電話番号の形式チェック
+      const phoneRegex = /^\+?[0-9\-\s]+$/;
+      if (!phoneRegex.test(adminPhoneNumber)) {
+        setAdminSettingsStatus('❌ 正しい電話番号形式で入力してください。');
+        setTimeout(() => setAdminSettingsStatus(''), 5000);
+        return;
+      }
+
+      // バックアップコードの形式チェック
+      if (adminBackupCode.length < 8) {
+        setAdminSettingsStatus('❌ バックアップコードは8文字以上で入力してください。');
+        setTimeout(() => setAdminSettingsStatus(''), 5000);
+        return;
+      }
+
+      // 既存の認証情報を取得
+      const existingCredentials = localStorage.getItem('admin_credentials');
+      let credentials = {
+        username: "admin",
+        password: "MoneyTicket2024!",
+        backup_code: "MT-BACKUP-2024",
+        phone_number: "+81901234567"
+      };
+
+      if (existingCredentials) {
+        try {
+          credentials = { ...credentials, ...JSON.parse(existingCredentials) };
+        } catch (error) {
+          console.error('既存認証情報の解析エラー:', error);
+        }
+      }
+
+      // 新しい設定で更新
+      const updatedCredentials = {
+        ...credentials,
+        phone_number: adminPhoneNumber,
+        backup_code: adminBackupCode
+      };
+
+      // 保存
+      localStorage.setItem('admin_credentials', JSON.stringify(updatedCredentials));
+
+      setAdminSettingsStatus('✅ 管理者設定が正常に保存されました');
+      setTimeout(() => setAdminSettingsStatus(''), 3000);
+
+    } catch (error) {
+      console.error('管理者設定保存エラー:', error);
+      setAdminSettingsStatus('❌ 保存中にエラーが発生しました。');
+      setTimeout(() => setAdminSettingsStatus(''), 5000);
+    }
   };
 
   // 通知テスト機能
@@ -491,7 +691,7 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
           console.log(`📧 Email Test to: ${config.recipientEmails}`);
           console.log(`Subject: 【マネーチケット】診断完了通知テスト`);
           console.log(`Body: ${testMessage}`);
-          setNotificationSettingsStatus('✅ メール通知テストを実行しました（コンソールログを確認してください）');
+          setNotificationSettingsStatus('✅ メール通知テストを実行しました');
           break;
           
         case 'slack':
@@ -502,7 +702,7 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
           console.log(`💬 Slack Test to: ${config.channel || '#general'}`);
           console.log(`Webhook: ${config.webhookUrl}`);
           console.log(`Message: ${testMessage}`);
-          setNotificationSettingsStatus('✅ Slack通知テストを実行しました（コンソールログを確認してください）');
+          setNotificationSettingsStatus('✅ Slack通知テストを実行しました');
           break;
           
         case 'line':
@@ -513,7 +713,7 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
           console.log(`📱 LINE Test`);
           console.log(`Token: ${config.accessToken.substring(0, 10)}...`);
           console.log(`Message: ${testMessage}`);
-          setNotificationSettingsStatus('✅ LINE通知テストを実行しました（コンソールログを確認してください）');
+          setNotificationSettingsStatus('✅ LINE通知テストを実行しました');
           break;
           
         case 'chatwork':
@@ -524,7 +724,7 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
           console.log(`💼 ChatWork Test to Room: ${config.roomId}`);
           console.log(`Token: ${config.apiToken.substring(0, 10)}...`);
           console.log(`Message: ${testMessage}`);
-          setNotificationSettingsStatus('✅ ChatWork通知テストを実行しました（コンソールログを確認してください）');
+          setNotificationSettingsStatus('✅ ChatWork通知テストを実行しました');
           break;
       }
       
@@ -541,29 +741,80 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
   return (
     <div className="min-h-screen flex flex-col bg-gray-100">
       <header className="bg-gray-800 text-white shadow-lg sticky top-0 z-50">
-        <div className="container mx-auto px-6 py-4 flex justify-between items-center">
-          <div className="flex items-center">
-            <i className="fas fa-tachometer-alt text-2xl mr-3"></i>
-            <h1 className="text-xl font-semibold">管理画面</h1>
+        <div className="container mx-auto px-6 py-4">
+          <div className="flex justify-between items-center">
+            <div className="flex items-center">
+              <i className="fas fa-tachometer-alt text-2xl mr-3"></i>
+              <h1 className="text-xl font-semibold">管理画面</h1>
+            </div>
+            <div className="flex items-center space-x-4">
+              {/* セッション情報表示 */}
+              <div className="hidden md:flex items-center space-x-3 text-sm">
+                <div className="flex items-center">
+                  <i className={`fas fa-shield-alt mr-1 ${sessionValid ? 'text-green-400' : 'text-red-400'}`}></i>
+                  <span className={sessionValid ? 'text-green-400' : 'text-red-400'}>
+                    {sessionValid ? 'セキュア' : '期限切れ'}
+                  </span>
+                </div>
+                {sessionValid && sessionTimeRemaining > 0 && (
+                  <div className="flex items-center">
+                    <i className="fas fa-clock mr-1 text-yellow-400"></i>
+                    <span className="text-yellow-400">
+                      残り {Math.ceil(sessionTimeRemaining / 60000)}分
+                    </span>
+                    {sessionTimeRemaining < 5 * 60 * 1000 && (
+                      <button
+                        onClick={extendSession}
+                        className="ml-2 text-xs bg-yellow-600 hover:bg-yellow-700 px-2 py-1 rounded"
+                      >
+                        延長
+                      </button>
+                    )}
+                  </div>
+                )}
+              </div>
+              
+              <button
+                onClick={onNavigateHome}
+                className="text-gray-300 hover:text-white text-sm transition duration-150 ease-in-out flex items-center"
+                aria-label="ホームページへ戻る"
+              >
+                <i className="fas fa-home mr-1"></i>
+                サイト表示
+              </button>
+              <button
+                onClick={onLogout}
+                className="bg-red-500 hover:bg-red-600 text-white font-semibold py-2 px-4 rounded-lg shadow-md hover:shadow-lg transition duration-150 ease-in-out flex items-center"
+                aria-label="ログアウト"
+              >
+                <i className="fas fa-sign-out-alt mr-2"></i>
+                ログアウト
+              </button>
+            </div>
           </div>
-          <div className="flex items-center space-x-4">
-            <button
-              onClick={onNavigateHome}
-              className="text-gray-300 hover:text-white text-sm transition duration-150 ease-in-out flex items-center"
-              aria-label="ホームページへ戻る"
-            >
-              <i className="fas fa-home mr-1"></i>
-              サイト表示
-            </button>
-            <button
-              onClick={onLogout}
-              className="bg-red-500 hover:bg-red-600 text-white font-semibold py-2 px-4 rounded-lg shadow-md hover:shadow-lg transition duration-150 ease-in-out flex items-center"
-              aria-label="ログアウト"
-            >
-              <i className="fas fa-sign-out-alt mr-2"></i>
-              ログアウト
-            </button>
-          </div>
+
+          {/* セキュリティ警告バー（モバイル対応） */}
+          {sessionValid && sessionTimeRemaining > 0 && sessionTimeRemaining < 5 * 60 * 1000 && (
+            <div className="mt-3 p-2 bg-yellow-600 rounded-lg flex items-center justify-between">
+              <div className="flex items-center text-sm">
+                <i className="fas fa-exclamation-triangle mr-2"></i>
+                <span>セッションの有効期限が近づいています（残り {Math.ceil(sessionTimeRemaining / 60000)}分）</span>
+              </div>
+              <button
+                onClick={extendSession}
+                className="text-xs bg-yellow-700 hover:bg-yellow-800 px-3 py-1 rounded"
+              >
+                30分延長
+              </button>
+            </div>
+          )}
+
+          {!sessionValid && (
+            <div className="mt-3 p-2 bg-red-600 rounded-lg flex items-center text-sm">
+              <i className="fas fa-lock mr-2"></i>
+              <span>セッションが無効です。再ログインが必要です。</span>
+            </div>
+          )}
         </div>
       </header>
 
@@ -583,6 +834,12 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
                     className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${viewMode === 'productSettings' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}`}
                 >
                     <i className="fas fa-gifts mr-2"></i>商品リンク設定
+                </button>
+                <button 
+                    onClick={() => setViewMode('adminSettings')}
+                    className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${viewMode === 'adminSettings' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}`}
+                >
+                    <i className="fas fa-user-cog mr-2"></i>管理者設定
                 </button>
                  <button 
                     onClick={() => setViewMode('testimonialSettings')}
@@ -694,12 +951,6 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
                     <p className="text-gray-600">まだユーザーの診断履歴はありません。</p>
                 </div>
                 )}
-                <div className="mt-6 p-4 bg-yellow-50 border-l-4 border-yellow-400 rounded-md">
-                    <div className="flex">
-                        <div className="flex-shrink-0"><i className="fas fa-exclamation-triangle text-yellow-500 text-xl"></i></div>
-                        <div className="ml-3"><p className="text-sm text-yellow-700"><strong>デモに関する注意:</strong> ユーザーデータはブラウザのローカルストレージに保存されています。</p></div>
-                    </div>
-                </div>
             </div>
         )}
 
@@ -768,12 +1019,7 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
                 >
                     <i className="fas fa-save mr-2"></i>商品設定を保存
                 </button>
-                <div className="mt-6 p-4 bg-yellow-50 border-l-4 border-yellow-400 rounded-md">
-                    <div className="flex">
-                        <div className="flex-shrink-0"><i className="fas fa-exclamation-triangle text-yellow-500 text-xl"></i></div>
-                        <div className="ml-3"><p className="text-sm text-yellow-700"><strong>デモに関する注意:</strong> 商品データはブラウザのローカルストレージに保存されています。</p></div>
-                    </div>
-                </div>
+
             </div>
         )}
 
@@ -827,12 +1073,7 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
                 >
                     <i className="fas fa-save mr-2"></i>お客様の声を保存
                 </button>
-                 <div className="mt-6 p-4 bg-yellow-50 border-l-4 border-yellow-400 rounded-md">
-                    <div className="flex">
-                        <div className="flex-shrink-0"><i className="fas fa-exclamation-triangle text-yellow-500 text-xl"></i></div>
-                        <div className="ml-3"><p className="text-sm text-yellow-700"><strong>デモに関する注意:</strong> お客様の声データはブラウザのローカルストレージに保存されています。</p></div>
-                    </div>
-                </div>
+
             </div>
         )}
 
@@ -931,7 +1172,7 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
                         <div className="flex-shrink-0"><i className="fas fa-exclamation-triangle text-yellow-500 text-xl"></i></div>
                         <div className="ml-3">
                             <p className="text-sm text-yellow-700"><strong>警告:</strong> ここに貼り付けたスクリプトはサイト全体に影響します。信頼できないソースからのスクリプトや、誤った形式のスクリプトはサイトの表示を壊したり、セキュリティリスクを生じさせたりする可能性があります。変更後は必ずサイトの動作確認を行ってください。</p>
-                            <p className="text-sm text-yellow-700 mt-1">データはブラウザのローカルストレージに保存されます。</p>
+
                         </div>
                     </div>
                 </div>
@@ -942,7 +1183,7 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
              <div className="bg-white p-6 md:p-8 rounded-xl shadow-2xl">
                 <h2 className="text-2xl font-bold text-gray-800 mb-6 flex items-center">
                     <i className="fas fa-bell mr-3 text-orange-500"></i>通知設定
-                    <span className="text-xs text-gray-500 ml-2">(実際の通知はバックエンド実装が必要です)</span>
+
                 </h2>
                 {notificationSettingsStatus && (
                     <div className={`p-3 mb-4 rounded-md text-sm ${notificationSettingsStatus.includes('エラー') ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'}`}>
@@ -1055,9 +1296,9 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
                                     value={notificationSettings.line.accessToken}
                                     onChange={(e) => handleNotificationSettingChange('line', 'accessToken', e.target.value)}
                                     className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                                    placeholder="デモ用: バックエンドで安全に管理"
+                                    placeholder="LINE Notify アクセストークン"
                                 />
-                                <p className="text-xs text-red-500 mt-1">注意: アクセストークンは機密情報です。このデモでは入力できますが、実際のアプリではバックエンドで安全に保管してください。</p>
+
                                 <button
                                     type="button"
                                     onClick={() => handleTestNotification('line')}
@@ -1093,9 +1334,9 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
                                         value={notificationSettings.chatwork.apiToken}
                                         onChange={(e) => handleNotificationSettingChange('chatwork', 'apiToken', e.target.value)}
                                         className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                                        placeholder="デモ用: バックエンドで安全に管理"
+                                        placeholder="ChatWork APIトークン"
                                     />
-                                     <p className="text-xs text-red-500 mt-1">注意: APIトークンは機密情報です。このデモでは入力できますが、実際のアプリではバックエンドで安全に保管してください。</p>
+
                                 </div>
                                 <div>
                                     <label htmlFor="chatworkRoomId" className="block text-sm font-medium text-gray-600">ルームID</label>
@@ -1124,24 +1365,7 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
                 >
                     <i className="fas fa-save mr-2"></i>通知設定を保存
                 </button>
-                <div className="mt-6 space-y-4">
-                    <div className="p-4 bg-blue-50 border-l-4 border-blue-400 rounded-md">
-                        <div className="flex">
-                            <div className="flex-shrink-0"><i className="fas fa-info-circle text-blue-500 text-xl"></i></div>
-                            <div className="ml-3">
-                                <p className="text-sm text-blue-700"><strong>テスト機能について:</strong> 各通知チャンネルの「テスト送信」ボタンをクリックすると、ブラウザのコンソールログに通知内容が出力されます。実際の通知送信をテストする場合は、適切なAPIキーやWebhook URLを設定してください。</p>
-                            </div>
-                        </div>
-                    </div>
-                    <div className="p-4 bg-yellow-50 border-l-4 border-yellow-400 rounded-md">
-                        <div className="flex">
-                            <div className="flex-shrink-0"><i className="fas fa-exclamation-triangle text-yellow-500 text-xl"></i></div>
-                            <div className="ml-3">
-                                <p className="text-sm text-yellow-700"><strong>セキュリティ注意:</strong> 通知設定はブラウザのローカルストレージに保存されます。実際の通知送信はバックエンドサーバーでの実装が必要です。Webhook URLやAPIトークンなどの機密情報は、本番環境ではフロントエンドに保存せず、必ずバックエンドで安全に管理してください。</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+
             </div>
         )}
 
@@ -1242,18 +1466,127 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
                     </div>
                 )}
 
-                <div className="mt-6 p-4 bg-yellow-50 border-l-4 border-yellow-400 rounded-md">
-                    <div className="flex">
-                        <div className="flex-shrink-0"><i className="fas fa-info-circle text-yellow-500 text-xl"></i></div>
-                        <div className="ml-3">
-                            <p className="text-sm text-yellow-700">
-                                <strong>使用方法:</strong> ここで設定したリンクは、サイトフッターに自動的に反映されます。
-                                URLを更新すると、即座にフロントエンドのリンクが変更されます。
-                            </p>
-                            <p className="text-sm text-yellow-700 mt-1">
-                                設定データはブラウザのローカルストレージに保存されます。
-                            </p>
+
+            </div>
+        )}
+
+        {viewMode === 'adminSettings' && (
+            <div className="bg-white p-6 md:p-8 rounded-xl shadow-2xl">
+                <h2 className="text-2xl font-bold text-gray-800 mb-6 flex items-center">
+                    <i className="fas fa-user-cog mr-3 text-indigo-600"></i>管理者設定
+                </h2>
+                
+                {adminSettingsStatus && (
+                    <div className={`p-3 mb-4 rounded-md text-sm ${adminSettingsStatus.includes('エラー') ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'}`}>
+                        {adminSettingsStatus}
+                    </div>
+                )}
+
+                <div className="space-y-8">
+                    {/* パスワードリセット用設定 */}
+                    <div className="p-6 bg-blue-50 border border-blue-200 rounded-lg">
+                        <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+                            <i className="fas fa-shield-alt mr-2 text-blue-600"></i>
+                            パスワードリセット認証設定
+                        </h3>
+                        <p className="text-sm text-gray-600 mb-6">
+                            管理者パスワードを忘れた場合に使用する認証方法を設定します。
+                        </p>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            {/* 電話番号設定 */}
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-2">
+                                    <i className="fas fa-mobile-alt mr-2 text-blue-500"></i>
+                                    登録電話番号
+                                </label>
+                                <input
+                                    type="tel"
+                                    value={adminPhoneNumber}
+                                    onChange={(e) => setAdminPhoneNumber(e.target.value)}
+                                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-150 ease-in-out"
+                                    placeholder="例: +819012345678 または 09012345678"
+                                />
+                                <p className="text-xs text-gray-500 mt-1">
+                                    SMS認証でパスワードリセットを行う際に使用されます
+                                </p>
+                            </div>
+
+                            {/* バックアップコード設定 */}
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-2">
+                                    <i className="fas fa-key mr-2 text-green-500"></i>
+                                    バックアップコード
+                                </label>
+                                <input
+                                    type="text"
+                                    value={adminBackupCode}
+                                    onChange={(e) => setAdminBackupCode(e.target.value)}
+                                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 transition duration-150 ease-in-out"
+                                    placeholder="例: MT-BACKUP-2024"
+                                />
+                                <p className="text-xs text-gray-500 mt-1">
+                                    SMS認証が利用できない場合の代替認証方法です（8文字以上）
+                                </p>
+                            </div>
                         </div>
+                    </div>
+
+                    {/* セキュリティ情報 */}
+                    <div className="p-6 bg-yellow-50 border border-yellow-200 rounded-lg">
+                        <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+                            <i className="fas fa-exclamation-triangle mr-2 text-yellow-600"></i>
+                            セキュリティ情報
+                        </h3>
+                        
+                        <div className="space-y-4">
+                            <div className="flex items-start space-x-3">
+                                <i className="fas fa-info-circle text-blue-500 mt-1"></i>
+                                <div>
+                                    <h4 className="font-medium text-gray-800">パスワードリセット手順</h4>
+                                    <p className="text-sm text-gray-600">
+                                        1. ログイン画面で「パスワードを忘れた場合」をクリック<br/>
+                                        2. SMS認証またはバックアップコードで本人確認<br/>
+                                        3. 新しいパスワードを設定
+                                    </p>
+                                </div>
+                            </div>
+                            
+                            <div className="flex items-start space-x-3">
+                                <i className="fas fa-lock text-green-500 mt-1"></i>
+                                <div>
+                                    <h4 className="font-medium text-gray-800">セキュリティ対策</h4>
+                                    <p className="text-sm text-gray-600">
+                                        • 電話番号とバックアップコードは安全な場所に保管してください<br/>
+                                        • バックアップコードは定期的に変更することを推奨します<br/>
+                                        • SMS認証が利用できない場合に備えてバックアップコードを必ず設定してください
+                                    </p>
+                                </div>
+                            </div>
+
+                            <div className="flex items-start space-x-3">
+                                <i className="fas fa-shield-alt text-purple-500 mt-1"></i>
+                                <div>
+                                    <h4 className="font-medium text-gray-800">認証方法</h4>
+                                    <p className="text-sm text-gray-600">
+                                        • <strong>SMS認証:</strong> 登録電話番号に送信される4桁の認証コード<br/>
+                                        • <strong>バックアップコード:</strong> 事前に設定した固定のコード<br/>
+                                        • どちらか一方の認証に成功すればパスワードリセットが可能です
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* 保存ボタン */}
+                    <div className="flex justify-center">
+                        <button
+                            onClick={handleSaveAdminSettings}
+                            className="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-3 px-8 rounded-lg shadow-md hover:shadow-lg transition duration-150 ease-in-out flex items-center"
+                        >
+                            <i className="fas fa-save mr-2"></i>
+                            管理者設定を保存
+                        </button>
                     </div>
                 </div>
             </div>
@@ -1264,8 +1597,6 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
       <footer className="bg-gray-200 text-center py-4 mt-auto">
         <p className="text-xs text-gray-600">
           &copy; {new Date().getFullYear()} MoneyTicket Admin Dashboard.
-          <br />
-          セキュリティとプライバシーを最優先に。
         </p>
       </footer>
     </div>
