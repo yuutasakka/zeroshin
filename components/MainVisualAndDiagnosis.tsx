@@ -1,6 +1,17 @@
-
 import React, { useState, useEffect } from 'react';
 import { DiagnosisQuestion, DiagnosisStep, DiagnosisFormState } from '../types';
+import { MainVisualData, defaultMainVisualData } from '../data/homepageContentData';
+
+// Supabase クライアント作成
+const createSupabaseClient = () => {
+  const supabaseUrl = 'https://gfwkhjqgkigfmrhhqsfo.supabase.co';
+  const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imdmd2toanFna2lnZm1yaGhxc2ZvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzU2NjI4MDEsImV4cCI6MjA1MTIzODgwMX0.fEYn7B-vOxqjwlV6dH6_WNPJZrV3lnz0M9xNw8JfzQA';
+  
+  return {
+    url: supabaseUrl,
+    key: supabaseKey
+  };
+};
 
 const diagnosisStepsData: DiagnosisStep[] = [
   {
