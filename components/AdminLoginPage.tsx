@@ -615,9 +615,14 @@ const AdminLoginPage: React.FC<AdminLoginPageProps> = ({ onLoginSuccess, onNavig
                 <input
                   type="tel"
                   value={resetPhoneNumber}
-                  onChange={(e) => setResetPhoneNumber(e.target.value)}
+                  onChange={(e) => {
+                    const numbersOnly = e.target.value.replace(/\D/g, '');
+                    setResetPhoneNumber(numbersOnly);
+                  }}
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   placeholder="例: 09012345678"
+                  inputMode="numeric"
+                  pattern="[0-9]*"
                 />
                 <p className="text-xs text-gray-500 mt-1">
                   管理画面に登録されている電話番号を入力してください

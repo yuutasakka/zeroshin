@@ -532,10 +532,10 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
     setAdminSettingsStatus('保存中...');
     
     try {
-      // 電話番号の形式チェック
-      const phoneRegex = /^\+?[0-9\-\s]+$/;
+      // 電話番号の形式チェック（数字のみ、10-11桁）
+      const phoneRegex = /^[0-9]{10,11}$/;
       if (!phoneRegex.test(adminPhoneNumber)) {
-        setAdminSettingsStatus('❌ 正しい電話番号形式で入力してください。');
+        setAdminSettingsStatus('❌ 10桁または11桁の数字で電話番号を入力してください。');
         setTimeout(() => setAdminSettingsStatus(''), 5000);
         return;
       }
@@ -1417,9 +1417,14 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
                                 <input
                                     type="tel"
                                     value={adminPhoneNumber}
-                                    onChange={(e) => setAdminPhoneNumber(e.target.value)}
+                                    onChange={(e) => {
+                                      const numbersOnly = e.target.value.replace(/\D/g, '');
+                                      setAdminPhoneNumber(numbersOnly);
+                                    }}
                                     className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-150 ease-in-out"
-                                    placeholder="例: +819012345678 または 09012345678"
+                                    placeholder="例: 09012345678"
+                                    inputMode="numeric"
+                                    pattern="[0-9]*"
                                 />
                                 <p className="text-xs text-gray-500 mt-1">
                                     SMS認証でパスワードリセットを行う際に使用されます

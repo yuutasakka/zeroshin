@@ -86,7 +86,13 @@ const MainVisualAndDiagnosis: React.FC<MainVisualAndDiagnosisProps> = ({ onProce
   const currentQuestionData = diagnosisStepsData.find(s => s.step === currentStep)?.question;
 
   const handleInputChange = (questionId: string, value: string) => {
-    setFormData(prev => ({ ...prev, [questionId]: value }));
+    // 電話番号の場合は数字のみに制限
+    if (questionId === 'phoneNumber') {
+      const numbersOnly = value.replace(/\D/g, '');
+      setFormData(prev => ({ ...prev, [questionId]: numbersOnly }));
+    } else {
+      setFormData(prev => ({ ...prev, [questionId]: value }));
+    }
   };
 
   const validateCurrentStep = (): boolean => {
@@ -299,7 +305,8 @@ const MainVisualAndDiagnosis: React.FC<MainVisualAndDiagnosisProps> = ({ onProce
                       placeholder={currentQuestionData.placeholder || ''}
                       className="luxury-input w-full"
                       autoComplete="tel"
-                      inputMode="tel"
+                      inputMode="numeric"
+                      pattern="[0-9]*"
                       required
                     />
                   )}

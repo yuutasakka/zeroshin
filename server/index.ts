@@ -144,16 +144,16 @@ const verificationCodes = new Map<string, { code: string; expiry: number; attemp
 // 入力検証ルール
 const phoneValidation = [
   body('phoneNumber')
-    .isLength({ min: 10, max: 15 })
-    .matches(/^[\+]?[0-9\-\s]+$/)
-    .withMessage('正しい電話番号形式で入力してください')
+    .isLength({ min: 10, max: 11 })
+    .matches(/^[0-9]+$/)
+    .withMessage('電話番号は10桁または11桁の数字で入力してください')
 ];
 
 const verificationValidation = [
   body('phoneNumber')
-    .isLength({ min: 10, max: 15 })
-    .matches(/^[\+]?[0-9\-\s]+$/)
-    .withMessage('正しい電話番号形式で入力してください'),
+    .isLength({ min: 10, max: 11 })
+    .matches(/^[0-9]+$/)
+    .withMessage('電話番号は10桁または11桁の数字で入力してください'),
   body('code')
     .isLength({ min: 4, max: 6 })
     .isNumeric()
