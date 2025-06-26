@@ -24,9 +24,6 @@ if (!accountSid || !authToken || !twilioPhoneNumber) {
 }
 
 console.log('✅ Twilio設定確認完了');
-console.log('- ACCOUNT_SID:', accountSid.substring(0, 10) + '...');
-console.log('- AUTH_TOKEN:', authToken.substring(0, 10) + '...');
-console.log('- PHONE_NUMBER:', twilioPhoneNumber);
 
 const client = twilio(accountSid, authToken);
 
@@ -87,7 +84,7 @@ app.post('/api/sms/send', async (req, res) => {
       to: normalizedPhoneNumber,
     });
 
-    console.log(`SMS送信成功: ${normalizedPhoneNumber} に認証コード ${verificationCode} を送信`);
+    console.log(`SMS送信成功: ${normalizedPhoneNumber}`);
 
     res.json({
       success: true,
@@ -98,13 +95,7 @@ app.post('/api/sms/send', async (req, res) => {
   } catch (error) {
     console.error('SMS送信エラー:', error);
     
-    // Twilioエラーの詳細情報を出力
-    if (error && typeof error === 'object') {
-      console.error('- エラーコード:', (error as any).code);
-      console.error('- エラーメッセージ:', (error as any).message);
-      console.error('- ステータス:', (error as any).status);
-      console.error('- 詳細:', (error as any).moreInfo);
-    }
+
     
     res.status(500).json({
       error: 'SMS送信に失敗しました',
@@ -179,8 +170,7 @@ app.get('/api/health', (req, res) => {
 
 // サーバー開始
 app.listen(PORT, () => {
-  console.log(`🚀 SMS認証サーバーが http://localhost:${PORT} で起動しました`);
-  console.log(`📱 Twilio本番モードで稼働中`);
+  console.log(`🚀 マネーチケット認証サーバーが http://localhost:${PORT} で起動しました`);
 });
 
 export default app; 
