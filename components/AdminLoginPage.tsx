@@ -319,19 +319,28 @@ const saveAdminCredentials = async (newCredentials: any) => {
   }
 };
 
-// セキュアなセッション管理
+// セキュアなセッション管理（Supabase連携）
 class SessionManager {
-  static createSecureSession(username: string): string {
+  static async createSecureSession(username: string, adminId: number): Promise<string> {
     const sessionData = {
       username,
+      adminId,
       timestamp: Date.now(),
       expires: Date.now() + SECURITY_CONFIG.SESSION_TIMEOUT,
       sessionId: CryptoJS.lib.WordArray.random(128/8).toString(),
       csrfToken: CryptoJS.lib.WordArray.random(128/8).toString()
     };
 
+    // ローカルストレージに保存
     SecureStorage.setSecureItem('admin_session', sessionData);
     sessionStorage.setItem('admin_authenticated', 'true');
+    
+    // Supabaseにもセッションを記録（非同期）
+    try {
+      await SupabaseAdminAPI.createAdminSession(adminId, sessionData);
+    } catch (error) {
+      console.warn('Supabaseセッション記録に失敗:', error);
+    }
     
     return sessionData.sessionId;
   }
@@ -382,12 +391,13 @@ interface LoginAttempt {
   userAgent?: string;
 }
 
-// セキュアなログイン試行記録
+// セキュアなログイン試行記録（Supabase連携）
 class LoginAttemptManager {
   private static key = 'admin_login_attempts';
 
-  static recordAttempt(success: boolean): void {
+  static async recordAttempt(success: boolean, username: string = 'admin', failureReason?: string): Promise<void> {
     try {
+      // ローカルストレージにも記録
       const attempts = this.getAttempts();
       const newAttempt: LoginAttempt = {
         timestamp: Date.now(),
@@ -404,6 +414,14 @@ class LoginAttemptManager {
       );
 
       SecureStorage.setSecureItem(this.key, filtered);
+      
+      // Supabaseにも記録（非同期）
+      try {
+        await SupabaseAdminAPI.recordLoginAttempt(username, success, failureReason);
+      } catch (error) {
+        console.warn('Supabaseログイン試行記録に失敗:', error);
+      }
+      
     } catch (error) {
       console.error('ログイン試行記録エラー:', error);
     }
@@ -805,8 +823,12 @@ const AdminLoginPage: React.FC<AdminLoginPageProps> = ({ onLoginSuccess, onNavig
 
       if (authSuccess) {
         console.log('🎉 認証成功！');
-        LoginAttemptManager.recordAttempt(true);
-        const sessionId = SessionManager.createSecureSession(username);
+        
+        // Supabaseにログイン成功を記録
+        await LoginAttemptManager.recordAttempt(true, username);
+        
+        // セッション作成（Supabase連携）
+        const sessionId = await SessionManager.createSecureSession(username, currentCredentials.id || 1);
         
         console.log('ログイン成功 - セッションID:', sessionId);
         console.log('onLoginSuccess関数を呼び出します...');
@@ -828,7 +850,10 @@ const AdminLoginPage: React.FC<AdminLoginPageProps> = ({ onLoginSuccess, onNavig
         }, 100);
         return;
       } else {
-        LoginAttemptManager.recordAttempt(false);
+        // ログイン失敗をSupabaseに記録
+        const failureReason = showBackupCodeInput ? 'Invalid backup code' : 'Invalid username or password';
+        await LoginAttemptManager.recordAttempt(false, username, failureReason);
+        
         setError(showBackupCodeInput ? 
           'バックアップコードが正しくありません。' : 
           'ユーザー名またはパスワードが正しくありません。'
@@ -846,7 +871,9 @@ const AdminLoginPage: React.FC<AdminLoginPageProps> = ({ onLoginSuccess, onNavig
     } catch (error) {
       console.error('ログイン処理エラー:', error);
       setError('ログイン処理中にエラーが発生しました。');
-      LoginAttemptManager.recordAttempt(false);
+      
+      // エラーもSupabaseに記録
+      await LoginAttemptManager.recordAttempt(false, username, `System error: ${error instanceof Error ? error.message : 'Unknown error'}`);
     } finally {
       setIsLoading(false);
     }
