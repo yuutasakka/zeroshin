@@ -532,6 +532,16 @@ const AdminLoginPage: React.FC<AdminLoginPageProps> = ({ onLoginSuccess, onNavig
         const sessionId = SessionManager.createSecureSession(username);
         
         console.log('ログイン成功 - セッションID:', sessionId);
+        
+        // デバッグ用アラート
+        alert('ログイン成功！管理画面に移動します。');
+        
+        // 状態をリセット
+        setUsername('');
+        setPassword('');
+        setBackupCode('');
+        setError('');
+        
         onLoginSuccess();
         return;
       } else {
@@ -761,7 +771,7 @@ const AdminLoginPage: React.FC<AdminLoginPageProps> = ({ onLoginSuccess, onNavig
                 className="w-full bg-purple-600 hover:bg-purple-700 disabled:bg-gray-400 text-white font-semibold py-3 px-4 rounded-lg transition duration-150 ease-in-out"
               >
                 <i className="fas fa-save mr-2"></i>
-                セキュアパスワードを設定
+                新しい管理者パスワードを設定
               </button>
             </div>
           )}
@@ -797,12 +807,16 @@ const AdminLoginPage: React.FC<AdminLoginPageProps> = ({ onLoginSuccess, onNavig
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-gray-100 p-4">
       <div className="w-full max-w-md bg-white rounded-xl shadow-2xl p-8">
-        <div className="text-center mb-8">
-          <div className="inline-block p-3 bg-gradient-to-r from-gray-700 to-gray-900 rounded-full mb-3">
-            <i className="fas fa-user-shield text-3xl text-white"></i>
+                  <div className="text-center mb-8">
+          <div className="inline-block p-3 bg-gradient-to-r from-blue-600 to-purple-700 rounded-full mb-3">
+            <i className="fas fa-cogs text-3xl text-white"></i>
           </div>
-          <h1 className="text-3xl font-bold text-gray-800">セキュア管理者ログイン</h1>
-          <p className="text-gray-600 mt-1">暗号化認証システムで管理画面にアクセス</p>
+          <h1 className="text-3xl font-bold text-gray-800">管理者専用ログイン</h1>
+          <p className="text-gray-600 mt-1">マネーチケット管理画面へのアクセス</p>
+          <div className="mt-2 inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+            <i className="fas fa-shield-alt mr-1"></i>
+            システム管理者・運営者専用
+          </div>
         </div>
 
         {/* セキュリティ状況表示 */}
@@ -835,7 +849,8 @@ const AdminLoginPage: React.FC<AdminLoginPageProps> = ({ onLoginSuccess, onNavig
             <>
               <div>
                 <label htmlFor="username" className="block text-sm font-medium text-gray-700 mb-1">
-                  ユーザー名
+                  <i className="fas fa-user-tie mr-1 text-blue-600"></i>
+                  管理者ユーザー名
                 </label>
                 <input
                   type="text"
@@ -844,14 +859,15 @@ const AdminLoginPage: React.FC<AdminLoginPageProps> = ({ onLoginSuccess, onNavig
                   onChange={(e) => setUsername(e.target.value)}
                   required
                   disabled={isLocked || isLoading}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-gray-500 focus:border-gray-500 transition duration-150 ease-in-out disabled:bg-gray-100"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-150 ease-in-out disabled:bg-gray-100"
                   placeholder="admin"
                 />
               </div>
 
               <div>
                 <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
-                  パスワード
+                  <i className="fas fa-key mr-1 text-purple-600"></i>
+                  管理者パスワード
                 </label>
                 <div className="relative">
                   <input
@@ -861,8 +877,8 @@ const AdminLoginPage: React.FC<AdminLoginPageProps> = ({ onLoginSuccess, onNavig
                     onChange={(e) => setPassword(e.target.value)}
                     required
                     disabled={isLocked || isLoading}
-                    className="w-full px-4 py-3 pr-12 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-gray-500 focus:border-gray-500 transition duration-150 ease-in-out disabled:bg-gray-100"
-                    placeholder="セキュアパスワード"
+                    className="w-full px-4 py-3 pr-12 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition duration-150 ease-in-out disabled:bg-gray-100"
+                    placeholder="管理者パスワードを入力"
                   />
                   <button
                     type="button"
@@ -900,7 +916,8 @@ const AdminLoginPage: React.FC<AdminLoginPageProps> = ({ onLoginSuccess, onNavig
           ) : (
             <div>
               <label htmlFor="backupCode" className="block text-sm font-medium text-gray-700 mb-1">
-                バックアップコード
+                <i className="fas fa-shield-alt mr-1 text-green-600"></i>
+                管理者バックアップコード
               </label>
               <input
                 type="text"
@@ -929,17 +946,17 @@ const AdminLoginPage: React.FC<AdminLoginPageProps> = ({ onLoginSuccess, onNavig
             <button
               type="submit"
               disabled={isLocked || isLoading}
-              className="w-full bg-gray-800 hover:bg-gray-900 disabled:bg-gray-400 disabled:cursor-not-allowed text-white font-semibold py-3 px-4 rounded-lg shadow-md hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-gray-700 focus:ring-opacity-50 transition duration-150 ease-in-out flex items-center justify-center"
+              className="w-full bg-gradient-to-r from-blue-600 to-purple-700 hover:from-blue-700 hover:to-purple-800 disabled:bg-gray-400 disabled:cursor-not-allowed text-white font-semibold py-3 px-4 rounded-lg shadow-md hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-opacity-50 transition duration-150 ease-in-out flex items-center justify-center"
             >
               {isLoading ? (
                 <>
                   <i className="fas fa-spinner fa-spin mr-2"></i>
-                  暗号化認証中...
+                  管理画面認証中...
                 </>
               ) : (
                 <>
                   <i className="fas fa-sign-in-alt mr-2"></i>
-                  {showBackupCodeInput ? 'バックアップコードでログイン' : 'セキュアログイン'}
+                  {showBackupCodeInput ? '管理画面にログイン（バックアップコード）' : '管理画面にログイン'}
                 </>
               )}
             </button>
@@ -958,7 +975,7 @@ const AdminLoginPage: React.FC<AdminLoginPageProps> = ({ onLoginSuccess, onNavig
                   disabled={isLoading}
                 >
                   <i className={`fas ${showBackupCodeInput ? 'fa-key' : 'fa-shield-alt'} mr-2`}></i>
-                  {showBackupCodeInput ? '通常ログインに戻る' : 'バックアップコードを使用'}
+                  {showBackupCodeInput ? 'パスワードログインに戻る' : '管理者バックアップコードを使用'}
                 </button>
 
                 <button
@@ -971,7 +988,7 @@ const AdminLoginPage: React.FC<AdminLoginPageProps> = ({ onLoginSuccess, onNavig
                   disabled={isLoading}
                 >
                   <i className="fas fa-lock-open mr-2"></i>
-                  セキュアパスワードリセット
+                  管理者パスワードをリセット
                 </button>
               </>
             )}
@@ -984,7 +1001,7 @@ const AdminLoginPage: React.FC<AdminLoginPageProps> = ({ onLoginSuccess, onNavig
             className="text-sm text-gray-600 hover:text-gray-800 hover:underline transition duration-150 ease-in-out"
           >
             <i className="fas fa-home mr-1"></i>
-            ホームページに戻る
+            マネーチケット診断画面に戻る
           </button>
         </div>
 
@@ -992,10 +1009,10 @@ const AdminLoginPage: React.FC<AdminLoginPageProps> = ({ onLoginSuccess, onNavig
         <div className="mt-6 p-3 bg-green-50 border border-green-200 rounded-lg">
           <div className="flex items-center text-sm text-green-700">
             <i className="fas fa-shield-alt mr-2"></i>
-            <span className="font-medium">セキュリティ保護済み</span>
+            <span className="font-medium">管理者認証システム保護中</span>
           </div>
           <p className="text-xs text-green-600 mt-1">
-            暗号化ストレージ・ハッシュ化パスワード・セッション管理
+            エンタープライズレベルセキュリティ・多要素認証・アクセス制御
           </p>
         </div>
       </div>
