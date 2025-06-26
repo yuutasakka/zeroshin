@@ -79,6 +79,121 @@ class SupabaseAdminAPI {
       throw error;
     }
   }
+
+  // 管理者設定をSupabaseで保存・読み込み
+  static async saveAdminSetting(key: string, value: any): Promise<boolean> {
+    try {
+      console.log(`Supabase管理者設定保存を試行中...`, { key, value });
+      
+      const response = await fetch(`${supabaseConfig.url}/functions/v1/admin-settings`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${supabaseConfig.key}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ key, value }),
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.warn(`Supabase設定保存API Error ${response.status}: ${errorText}`);
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+
+      const result = await response.json();
+      console.log('Supabase設定保存成功');
+      return result.success;
+    } catch (error) {
+      console.warn('Supabase設定保存エラー:', error);
+      return false;
+    }
+  }
+
+  static async loadAdminSetting(key: string): Promise<any> {
+    try {
+      console.log(`Supabase管理者設定読み込みを試行中...`, { key });
+      
+      const response = await fetch(`${supabaseConfig.url}/functions/v1/admin-settings?key=${encodeURIComponent(key)}`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${supabaseConfig.key}`,
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.warn(`Supabase設定読み込みAPI Error ${response.status}: ${errorText}`);
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+
+      const result = await response.json();
+      console.log('Supabase設定読み込み成功');
+      return result.data;
+    } catch (error) {
+      console.warn('Supabase設定読み込みエラー:', error);
+      return null;
+    }
+  }
+
+  // 管理者認証情報をEdge Function経由で更新
+  static async updateAdminCredentialsViaFunction(phoneNumber: string, backupCode: string): Promise<boolean> {
+    try {
+      console.log('Supabase管理者認証情報更新（Edge Function）を試行中...');
+      
+      const response = await fetch(`${supabaseConfig.url}/functions/v1/admin-credentials-update`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${supabaseConfig.key}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ 
+          phone_number: phoneNumber, 
+          backup_code: backupCode 
+        }),
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.warn(`Supabase認証情報更新API Error ${response.status}: ${errorText}`);
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+
+      const result = await response.json();
+      console.log('Supabase認証情報更新成功');
+      return result.success;
+    } catch (error) {
+      console.warn('Supabase認証情報更新エラー:', error);
+      return false;
+    }
+  }
+
+  static async loadAdminCredentialsViaFunction(): Promise<any> {
+    try {
+      console.log('Supabase管理者認証情報読み込み（Edge Function）を試行中...');
+      
+      const response = await fetch(`${supabaseConfig.url}/functions/v1/admin-credentials-update`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${supabaseConfig.key}`,
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.warn(`Supabase認証情報読み込みAPI Error ${response.status}: ${errorText}`);
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+
+      const result = await response.json();
+      console.log('Supabase認証情報読み込み成功');
+      return result.data;
+    } catch (error) {
+      console.warn('Supabase認証情報読み込みエラー:', error);
+      return null;
+    }
+  }
 }
 
 // セキュリティ設定（AdminLoginPageと同じ）
@@ -286,8 +401,8 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
       try {
         console.log('管理者設定をSupabaseから読み込み中...');
         
-        // まずSupabaseから最新データを取得
-        const supabaseCredentials = await SupabaseAdminAPI.fetchAdminCredentials('admin');
+        // まずSupabaseから最新データを取得（Edge Function経由）
+        const supabaseCredentials = await SupabaseAdminAPI.loadAdminCredentialsViaFunction();
         
         if (supabaseCredentials) {
           console.log('Supabaseから管理者設定を取得');
@@ -296,14 +411,10 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
           
           // ローカルストレージにもバックアップとして保存
           const localCredentials = {
-            id: supabaseCredentials.id,
-            username: supabaseCredentials.username,
-            password: supabaseCredentials.password_hash,
+            username: 'admin',
             backup_code: supabaseCredentials.backup_code,
             phone_number: supabaseCredentials.phone_number,
-            is_active: supabaseCredentials.is_active,
-            created_at: supabaseCredentials.created_at,
-            last_updated: supabaseCredentials.updated_at
+            last_updated: new Date().toISOString()
           };
           SecureStorage.setSecureItem('admin_credentials', localCredentials);
           return;
@@ -344,60 +455,169 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
   }, [onLogout]);
 
   useEffect(() => {
-    // Load financial products for editing
-    const customProductsString = localStorage.getItem('customFinancialProducts');
-    if (customProductsString) {
+    // Load all settings from Supabase first, fallback to localStorage
+    const loadAllSettings = async () => {
+      // Load financial products for editing
       try {
-        const customProducts = JSON.parse(customProductsString);
-        setProductsForEditing(customProducts);
-      } catch (e) {
-        console.error("Error parsing custom financial products from localStorage:", e);
-        setProductsForEditing(JSON.parse(JSON.stringify(defaultFinancialProducts))); // Deep copy
+        const supabaseProducts = await SupabaseAdminAPI.loadAdminSetting('financial_products');
+        if (supabaseProducts) {
+          console.log('Supabaseから商品設定を読み込み');
+          setProductsForEditing(supabaseProducts);
+          // ローカルストレージにもバックアップ保存
+          localStorage.setItem('customFinancialProducts', JSON.stringify(supabaseProducts));
+        } else {
+          // フォールバック: ローカルストレージから読み込み
+          const customProductsString = localStorage.getItem('customFinancialProducts');
+          if (customProductsString) {
+            try {
+              const customProducts = JSON.parse(customProductsString);
+              setProductsForEditing(customProducts);
+            } catch (e) {
+              console.error("Error parsing custom financial products from localStorage:", e);
+              setProductsForEditing(JSON.parse(JSON.stringify(defaultFinancialProducts))); // Deep copy
+            }
+          } else {
+            setProductsForEditing(JSON.parse(JSON.stringify(defaultFinancialProducts))); // Deep copy
+          }
+        }
+      } catch (error) {
+        console.warn('商品設定のSupabase読み込みエラー、ローカルストレージを使用:', error);
+        const customProductsString = localStorage.getItem('customFinancialProducts');
+        if (customProductsString) {
+          try {
+            const customProducts = JSON.parse(customProductsString);
+            setProductsForEditing(customProducts);
+          } catch (e) {
+            console.error("Error parsing custom financial products from localStorage:", e);
+            setProductsForEditing(JSON.parse(JSON.stringify(defaultFinancialProducts))); // Deep copy
+          }
+        } else {
+          setProductsForEditing(JSON.parse(JSON.stringify(defaultFinancialProducts))); // Deep copy
+        }
       }
-    } else {
-      setProductsForEditing(JSON.parse(JSON.stringify(defaultFinancialProducts))); // Deep copy
-    }
 
-    // Load testimonials for editing
-    const customTestimonialsString = localStorage.getItem('customTestimonialsData');
-    if (customTestimonialsString) {
+      // Load testimonials for editing
       try {
-        const customTestimonials = JSON.parse(customTestimonialsString);
-        setTestimonialsForEditing(customTestimonials);
-      } catch (e) {
-        console.error("Error parsing custom testimonials from localStorage:", e);
-        setTestimonialsForEditing(JSON.parse(JSON.stringify(defaultTestimonialsData))); // Deep copy
+        const supabaseTestimonials = await SupabaseAdminAPI.loadAdminSetting('testimonials');
+        if (supabaseTestimonials) {
+          console.log('Supabaseからお客様の声を読み込み');
+          setTestimonialsForEditing(supabaseTestimonials);
+          // ローカルストレージにもバックアップ保存
+          localStorage.setItem('customTestimonials', JSON.stringify(supabaseTestimonials));
+        } else {
+          // フォールバック: ローカルストレージから読み込み
+          const customTestimonialsString = localStorage.getItem('customTestimonials');
+          if (customTestimonialsString) {
+            try {
+              const customTestimonials = JSON.parse(customTestimonialsString);
+              setTestimonialsForEditing(customTestimonials);
+            } catch (e) {
+              console.error("Error parsing custom testimonials from localStorage:", e);
+              setTestimonialsForEditing(JSON.parse(JSON.stringify(defaultTestimonialsData))); // Deep copy
+            }
+          } else {
+            setTestimonialsForEditing(JSON.parse(JSON.stringify(defaultTestimonialsData))); // Deep copy
+          }
+        }
+      } catch (error) {
+        console.warn('お客様の声のSupabase読み込みエラー、ローカルストレージを使用:', error);
+        const customTestimonialsString = localStorage.getItem('customTestimonials');
+        if (customTestimonialsString) {
+          try {
+            const customTestimonials = JSON.parse(customTestimonialsString);
+            setTestimonialsForEditing(customTestimonials);
+          } catch (e) {
+            console.error("Error parsing custom testimonials from localStorage:", e);
+            setTestimonialsForEditing(JSON.parse(JSON.stringify(defaultTestimonialsData))); // Deep copy
+          }
+        } else {
+          setTestimonialsForEditing(JSON.parse(JSON.stringify(defaultTestimonialsData))); // Deep copy
+        }
       }
-    } else {
-      setTestimonialsForEditing(JSON.parse(JSON.stringify(defaultTestimonialsData))); // Deep copy
-    }
 
-    // Load tracking scripts
-    const storedTrackingScripts = localStorage.getItem('trackingScripts');
-    if (storedTrackingScripts) {
+      // Load tracking scripts
       try {
-        const parsedScripts = JSON.parse(storedTrackingScripts);
-        setTrackingScripts(parsedScripts);
-      } catch (e) {
-        console.error("Error parsing tracking scripts from localStorage:", e);
-        setTrackingScripts({ head: '', bodyEnd: '' });
+        const supabaseTrackingScripts = await SupabaseAdminAPI.loadAdminSetting('tracking_scripts');
+        if (supabaseTrackingScripts) {
+          console.log('Supabaseからアナリティクス設定を読み込み');
+          setTrackingScripts(supabaseTrackingScripts);
+          // ローカルストレージにもバックアップ保存
+          localStorage.setItem('customTrackingScripts', JSON.stringify(supabaseTrackingScripts));
+        } else {
+          // フォールバック: ローカルストレージから読み込み
+          const storedTrackingScripts = localStorage.getItem('customTrackingScripts');
+          if (storedTrackingScripts) {
+            try {
+              const parsedScripts = JSON.parse(storedTrackingScripts);
+              setTrackingScripts(parsedScripts);
+            } catch (e) {
+              console.error("Error parsing tracking scripts from localStorage:", e);
+              setTrackingScripts({ head: '', bodyEnd: '' });
+            }
+          } else {
+            setTrackingScripts({ head: '', bodyEnd: '' });
+          }
+        }
+      } catch (error) {
+        console.warn('アナリティクス設定のSupabase読み込みエラー、ローカルストレージを使用:', error);
+        const storedTrackingScripts = localStorage.getItem('customTrackingScripts');
+        if (storedTrackingScripts) {
+          try {
+            const parsedScripts = JSON.parse(storedTrackingScripts);
+            setTrackingScripts(parsedScripts);
+          } catch (e) {
+            console.error("Error parsing tracking scripts from localStorage:", e);
+            setTrackingScripts({ head: '', bodyEnd: '' });
+          }
+        } else {
+          setTrackingScripts({ head: '', bodyEnd: '' });
+        }
       }
-    }
 
-    // Load notification settings
-    const storedNotificationSettings = localStorage.getItem('notificationConfigurations');
-    if (storedNotificationSettings) {
+      // Load notification settings
       try {
-        const parsedSettings = JSON.parse(storedNotificationSettings);
-        setNotificationSettings({ ...initialNotificationSettings, ...parsedSettings });
-      } catch (e) {
-        console.error("Error parsing notification settings from localStorage:", e);
-        setNotificationSettings(initialNotificationSettings);
+        const supabaseNotificationSettings = await SupabaseAdminAPI.loadAdminSetting('notification_settings');
+        if (supabaseNotificationSettings) {
+          console.log('Supabaseから通知設定を読み込み');
+          setNotificationSettings({ ...initialNotificationSettings, ...supabaseNotificationSettings });
+          // ローカルストレージにもバックアップ保存
+          localStorage.setItem('notificationConfigurations', JSON.stringify(supabaseNotificationSettings));
+        } else {
+          // フォールバック: ローカルストレージから読み込み
+          const storedNotificationSettings = localStorage.getItem('notificationConfigurations');
+          if (storedNotificationSettings) {
+            try {
+              const parsedSettings = JSON.parse(storedNotificationSettings);
+              setNotificationSettings({ ...initialNotificationSettings, ...parsedSettings });
+            } catch (e) {
+              console.error("Error parsing notification settings from localStorage:", e);
+              setNotificationSettings(initialNotificationSettings);
+            }
+          } else {
+            setNotificationSettings(initialNotificationSettings);
+          }
+        }
+      } catch (error) {
+        console.warn('通知設定のSupabase読み込みエラー、ローカルストレージを使用:', error);
+        const storedNotificationSettings = localStorage.getItem('notificationConfigurations');
+        if (storedNotificationSettings) {
+          try {
+            const parsedSettings = JSON.parse(storedNotificationSettings);
+            setNotificationSettings({ ...initialNotificationSettings, ...parsedSettings });
+          } catch (e) {
+            console.error("Error parsing notification settings from localStorage:", e);
+            setNotificationSettings(initialNotificationSettings);
+          }
+        } else {
+          setNotificationSettings(initialNotificationSettings);
+        }
       }
-    }
 
-    // Load legal links
-    loadLegalLinks();
+      // Load legal links
+      await loadLegalLinksFromSupabase();
+    };
+
+    loadAllSettings();
   }, []);
 
   const calculateDashboardStats = (sessions: UserSessionData[]) => {
@@ -501,11 +721,25 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
         }
       }
 
-      // ローカルストレージに確実に保存
+      // まずローカルストレージに確実に保存
       localStorage.setItem('customFinancialProducts', JSON.stringify(productsForEditing));
       console.log('商品設定をローカルストレージに保存完了');
       
-      setProductSettingsStatus('✅ 商品設定が正常に保存されました');
+      // Supabaseにも保存を試行
+      try {
+        const supabaseSuccess = await SupabaseAdminAPI.saveAdminSetting('financial_products', productsForEditing);
+        if (supabaseSuccess) {
+          console.log('Supabaseにも商品設定を保存完了');
+          setProductSettingsStatus('✅ 商品設定が正常に保存され、データベースに反映されました');
+        } else {
+          console.warn('Supabase保存に失敗しましたが、ローカル保存は成功');
+          setProductSettingsStatus('✅ 商品設定が正常に保存されました（ローカル保存）');
+        }
+      } catch (supabaseError) {
+        console.warn('Supabase保存でエラーが発生しましたが、ローカル保存は成功:', supabaseError);
+        setProductSettingsStatus('✅ 商品設定が正常に保存されました（ローカル保存）');
+      }
+      
       setTimeout(() => setProductSettingsStatus(''), 3000);
     } catch (error) {
       console.error("Error saving product settings:", error);
@@ -596,10 +830,25 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
           }
         }
 
-        // ローカルストレージに保存
+        // まずローカルストレージに保存
         localStorage.setItem('customTestimonials', JSON.stringify(testimonialsForEditing));
+        console.log('お客様の声をローカルストレージに保存完了');
         
-        setTestimonialStatus('✅ お客様の声が正常に保存されました');
+        // Supabaseにも保存を試行
+        try {
+          const supabaseSuccess = await SupabaseAdminAPI.saveAdminSetting('testimonials', testimonialsForEditing);
+          if (supabaseSuccess) {
+            console.log('Supabaseにもお客様の声を保存完了');
+            setTestimonialStatus('✅ お客様の声が正常に保存され、データベースに反映されました');
+          } else {
+            console.warn('Supabase保存に失敗しましたが、ローカル保存は成功');
+            setTestimonialStatus('✅ お客様の声が正常に保存されました（ローカル保存）');
+          }
+        } catch (supabaseError) {
+          console.warn('Supabase保存でエラーが発生しましたが、ローカル保存は成功:', supabaseError);
+          setTestimonialStatus('✅ お客様の声が正常に保存されました（ローカル保存）');
+        }
+        
         setTimeout(() => setTestimonialStatus(''), 3000);
     } catch (error) {
         console.error("Error saving testimonial settings:", error);
@@ -632,10 +881,25 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
             }
           }
 
-          // ローカルストレージに保存
+          // まずローカルストレージに保存
           localStorage.setItem('customTrackingScripts', JSON.stringify(trackingScripts));
+          console.log('アナリティクス設定をローカルストレージに保存完了');
           
-          setAnalyticsSettingsStatus('✅ アナリティクス設定が正常に保存されました');
+          // Supabaseにも保存を試行
+          try {
+            const supabaseSuccess = await SupabaseAdminAPI.saveAdminSetting('tracking_scripts', trackingScripts);
+            if (supabaseSuccess) {
+              console.log('Supabaseにもアナリティクス設定を保存完了');
+              setAnalyticsSettingsStatus('✅ アナリティクス設定が正常に保存され、データベースに反映されました');
+            } else {
+              console.warn('Supabase保存に失敗しましたが、ローカル保存は成功');
+              setAnalyticsSettingsStatus('✅ アナリティクス設定が正常に保存されました（ローカル保存）');
+            }
+          } catch (supabaseError) {
+            console.warn('Supabase保存でエラーが発生しましたが、ローカル保存は成功:', supabaseError);
+            setAnalyticsSettingsStatus('✅ アナリティクス設定が正常に保存されました（ローカル保存）');
+          }
+          
           setTimeout(() => setAnalyticsSettingsStatus(''), 3000);
       } catch (error) {
           console.error("Error saving tracking scripts:", error);
@@ -678,10 +942,25 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
           }
         }
 
-        // ローカルストレージに保存
+        // まずローカルストレージに保存
         localStorage.setItem('notificationConfigurations', JSON.stringify(notificationSettings));
+        console.log('通知設定をローカルストレージに保存完了');
         
-        setNotificationSettingsStatus('✅ 通知設定が正常に保存されました');
+        // Supabaseにも保存を試行
+        try {
+          const supabaseSuccess = await SupabaseAdminAPI.saveAdminSetting('notification_settings', notificationSettings);
+          if (supabaseSuccess) {
+            console.log('Supabaseにも通知設定を保存完了');
+            setNotificationSettingsStatus('✅ 通知設定が正常に保存され、データベースに反映されました');
+          } else {
+            console.warn('Supabase保存に失敗しましたが、ローカル保存は成功');
+            setNotificationSettingsStatus('✅ 通知設定が正常に保存されました（ローカル保存）');
+          }
+        } catch (supabaseError) {
+          console.warn('Supabase保存でエラーが発生しましたが、ローカル保存は成功:', supabaseError);
+          setNotificationSettingsStatus('✅ 通知設定が正常に保存されました（ローカル保存）');
+        }
+        
         setTimeout(() => setNotificationSettingsStatus(''), 3000);
     } catch (error) {
         console.error("Error saving notification settings:", error);
@@ -691,8 +970,32 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
   };
 
   // Legal Links Management Functions
-  const loadLegalLinks = async () => {
+  const loadLegalLinksFromSupabase = async () => {
     try {
+      const supabaseLegalLinks = await SupabaseAdminAPI.loadAdminSetting('legal_links');
+      if (supabaseLegalLinks) {
+        console.log('Supabaseからリーガルリンクを読み込み');
+        setLegalLinks(supabaseLegalLinks);
+        // ローカルストレージにもバックアップ保存
+        localStorage.setItem('customLegalLinks', JSON.stringify(supabaseLegalLinks));
+      } else {
+        // フォールバック: ローカルストレージから読み込み
+        const storedLinks = localStorage.getItem('customLegalLinks');
+        if (storedLinks) {
+          setLegalLinks(JSON.parse(storedLinks));
+        } else {
+          // デフォルトのリーガルリンク
+          const defaultLinks: LegalLink[] = [
+            { id: 1, link_type: 'privacy_policy', title: 'プライバシーポリシー', url: '#privacy', is_active: true, created_at: '', updated_at: '' },
+            { id: 2, link_type: 'terms_of_service', title: '利用規約', url: '#terms', is_active: true, created_at: '', updated_at: '' },
+            { id: 3, link_type: 'specified_commercial_transactions', title: '特定商取引法', url: '#scta', is_active: true, created_at: '', updated_at: '' },
+            { id: 4, link_type: 'company_info', title: '会社概要', url: '#company', is_active: true, created_at: '', updated_at: '' }
+          ];
+          setLegalLinks(defaultLinks);
+        }
+      }
+    } catch (error) {
+      console.warn('リーガルリンクのSupabase読み込みエラー、ローカルストレージを使用:', error);
       const storedLinks = localStorage.getItem('customLegalLinks');
       if (storedLinks) {
         setLegalLinks(JSON.parse(storedLinks));
@@ -706,8 +1009,6 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
         ];
         setLegalLinks(defaultLinks);
       }
-    } catch (error) {
-      console.error('Error loading legal links:', error);
     }
   };
 
@@ -737,11 +1038,26 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
       
       setLegalLinks(updatedLinks);
       
-      // ローカルストレージに保存
+      // まずローカルストレージに保存
       localStorage.setItem('customLegalLinks', JSON.stringify(updatedLinks));
+      console.log('リーガルリンクをローカルストレージに保存完了');
+      
+      // Supabaseにも保存を試行
+      try {
+        const supabaseSuccess = await SupabaseAdminAPI.saveAdminSetting('legal_links', updatedLinks);
+        if (supabaseSuccess) {
+          console.log('Supabaseにもリーガルリンクを保存完了');
+          setLegalLinksStatus('✅ リーガルリンクが正常に保存され、データベースに反映されました');
+        } else {
+          console.warn('Supabase保存に失敗しましたが、ローカル保存は成功');
+          setLegalLinksStatus('✅ リーガルリンクが正常に保存されました（ローカル保存）');
+        }
+      } catch (supabaseError) {
+        console.warn('Supabase保存でエラーが発生しましたが、ローカル保存は成功:', supabaseError);
+        setLegalLinksStatus('✅ リーガルリンクが正常に保存されました（ローカル保存）');
+      }
       
       setEditingLegalLink(null);
-      setLegalLinksStatus('✅ リーガルリンクが正常に保存されました');
       setTimeout(() => setLegalLinksStatus(''), 3000);
     } catch (error) {
       console.error('Error saving legal link:', error);
@@ -807,7 +1123,6 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
       console.log('管理者設定をローカルストレージに保存中...');
       
       // まずローカルストレージに確実に保存
-      const existingCredentials = SecureStorage.getSecureItem('admin_credentials');
       let credentials = {
         username: "admin",
         password: "MoneyTicket2024!",
@@ -815,8 +1130,10 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
         phone_number: "+81901234567"
       };
 
-      if (existingCredentials) {
-        credentials = { ...credentials, ...existingCredentials };
+      // 既存認証情報を再取得
+      const currentCredentials = SecureStorage.getSecureItem('admin_credentials');
+      if (currentCredentials) {
+        credentials = { ...credentials, ...currentCredentials };
       }
 
       // 新しい設定で更新
@@ -831,26 +1148,21 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
       SecureStorage.setSecureItem('admin_credentials', updatedCredentials);
       console.log('ローカルストレージに保存完了');
       
-      // Supabaseへの保存は非同期で試行（失敗しても処理を続行）
+      // Supabaseへの保存は非同期で試行（Edge Function経由）
       try {
         console.log('Supabaseへの保存を試行中...');
-        const supabaseCredentials = await SupabaseAdminAPI.fetchAdminCredentials('admin');
+        const supabaseSuccess = await SupabaseAdminAPI.updateAdminCredentialsViaFunction(adminPhoneNumber, adminBackupCode);
         
-        if (supabaseCredentials) {
-          await SupabaseAdminAPI.updateAdminCredentials(supabaseCredentials.id, {
-            phone_number: adminPhoneNumber,
-            backup_code: adminBackupCode,
-            updated_at: new Date().toISOString()
-          });
+        if (supabaseSuccess) {
           console.log('Supabaseにも正常に保存されました');
-          setAdminSettingsStatus('✅ 管理者設定が正常に保存されました');
+          setAdminSettingsStatus('✅ 管理者設定が正常に保存され、データベースに反映されました');
         } else {
-          console.log('Supabaseにデータが見つかりませんでした');
-          setAdminSettingsStatus('✅ 管理者設定が正常に保存されました');
+          console.warn('Supabase保存に失敗しましたが、ローカル保存は成功');
+          setAdminSettingsStatus('✅ 管理者設定が正常に保存されました（ローカル保存）');
         }
       } catch (supabaseError) {
         console.warn('Supabase保存でエラーが発生しましたが、ローカル保存は成功:', supabaseError);
-        setAdminSettingsStatus('✅ 管理者設定が正常に保存されました');
+        setAdminSettingsStatus('✅ 管理者設定が正常に保存されました（ローカル保存）');
       }
       
       setTimeout(() => setAdminSettingsStatus(''), 3000);
