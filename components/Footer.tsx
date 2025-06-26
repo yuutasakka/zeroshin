@@ -1,5 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { LegalLink } from '../types';
+import { FooterData, defaultFooterData } from '../data/homepageContentData';
+import { secureLog } from '../security.config';
+import { createSupabaseClient } from './adminUtils';
 
 interface FooterProps {
   onNavigateToAdminLogin: () => void;
@@ -7,26 +10,45 @@ interface FooterProps {
 
 const Footer: React.FC<FooterProps> = ({ onNavigateToAdminLogin }) => {
   const [legalLinks, setLegalLinks] = useState<LegalLink[]>([]);
+  const [footerData, setFooterData] = useState<FooterData>(defaultFooterData);
 
   useEffect(() => {
-    const loadLegalLinks = () => {
-      try {
-        const storedLinks = localStorage.getItem('customLegalLinks');
-        if (storedLinks) {
-          setLegalLinks(JSON.parse(storedLinks));
-        } else {
-          // デフォルトのリーガルリンク
-          const defaultLinks: LegalLink[] = [
-            { id: 1, link_type: 'privacy_policy', title: 'プライバシーポリシー', url: '#privacy', is_active: true, created_at: '', updated_at: '' },
-            { id: 2, link_type: 'terms_of_service', title: '利用規約', url: '#terms', is_active: true, created_at: '', updated_at: '' },
-            { id: 3, link_type: 'specified_commercial_transactions', title: '特定商取引法', url: '#scta', is_active: true, created_at: '', updated_at: '' },
-            { id: 4, link_type: 'company_info', title: '会社概要', url: '#company', is_active: true, created_at: '', updated_at: '' }
-          ];
-          setLegalLinks(defaultLinks);
+    loadFooterFromSupabase();
+    loadLegalLinks();
+  }, []);
+
+  const loadFooterFromSupabase = async () => {
+    try {
+      const supabaseConfig = createSupabaseClient();
+      const response = await fetch(`${supabaseConfig.url}/rest/v1/homepage_content_settings?setting_key=eq.footer_data&select=*`, {
+        headers: {
+          'Authorization': `Bearer ${supabaseConfig.key}`,
+          'apikey': supabaseConfig.key,
+          'Content-Type': 'application/json'
         }
-      } catch (error) {
-        console.error('Error loading legal links:', error);
-        // エラー時はデフォルトリンク使用
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        if (data && data.length > 0 && data[0].setting_data) {
+          secureLog('✅ フッターデータをSupabaseから読み込み');
+          setFooterData(data[0].setting_data);
+        }
+      } else {
+        secureLog('フッターデータの読み込みに失敗、デフォルトデータを使用');
+      }
+    } catch (error) {
+      secureLog('フッターデータ読み込みエラー、デフォルトデータを使用:', error);
+    }
+  };
+
+  const loadLegalLinks = () => {
+    try {
+      const storedLinks = localStorage.getItem('customLegalLinks');
+      if (storedLinks) {
+        setLegalLinks(JSON.parse(storedLinks));
+      } else {
+        // デフォルトのリーガルリンク
         const defaultLinks: LegalLink[] = [
           { id: 1, link_type: 'privacy_policy', title: 'プライバシーポリシー', url: '#privacy', is_active: true, created_at: '', updated_at: '' },
           { id: 2, link_type: 'terms_of_service', title: '利用規約', url: '#terms', is_active: true, created_at: '', updated_at: '' },
@@ -35,10 +57,20 @@ const Footer: React.FC<FooterProps> = ({ onNavigateToAdminLogin }) => {
         ];
         setLegalLinks(defaultLinks);
       }
-    };
+    } catch (error) {
+      secureLog('Error loading legal links:', error);
+      // エラー時はデフォルトリンク使用
+      const defaultLinks: LegalLink[] = [
+        { id: 1, link_type: 'privacy_policy', title: 'プライバシーポリシー', url: '#privacy', is_active: true, created_at: '', updated_at: '' },
+        { id: 2, link_type: 'terms_of_service', title: '利用規約', url: '#terms', is_active: true, created_at: '', updated_at: '' },
+        { id: 3, link_type: 'specified_commercial_transactions', title: '特定商取引法', url: '#scta', is_active: true, created_at: '', updated_at: '' },
+        { id: 4, link_type: 'company_info', title: '会社概要', url: '#company', is_active: true, created_at: '', updated_at: '' }
+      ];
+      setLegalLinks(defaultLinks);
+    }
+  };
 
-    loadLegalLinks();
-    
+  useEffect(() => {
     // ローカルストレージの変更を監視
     const handleStorageChange = (e: StorageEvent) => {
       if (e.key === 'customLegalLinks') {
@@ -60,15 +92,15 @@ const Footer: React.FC<FooterProps> = ({ onNavigateToAdminLogin }) => {
             >
                 <i className="fas fa-coins text-white"></i>
             </div>
-            <h5 className="text-2xl font-bold" style={{ color: 'var(--accent-gold)' }}>マネーチケット</h5>
+            <h5 className="text-2xl font-bold" style={{ color: 'var(--accent-gold)' }}>{footerData.siteName}</h5>
         </div>
         
         <div className="text-center space-y-4">
-            <p className="text-gray-300">お客様の豊かな未来を全力でサポートいたします</p>
+            <p className="text-gray-300">{footerData.description}</p>
             
             <div className="text-sm text-gray-400 space-y-2">
-                <p>運営会社：株式会社◯◯◯ | 金融商品取引業者 関東財務局長（金商）第◯◯◯号</p>
-                <p>〒XXX-XXXX 東京都○○区○○ X-X-X | TEL：0120-XXX-XXX</p>
+                <p>{footerData.companyInfo}</p>
+                <p>{footerData.contactInfo}</p>
                 <nav className="flex flex-wrap justify-center space-x-4 md:space-x-6 mt-6">
                     {legalLinks
                       .filter(link => link.is_active)
@@ -95,7 +127,7 @@ const Footer: React.FC<FooterProps> = ({ onNavigateToAdminLogin }) => {
                       管理者ログイン
                     </a>
                 </nav>
-                <p className="mt-8 text-gray-500">&copy; {new Date().getFullYear()} MoneyTicket. All rights reserved.</p>
+                <p className="mt-8 text-gray-500">&copy; {new Date().getFullYear()} {footerData.copyright}</p>
             </div>
         </div>
       </div>

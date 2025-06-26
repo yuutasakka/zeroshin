@@ -33,6 +33,15 @@ export interface MainVisualData {
   subtitle: string;
 }
 
+// フッター設定の型定義
+export interface FooterData {
+  siteName: string;
+  description: string;
+  companyInfo: string;
+  contactInfo: string;
+  copyright: string;
+}
+
 export const defaultReasonsToChooseData: ReasonsToChooseData = {
   title: "選ばれる理由があります",
   subtitle: "多くのお客様から信頼をいただいている、確かな実績をご紹介します",
@@ -80,4 +89,13 @@ export const defaultMainVisualData: MainVisualData = {
   title: "あなたの資産運用を\nプロフェッショナルが\n完全サポート",
   highlightWord: "プロフェッショナル",
   subtitle: "経験豊富なファイナンシャルプランナーが、あなただけの投資戦略を無料でご提案。 安心して始められる資産運用の第一歩を踏み出しませんか。"
+};
+
+// デフォルトフッター情報
+export const defaultFooterData: FooterData = {
+  siteName: "マネーチケット",
+  description: "お客様の豊かな未来を全力でサポートいたします",
+  companyInfo: "運営会社：株式会社◯◯◯ | 金融商品取引業者 関東財務局長（金商）第◯◯◯号",
+  contactInfo: "〒XXX-XXXX 東京都○○区○○ X-X-X | TEL：0120-XXX-XXX",
+  copyright: "MoneyTicket. All rights reserved."
 }; 

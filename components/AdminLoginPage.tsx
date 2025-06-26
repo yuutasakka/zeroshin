@@ -1,22 +1,20 @@
 import React, { useState, useEffect, FormEvent } from 'react';
 import CryptoJS from 'crypto-js';
+import { SECURITY_CONFIG, SUPABASE_CONFIG, secureLog } from '../security.config';
+import { SecureStorage } from './adminUtils';
 
-// Supabaseクライアント（環境変数から設定を取得）
-const createSupabaseClient = () => {
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://eqirzbuqgymrtnfmvwhq.supabase.co';
-  const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVxaXJ6YnVxZ3ltcnRuZm12d2hxIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1MDY3MjE3MCwiZXhwIjoyMDY2MjQ4MTcwfQ.JTjrWFXHn4JKfRFLLV2Mb_xzZOqB7j9OQ4TQo3xgmJE';
-  
-  // 管理者認証にはサービスロールキーを使用（RLSをバイパス）
+// AdminLoginPage専用のSupabaseクライアント（管理者認証にはサービスロールキーを使用）
+const createAdminSupabaseClient = () => {
   return {
-    url: supabaseUrl,
-    key: supabaseServiceKey
+    url: SUPABASE_CONFIG.url,
+    key: SUPABASE_CONFIG.serviceRoleKey
   };
 };
 
-const supabaseConfig = createSupabaseClient();
+const supabaseConfig = createAdminSupabaseClient();
 
-// Supabase API ヘルパー関数
-class SupabaseAdminAPI {
+// AdminLoginPage専用のSupabase API ヘルパー関数（認証専用機能）
+class AdminAuthAPI {
   static async fetchAdminCredentials(username: string = 'admin') {
     try {
       const response = await fetch(`${supabaseConfig.url}/rest/v1/admin_credentials?username=eq.${username}`, {
@@ -35,7 +33,7 @@ class SupabaseAdminAPI {
       const data = await response.json();
       return data[0] || null;
     } catch (error) {
-      console.error('Supabase管理者認証情報取得エラー:', error);
+      secureLog('Supabase管理者認証情報取得エラー:', error);
       return null;
     }
   }
@@ -58,7 +56,7 @@ class SupabaseAdminAPI {
 
       return await response.json();
     } catch (error) {
-      console.error('Supabase管理者認証情報更新エラー:', error);
+      secureLog('Supabase管理者認証情報更新エラー:', error);
       throw error;
     }
   }
@@ -82,10 +80,10 @@ class SupabaseAdminAPI {
       });
 
       if (!response.ok) {
-        console.warn('ログイン試行記録の保存に失敗:', response.status);
+        secureLog('ログイン試行記録の保存に失敗:', response.status);
       }
     } catch (error) {
-      console.error('ログイン試行記録エラー:', error);
+      secureLog('ログイン試行記録エラー:', error);
     }
   }
 
@@ -109,66 +107,11 @@ class SupabaseAdminAPI {
       });
 
       if (!response.ok) {
-        console.warn('セッション作成の保存に失敗:', response.status);
+        secureLog('セッション作成の保存に失敗:', response.status);
       }
     } catch (error) {
-      console.error('セッション作成エラー:', error);
+      secureLog('セッション作成エラー:', error);
     }
-  }
-}
-
-// セキュリティ設定
-const SECURITY_CONFIG = {
-  MAX_LOGIN_ATTEMPTS: 5,
-  LOCKOUT_DURATION: 15 * 60 * 1000, // 15分
-  SESSION_TIMEOUT: 30 * 60 * 1000,  // 30分
-  PASSWORD_MIN_LENGTH: 8,
-  REQUIRE_2FA: false, // 2FA有効化フラグ
-  ENCRYPTION_KEY: 'MoneyTicket-SecureKey-2024', // 本番環境では環境変数から取得
-};
-
-// セキュアなストレージ管理
-class SecureStorage {
-  private static encryptionKey = SECURITY_CONFIG.ENCRYPTION_KEY;
-
-  static encrypt(data: any): string {
-    try {
-      const jsonString = JSON.stringify(data);
-      const encrypted = CryptoJS.AES.encrypt(jsonString, this.encryptionKey).toString();
-      return encrypted;
-    } catch (error) {
-      console.error('暗号化エラー:', error);
-      return '';
-    }
-  }
-
-  static decrypt(encryptedData: string): any {
-    try {
-      if (!encryptedData) return null;
-      const decrypted = CryptoJS.AES.decrypt(encryptedData, this.encryptionKey);
-      const jsonString = decrypted.toString(CryptoJS.enc.Utf8);
-      return JSON.parse(jsonString);
-    } catch (error) {
-      console.error('復号化エラー:', error);
-      return null;
-    }
-  }
-
-  static setSecureItem(key: string, value: any): void {
-    const encrypted = this.encrypt(value);
-    if (encrypted) {
-      localStorage.setItem(key, encrypted);
-    }
-  }
-
-  static getSecureItem(key: string): any {
-    const encrypted = localStorage.getItem(key);
-    if (!encrypted) return null;
-    return this.decrypt(encrypted);
-  }
-
-  static removeSecureItem(key: string): void {
-    localStorage.removeItem(key);
   }
 }
 
@@ -186,7 +129,7 @@ class PasswordManager {
       });
       return salt.toString() + ':' + hash.toString();
     } catch (error) {
-      console.error('パスワードハッシュ化エラー:', error);
+      secureLog('パスワードハッシュ化エラー:', error);
       return password; // フォールバック
     }
   }
@@ -207,7 +150,7 @@ class PasswordManager {
       
       return hash.toString() === hashStr;
     } catch (error) {
-      console.error('パスワード検証エラー:', error);
+      secureLog('パスワード検証エラー:', error);
       return false;
     }
   }
@@ -216,13 +159,13 @@ class PasswordManager {
 // Supabaseから管理者認証情報を読み込み（ローカルストレージとの併用）
 const loadAdminCredentials = async () => {
   try {
-    console.log('管理者認証情報をSupabaseから読み込み中...');
+    secureLog('管理者認証情報をSupabaseから読み込み中...');
     
     // まずSupabaseから最新データを取得
-    const supabaseCredentials = await SupabaseAdminAPI.fetchAdminCredentials('admin');
+            const supabaseCredentials = await AdminAuthAPI.fetchAdminCredentials('admin');
     
     if (supabaseCredentials) {
-      console.log('Supabaseから認証情報を取得:', supabaseCredentials.username);
+      secureLog('Supabaseから認証情報を取得:', supabaseCredentials.username);
       
       // ローカルストレージにもバックアップとして保存
       const localCredentials = {
@@ -241,19 +184,19 @@ const loadAdminCredentials = async () => {
     }
     
     // Supabaseから取得できない場合はローカルストレージを確認
-    console.log('Supabaseから取得できませんでした。ローカルストレージを確認中...');
+    secureLog('Supabaseから取得できませんでした。ローカルストレージを確認中...');
     const stored = SecureStorage.getSecureItem('admin_credentials');
     if (stored) {
-      console.log('ローカルストレージから認証情報を取得');
+      secureLog('ローカルストレージから認証情報を取得');
       return stored;
     }
 
     // どちらからも取得できない場合はデフォルト値を返す
-    console.log('デフォルト認証情報を使用');
+    secureLog('デフォルト認証情報を使用');
     return await getDefaultCredentials();
     
   } catch (error) {
-    console.error('認証情報読み込みエラー:', error);
+    secureLog('認証情報読み込みエラー:', error);
     
     // エラー時はローカルストレージをフォールバック
     const stored = SecureStorage.getSecureItem('admin_credentials');
@@ -265,15 +208,20 @@ const loadAdminCredentials = async () => {
   }
 };
 
-// デフォルト認証情報（フォールバック用）
+// デフォルト認証情報（初回セットアップ用）
 const getDefaultCredentials = async () => {
-  // 一時的に平文パスワードを使用（ハッシュ化エラー対策）
+  // 本番環境では初回セットアップ時にパスワードを設定する仕組みが必要
+  if (SECURITY_CONFIG.IS_PRODUCTION) {
+    throw new Error('本番環境では初回セットアップが必要です。管理者にお問い合わせください。');
+  }
+  
+  // 開発環境でのみ使用
   return {
     id: 1,
     username: "admin",
-    password: "MoneyTicket2024!",
-    backup_code: "MT-BACKUP-2024",
-    phone_number: "09012345678",
+    password: "MoneyTicket2024!", // 開発環境のみ
+    backup_code: "MT-BACKUP-2024", // 開発環境のみ
+    phone_number: "09012345678", // 開発環境のみ
     is_active: true,
     created_at: Date.now(),
     last_updated: Date.now()
@@ -283,7 +231,7 @@ const getDefaultCredentials = async () => {
 // 管理者認証情報をSupabaseに保存
 const saveAdminCredentials = async (newCredentials: any) => {
   try {
-    console.log('管理者認証情報をSupabaseに保存中...');
+    secureLog('管理者認証情報をSupabaseに保存中...');
     
     if (newCredentials.id) {
       // 既存レコードの更新
@@ -294,8 +242,8 @@ const saveAdminCredentials = async (newCredentials: any) => {
         updated_at: new Date().toISOString()
       };
       
-      await SupabaseAdminAPI.updateAdminCredentials(newCredentials.id, updates);
-      console.log('Supabaseの認証情報を更新しました');
+              await AdminAuthAPI.updateAdminCredentials(newCredentials.id, updates);
+      secureLog('Supabaseの認証情報を更新しました');
     }
     
     // ローカルストレージにもバックアップとして保存
@@ -305,9 +253,9 @@ const saveAdminCredentials = async (newCredentials: any) => {
     };
     SecureStorage.setSecureItem('admin_credentials', credentialsWithTimestamp);
     
-    console.log('管理者認証情報が安全に保存されました');
+    secureLog('管理者認証情報が安全に保存されました');
   } catch (error) {
-    console.error('認証情報保存エラー:', error);
+    secureLog('認証情報保存エラー:', error);
     
     // Supabaseへの保存に失敗してもローカルストレージには保存
     const credentialsWithTimestamp = {
@@ -315,7 +263,7 @@ const saveAdminCredentials = async (newCredentials: any) => {
       last_updated: Date.now()
     };
     SecureStorage.setSecureItem('admin_credentials', credentialsWithTimestamp);
-    console.log('ローカルストレージに認証情報を保存しました（フォールバック）');
+    secureLog('ローカルストレージに認証情報を保存しました（フォールバック）');
   }
 };
 
@@ -337,9 +285,9 @@ class SessionManager {
     
     // Supabaseにもセッションを記録（非同期）
     try {
-      await SupabaseAdminAPI.createAdminSession(adminId, sessionData);
+      await AdminAuthAPI.createAdminSession(adminId, sessionData);
     } catch (error) {
-      console.warn('Supabaseセッション記録に失敗:', error);
+      secureLog('Supabaseセッション記録に失敗:', error);
     }
     
     return sessionData.sessionId;
@@ -358,7 +306,7 @@ class SessionManager {
 
       return true;
     } catch (error) {
-      console.error('セッション検証エラー:', error);
+      secureLog('セッション検証エラー:', error);
       return false;
     }
   }
@@ -372,7 +320,7 @@ class SessionManager {
       SecureStorage.setSecureItem('admin_session', sessionData);
       return true;
     } catch (error) {
-      console.error('セッション延長エラー:', error);
+      secureLog('セッション延長エラー:', error);
       return false;
     }
   }
@@ -417,13 +365,13 @@ class LoginAttemptManager {
       
       // Supabaseにも記録（非同期）
       try {
-        await SupabaseAdminAPI.recordLoginAttempt(username, success, failureReason);
+        await AdminAuthAPI.recordLoginAttempt(username, success, failureReason);
       } catch (error) {
-        console.warn('Supabaseログイン試行記録に失敗:', error);
+        secureLog('Supabaseログイン試行記録に失敗:', error);
       }
       
     } catch (error) {
-      console.error('ログイン試行記録エラー:', error);
+      secureLog('ログイン試行記録エラー:', error);
     }
   }
 
@@ -431,7 +379,7 @@ class LoginAttemptManager {
     try {
       return SecureStorage.getSecureItem(this.key) || [];
     } catch (error) {
-      console.error('ログイン試行取得エラー:', error);
+      secureLog('ログイン試行取得エラー:', error);
       return [];
     }
   }
@@ -463,9 +411,9 @@ class LoginAttemptManager {
     try {
       // ローカルストレージから失敗した試行履歴をクリア
       SecureStorage.removeSecureItem(this.key);
-      console.log('✅ セキュリティ警告がリセットされました');
+      secureLog('✅ セキュリティ警告がリセットされました');
     } catch (error) {
-      console.error('セキュリティ警告リセットエラー:', error);
+      secureLog('セキュリティ警告リセットエラー:', error);
     }
   }
 
@@ -476,9 +424,9 @@ class LoginAttemptManager {
       // 成功したログイン履歴のみ残す（統計目的）
       const successfulAttempts = attempts.filter(attempt => attempt.success);
       SecureStorage.setSecureItem(this.key, successfulAttempts);
-      console.log('✅ 失敗したログイン試行履歴がクリアされました');
+      secureLog('✅ 失敗したログイン試行履歴がクリアされました');
     } catch (error) {
-      console.error('失敗試行履歴クリアエラー:', error);
+      secureLog('失敗試行履歴クリアエラー:', error);
     }
   }
 }
@@ -515,7 +463,7 @@ const AdminLoginPage: React.FC<AdminLoginPageProps> = ({ onLoginSuccess, onNavig
     const initializeAuth = async () => {
       try {
         // 🧹 古いセッション状態をクリア（ページリロード時）
-        console.log('🧹 認証ページ初期化: 古いセッション状態をクリア');
+        secureLog('🧹 認証ページ初期化: 古いセッション状態をクリア');
         sessionStorage.removeItem('admin_authenticated');
         
         // 期限切れのセッションもクリア
@@ -525,18 +473,18 @@ const AdminLoginPage: React.FC<AdminLoginPageProps> = ({ onLoginSuccess, onNavig
             const session = JSON.parse(adminSession);
             const now = Date.now();
             if (session.expires && now > session.expires) {
-              console.log('🔄 期限切れセッションを削除');
+              secureLog('🔄 期限切れセッションを削除');
               localStorage.removeItem('admin_session');
             }
           } catch (error) {
-            console.warn('セッション解析エラー:', error);
+            secureLog('セッション解析エラー:', error);
             localStorage.removeItem('admin_session');
           }
         }
 
         // 🔧 開発時のデバッグ: ログイン試行履歴をリセット
         if (process.env.NODE_ENV === 'development') {
-          console.log('🔧 開発モード: ログイン試行履歴をリセット');
+          secureLog('🔧 開発モード: ログイン試行履歴をリセット');
           LoginAttemptManager.clearFailedAttempts();
         }
         
@@ -552,7 +500,7 @@ const AdminLoginPage: React.FC<AdminLoginPageProps> = ({ onLoginSuccess, onNavig
           setLockoutTimeRemaining(timeRemaining);
         }
       } catch (error) {
-        console.error('認証初期化エラー:', error);
+        secureLog('認証初期化エラー:', error);
         setError('認証システムの初期化に失敗しました。');
         
         // エラー時は全セッション情報をクリア
@@ -626,8 +574,8 @@ const AdminLoginPage: React.FC<AdminLoginPageProps> = ({ onLoginSuccess, onNavig
 
   // パスワードリセット用SMS送信
   const sendResetSMS = async () => {
-    console.log('SMS送信開始 - 入力電話番号:', resetPhoneNumber);
-    console.log('登録済み電話番号:', currentCredentials?.phone_number);
+    secureLog('SMS送信開始 - 入力電話番号:', resetPhoneNumber);
+    secureLog('登録済み電話番号:', currentCredentials?.phone_number);
     
     if (!currentCredentials) {
       setError('認証情報が読み込まれていません。ページを再読み込みしてください。');
@@ -646,7 +594,7 @@ const AdminLoginPage: React.FC<AdminLoginPageProps> = ({ onLoginSuccess, onNavig
     const inputNormalized = normalizePhoneNumber(resetPhoneNumber);
     const registeredNormalized = normalizePhoneNumber(currentCredentials.phone_number);
     
-    console.log('正規化後 - 入力:', inputNormalized, '登録済み:', registeredNormalized);
+    secureLog('正規化後 - 入力: ' + inputNormalized + ', 登録済み: ' + registeredNormalized);
 
     if (inputNormalized !== registeredNormalized) {
       setError(`登録されている電話番号と一致しません。\n登録番号: ${currentCredentials.phone_number}`);
@@ -657,7 +605,7 @@ const AdminLoginPage: React.FC<AdminLoginPageProps> = ({ onLoginSuccess, onNavig
     setError('');
     
     try {
-      console.log('SMS API呼び出し開始...');
+      secureLog('SMS API呼び出し開始...');
       const response = await fetch('http://localhost:8080/api/sms/send', {
         method: 'POST',
         headers: {
@@ -666,14 +614,14 @@ const AdminLoginPage: React.FC<AdminLoginPageProps> = ({ onLoginSuccess, onNavig
         body: JSON.stringify({ phoneNumber: currentCredentials.phone_number }),
       });
 
-      console.log('SMS API応答ステータス:', response.status);
+      secureLog('SMS API応答ステータス:', response.status);
       
       if (!response.ok) {
         throw new Error(`HTTP ${response.status}: ${response.statusText}`);
       }
 
       const result = await response.json();
-      console.log('SMS API応答:', result);
+      secureLog('SMS API応答:', result);
       
       if (result.success || result.demoCode) {
         setIsCodeSent(true);
@@ -688,7 +636,7 @@ const AdminLoginPage: React.FC<AdminLoginPageProps> = ({ onLoginSuccess, onNavig
         setError(result.error || 'SMS送信に失敗しました。');
       }
     } catch (error) {
-      console.error('SMS送信エラー:', error);
+      secureLog('SMS送信エラー:', error);
       setError(`SMS送信処理中にエラーが発生しました: ${error instanceof Error ? error.message : '不明なエラー'}`);
     } finally {
       setIsLoading(false);
@@ -697,7 +645,7 @@ const AdminLoginPage: React.FC<AdminLoginPageProps> = ({ onLoginSuccess, onNavig
 
   // SMS認証コード検証
   const verifySMSCode = async () => {
-    console.log('SMS認証コード検証開始 - コード:', resetVerificationCode);
+    secureLog('SMS認証コード検証開始 - コード:', resetVerificationCode);
     
     if (!resetVerificationCode || resetVerificationCode.length < 4) {
       setError('認証コードを正しく入力してください。');
@@ -708,7 +656,7 @@ const AdminLoginPage: React.FC<AdminLoginPageProps> = ({ onLoginSuccess, onNavig
     setError('');
     
     try {
-      console.log('SMS認証API呼び出し開始...');
+      secureLog('SMS認証API呼び出し開始...');
       const response = await fetch('http://localhost:8080/api/sms/verify', {
         method: 'POST',
         headers: {
@@ -720,14 +668,14 @@ const AdminLoginPage: React.FC<AdminLoginPageProps> = ({ onLoginSuccess, onNavig
         }),
       });
 
-      console.log('SMS認証API応答ステータス:', response.status);
+      secureLog('SMS認証API応答ステータス:', response.status);
       
       if (!response.ok) {
         throw new Error(`HTTP ${response.status}: ${response.statusText}`);
       }
 
       const result = await response.json();
-      console.log('SMS認証API応答:', result);
+      secureLog('SMS認証API応答:', result);
       
       if (result.success) {
         setResetStep('newpassword');
@@ -737,7 +685,7 @@ const AdminLoginPage: React.FC<AdminLoginPageProps> = ({ onLoginSuccess, onNavig
         setError(result.error || '認証コードが正しくありません。再度確認してください。');
       }
     } catch (error) {
-      console.error('SMS認証エラー:', error);
+      secureLog('SMS認証エラー:', error);
       setError(`認証コード検証中にエラーが発生しました: ${error instanceof Error ? error.message : '不明なエラー'}`);
     } finally {
       setIsLoading(false);
@@ -746,8 +694,8 @@ const AdminLoginPage: React.FC<AdminLoginPageProps> = ({ onLoginSuccess, onNavig
 
   // バックアップコード検証
   const verifyResetBackupCode = () => {
-    console.log('バックアップコード検証開始 - 入力コード:', resetBackupCode);
-    console.log('登録済みバックアップコード:', currentCredentials?.backup_code);
+    secureLog('バックアップコード検証開始 - 入力コード:', resetBackupCode);
+    secureLog('登録済みバックアップコード:', currentCredentials?.backup_code);
     
     if (!currentCredentials) {
       setError('認証情報が読み込まれていません。ページを再読み込みしてください。');
@@ -770,7 +718,7 @@ const AdminLoginPage: React.FC<AdminLoginPageProps> = ({ onLoginSuccess, onNavig
         return;
       }
       
-      console.log('バックアップコード認証成功');
+      secureLog('バックアップコード認証成功');
       setResetStep('newpassword');
       setError('');
       setIsLoading(false);
@@ -780,7 +728,7 @@ const AdminLoginPage: React.FC<AdminLoginPageProps> = ({ onLoginSuccess, onNavig
 
   // パスワード変更実行
   const updatePassword = async () => {
-    console.log('パスワード変更開始');
+    secureLog('パスワード変更開始');
     
     if (!currentCredentials) {
       setError('認証情報が読み込まれていません。ページを再読み込みしてください。');
@@ -807,9 +755,9 @@ const AdminLoginPage: React.FC<AdminLoginPageProps> = ({ onLoginSuccess, onNavig
     setError('');
 
     try {
-      console.log('パスワードハッシュ化開始...');
+      secureLog('パスワードハッシュ化開始...');
       const hashedPassword = await PasswordManager.hashPassword(newPassword);
-      console.log('パスワードハッシュ化完了');
+      secureLog('パスワードハッシュ化完了');
       
       const newCredentials = {
         ...currentCredentials,
@@ -817,10 +765,10 @@ const AdminLoginPage: React.FC<AdminLoginPageProps> = ({ onLoginSuccess, onNavig
         last_updated: Date.now()
       };
       
-      console.log('認証情報保存開始...');
+      secureLog('認証情報保存開始...');
       await saveAdminCredentials(newCredentials);
       setCurrentCredentials(newCredentials);
-      console.log('認証情報保存完了');
+      secureLog('認証情報保存完了');
 
       // 🔐 パスワード変更成功時にセキュリティ警告をリセット
       LoginAttemptManager.clearFailedAttempts();
@@ -841,10 +789,10 @@ const AdminLoginPage: React.FC<AdminLoginPageProps> = ({ onLoginSuccess, onNavig
       setError('');
 
       alert('✅ パスワードが正常に変更されました！\n\nセキュリティ警告もリセットされました。\n新しいパスワードでログインしてください。');
-      console.log('パスワード変更処理完了');
+      secureLog('パスワード変更処理完了');
       
     } catch (error) {
-      console.error('パスワード変更エラー:', error);
+      secureLog('パスワード変更エラー:', error);
       setError(`パスワード変更中にエラーが発生しました: ${error instanceof Error ? error.message : '不明なエラー'}`);
     } finally {
       setIsLoading(false);
@@ -878,7 +826,7 @@ const AdminLoginPage: React.FC<AdminLoginPageProps> = ({ onLoginSuccess, onNavig
         authSuccess = backupCode === currentCredentials.backup_code;
       } else {
         // 通常のログイン（一時的に平文パスワード比較）
-        console.log('認証チェック:', {
+        secureLog('認証チェック:', {
           入力ユーザー名: username,
           保存ユーザー名: currentCredentials.username,
           入力パスワード: password,
@@ -894,7 +842,7 @@ const AdminLoginPage: React.FC<AdminLoginPageProps> = ({ onLoginSuccess, onNavig
             authSuccess = username === currentCredentials.username && 
                          await PasswordManager.verifyPassword(password, currentCredentials.password);
           } catch (error) {
-            console.error('ハッシュ化パスワード検証エラー:', error);
+            secureLog('ハッシュ化パスワード検証エラー:', error);
             // ハッシュ化検証に失敗した場合は平文比較にフォールバック
             authSuccess = username === currentCredentials.username && password === currentCredentials.password;
           }
@@ -902,7 +850,7 @@ const AdminLoginPage: React.FC<AdminLoginPageProps> = ({ onLoginSuccess, onNavig
       }
 
       if (authSuccess) {
-        console.log('🎉 認証成功！');
+        secureLog('🎉 認証成功！');
         
         // Supabaseにログイン成功を記録
         await LoginAttemptManager.recordAttempt(true, username);
@@ -915,15 +863,15 @@ const AdminLoginPage: React.FC<AdminLoginPageProps> = ({ onLoginSuccess, onNavig
         setLockoutTimeRemaining(0);
         
         // 🧹 古いセッション情報をクリアしてから新しいセッションを作成
-        console.log('🧹 古いセッション情報をクリア');
+        secureLog('🧹 古いセッション情報をクリア');
         sessionStorage.clear();
         localStorage.removeItem('admin_session');
         
         // セッション作成（Supabase連携）
         const sessionId = await SessionManager.createSecureSession(username, currentCredentials.id || 1);
         
-        console.log('ログイン成功 - セッションID:', sessionId);
-        console.log('onLoginSuccess関数を呼び出します...');
+        secureLog('ログイン成功 - セッションID:', sessionId);
+        secureLog('onLoginSuccess関数を呼び出します...');
         
         // デバッグ用アラート
         alert('ログイン成功！管理画面に移動します。');
@@ -936,9 +884,9 @@ const AdminLoginPage: React.FC<AdminLoginPageProps> = ({ onLoginSuccess, onNavig
         
         // 少し遅延を入れてから呼び出し
         setTimeout(() => {
-          console.log('onLoginSuccess実行中...');
+          secureLog('onLoginSuccess実行中...');
           onLoginSuccess();
-          console.log('onLoginSuccess実行完了');
+          secureLog('onLoginSuccess実行完了');
         }, 100);
         return;
       } else {
@@ -961,7 +909,7 @@ const AdminLoginPage: React.FC<AdminLoginPageProps> = ({ onLoginSuccess, onNavig
       }
 
     } catch (error) {
-      console.error('ログイン処理エラー:', error);
+      secureLog('ログイン処理エラー:', error);
       setError('ログイン処理中にエラーが発生しました。');
       
       // エラーもSupabaseに記録

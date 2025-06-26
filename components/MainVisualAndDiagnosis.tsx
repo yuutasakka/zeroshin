@@ -1,17 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { DiagnosisQuestion, DiagnosisStep, DiagnosisFormState } from '../types';
 import { MainVisualData, defaultMainVisualData } from '../data/homepageContentData';
-
-// Supabase クライアント作成
-const createSupabaseClient = () => {
-  const supabaseUrl = 'https://gfwkhjqgkigfmrhhqsfo.supabase.co';
-  const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imdmd2toanFna2lnZm1yaGhxc2ZvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzU2NjI4MDEsImV4cCI6MjA1MTIzODgwMX0.fEYn7B-vOxqjwlV6dH6_WNPJZrV3lnz0M9xNw8JfzQA';
-  
-  return {
-    url: supabaseUrl,
-    key: supabaseKey
-  };
-};
+import { secureLog } from '../security.config';
+import { createSupabaseClient } from './adminUtils';
 
 const diagnosisStepsData: DiagnosisStep[] = [
   {
@@ -92,6 +83,36 @@ const MainVisualAndDiagnosis: React.FC<MainVisualAndDiagnosisProps> = ({ onProce
   const [currentStep, setCurrentStep] = useState<number>(1);
   const [formData, setFormData] = useState<DiagnosisFormState>({});
   const [showAIConsent, setShowAIConsent] = useState<boolean>(false);
+  const [mainVisualData, setMainVisualData] = useState<MainVisualData>(defaultMainVisualData);
+
+  useEffect(() => {
+    loadMainVisualFromSupabase();
+  }, []);
+
+  const loadMainVisualFromSupabase = async () => {
+    try {
+      const supabaseConfig = createSupabaseClient();
+      const response = await fetch(`${supabaseConfig.url}/rest/v1/homepage_content_settings?setting_key=eq.main_visual_data&select=*`, {
+        headers: {
+          'Authorization': `Bearer ${supabaseConfig.key}`,
+          'apikey': supabaseConfig.key,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        if (data && data.length > 0 && data[0].setting_data) {
+          secureLog('✅ メインビジュアルデータをSupabaseから読み込み:', data[0].setting_data);
+          setMainVisualData(data[0].setting_data);
+        }
+      } else {
+        secureLog('メインビジュアルデータの読み込みに失敗、デフォルトデータを使用');
+      }
+    } catch (error) {
+      secureLog('メインビジュアルデータ読み込みエラー、デフォルトデータを使用:', error);
+    }
+  };
 
   const totalSteps = diagnosisStepsData.length; 
   const currentQuestionData = diagnosisStepsData.find(s => s.step === currentStep)?.question;
@@ -177,7 +198,7 @@ const MainVisualAndDiagnosis: React.FC<MainVisualAndDiagnosisProps> = ({ onProce
           alert('SMS送信に失敗しました: ' + result.error);
         }
       } catch (error) {
-        console.error('SMS送信エラー:', error);
+        secureLog('SMS送信エラー:', error);
         alert('サーバーとの通信に失敗しました。サーバーが起動しているか確認してください。');
       }
     }
@@ -199,17 +220,32 @@ const MainVisualAndDiagnosis: React.FC<MainVisualAndDiagnosisProps> = ({ onProce
               textShadow: '0 4px 12px rgba(0, 0, 0, 0.9), 0 2px 6px rgba(0, 0, 0, 0.8)',
               letterSpacing: '0.02em'
             }}>
-            あなたの資産運用を<br />
-            <span style={{ 
-              color: '#fbbf24',
-              textShadow: '0 4px 12px rgba(0, 0, 0, 0.95), 0 2px 6px rgba(0, 0, 0, 0.9)',
-              fontWeight: '800'
-            }}>プロフェッショナル</span>が<br />
-            完全サポート
+            {mainVisualData.title.split('\n').map((line, index) => (
+              <React.Fragment key={index}>
+                {line.includes(mainVisualData.highlightWord) ? (
+                  line.split(mainVisualData.highlightWord).map((part, partIndex) => (
+                    <React.Fragment key={partIndex}>
+                      {part}
+                      {partIndex < line.split(mainVisualData.highlightWord).length - 1 && (
+                        <span style={{ 
+                          color: '#fbbf24',
+                          textShadow: '0 4px 12px rgba(0, 0, 0, 0.95), 0 2px 6px rgba(0, 0, 0, 0.9)',
+                          fontWeight: '800'
+                        }}>
+                          {mainVisualData.highlightWord}
+                        </span>
+                      )}
+                    </React.Fragment>
+                  ))
+                ) : (
+                  line
+                )}
+                {index < mainVisualData.title.split('\n').length - 1 && <br />}
+              </React.Fragment>
+            ))}
         </h2>
         <p className="text-xl md:text-2xl mb-12 text-gray-200 max-w-3xl mx-auto leading-relaxed">
-            経験豊富なファイナンシャルプランナーが、あなただけの投資戦略を無料でご提案。
-            安心して始められる資産運用の第一歩を踏み出しませんか。
+            {mainVisualData.subtitle}
         </p>
           
         <div id="diagnosis-form-section" className="luxury-card max-w-2xl mx-auto mb-16 text-left"> {/* text-left for card content */}

@@ -10,6 +10,7 @@ import PhoneVerificationPage from './components/PhoneVerificationPage';
 import DiagnosisResultsPage from './components/DiagnosisResultsPage';
 import AdminLoginPage from './components/AdminLoginPage';
 import AdminDashboardPage from './components/AdminDashboardPage';
+import { ColorThemeProvider } from './components/ColorThemeContext';
 import { DiagnosisFormState, PageView, UserSessionData } from './types';
 
 // AI Client Initialization (GoogleGenAI) has been removed from the frontend.
@@ -255,7 +256,11 @@ const App: React.FC = () => {
 
   if (currentPage === 'login') {
     console.log('Rendering AdminLoginPage');
-    return <AdminLoginPage onLoginSuccess={handleAdminLoginSuccess} onNavigateHome={navigateToHome} />;
+    return (
+      <ColorThemeProvider>
+        <AdminLoginPage onLoginSuccess={handleAdminLoginSuccess} onNavigateHome={navigateToHome} />
+      </ColorThemeProvider>
+    );
   }
 
   if (currentPage === 'adminDashboard') {
@@ -263,39 +268,55 @@ const App: React.FC = () => {
     if (!isAdminLoggedIn) {
       // Redirect to login if not authenticated
       console.log('Not authenticated, redirecting to login');
-      return <AdminLoginPage onLoginSuccess={handleAdminLoginSuccess} onNavigateHome={navigateToHome} />;
+      return (
+        <ColorThemeProvider>
+          <AdminLoginPage onLoginSuccess={handleAdminLoginSuccess} onNavigateHome={navigateToHome} />
+        </ColorThemeProvider>
+      );
     }
     console.log('Authenticated, showing AdminDashboard');
-    return <AdminDashboardPage onLogout={handleAdminLogout} onNavigateHome={navigateToHome} />;
+    return (
+      <ColorThemeProvider>
+        <AdminDashboardPage onLogout={handleAdminLogout} onNavigateHome={navigateToHome} />
+      </ColorThemeProvider>
+    );
   }
 
   if (currentPage === 'verification') {
     return phoneNumberToVerify ? (
-      <PhoneVerificationPage 
-        phoneNumber={phoneNumberToVerify} 
-        onVerificationComplete={handleVerificationComplete}
-        onCancel={handleVerificationCancel}
-      />
+      <ColorThemeProvider>
+        <PhoneVerificationPage 
+          phoneNumber={phoneNumberToVerify} 
+          onVerificationComplete={handleVerificationComplete}
+          onCancel={handleVerificationCancel}
+        />
+      </ColorThemeProvider>
     ) : (
       // Fallback if somehow phoneNumberToVerify is null
-      <MainVisualAndDiagnosis onProceedToVerification={handleProceedToVerification} />
+      <ColorThemeProvider>
+        <MainVisualAndDiagnosis onProceedToVerification={handleProceedToVerification} />
+      </ColorThemeProvider>
     );
   }
 
   if (currentPage === 'results') {
-    return <DiagnosisResultsPage diagnosisData={diagnosisData} onReturnToStart={handleReturnToStart}/>;
+    return (
+      <ColorThemeProvider>
+        <DiagnosisResultsPage diagnosisData={diagnosisData} onReturnToStart={handleReturnToStart}/>
+      </ColorThemeProvider>
+    );
   }
 
   // Default page is 'diagnosis'
   return (
-    <>
+    <ColorThemeProvider>
       <Header />
       <MainVisualAndDiagnosis onProceedToVerification={handleProceedToVerification} />
       <ReliabilitySection />
       <SecurityTrustSection />
       <CallToActionSection />
       <Footer onNavigateToAdminLogin={navigateToAdminLogin} />
-    </>
+    </ColorThemeProvider>
   );
 };
 

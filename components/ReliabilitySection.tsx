@@ -2,28 +2,28 @@ import React, { useState, useEffect } from 'react';
 import { Testimonial } from '../types';
 import { defaultTestimonialsData } from '../data/testimonialsData';
 import { defaultReasonsToChooseData, ReasonsToChooseData } from '../data/homepageContentData';
+import { secureLog } from '../security.config';
+import { createSupabaseClient } from './adminUtils';
 
-const createSupabaseClient = () => {
-  const SUPABASE_URL = 'https://xpjkmhnnrwwqcijrqmhv.supabase.co';
-  const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhwamttaG5ucnd3cWNpanJxbWh2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzU4MjIzMzIsImV4cCI6MjA1MTM5ODMzMn0.7KXNTt8dn6Ps3jLRADgp7VdjU5LZDP0qhtx2xClqOy0';
-
+const createSupabaseHelper = () => {
+  const config = createSupabaseClient();
   return {
     from: (table: string) => ({
       select: (columns: string = '*') => ({
         eq: (column: string, value: any) => ({
           single: async () => {
             try {
-              const response = await fetch(`${SUPABASE_URL}/rest/v1/${table}?${column}=eq.${value}&select=${columns}`, {
+              const response = await fetch(`${config.url}/rest/v1/${table}?${column}=eq.${value}&select=${columns}`, {
                 headers: {
-                  'apikey': SUPABASE_ANON_KEY,
-                  'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+                  'apikey': config.key,
+                  'Authorization': `Bearer ${config.key}`,
                   'Content-Type': 'application/json'
                 }
               });
               const data = await response.json();
               return { data: data.length > 0 ? data[0] : null, error: null };
             } catch (error) {
-              console.error('Supabase fetch error:', error);
+              secureLog('Supabase fetch error:', error);
               return { data: null, error };
             }
           }
@@ -39,7 +39,7 @@ const ReliabilitySection: React.FC = () => {
 
   useEffect(() => {
     const loadContent = async () => {
-      const supabase = createSupabaseClient();
+      const supabase = createSupabaseHelper();
       
       // 選ばれる理由データの読み込み
       try {
@@ -52,10 +52,10 @@ const ReliabilitySection: React.FC = () => {
         if (!reasonsError && reasonsResponse?.setting_data) {
           setReasonsData(reasonsResponse.setting_data);
         } else {
-          console.log('選ばれる理由のデータが見つからないため、デフォルトデータを使用します');
+          secureLog('選ばれる理由のデータが見つからないため、デフォルトデータを使用します');
         }
       } catch (error) {
-        console.warn('選ばれる理由の読み込みエラー、デフォルトデータを使用:', error);
+        secureLog('選ばれる理由の読み込みエラー、デフォルトデータを使用:', error);
       }
 
       // お客様の声データの読み込み（既存のロジック）
@@ -73,7 +73,7 @@ const ReliabilitySection: React.FC = () => {
           }
         }
       } catch (error) {
-        console.warn('お客様の声の読み込みエラー、デフォルトデータを使用:', error);
+        secureLog('お客様の声の読み込みエラー、デフォルトデータを使用:', error);
         setTestimonials(defaultTestimonialsData);
       }
     };
@@ -83,7 +83,7 @@ const ReliabilitySection: React.FC = () => {
 
   const loadTestimonialsFromSupabase = async () => {
     try {
-      const supabase = createSupabaseClient();
+      const supabase = createSupabaseHelper();
       const { data, error } = await supabase
         .from('admin_settings')
         .select('setting_data')
@@ -94,7 +94,7 @@ const ReliabilitySection: React.FC = () => {
         return data.setting_data;
       }
     } catch (error) {
-      console.error('お客様の声Supabase読み込みエラー:', error);
+      secureLog('お客様の声Supabase読み込みエラー:', error);
     }
     return null;
   };

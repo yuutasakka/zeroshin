@@ -4,7 +4,8 @@ import React, { useState, useEffect, useRef } from 'react';
 import { DiagnosisFormState, FinancialProduct, Company, RecommendedProductWithReason } from '../types';
 import FloatingHeartsBackground from './FloatingHeartsBackground';
 import { assetProjectionData, AgeGroup, InvestmentAmountKey } from '../data/assetProjectionData';
-import { allFinancialProducts as defaultFinancialProducts } from '../data/financialProductsData'; 
+import { allFinancialProducts as defaultFinancialProducts } from '../data/financialProductsData';
+import { secureLog } from '../security.config'; 
 
 interface DiagnosisResultsPageProps {
   diagnosisData: DiagnosisFormState | null;
@@ -97,7 +98,7 @@ const DiagnosisResultsPage: React.FC<DiagnosisResultsPageProps> = ({ diagnosisDa
           setFinancialAdvice(personalizedMessage);
 
         } catch (error) {
-          console.error("Failed to fetch financial advice:", error);
+          secureLog("Failed to fetch financial advice:", error);
           setAdviceError("AIアドバイスの取得中にエラーが発生しました。");
         } finally {
           setIsLoadingAdvice(false);

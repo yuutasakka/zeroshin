@@ -4,244 +4,23 @@ import { UserSessionData, FinancialProduct, Company, Testimonial, NotificationSe
 import { diagnosisFormMapping } from '../data/diagnosisFormMapping';
 import { allFinancialProducts as defaultFinancialProducts } from '../data/financialProductsData';
 import { defaultTestimonialsData } from '../data/testimonialsData';
-import { defaultReasonsToChooseData, defaultFirstConsultationOffer, ReasonsToChooseData, FirstConsultationOffer } from '../data/homepageContentData';
-
-// Supabaseクライアント設定（Environment変数優先、フォールバック対応）
-const createSupabaseClient = () => {
-  const supabaseUrl = 'https://eqirzbuqgymrtnfmvwhq.supabase.co';
-  // 環境変数が使用できない場合の対応として、Anon Keyを使用してアクセス制御
-  const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVxaXJ6YnVxZ3ltcnRuZm12d2hxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTA2NzIxNzAsImV4cCI6MjA2NjI0ODE3MH0.APLjURIz9ilNgTF8mIowOqrT31MFhozUnk_CHz8mydg';
-  
-  return {
-    url: supabaseUrl,
-    key: supabaseKey
-  };
-};
+import { 
+  ReasonsToChooseData, 
+  FirstConsultationOffer, 
+  defaultReasonsToChooseData, 
+  defaultFirstConsultationOffer,
+  HeaderData,
+  MainVisualData,
+  FooterData,
+  defaultHeaderData,
+  defaultMainVisualData,
+  defaultFooterData
+} from '../data/homepageContentData';
+import { SECURITY_CONFIG, SUPABASE_CONFIG, secureLog } from '../security.config';
+import { SupabaseAdminAPI, SecureStorage, createSupabaseClient } from './adminUtils';
+import { useColorTheme } from './ColorThemeContext';
 
 const supabaseConfig = createSupabaseClient();
-
-// Supabase API ヘルパー関数（エラー耐性あり）
-class SupabaseAdminAPI {
-  static async fetchAdminCredentials(username: string = 'admin') {
-    try {
-      console.log('Supabase管理者認証情報取得を試行中...', { username, url: supabaseConfig.url });
-      
-      const response = await fetch(`${supabaseConfig.url}/rest/v1/admin_credentials?username=eq.${username}`, {
-        method: 'GET',
-        headers: {
-          'Authorization': `Bearer ${supabaseConfig.key}`,
-          'apikey': supabaseConfig.key,
-          'Content-Type': 'application/json',
-        },
-      });
-
-      console.log('Supabase API Response Status:', response.status);
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.warn(`Supabase API Error ${response.status}: ${errorText}`);
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-      }
-
-      const data = await response.json();
-      console.log('Supabase管理者認証情報取得成功:', data.length > 0 ? 'データあり' : 'データなし');
-      return data[0] || null;
-    } catch (error) {
-      console.warn('Supabase管理者認証情報取得エラー（正常なフォールバック）:', error);
-      return null;
-    }
-  }
-
-  static async updateAdminCredentials(id: number, updates: any) {
-    try {
-      console.log('Supabase管理者認証情報更新を試行中...', { id, updates });
-      
-      const response = await fetch(`${supabaseConfig.url}/rest/v1/admin_credentials?id=eq.${id}`, {
-        method: 'PATCH',
-        headers: {
-          'Authorization': `Bearer ${supabaseConfig.key}`,
-          'apikey': supabaseConfig.key,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(updates),
-      });
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.warn(`Supabase更新API Error ${response.status}: ${errorText}`);
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-      }
-
-      const result = await response.json();
-      console.log('Supabase管理者認証情報更新成功');
-      return result;
-    } catch (error) {
-      console.warn('Supabase管理者認証情報更新エラー（フォールバック処理）:', error);
-      throw error;
-    }
-  }
-
-  // 管理者設定をSupabaseで保存・読み込み
-  static async saveAdminSetting(key: string, value: any): Promise<boolean> {
-    try {
-      console.log(`Supabase管理者設定保存を試行中...`, { key, value });
-      
-      const response = await fetch(`${supabaseConfig.url}/functions/v1/admin-settings`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${supabaseConfig.key}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ key, value }),
-      });
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.warn(`Supabase設定保存API Error ${response.status}: ${errorText}`);
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-      }
-
-      const result = await response.json();
-      console.log('Supabase設定保存成功');
-      return result.success;
-    } catch (error) {
-      console.warn('Supabase設定保存エラー:', error);
-      return false;
-    }
-  }
-
-  static async loadAdminSetting(key: string): Promise<any> {
-    try {
-      console.log(`Supabase管理者設定読み込みを試行中...`, { key });
-      
-      const response = await fetch(`${supabaseConfig.url}/functions/v1/admin-settings?key=${encodeURIComponent(key)}`, {
-        method: 'GET',
-        headers: {
-          'Authorization': `Bearer ${supabaseConfig.key}`,
-          'Content-Type': 'application/json',
-        },
-      });
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.warn(`Supabase設定読み込みAPI Error ${response.status}: ${errorText}`);
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-      }
-
-      const result = await response.json();
-      console.log('Supabase設定読み込み成功');
-      return result.data;
-    } catch (error) {
-      console.warn('Supabase設定読み込みエラー:', error);
-      return null;
-    }
-  }
-
-  // 管理者認証情報をEdge Function経由で更新
-  static async updateAdminCredentialsViaFunction(phoneNumber: string, backupCode: string): Promise<boolean> {
-    try {
-      console.log('Supabase管理者認証情報更新（Edge Function）を試行中...');
-      
-      const response = await fetch(`${supabaseConfig.url}/functions/v1/admin-credentials-update`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${supabaseConfig.key}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ 
-          phone_number: phoneNumber, 
-          backup_code: backupCode 
-        }),
-      });
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.warn(`Supabase認証情報更新API Error ${response.status}: ${errorText}`);
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-      }
-
-      const result = await response.json();
-      console.log('Supabase認証情報更新成功');
-      return result.success;
-    } catch (error) {
-      console.warn('Supabase認証情報更新エラー:', error);
-      return false;
-    }
-  }
-
-  static async loadAdminCredentialsViaFunction(): Promise<any> {
-    try {
-      console.log('Supabase管理者認証情報読み込み（Edge Function）を試行中...');
-      
-      const response = await fetch(`${supabaseConfig.url}/functions/v1/admin-credentials-update`, {
-        method: 'GET',
-        headers: {
-          'Authorization': `Bearer ${supabaseConfig.key}`,
-          'Content-Type': 'application/json',
-        },
-      });
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.warn(`Supabase認証情報読み込みAPI Error ${response.status}: ${errorText}`);
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-      }
-
-      const result = await response.json();
-      console.log('Supabase認証情報読み込み成功');
-      return result.data;
-    } catch (error) {
-      console.warn('Supabase認証情報読み込みエラー:', error);
-      return null;
-    }
-  }
-}
-
-// セキュリティ設定（AdminLoginPageと同じ）
-const SECURITY_CONFIG = {
-  ENCRYPTION_KEY: 'MoneyTicket-SecureKey-2024',
-};
-
-// セキュアなストレージ管理（AdminLoginPageと同じ）
-class SecureStorage {
-  private static encryptionKey = SECURITY_CONFIG.ENCRYPTION_KEY;
-
-  static encrypt(data: any): string {
-    try {
-      const jsonString = JSON.stringify(data);
-      const encrypted = CryptoJS.AES.encrypt(jsonString, this.encryptionKey).toString();
-      return encrypted;
-    } catch (error) {
-      console.error('暗号化エラー:', error);
-      return '';
-    }
-  }
-
-  static decrypt(encryptedData: string): any {
-    try {
-      if (!encryptedData) return null;
-      const decrypted = CryptoJS.AES.decrypt(encryptedData, this.encryptionKey);
-      const jsonString = decrypted.toString(CryptoJS.enc.Utf8);
-      return JSON.parse(jsonString);
-    } catch (error) {
-      console.error('復号化エラー:', error);
-      return null;
-    }
-  }
-
-  static setSecureItem(key: string, value: any): void {
-    const encrypted = this.encrypt(value);
-    if (encrypted) {
-      localStorage.setItem(key, encrypted);
-    }
-  }
-
-  static getSecureItem(key: string): any {
-    const encrypted = localStorage.getItem(key);
-    if (!encrypted) return null;
-    return this.decrypt(encrypted);
-  }
-}
 
 
 interface AdminDashboardPageProps {
@@ -249,7 +28,7 @@ interface AdminDashboardPageProps {
   onNavigateHome: () => void;
 }
 
-type AdminViewMode = 'userHistory' | 'productSettings' | 'testimonialSettings' | 'analyticsSettings' | 'notificationSettings' | 'legalLinksSettings' | 'adminSettings' | 'homepageContentSettings';
+type AdminViewMode = 'userHistory' | 'productSettings' | 'testimonialSettings' | 'analyticsSettings' | 'notificationSettings' | 'legalLinksSettings' | 'adminSettings' | 'homepageContentSettings' | 'headerAndVisualSettings' | 'colorThemeSettings';
 
 interface DashboardStats {
     totalDiagnoses: number;
@@ -268,6 +47,7 @@ const initialNotificationSettings: NotificationSettings = {
 
 
 const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNavigateHome }) => {
+  const { currentTheme, setCurrentTheme, themes } = useColorTheme();
   const [userSessions, setUserSessions] = useState<UserSessionData[]>([]);
   const [viewMode, setViewMode] = useState<AdminViewMode>('userHistory');
   const [sessionValid, setSessionValid] = useState<boolean>(true);
@@ -312,6 +92,12 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
   const [reasonsToChoose, setReasonsToChoose] = useState<ReasonsToChooseData>(defaultReasonsToChooseData);
   const [firstConsultationOffer, setFirstConsultationOffer] = useState<FirstConsultationOffer>(defaultFirstConsultationOffer);
   const [homepageContentStatus, setHomepageContentStatus] = useState<string>('');
+  
+  // ヘッダー・メインビジュアル・フッター設定のstate
+  const [headerData, setHeaderData] = useState<HeaderData>(defaultHeaderData);
+  const [mainVisualData, setMainVisualData] = useState<MainVisualData>(defaultMainVisualData);
+  const [footerData, setFooterData] = useState<FooterData>(defaultFooterData);
+  const [headerVisualStatus, setHeaderVisualStatus] = useState<string>('');
 
 
   // セッション有効性チェック
@@ -337,12 +123,12 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
       
       // セッション期限が5分以内の場合は警告
       if (timeRemaining < 5 * 60 * 1000) {
-        console.warn('セッションの有効期限が近づいています');
+        secureLog('セッションの有効期限が近づいています');
       }
 
       return true;
     } catch (error) {
-      console.error('セッションデータの解析エラー:', error);
+      secureLog('セッションデータの解析エラー:', error);
       setSessionValid(false);
       return false;
     }
@@ -358,7 +144,7 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
         setSessionTimeRemaining(30 * 60 * 1000);
       }
     } catch (error) {
-      console.error('セッション延長エラー:', error);
+      secureLog('セッション延長エラー:', error);
     }
   };
 
@@ -388,7 +174,7 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
             setUserSessions(loadedSessions);
             calculateDashboardStats(loadedSessions);
           } catch (e) {
-            console.error("Error parsing user sessions from localStorage:", e);
+            secureLog("Error parsing user sessions from localStorage:", e);
           }
         }
 
@@ -396,7 +182,7 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
         // 実装はローカルストレージのデータで動作
 
       } catch (error) {
-        console.error('ユーザーセッションの読み込みエラー:', error);
+        secureLog('ユーザーセッションの読み込みエラー:', error);
       }
     };
 
@@ -405,13 +191,13 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
     // Load admin settings from Supabase
     const loadAdminSettings = async () => {
       try {
-        console.log('管理者設定をSupabaseから読み込み中...');
+        secureLog('管理者設定をSupabaseから読み込み中...');
         
         // まずSupabaseから最新データを取得（Edge Function経由）
         const supabaseCredentials = await SupabaseAdminAPI.loadAdminCredentialsViaFunction();
         
         if (supabaseCredentials) {
-          console.log('Supabaseから管理者設定を取得');
+          secureLog('Supabaseから管理者設定を取得');
           setAdminPhoneNumber(supabaseCredentials.phone_number || '09012345678');
           setAdminBackupCode(supabaseCredentials.backup_code || 'MT-BACKUP-2024');
           
@@ -427,19 +213,19 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
         }
         
         // Supabaseから取得できない場合はローカルストレージを確認
-        console.log('Supabaseから取得できませんでした。ローカルストレージを確認中...');
+        secureLog('Supabaseから取得できませんでした。ローカルストレージを確認中...');
         const credentials = SecureStorage.getSecureItem('admin_credentials');
         if (credentials) {
-          console.log('ローカルストレージから管理者設定を取得');
+          secureLog('ローカルストレージから管理者設定を取得');
           setAdminPhoneNumber(credentials.phone_number || '09012345678');
           setAdminBackupCode(credentials.backup_code || 'MT-BACKUP-2024');
         } else {
-          console.log('デフォルト管理者設定を使用');
+          secureLog('デフォルト管理者設定を使用');
           setAdminPhoneNumber('09012345678');
           setAdminBackupCode('MT-BACKUP-2024');
         }
       } catch (error) {
-        console.error('管理者設定の読み込みエラー:', error);
+        secureLog('管理者設定の読み込みエラー:', error);
         
         // エラー時はローカルストレージをフォールバック
         const credentials = SecureStorage.getSecureItem('admin_credentials');
@@ -467,7 +253,7 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
       try {
         const supabaseProducts = await SupabaseAdminAPI.loadAdminSetting('financial_products');
         if (supabaseProducts) {
-          console.log('Supabaseから商品設定を読み込み');
+          secureLog('Supabaseから商品設定を読み込み');
           setProductsForEditing(supabaseProducts);
           // ローカルストレージにもバックアップ保存
           localStorage.setItem('customFinancialProducts', JSON.stringify(supabaseProducts));
@@ -479,7 +265,7 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
               const customProducts = JSON.parse(customProductsString);
               setProductsForEditing(customProducts);
             } catch (e) {
-              console.error("Error parsing custom financial products from localStorage:", e);
+              secureLog("Error parsing custom financial products from localStorage:", e);
               setProductsForEditing(JSON.parse(JSON.stringify(defaultFinancialProducts))); // Deep copy
             }
           } else {
@@ -487,14 +273,14 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
           }
         }
       } catch (error) {
-        console.warn('商品設定のSupabase読み込みエラー、ローカルストレージを使用:', error);
+        secureLog('商品設定のSupabase読み込みエラー、ローカルストレージを使用:', error);
         const customProductsString = localStorage.getItem('customFinancialProducts');
         if (customProductsString) {
           try {
             const customProducts = JSON.parse(customProductsString);
             setProductsForEditing(customProducts);
           } catch (e) {
-            console.error("Error parsing custom financial products from localStorage:", e);
+            secureLog("Error parsing custom financial products from localStorage:", e);
             setProductsForEditing(JSON.parse(JSON.stringify(defaultFinancialProducts))); // Deep copy
           }
         } else {
@@ -506,7 +292,7 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
       try {
         const supabaseTestimonials = await SupabaseAdminAPI.loadAdminSetting('testimonials');
         if (supabaseTestimonials) {
-          console.log('Supabaseからお客様の声を読み込み');
+          secureLog('Supabaseからお客様の声を読み込み');
           setTestimonialsForEditing(supabaseTestimonials);
           // ローカルストレージにもバックアップ保存
           localStorage.setItem('customTestimonials', JSON.stringify(supabaseTestimonials));
@@ -518,7 +304,7 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
               const customTestimonials = JSON.parse(customTestimonialsString);
               setTestimonialsForEditing(customTestimonials);
             } catch (e) {
-              console.error("Error parsing custom testimonials from localStorage:", e);
+              secureLog("Error parsing custom testimonials from localStorage:", e);
               setTestimonialsForEditing(JSON.parse(JSON.stringify(defaultTestimonialsData))); // Deep copy
             }
           } else {
@@ -526,14 +312,14 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
           }
         }
       } catch (error) {
-        console.warn('お客様の声のSupabase読み込みエラー、ローカルストレージを使用:', error);
+        secureLog('お客様の声のSupabase読み込みエラー、ローカルストレージを使用:', error);
         const customTestimonialsString = localStorage.getItem('customTestimonials');
         if (customTestimonialsString) {
           try {
             const customTestimonials = JSON.parse(customTestimonialsString);
             setTestimonialsForEditing(customTestimonials);
           } catch (e) {
-            console.error("Error parsing custom testimonials from localStorage:", e);
+            secureLog("Error parsing custom testimonials from localStorage:", e);
             setTestimonialsForEditing(JSON.parse(JSON.stringify(defaultTestimonialsData))); // Deep copy
           }
         } else {
@@ -545,7 +331,7 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
       try {
         const supabaseTrackingScripts = await SupabaseAdminAPI.loadAdminSetting('tracking_scripts');
         if (supabaseTrackingScripts) {
-          console.log('Supabaseからアナリティクス設定を読み込み');
+          secureLog('Supabaseからアナリティクス設定を読み込み');
           setTrackingScripts(supabaseTrackingScripts);
           // ローカルストレージにもバックアップ保存
           localStorage.setItem('customTrackingScripts', JSON.stringify(supabaseTrackingScripts));
@@ -557,7 +343,7 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
               const parsedScripts = JSON.parse(storedTrackingScripts);
               setTrackingScripts(parsedScripts);
             } catch (e) {
-              console.error("Error parsing tracking scripts from localStorage:", e);
+              secureLog("Error parsing tracking scripts from localStorage:", e);
               setTrackingScripts({ head: '', bodyEnd: '' });
             }
           } else {
@@ -565,14 +351,14 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
           }
         }
       } catch (error) {
-        console.warn('アナリティクス設定のSupabase読み込みエラー、ローカルストレージを使用:', error);
+        secureLog('アナリティクス設定のSupabase読み込みエラー、ローカルストレージを使用:', error);
         const storedTrackingScripts = localStorage.getItem('customTrackingScripts');
         if (storedTrackingScripts) {
           try {
             const parsedScripts = JSON.parse(storedTrackingScripts);
             setTrackingScripts(parsedScripts);
           } catch (e) {
-            console.error("Error parsing tracking scripts from localStorage:", e);
+            secureLog("Error parsing tracking scripts from localStorage:", e);
             setTrackingScripts({ head: '', bodyEnd: '' });
           }
         } else {
@@ -584,7 +370,7 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
       try {
         const supabaseNotificationSettings = await SupabaseAdminAPI.loadAdminSetting('notification_settings');
         if (supabaseNotificationSettings) {
-          console.log('Supabaseから通知設定を読み込み');
+          secureLog('Supabaseから通知設定を読み込み');
           setNotificationSettings({ ...initialNotificationSettings, ...supabaseNotificationSettings });
           // ローカルストレージにもバックアップ保存
           localStorage.setItem('notificationConfigurations', JSON.stringify(supabaseNotificationSettings));
@@ -596,7 +382,7 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
               const parsedSettings = JSON.parse(storedNotificationSettings);
               setNotificationSettings({ ...initialNotificationSettings, ...parsedSettings });
             } catch (e) {
-              console.error("Error parsing notification settings from localStorage:", e);
+              secureLog("Error parsing notification settings from localStorage:", e);
               setNotificationSettings(initialNotificationSettings);
             }
           } else {
@@ -604,14 +390,14 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
           }
         }
       } catch (error) {
-        console.warn('通知設定のSupabase読み込みエラー、ローカルストレージを使用:', error);
+        secureLog('通知設定のSupabase読み込みエラー、ローカルストレージを使用:', error);
         const storedNotificationSettings = localStorage.getItem('notificationConfigurations');
         if (storedNotificationSettings) {
           try {
             const parsedSettings = JSON.parse(storedNotificationSettings);
             setNotificationSettings({ ...initialNotificationSettings, ...parsedSettings });
           } catch (e) {
-            console.error("Error parsing notification settings from localStorage:", e);
+            secureLog("Error parsing notification settings from localStorage:", e);
             setNotificationSettings(initialNotificationSettings);
           }
         } else {
@@ -627,26 +413,59 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
         // 選ばれる理由
         const supabaseReasons = await loadHomepageContentFromSupabase('reasons_to_choose');
         if (supabaseReasons) {
-          console.log('Supabaseから選ばれる理由を読み込み');
+          secureLog('Supabaseから選ばれる理由を読み込み');
           setReasonsToChoose(supabaseReasons);
         } else {
-          console.log('デフォルトの選ばれる理由を使用');
+          secureLog('デフォルトの選ばれる理由を使用');
           setReasonsToChoose(defaultReasonsToChooseData);
         }
 
         // 初回相談限定特典
         const supabaseOffer = await loadHomepageContentFromSupabase('first_consultation_offer');
         if (supabaseOffer) {
-          console.log('Supabaseから初回相談限定特典を読み込み');
+          secureLog('Supabaseから初回相談限定特典を読み込み');
           setFirstConsultationOffer(supabaseOffer);
         } else {
-          console.log('デフォルトの初回相談限定特典を使用');
+          secureLog('デフォルトの初回相談限定特典を使用');
           setFirstConsultationOffer(defaultFirstConsultationOffer);
         }
+
+        // ヘッダーデータ
+        const supabaseHeader = await loadHomepageContentFromSupabase('header_data');
+        if (supabaseHeader) {
+          secureLog('Supabaseからヘッダーデータを読み込み');
+          setHeaderData(supabaseHeader);
+        } else {
+          secureLog('デフォルトのヘッダーデータを使用');
+          setHeaderData(defaultHeaderData);
+        }
+
+        // メインビジュアルデータ
+        const supabaseMainVisual = await loadHomepageContentFromSupabase('main_visual_data');
+        if (supabaseMainVisual) {
+          secureLog('Supabaseからメインビジュアルデータを読み込み');
+          setMainVisualData(supabaseMainVisual);
+        } else {
+          secureLog('デフォルトのメインビジュアルデータを使用');
+          setMainVisualData(defaultMainVisualData);
+        }
+
+        // フッターデータ
+        const supabaseFooter = await loadHomepageContentFromSupabase('footer_data');
+        if (supabaseFooter) {
+          secureLog('Supabaseからフッターデータを読み込み');
+          setFooterData(supabaseFooter);
+        } else {
+          secureLog('デフォルトのフッターデータを使用');
+          setFooterData(defaultFooterData);
+        }
       } catch (error) {
-        console.warn('ホームページコンテンツの読み込みエラー、デフォルトデータを使用:', error);
+        secureLog('ホームページコンテンツの読み込みエラー、デフォルトデータを使用:', error);
         setReasonsToChoose(defaultReasonsToChooseData);
         setFirstConsultationOffer(defaultFirstConsultationOffer);
+        setHeaderData(defaultHeaderData);
+        setMainVisualData(defaultMainVisualData);
+        setFooterData(defaultFooterData);
       }
     };
 
@@ -726,8 +545,8 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
   };
 
   const handleSaveProductSettings = async () => {
-    console.log('handleSaveProductSettings関数が呼び出されました');
-    console.log('保存する商品データ:', productsForEditing);
+    secureLog('handleSaveProductSettings関数が呼び出されました');
+    secureLog('保存する商品データ:', productsForEditing);
     
     setProductSettingsStatus('💾 商品設定を保存中...');
     
@@ -750,32 +569,32 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
             return;
           }
         } catch (parseError) {
-          console.log('既存商品データの解析でエラー（新規保存として処理）:', parseError);
+          secureLog('既存商品データの解析でエラー（新規保存として処理）:', parseError);
         }
       }
 
       // まずローカルストレージに確実に保存
       localStorage.setItem('customFinancialProducts', JSON.stringify(productsForEditing));
-      console.log('商品設定をローカルストレージに保存完了');
+      secureLog('商品設定をローカルストレージに保存完了');
       
       // Supabaseにも保存を試行
       try {
         const supabaseSuccess = await SupabaseAdminAPI.saveAdminSetting('financial_products', productsForEditing);
         if (supabaseSuccess) {
-          console.log('Supabaseにも商品設定を保存完了');
+          secureLog('Supabaseにも商品設定を保存完了');
           setProductSettingsStatus('✅ 商品設定が正常に保存され、データベースに反映されました');
         } else {
-          console.warn('Supabase保存に失敗しましたが、ローカル保存は成功');
+          secureLog('Supabase保存に失敗しましたが、ローカル保存は成功');
           setProductSettingsStatus('✅ 商品設定が正常に保存されました（ローカル保存）');
         }
       } catch (supabaseError) {
-        console.warn('Supabase保存でエラーが発生しましたが、ローカル保存は成功:', supabaseError);
+        secureLog('Supabase保存でエラーが発生しましたが、ローカル保存は成功:', supabaseError);
         setProductSettingsStatus('✅ 商品設定が正常に保存されました（ローカル保存）');
       }
       
       setTimeout(() => setProductSettingsStatus(''), 3000);
     } catch (error) {
-      console.error("Error saving product settings:", error);
+      secureLog("Error saving product settings:", error);
       setProductSettingsStatus('❌ 保存中にエラーが発生しました。');
       setTimeout(() => setProductSettingsStatus(''), 5000);
     }
@@ -859,32 +678,32 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
               return;
             }
           } catch (parseError) {
-            console.log('既存お客様の声データの解析でエラー（新規保存として処理）:', parseError);
+            secureLog('既存お客様の声データの解析でエラー（新規保存として処理）:', parseError);
           }
         }
 
         // まずローカルストレージに保存
         localStorage.setItem('customTestimonials', JSON.stringify(testimonialsForEditing));
-        console.log('お客様の声をローカルストレージに保存完了');
+        secureLog('お客様の声をローカルストレージに保存完了');
         
         // Supabaseにも保存を試行
         try {
           const supabaseSuccess = await SupabaseAdminAPI.saveAdminSetting('testimonials', testimonialsForEditing);
           if (supabaseSuccess) {
-            console.log('Supabaseにもお客様の声を保存完了');
+            secureLog('Supabaseにもお客様の声を保存完了');
             setTestimonialStatus('✅ お客様の声が正常に保存され、データベースに反映されました');
           } else {
-            console.warn('Supabase保存に失敗しましたが、ローカル保存は成功');
+            secureLog('Supabase保存に失敗しましたが、ローカル保存は成功');
             setTestimonialStatus('✅ お客様の声が正常に保存されました（ローカル保存）');
           }
         } catch (supabaseError) {
-          console.warn('Supabase保存でエラーが発生しましたが、ローカル保存は成功:', supabaseError);
+          secureLog('Supabase保存でエラーが発生しましたが、ローカル保存は成功:', supabaseError);
           setTestimonialStatus('✅ お客様の声が正常に保存されました（ローカル保存）');
         }
         
         setTimeout(() => setTestimonialStatus(''), 3000);
     } catch (error) {
-        console.error("Error saving testimonial settings:", error);
+        secureLog("Error saving testimonial settings:", error);
         setTestimonialStatus('❌ 保存中にエラーが発生しました。');
         setTimeout(() => setTestimonialStatus(''), 5000);
     }
@@ -910,32 +729,32 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
                 return;
               }
             } catch (parseError) {
-              console.log('既存アナリティクス設定の解析でエラー（新規保存として処理）:', parseError);
+              secureLog('既存アナリティクス設定の解析でエラー（新規保存として処理）:', parseError);
             }
           }
 
           // まずローカルストレージに保存
           localStorage.setItem('customTrackingScripts', JSON.stringify(trackingScripts));
-          console.log('アナリティクス設定をローカルストレージに保存完了');
+          secureLog('アナリティクス設定をローカルストレージに保存完了');
           
           // Supabaseにも保存を試行
           try {
             const supabaseSuccess = await SupabaseAdminAPI.saveAdminSetting('tracking_scripts', trackingScripts);
             if (supabaseSuccess) {
-              console.log('Supabaseにもアナリティクス設定を保存完了');
+              secureLog('Supabaseにもアナリティクス設定を保存完了');
               setAnalyticsSettingsStatus('✅ アナリティクス設定が正常に保存され、データベースに反映されました');
             } else {
-              console.warn('Supabase保存に失敗しましたが、ローカル保存は成功');
+              secureLog('Supabase保存に失敗しましたが、ローカル保存は成功');
               setAnalyticsSettingsStatus('✅ アナリティクス設定が正常に保存されました（ローカル保存）');
             }
           } catch (supabaseError) {
-            console.warn('Supabase保存でエラーが発生しましたが、ローカル保存は成功:', supabaseError);
+            secureLog('Supabase保存でエラーが発生しましたが、ローカル保存は成功:', supabaseError);
             setAnalyticsSettingsStatus('✅ アナリティクス設定が正常に保存されました（ローカル保存）');
           }
           
           setTimeout(() => setAnalyticsSettingsStatus(''), 3000);
       } catch (error) {
-          console.error("Error saving tracking scripts:", error);
+          secureLog("Error saving tracking scripts:", error);
           setAnalyticsSettingsStatus('❌ 保存中にエラーが発生しました。');
           setTimeout(() => setAnalyticsSettingsStatus(''), 5000);
       }
@@ -971,32 +790,32 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
               return;
             }
           } catch (parseError) {
-            console.log('既存通知設定の解析でエラー（新規保存として処理）:', parseError);
+            secureLog('既存通知設定の解析でエラー（新規保存として処理）:', parseError);
           }
         }
 
         // まずローカルストレージに保存
         localStorage.setItem('notificationConfigurations', JSON.stringify(notificationSettings));
-        console.log('通知設定をローカルストレージに保存完了');
+        secureLog('通知設定をローカルストレージに保存完了');
         
         // Supabaseにも保存を試行
         try {
           const supabaseSuccess = await SupabaseAdminAPI.saveAdminSetting('notification_settings', notificationSettings);
           if (supabaseSuccess) {
-            console.log('Supabaseにも通知設定を保存完了');
+            secureLog('Supabaseにも通知設定を保存完了');
             setNotificationSettingsStatus('✅ 通知設定が正常に保存され、データベースに反映されました');
           } else {
-            console.warn('Supabase保存に失敗しましたが、ローカル保存は成功');
+            secureLog('Supabase保存に失敗しましたが、ローカル保存は成功');
             setNotificationSettingsStatus('✅ 通知設定が正常に保存されました（ローカル保存）');
           }
         } catch (supabaseError) {
-          console.warn('Supabase保存でエラーが発生しましたが、ローカル保存は成功:', supabaseError);
+          secureLog('Supabase保存でエラーが発生しましたが、ローカル保存は成功:', supabaseError);
           setNotificationSettingsStatus('✅ 通知設定が正常に保存されました（ローカル保存）');
         }
         
         setTimeout(() => setNotificationSettingsStatus(''), 3000);
     } catch (error) {
-        console.error("Error saving notification settings:", error);
+        secureLog("Error saving notification settings:", error);
         setNotificationSettingsStatus('❌ 通知設定の保存中にエラーが発生しました。');
         setTimeout(() => setNotificationSettingsStatus(''), 5000);
     }
@@ -1021,7 +840,7 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
       const data = await response.json();
       return data.length > 0 ? data[0].setting_data : null;
     } catch (error) {
-      console.warn(`ホームページコンテンツ(${settingKey})のSupabase読み込みエラー:`, error);
+      secureLog(`ホームページコンテンツ(${settingKey})のSupabase読み込みエラー:`, error);
       return null;
     }
   };
@@ -1030,7 +849,7 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
     try {
       const supabaseLegalLinks = await SupabaseAdminAPI.loadAdminSetting('legal_links');
       if (supabaseLegalLinks) {
-        console.log('Supabaseからリーガルリンクを読み込み');
+        secureLog('Supabaseからリーガルリンクを読み込み');
         setLegalLinks(supabaseLegalLinks);
         // ローカルストレージにもバックアップ保存
         localStorage.setItem('customLegalLinks', JSON.stringify(supabaseLegalLinks));
@@ -1051,7 +870,7 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
         }
       }
     } catch (error) {
-      console.warn('リーガルリンクのSupabase読み込みエラー、ローカルストレージを使用:', error);
+      secureLog('リーガルリンクのSupabase読み込みエラー、ローカルストレージを使用:', error);
       const storedLinks = localStorage.getItem('customLegalLinks');
       if (storedLinks) {
         setLegalLinks(JSON.parse(storedLinks));
@@ -1096,27 +915,27 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
       
       // まずローカルストレージに保存
       localStorage.setItem('customLegalLinks', JSON.stringify(updatedLinks));
-      console.log('リーガルリンクをローカルストレージに保存完了');
+      secureLog('リーガルリンクをローカルストレージに保存完了');
       
       // Supabaseにも保存を試行
       try {
         const supabaseSuccess = await SupabaseAdminAPI.saveAdminSetting('legal_links', updatedLinks);
         if (supabaseSuccess) {
-          console.log('Supabaseにもリーガルリンクを保存完了');
+          secureLog('Supabaseにもリーガルリンクを保存完了');
           setLegalLinksStatus('✅ リーガルリンクが正常に保存され、データベースに反映されました');
         } else {
-          console.warn('Supabase保存に失敗しましたが、ローカル保存は成功');
+          secureLog('Supabase保存に失敗しましたが、ローカル保存は成功');
           setLegalLinksStatus('✅ リーガルリンクが正常に保存されました（ローカル保存）');
         }
       } catch (supabaseError) {
-        console.warn('Supabase保存でエラーが発生しましたが、ローカル保存は成功:', supabaseError);
+        secureLog('Supabase保存でエラーが発生しましたが、ローカル保存は成功:', supabaseError);
         setLegalLinksStatus('✅ リーガルリンクが正常に保存されました（ローカル保存）');
       }
       
       setEditingLegalLink(null);
       setTimeout(() => setLegalLinksStatus(''), 3000);
     } catch (error) {
-      console.error('Error saving legal link:', error);
+      secureLog('Error saving legal link:', error);
       setLegalLinksStatus('❌ 保存中にエラーが発生しました。');
       setTimeout(() => setLegalLinksStatus(''), 5000);
     }
@@ -1128,9 +947,9 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
 
   // 管理者設定保存機能（ローカルストレージ優先、Supabaseはオプション）
   const handleSaveAdminSettings = async () => {
-    console.log('handleSaveAdminSettings関数が呼び出されました');
-    console.log('現在の電話番号:', adminPhoneNumber);
-    console.log('現在のバックアップコード:', adminBackupCode);
+    secureLog('handleSaveAdminSettings関数が呼び出されました');
+    secureLog('現在の電話番号:', adminPhoneNumber);
+    secureLog('現在のバックアップコード:', adminBackupCode);
     
     setAdminSettingsStatus('保存中...');
     
@@ -1176,14 +995,14 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
         }
       }
 
-      console.log('管理者設定をローカルストレージに保存中...');
+      secureLog('管理者設定をローカルストレージに保存中...');
       
       // まずローカルストレージに確実に保存
       let credentials = {
         username: "admin",
-        password: "MoneyTicket2024!",
-        backup_code: "MT-BACKUP-2024",
-        phone_number: "09012345678"
+        password: SECURITY_CONFIG.IS_PRODUCTION ? "[SETUP_REQUIRED]" : "MoneyTicket2024!", // 開発環境のみ
+        backup_code: SECURITY_CONFIG.IS_PRODUCTION ? "[SETUP_REQUIRED]" : "MT-BACKUP-2024", // 開発環境のみ
+        phone_number: SECURITY_CONFIG.IS_PRODUCTION ? "[SETUP_REQUIRED]" : "09012345678" // 開発環境のみ
       };
 
       // 既存認証情報を再取得
@@ -1202,29 +1021,29 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
 
       // ローカルストレージに保存
       SecureStorage.setSecureItem('admin_credentials', updatedCredentials);
-      console.log('ローカルストレージに保存完了');
+      secureLog('ローカルストレージに保存完了');
       
       // Supabaseへの保存は非同期で試行（Edge Function経由）
       try {
-        console.log('Supabaseへの保存を試行中...');
+        secureLog('Supabaseへの保存を試行中...');
         const supabaseSuccess = await SupabaseAdminAPI.updateAdminCredentialsViaFunction(adminPhoneNumber, adminBackupCode);
         
         if (supabaseSuccess) {
-          console.log('Supabaseにも正常に保存されました');
+          secureLog('Supabaseにも正常に保存されました');
           setAdminSettingsStatus('✅ 管理者設定が正常に保存され、データベースに反映されました');
         } else {
-          console.warn('Supabase保存に失敗しましたが、ローカル保存は成功');
+          secureLog('Supabase保存に失敗しましたが、ローカル保存は成功');
           setAdminSettingsStatus('✅ 管理者設定が正常に保存されました（ローカル保存）');
         }
       } catch (supabaseError) {
-        console.warn('Supabase保存でエラーが発生しましたが、ローカル保存は成功:', supabaseError);
+        secureLog('Supabase保存でエラーが発生しましたが、ローカル保存は成功:', supabaseError);
         setAdminSettingsStatus('✅ 管理者設定が正常に保存されました（ローカル保存）');
       }
       
       setTimeout(() => setAdminSettingsStatus(''), 3000);
 
     } catch (error) {
-      console.error('管理者設定保存エラー:', error);
+      secureLog('管理者設定保存エラー:', error);
       setAdminSettingsStatus('❌ 保存中にエラーが発生しました。');
       setTimeout(() => setAdminSettingsStatus(''), 5000);
     }
@@ -1255,7 +1074,7 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
 
       return true;
     } catch (error) {
-      console.warn(`ホームページコンテンツ(${settingKey})のSupabase保存エラー:`, error);
+      secureLog(`ホームページコンテンツ(${settingKey})のSupabase保存エラー:`, error);
       return false;
     }
   };
@@ -1316,22 +1135,22 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
       try {
         const reasonsSuccess = await saveHomepageContentToSupabase('reasons_to_choose', reasonsToChoose);
         if (reasonsSuccess) {
-          console.log('選ばれる理由をSupabaseに保存完了');
+          secureLog('選ばれる理由をSupabaseに保存完了');
           successCount++;
         }
       } catch (error) {
-        console.warn('選ばれる理由のSupabase保存エラー:', error);
+        secureLog('選ばれる理由のSupabase保存エラー:', error);
       }
       
       // 初回相談限定特典を保存
       try {
         const offerSuccess = await saveHomepageContentToSupabase('first_consultation_offer', firstConsultationOffer);
         if (offerSuccess) {
-          console.log('初回相談限定特典をSupabaseに保存完了');
+          secureLog('初回相談限定特典をSupabaseに保存完了');
           successCount++;
         }
       } catch (error) {
-        console.warn('初回相談限定特典のSupabase保存エラー:', error);
+        secureLog('初回相談限定特典のSupabase保存エラー:', error);
       }
 
       if (successCount === 2) {
@@ -1344,7 +1163,7 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
       
       setTimeout(() => setHomepageContentStatus(''), 3000);
     } catch (error) {
-      console.error("Error saving homepage content settings:", error);
+      secureLog("Error saving homepage content settings:", error);
       setHomepageContentStatus('❌ 保存中にエラーが発生しました。');
       setTimeout(() => setHomepageContentStatus(''), 5000);
     }
@@ -1365,8 +1184,8 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
             setNotificationSettingsStatus('メールアドレスが設定されていません。');
             return;
           }
-          console.log(`📧 Email Test to: ${emailConfig.recipientEmails}`);
-          console.log(`Message: ${testMessage}`);
+          secureLog(`📧 Email Test to: ${emailConfig.recipientEmails}`);
+          secureLog(`Message: ${testMessage}`);
           setNotificationSettingsStatus('✅ メール通知テストを実行しました');
           break;
           
@@ -1376,9 +1195,9 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
             setNotificationSettingsStatus('SlackのWebhook URLが設定されていません。');
             return;
           }
-          console.log(`💬 Slack Test to: ${slackConfig.channel || '#general'}`);
-          console.log(`Webhook: ${slackConfig.webhookUrl}`);
-          console.log(`Message: ${testMessage}`);
+          secureLog(`💬 Slack Test to: ${slackConfig.channel || '#general'}`);
+          secureLog(`Webhook: ${slackConfig.webhookUrl}`);
+          secureLog(`Message: ${testMessage}`);
           setNotificationSettingsStatus('✅ Slack通知テストを実行しました');
           break;
           
@@ -1388,9 +1207,9 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
             setNotificationSettingsStatus('LINEのアクセストークンが設定されていません。');
             return;
           }
-          console.log(`📱 LINE Test`);
-          console.log(`Token: ${lineConfig.accessToken.substring(0, 10)}...`);
-          console.log(`Message: ${testMessage}`);
+          secureLog(`📱 LINE Test`);
+          secureLog(`Token: ${lineConfig.accessToken.substring(0, 10)}...`);
+          secureLog(`Message: ${testMessage}`);
           setNotificationSettingsStatus('✅ LINE通知テストを実行しました');
           break;
           
@@ -1400,9 +1219,9 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
             setNotificationSettingsStatus('ChatWorkのAPIトークンまたはルームIDが設定されていません。');
             return;
           }
-          console.log(`💼 ChatWork Test to Room: ${chatworkConfig.roomId}`);
-          console.log(`Token: ${chatworkConfig.apiToken.substring(0, 10)}...`);
-          console.log(`Message: ${testMessage}`);
+          secureLog(`💼 ChatWork Test to Room: ${chatworkConfig.roomId}`);
+          secureLog(`Token: ${chatworkConfig.apiToken.substring(0, 10)}...`);
+          secureLog(`Message: ${testMessage}`);
           setNotificationSettingsStatus('✅ ChatWork通知テストを実行しました');
           break;
       }
@@ -1410,12 +1229,93 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
       setTimeout(() => setNotificationSettingsStatus(''), 5000);
       
     } catch (error) {
-      console.error('通知テストエラー:', error);
+      secureLog('通知テストエラー:', error);
       setNotificationSettingsStatus(`❌ ${channel}通知テストでエラーが発生しました: ${error}`);
       setTimeout(() => setNotificationSettingsStatus(''), 5000);
     }
   };
 
+  // ヘッダー・メインビジュアル設定のハンドラー
+  const handleHeaderDataChange = (field: keyof HeaderData, value: string) => {
+    setHeaderData(prev => ({ ...prev, [field]: value }));
+  };
+
+  const handleMainVisualDataChange = (field: keyof MainVisualData, value: string) => {
+    setMainVisualData(prev => ({ ...prev, [field]: value }));
+  };
+
+  const handleFooterDataChange = (field: keyof FooterData, value: string) => {
+    setFooterData(prev => ({ ...prev, [field]: value }));
+  };
+
+  const handleSaveHeaderAndVisualSettings = async () => {
+    setHeaderVisualStatus('💾 ヘッダー・メインビジュアル・フッター設定を保存中...');
+    
+    try {
+      // データの基本チェック
+      if (!headerData.title || !headerData.subtitle || !mainVisualData.title || !mainVisualData.subtitle || !footerData.siteName) {
+        setHeaderVisualStatus('❌ 必須項目が入力されていません。');
+        setTimeout(() => setHeaderVisualStatus(''), 5000);
+        return;
+      }
+
+      let successCount = 0;
+      
+      // ヘッダーデータを保存
+      try {
+        const headerSuccess = await saveHomepageContentToSupabase('header_data', headerData);
+        if (headerSuccess) {
+          secureLog('ヘッダーデータをSupabaseに保存完了');
+          successCount++;
+        }
+      } catch (error) {
+        secureLog('ヘッダーデータの保存エラー:', error);
+      }
+
+      // メインビジュアルデータを保存
+      try {
+        const mainVisualSuccess = await saveHomepageContentToSupabase('main_visual_data', mainVisualData);
+        if (mainVisualSuccess) {
+          secureLog('メインビジュアルデータをSupabaseに保存完了');
+          successCount++;
+        }
+      } catch (error) {
+        secureLog('メインビジュアルデータの保存エラー:', error);
+      }
+
+      // フッターデータを保存
+      try {
+        const footerSuccess = await saveHomepageContentToSupabase('footer_data', footerData);
+        if (footerSuccess) {
+          secureLog('フッターデータをSupabaseに保存完了');
+          successCount++;
+        }
+      } catch (error) {
+        secureLog('フッターデータの保存エラー:', error);
+      }
+
+      if (successCount === 3) {
+        setHeaderVisualStatus('✅ ヘッダー・メインビジュアル・フッター設定が正常に保存されました');
+      } else if (successCount > 0) {
+        setHeaderVisualStatus('⚠️ 一部の設定の保存に失敗しました');
+      } else {
+        setHeaderVisualStatus('❌ 設定の保存に失敗しました');
+      }
+
+      setTimeout(() => setHeaderVisualStatus(''), 3000);
+
+    } catch (error) {
+      secureLog('ヘッダー・メインビジュアル・フッター設定保存エラー:', error);
+      setHeaderVisualStatus('❌ 保存中にエラーが発生しました。');
+      setTimeout(() => setHeaderVisualStatus(''), 5000);
+    }
+  };
+
+  // カラーテーマ変更ハンドラー
+  const handleColorThemeChange = (themeId: string) => {
+    setCurrentTheme(themeId);
+    secureLog('カラーテーマを変更:', themeId);
+  };
 
   return (
     <div className="min-h-screen flex flex-col bg-gray-100">
@@ -1558,6 +1458,20 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
                     <i className="fas fa-home mr-2"></i>
                     <span>ホームページコンテンツ設定</span>
                 </button>
+                                 <button 
+                     onClick={() => setViewMode('headerAndVisualSettings')}
+                     className={`admin-nav-button px-4 py-2 rounded-md text-sm font-medium transition-colors ${viewMode === 'headerAndVisualSettings' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}`}
+                 >
+                     <i className="fas fa-heading mr-2"></i>
+                     <span>ヘッダー・メインビジュアル・フッター設定</span>
+                 </button>
+                 <button 
+                     onClick={() => setViewMode('colorThemeSettings')}
+                     className={`admin-nav-button px-4 py-2 rounded-md text-sm font-medium transition-colors ${viewMode === 'colorThemeSettings' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}`}
+                 >
+                     <i className="fas fa-palette mr-2"></i>
+                     <span>カラーテーマ設定</span>
+                 </button>
             </div>
         </div>
 
@@ -1708,7 +1622,7 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
                 </div>
                 <button
                     onClick={() => {
-                        console.log('商品設定保存ボタンがクリックされました');
+                        secureLog('商品設定保存ボタンがクリックされました');
                         handleSaveProductSettings();
                     }}
                     className="mt-6 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-6 rounded-lg shadow-md transition duration-150 ease-in-out flex items-center"
@@ -2394,6 +2308,403 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
             </div>
         )}
 
+        {viewMode === 'headerAndVisualSettings' && (
+            <div className="bg-white p-6 md:p-8 rounded-xl shadow-2xl">
+                <h2 className="text-2xl font-bold text-gray-800 mb-6 flex items-center">
+                    <i className="fas fa-heading mr-3 text-purple-600"></i>ヘッダー・メインビジュアル・フッター設定
+                </h2>
+                
+                {headerVisualStatus && (
+                    <div className={`p-3 mb-4 rounded-md text-sm ${headerVisualStatus.includes('❌') || headerVisualStatus.includes('エラー') ? 'bg-red-100 text-red-700' : 
+                        headerVisualStatus.includes('⚠️') ? 'bg-yellow-100 text-yellow-700' : 'bg-green-100 text-green-700'}`}>
+                        {headerVisualStatus}
+                    </div>
+                )}
+
+                <div className="space-y-8">
+                    {/* ヘッダー設定 */}
+                    <div className="p-6 bg-blue-50 border border-blue-200 rounded-lg">
+                        <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+                            <i className="fas fa-bars mr-2 text-blue-600"></i>
+                            ヘッダー設定
+                        </h3>
+                        <p className="text-sm text-gray-600 mb-6">
+                            サイトの上部に表示されるヘッダー情報を設定します。
+                        </p>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-2">
+                                    サイトタイトル
+                                </label>
+                                <input
+                                    type="text"
+                                    value={headerData.title}
+                                    onChange={(e) => handleHeaderDataChange('title', e.target.value)}
+                                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                    placeholder="例: マネーチケット"
+                                />
+                            </div>
+                            
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-2">
+                                    モバイル用サブタイトル
+                                </label>
+                                <input
+                                    type="text"
+                                    value={headerData.subtitle}
+                                    onChange={(e) => handleHeaderDataChange('subtitle', e.target.value)}
+                                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                    placeholder="例: あなたの資産運用をプロがサポート"
+                                />
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* メインビジュアル設定 */}
+                    <div className="p-6 bg-green-50 border border-green-200 rounded-lg">
+                        <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+                            <i className="fas fa-image mr-2 text-green-600"></i>
+                            メインビジュアル設定
+                        </h3>
+                        <p className="text-sm text-gray-600 mb-6">
+                            トップページのメインビジュアル部分のテキストを設定します。
+                        </p>
+
+                        <div className="space-y-6">
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-2">
+                                    メインタイトル
+                                </label>
+                                <textarea
+                                    value={mainVisualData.title}
+                                    onChange={(e) => handleMainVisualDataChange('title', e.target.value)}
+                                    rows={4}
+                                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                                    placeholder="例: あなたの資産運用を\nプロフェッショナルが\n完全サポート"
+                                />
+                                <p className="text-xs text-gray-500 mt-1">
+                                    改行（\n）で改行が表示されます
+                                </p>
+                            </div>
+                            
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-2">
+                                    ハイライト単語
+                                </label>
+                                <input
+                                    type="text"
+                                    value={mainVisualData.highlightWord}
+                                    onChange={(e) => handleMainVisualDataChange('highlightWord', e.target.value)}
+                                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                                    placeholder="例: プロフェッショナル"
+                                />
+                                <p className="text-xs text-gray-500 mt-1">
+                                    この単語は金色でハイライト表示されます
+                                </p>
+                            </div>
+                            
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-2">
+                                    サブタイトル
+                                </label>
+                                <textarea
+                                    value={mainVisualData.subtitle}
+                                    onChange={(e) => handleMainVisualDataChange('subtitle', e.target.value)}
+                                    rows={3}
+                                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                                    placeholder="例: 経験豊富なファイナンシャルプランナーが、あなただけの投資戦略を無料でご提案。 安心して始められる資産運用の第一歩を踏み出しませんか。"
+                                />
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* フッター設定 */}
+                    <div className="p-6 bg-orange-50 border border-orange-200 rounded-lg">
+                        <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+                            <i className="fas fa-footer mr-2 text-orange-600"></i>
+                            フッター設定
+                        </h3>
+                        <p className="text-sm text-gray-600 mb-6">
+                            サイトの下部に表示されるフッター情報を設定します。
+                        </p>
+
+                        <div className="space-y-6">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                                        サイト名
+                                    </label>
+                                    <input
+                                        type="text"
+                                        value={footerData.siteName}
+                                        onChange={(e) => handleFooterDataChange('siteName', e.target.value)}
+                                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                                        placeholder="例: マネーチケット"
+                                    />
+                                </div>
+                                
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                                        説明文
+                                    </label>
+                                    <input
+                                        type="text"
+                                        value={footerData.description}
+                                        onChange={(e) => handleFooterDataChange('description', e.target.value)}
+                                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                                        placeholder="例: お客様の豊かな未来を全力でサポートいたします"
+                                    />
+                                </div>
+                            </div>
+                            
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-2">
+                                    会社情報
+                                </label>
+                                <input
+                                    type="text"
+                                    value={footerData.companyInfo}
+                                    onChange={(e) => handleFooterDataChange('companyInfo', e.target.value)}
+                                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                                    placeholder="例: 運営会社：株式会社◯◯◯ | 金融商品取引業者 関東財務局長（金商）第◯◯◯号"
+                                />
+                            </div>
+                            
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-2">
+                                    連絡先情報
+                                </label>
+                                <input
+                                    type="text"
+                                    value={footerData.contactInfo}
+                                    onChange={(e) => handleFooterDataChange('contactInfo', e.target.value)}
+                                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                                    placeholder="例: 〒XXX-XXXX 東京都○○区○○ X-X-X | TEL：0120-XXX-XXX"
+                                />
+                            </div>
+                            
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-2">
+                                    著作権表示
+                                </label>
+                                <input
+                                    type="text"
+                                    value={footerData.copyright}
+                                    onChange={(e) => handleFooterDataChange('copyright', e.target.value)}
+                                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                                    placeholder="例: MoneyTicket. All rights reserved."
+                                />
+                                <p className="text-xs text-gray-500 mt-1">
+                                    年号は自動で挿入されます（© 2024 の部分）
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* プレビュー */}
+                    <div className="p-6 bg-gray-50 border border-gray-200 rounded-lg">
+                        <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+                            <i className="fas fa-eye mr-2 text-gray-600"></i>
+                            プレビュー
+                        </h3>
+                        
+                        <div className="space-y-4">
+                            <div className="p-4 bg-white border rounded-lg">
+                                <h4 className="text-sm font-medium text-gray-700 mb-2">ヘッダータイトル：</h4>
+                                <p className="text-xl font-bold text-blue-800">{headerData.title}</p>
+                                <p className="text-sm text-gray-600 mt-1">{headerData.subtitle}</p>
+                            </div>
+                            
+                                                         <div className="p-4 bg-white border rounded-lg">
+                                 <h4 className="text-sm font-medium text-gray-700 mb-2">メインビジュアル：</h4>
+                                 <div className="text-lg font-bold text-gray-800 mb-2">
+                                     {mainVisualData.title.split('\n').map((line, index) => (
+                                         <div key={index}>
+                                             {line.includes(mainVisualData.highlightWord) ? (
+                                                 line.split(mainVisualData.highlightWord).map((part, partIndex) => (
+                                                     <span key={partIndex}>
+                                                         {part}
+                                                         {partIndex < line.split(mainVisualData.highlightWord).length - 1 && (
+                                                             <span className="text-yellow-600 font-extrabold">
+                                                                 {mainVisualData.highlightWord}
+                                                             </span>
+                                                         )}
+                                                     </span>
+                                                 ))
+                                             ) : (
+                                                 line
+                                             )}
+                                         </div>
+                                     ))}
+                                 </div>
+                                 <p className="text-gray-600">{mainVisualData.subtitle}</p>
+                             </div>
+                             
+                             <div className="p-4 bg-white border rounded-lg">
+                                 <h4 className="text-sm font-medium text-gray-700 mb-2">フッター：</h4>
+                                 <div className="space-y-2 text-sm">
+                                     <p className="text-lg font-bold text-orange-600">{footerData.siteName}</p>
+                                     <p className="text-gray-600">{footerData.description}</p>
+                                     <p className="text-gray-500 text-xs">{footerData.companyInfo}</p>
+                                     <p className="text-gray-500 text-xs">{footerData.contactInfo}</p>
+                                     <p className="text-gray-400 text-xs">© {new Date().getFullYear()} {footerData.copyright}</p>
+                                 </div>
+                             </div>
+                        </div>
+                    </div>
+
+                    {/* 保存ボタン */}
+                    <div className="flex justify-center">
+                                                 <button
+                             onClick={handleSaveHeaderAndVisualSettings}
+                             className="bg-purple-600 hover:bg-purple-700 text-white font-semibold py-3 px-8 rounded-lg shadow-md hover:shadow-lg transition duration-150 ease-in-out flex items-center justify-center min-w-max"
+                         >
+                             <i className="fas fa-save mr-2 text-white"></i>
+                             <span className="text-white">ヘッダー・メインビジュアル・フッター設定を保存</span>
+                         </button>
+                    </div>
+                </div>
+            </div>
+        )}
+
+        {viewMode === 'colorThemeSettings' && (
+            <div className="bg-white p-6 md:p-8 rounded-xl shadow-2xl">
+                <h2 className="text-2xl font-bold text-gray-800 mb-6 flex items-center">
+                    <i className="fas fa-palette mr-3 text-purple-600"></i>カラーテーマ設定
+                </h2>
+                
+                <div className="mb-6">
+                    <p className="text-gray-600 mb-4">
+                        サイト全体のカラーテーマを選択してください。変更は即座に反映されます。
+                    </p>
+                    
+                    <div className="space-y-4">
+                        <h3 className="text-lg font-semibold text-gray-700 mb-3">
+                            現在のテーマ: <span className="text-purple-600">{currentTheme.name}</span>
+                        </h3>
+                        
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                            {themes.map((theme) => (
+                                <div
+                                    key={theme.id}
+                                    className={`p-4 rounded-lg border-2 cursor-pointer transition-all duration-200 ${
+                                        currentTheme.id === theme.id
+                                            ? 'border-purple-500 bg-purple-50 shadow-md'
+                                            : 'border-gray-200 bg-white hover:border-purple-300 hover:shadow-sm'
+                                    }`}
+                                    onClick={() => handleColorThemeChange(theme.id)}
+                                >
+                                    <div className="mb-3">
+                                        <h4 className="text-md font-semibold text-gray-800 mb-1">
+                                            {theme.name}
+                                        </h4>
+                                        <p className="text-sm text-gray-600">
+                                            {theme.description}
+                                        </p>
+                                    </div>
+                                    
+                                    {/* カラーパレット表示 */}
+                                    <div className="flex space-x-2 mb-3">
+                                        <div
+                                            className="w-6 h-6 rounded-full border border-gray-300"
+                                            style={{ backgroundColor: theme.colors.primaryNavy }}
+                                            title="Primary Navy"
+                                        ></div>
+                                        <div
+                                            className="w-6 h-6 rounded-full border border-gray-300"
+                                            style={{ backgroundColor: theme.colors.primaryBlue }}
+                                            title="Primary Blue"
+                                        ></div>
+                                        <div
+                                            className="w-6 h-6 rounded-full border border-gray-300"
+                                            style={{ backgroundColor: theme.colors.accentGold }}
+                                            title="Accent Gold"
+                                        ></div>
+                                        <div
+                                            className="w-6 h-6 rounded-full border border-gray-300"
+                                            style={{ backgroundColor: theme.colors.accentEmerald }}
+                                            title="Accent Emerald"
+                                        ></div>
+                                        <div
+                                            className="w-6 h-6 rounded-full border border-gray-300"
+                                            style={{ backgroundColor: theme.colors.accentRose }}
+                                            title="Accent Rose"
+                                        ></div>
+                                    </div>
+                                    
+                                    {/* 選択状態表示 */}
+                                    {currentTheme.id === theme.id && (
+                                        <div className="flex items-center text-purple-600 text-sm font-medium">
+                                            <i className="fas fa-check-circle mr-2"></i>
+                                            現在選択中
+                                        </div>
+                                    )}
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                    
+                    {/* プレビュー例 */}
+                    <div className="mt-8 p-6 bg-gray-50 rounded-lg">
+                        <h3 className="text-lg font-semibold text-gray-700 mb-4">プレビュー例</h3>
+                        <div className="space-y-4">
+                            <div 
+                                className="p-4 rounded-lg text-white"
+                                style={{ backgroundColor: currentTheme.colors.primaryNavy }}
+                            >
+                                <h4 className="font-bold">プライマリーカラー（ネイビー）</h4>
+                                <p>メインヘッダーやナビゲーションに使用されます</p>
+                            </div>
+                            
+                            <div 
+                                className="p-4 rounded-lg text-white"
+                                style={{ backgroundColor: currentTheme.colors.primaryBlue }}
+                            >
+                                <h4 className="font-bold">プライマリーカラー（ブルー）</h4>
+                                <p>ボタンやリンクに使用されます</p>
+                            </div>
+                            
+                            <div className="flex space-x-2">
+                                <div 
+                                    className="flex-1 p-3 rounded text-white text-center"
+                                    style={{ backgroundColor: currentTheme.colors.accentGold }}
+                                >
+                                    <strong>アクセントゴールド</strong>
+                                </div>
+                                <div 
+                                    className="flex-1 p-3 rounded text-white text-center"
+                                    style={{ backgroundColor: currentTheme.colors.accentEmerald }}
+                                >
+                                    <strong>アクセントエメラルド</strong>
+                                </div>
+                                <div 
+                                    className="flex-1 p-3 rounded text-white text-center"
+                                    style={{ backgroundColor: currentTheme.colors.accentRose }}
+                                >
+                                    <strong>アクセントローズ</strong>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                        <div className="flex items-start space-x-3">
+                            <i className="fas fa-info-circle text-blue-500 mt-1"></i>
+                            <div>
+                                <h4 className="font-medium text-gray-800">カラーテーマについて</h4>
+                                <p className="text-sm text-gray-600 mt-1">
+                                    • カラーテーマの変更は即座にサイト全体に反映されます<br/>
+                                    • 設定はブラウザに自動保存され、次回アクセス時にも適用されます<br/>
+                                    • 各テーマは異なる印象やブランドイメージを表現するように設計されています
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        )}
+
         {viewMode === 'adminSettings' && (
             <div className="bg-white p-6 md:p-8 rounded-xl shadow-2xl">
                 <h2 className="text-2xl font-bold text-gray-800 mb-6 flex items-center">
@@ -2511,7 +2822,7 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
                     <div className="flex justify-center">
                         <button
                             onClick={() => {
-                                console.log('管理者設定保存ボタンがクリックされました');
+                                secureLog('管理者設定保存ボタンがクリックされました');
                                 handleSaveAdminSettings();
                             }}
                             className="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-3 px-8 rounded-lg shadow-md hover:shadow-lg transition duration-150 ease-in-out flex items-center"

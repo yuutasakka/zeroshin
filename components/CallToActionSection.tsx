@@ -1,27 +1,27 @@
 import React, { useState, useEffect } from 'react';
 import { defaultFirstConsultationOffer, FirstConsultationOffer } from '../data/homepageContentData';
+import { secureLog } from '../security.config';
+import { createSupabaseClient } from './adminUtils';
 
-const createSupabaseClient = () => {
-  const SUPABASE_URL = 'https://xpjkmhnnrwwqcijrqmhv.supabase.co';
-  const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhwamttaG5ucnd3cWNpanJxbWh2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzU4MjIzMzIsImV4cCI6MjA1MTM5ODMzMn0.7KXNTt8dn6Ps3jLRADgp7VdjU5LZDP0qhtx2xClqOy0';
-
+const createSupabaseHelper = () => {
+  const config = createSupabaseClient();
   return {
     from: (table: string) => ({
       select: (columns: string = '*') => ({
         eq: (column: string, value: any) => ({
           single: async () => {
             try {
-              const response = await fetch(`${SUPABASE_URL}/rest/v1/${table}?${column}=eq.${value}&select=${columns}`, {
+              const response = await fetch(`${config.url}/rest/v1/${table}?${column}=eq.${value}&select=${columns}`, {
                 headers: {
-                  'apikey': SUPABASE_ANON_KEY,
-                  'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+                  'apikey': config.key,
+                  'Authorization': `Bearer ${config.key}`,
                   'Content-Type': 'application/json'
                 }
               });
               const data = await response.json();
               return { data: data.length > 0 ? data[0] : null, error: null };
             } catch (error) {
-              console.error('Supabase fetch error:', error);
+              secureLog('Supabase fetch error:', error);
               return { data: null, error };
             }
           }
@@ -36,7 +36,7 @@ const CallToActionSection: React.FC = () => {
 
   useEffect(() => {
     const loadConsultationOffer = async () => {
-      const supabase = createSupabaseClient();
+      const supabase = createSupabaseHelper();
       
       try {
         const { data: offerResponse, error: offerError } = await supabase
@@ -48,10 +48,10 @@ const CallToActionSection: React.FC = () => {
         if (!offerError && offerResponse?.setting_data) {
           setConsultationOffer(offerResponse.setting_data);
         } else {
-          console.log('初回相談限定特典のデータが見つからないため、デフォルトデータを使用します');
+          secureLog('初回相談限定特典のデータが見つからないため、デフォルトデータを使用します');
         }
       } catch (error) {
-        console.warn('初回相談限定特典の読み込みエラー、デフォルトデータを使用:', error);
+        secureLog('初回相談限定特典の読み込みエラー、デフォルトデータを使用:', error);
       }
     };
 

@@ -18,6 +18,29 @@ dist-ssr
 .env.development.local
 .env.test.local
 .env.production.local
+.env.production
+
+# Security configuration files (production)
+security.config.prod.ts
+security.config.production.ts
+
+# API keys and secrets
+*.key
+*.pem
+credentials.json
+secrets.json
+config.json
+supabase.config.ts
+
+# Sensitive data files
+admin_credentials.json
+backup_codes.txt
+api_keys.txt
+tokens.json
+
+# IDE specific secrets
+.vscode/settings.json
+.idea/workspace.xml
 
 # Editor directories and files
 .vscode/*

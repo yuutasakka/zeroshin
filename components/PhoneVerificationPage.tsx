@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, ChangeEvent, KeyboardEvent } from 'react';
 import SparkleBackground from './SparkleBackground';
+import { secureLog } from '../security.config';
 
 interface PhoneVerificationPageProps {
   phoneNumber: string;
@@ -66,7 +67,7 @@ const PhoneVerificationPage: React.FC<PhoneVerificationPageProps> = ({ phoneNumb
         document.getElementById('verification-code')?.focus();
       }
     } catch (error) {
-      console.error('認証エラー:', error);
+      secureLog('認証エラー:', error);
       alert('サーバーとの通信に失敗しました。サーバーが起動しているか確認してください。');
     } finally {
       setIsVerifying(false);

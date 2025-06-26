@@ -1,16 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { HeaderData, defaultHeaderData } from '../data/homepageContentData';
 
-// Supabase クライアント作成
-const createSupabaseClient = () => {
-  const supabaseUrl = 'https://gfwkhjqgkigfmrhhqsfo.supabase.co';
-  const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imdmd2toanFna2lnZm1yaGhxc2ZvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzU2NjI4MDEsImV4cCI6MjA1MTIzODgwMX0.fEYn7B-vOxqjwlV6dH6_WNPJZrV3lnz0M9xNw8JfzQA';
-  
-  return {
-    url: supabaseUrl,
-    key: supabaseKey
-  };
-};
+import { secureLog } from '../security.config';
+import { createSupabaseClient } from './adminUtils';
 
 const Header: React.FC = () => {
   const [headerData, setHeaderData] = useState<HeaderData>(defaultHeaderData);
@@ -33,14 +25,14 @@ const Header: React.FC = () => {
       if (response.ok) {
         const data = await response.json();
         if (data && data.length > 0 && data[0].setting_data) {
-          console.log('✅ ヘッダーデータをSupabaseから読み込み:', data[0].setting_data);
+          secureLog('✅ ヘッダーデータをSupabaseから読み込み');
           setHeaderData(data[0].setting_data);
         }
       } else {
-        console.warn('ヘッダーデータの読み込みに失敗、デフォルトデータを使用');
+        secureLog('ヘッダーデータの読み込みに失敗、デフォルトデータを使用');
       }
     } catch (error) {
-      console.warn('ヘッダーデータ読み込みエラー、デフォルトデータを使用:', error);
+      secureLog('ヘッダーデータ読み込みエラー、デフォルトデータを使用:', error);
     }
   };
 

@@ -10,6 +10,7 @@ import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import * as fs from 'fs';
 import * as path from 'path';
+import { randomBytes } from 'crypto';
 
 // 環境変数を読み込み
 dotenv.config();
@@ -181,9 +182,8 @@ function normalizeJapanesePhoneNumber(phoneNumber: string): string {
 
 // 認証コード生成（暗号学的に安全）
 function generateSecureCode(): string {
-  const crypto = require('crypto');
-  const randomBytes = crypto.randomBytes(2);
-  const code = (randomBytes.readUInt16BE(0) % 9000 + 1000).toString();
+  const randomBytesBuffer = randomBytes(2);
+  const code = (randomBytesBuffer.readUInt16BE(0) % 9000 + 1000).toString();
   return code;
 }
 
@@ -235,7 +235,7 @@ app.post('/api/sms/send', smsLimiter, phoneValidation, async (req: Request, res:
     const message = `マネーチケット認証コード: ${verificationCode}\n5分以内にご入力ください。このコードを他人に教えないでください。`;
 
     // TwilioでSMS送信
-    await client.messages.create({
+    const smsResult = await client.messages.create({
       body: message,
       from: twilioPhoneNumber,
       to: normalizedPhoneNumber,
@@ -243,10 +243,11 @@ app.post('/api/sms/send', smsLimiter, phoneValidation, async (req: Request, res:
 
     logger.info('SMS送信成功', {
       phoneNumber: normalizedPhoneNumber,
+      messageSid: smsResult.sid,
       ip: req.ip
     });
 
-    console.log(`SMS送信成功: ${normalizedPhoneNumber}`);
+    console.log(`SMS送信成功: ${normalizedPhoneNumber} (SID: ${smsResult.sid})`);
 
     res.json({
       success: true,
