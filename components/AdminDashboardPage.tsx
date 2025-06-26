@@ -477,12 +477,35 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
     console.log('保存する商品データ:', productsForEditing);
     
     setProductSettingsStatus('💾 商品設定を保存中...');
+    
     try {
+      // 商品データの基本チェック
+      if (!productsForEditing || productsForEditing.length === 0) {
+        setProductSettingsStatus('❌ 商品設定データがありません。');
+        setTimeout(() => setProductSettingsStatus(''), 5000);
+        return;
+      }
+
+      // 既存データとの比較（変更がない場合のチェック）
+      const existingProductsString = localStorage.getItem('customFinancialProducts');
+      if (existingProductsString) {
+        try {
+          const existingProducts = JSON.parse(existingProductsString);
+          if (JSON.stringify(existingProducts) === JSON.stringify(productsForEditing)) {
+            setProductSettingsStatus('❌ 商品設定に変更がありません。');
+            setTimeout(() => setProductSettingsStatus(''), 5000);
+            return;
+          }
+        } catch (parseError) {
+          console.log('既存商品データの解析でエラー（新規保存として処理）:', parseError);
+        }
+      }
+
       // ローカルストレージに確実に保存
       localStorage.setItem('customFinancialProducts', JSON.stringify(productsForEditing));
       console.log('商品設定をローカルストレージに保存完了');
       
-      setProductSettingsStatus('✅ 商品設定が正常に保存されました！');
+      setProductSettingsStatus('✅ 商品設定が正常に保存されました');
       setTimeout(() => setProductSettingsStatus(''), 3000);
     } catch (error) {
       console.error("Error saving product settings:", error);
@@ -548,14 +571,35 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
   };
   
   const handleSaveTestimonialSettings = async () => {
-    setTestimonialStatus('📝 お客様の声をSupabaseに保存中...');
+    setTestimonialStatus('📝 お客様の声を保存中...');
+    
     try {
-        // ローカルストレージに保存（後方互換性）
+        // お客様の声データの基本チェック
+        if (!testimonialsForEditing || testimonialsForEditing.length === 0) {
+          setTestimonialStatus('❌ お客様の声のデータがありません。');
+          setTimeout(() => setTestimonialStatus(''), 5000);
+          return;
+        }
+
+        // 既存データとの比較（変更がない場合のチェック）
+        const existingTestimonialsString = localStorage.getItem('customTestimonials');
+        if (existingTestimonialsString) {
+          try {
+            const existingTestimonials = JSON.parse(existingTestimonialsString);
+            if (JSON.stringify(existingTestimonials) === JSON.stringify(testimonialsForEditing)) {
+              setTestimonialStatus('❌ お客様の声に変更がありません。');
+              setTimeout(() => setTestimonialStatus(''), 5000);
+              return;
+            }
+          } catch (parseError) {
+            console.log('既存お客様の声データの解析でエラー（新規保存として処理）:', parseError);
+          }
+        }
+
+        // ローカルストレージに保存
         localStorage.setItem('customTestimonials', JSON.stringify(testimonialsForEditing));
         
-
-        
-        setTestimonialStatus('✅ お客様の声がSupabaseに正常に保存されました！');
+        setTestimonialStatus('✅ お客様の声が正常に保存されました');
         setTimeout(() => setTestimonialStatus(''), 3000);
     } catch (error) {
         console.error("Error saving testimonial settings:", error);
@@ -570,14 +614,28 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
   };
 
   const handleSaveTrackingScripts = async () => {
-      setAnalyticsSettingsStatus('📊 アナリティクス設定をSupabaseに保存中...');
+      setAnalyticsSettingsStatus('📊 アナリティクス設定を保存中...');
+      
       try {
-          // ローカルストレージに保存（後方互換性）
+          // 既存データとの比較（変更がない場合のチェック）
+          const existingScriptsString = localStorage.getItem('customTrackingScripts');
+          if (existingScriptsString) {
+            try {
+              const existingScripts = JSON.parse(existingScriptsString);
+              if (JSON.stringify(existingScripts) === JSON.stringify(trackingScripts)) {
+                setAnalyticsSettingsStatus('❌ アナリティクス設定に変更がありません。');
+                setTimeout(() => setAnalyticsSettingsStatus(''), 5000);
+                return;
+              }
+            } catch (parseError) {
+              console.log('既存アナリティクス設定の解析でエラー（新規保存として処理）:', parseError);
+            }
+          }
+
+          // ローカルストレージに保存
           localStorage.setItem('customTrackingScripts', JSON.stringify(trackingScripts));
           
-
-          
-          setAnalyticsSettingsStatus('✅ アナリティクス設定がSupabaseに正常に保存されました！');
+          setAnalyticsSettingsStatus('✅ アナリティクス設定が正常に保存されました');
           setTimeout(() => setAnalyticsSettingsStatus(''), 3000);
       } catch (error) {
           console.error("Error saving tracking scripts:", error);
@@ -602,15 +660,28 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
   };
 
   const handleSaveNotificationSettings = async () => {
-    setNotificationSettingsStatus('🔔 通知設定をSupabaseに保存中...');
+    setNotificationSettingsStatus('🔔 通知設定を保存中...');
+    
     try {
-        // ローカルストレージに保存（後方互換性）
+        // 既存データとの比較（変更がない場合のチェック）
+        const existingSettingsString = localStorage.getItem('notificationConfigurations');
+        if (existingSettingsString) {
+          try {
+            const existingSettings = JSON.parse(existingSettingsString);
+            if (JSON.stringify(existingSettings) === JSON.stringify(notificationSettings)) {
+              setNotificationSettingsStatus('❌ 通知設定に変更がありません。');
+              setTimeout(() => setNotificationSettingsStatus(''), 5000);
+              return;
+            }
+          } catch (parseError) {
+            console.log('既存通知設定の解析でエラー（新規保存として処理）:', parseError);
+          }
+        }
+
+        // ローカルストレージに保存
         localStorage.setItem('notificationConfigurations', JSON.stringify(notificationSettings));
         
-
-
-        
-        setNotificationSettingsStatus('✅ 通知設定がSupabaseに暗号化されて保存されました！');
+        setNotificationSettingsStatus('✅ 通知設定が正常に保存されました');
         setTimeout(() => setNotificationSettingsStatus(''), 3000);
     } catch (error) {
         console.error("Error saving notification settings:", error);
@@ -658,7 +729,7 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
     if (!editingLegalLink) return;
 
     try {
-      setLegalLinksStatus('🔗 リーガルリンクをSupabaseに保存中...');
+      setLegalLinksStatus('🔗 リーガルリンクを保存中...');
       
       const updatedLinks = legalLinks.map(link => 
         link.id === editingLegalLink.id ? { ...link, ...editingLegalLink } : link
@@ -666,14 +737,11 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
       
       setLegalLinks(updatedLinks);
       
-      // ローカルストレージに保存（後方互換性）
+      // ローカルストレージに保存
       localStorage.setItem('customLegalLinks', JSON.stringify(updatedLinks));
       
-      // 将来的にはSupabaseに保存
-      
-      
       setEditingLegalLink(null);
-      setLegalLinksStatus('✅ リーガルリンクがSupabaseに正常に保存されました');
+      setLegalLinksStatus('✅ リーガルリンクが正常に保存されました');
       setTimeout(() => setLegalLinksStatus(''), 3000);
     } catch (error) {
       console.error('Error saving legal link:', error);
