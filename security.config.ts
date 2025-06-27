@@ -1,8 +1,24 @@
 // セキュリティ設定の中央管理（完全Supabaseベース）
+
+// Vite環境変数の型定義
+interface ImportMetaEnv {
+  readonly VITE_ENCRYPTION_KEY?: string;
+  readonly VITE_JWT_SECRET?: string;
+  readonly VITE_SESSION_SECRET?: string;
+  readonly VITE_SUPABASE_URL?: string;
+  readonly VITE_SUPABASE_ANON_KEY?: string;
+  readonly VITE_SUPABASE_SERVICE_ROLE_KEY?: string;
+  readonly MODE?: string;
+}
+
+interface ImportMeta {
+  readonly env: ImportMetaEnv;
+}
+
 export const SECURITY_CONFIG = {
   // 暗号化設定（本番では必須）
-  ENCRYPTION_KEY: process.env.ENCRYPTION_KEY || (() => {
-    if (process.env.NODE_ENV === 'production') {
+  ENCRYPTION_KEY: (typeof import.meta !== 'undefined' && (import.meta as any).env?.VITE_ENCRYPTION_KEY) || process.env.ENCRYPTION_KEY || (() => {
+    if (process.env.NODE_ENV === 'production' || (typeof import.meta !== 'undefined' && (import.meta as any).env?.MODE === 'production')) {
       throw new Error('ENCRYPTION_KEY must be set in production environment');
     }
     // 開発環境でも予測不可能な一意キーを生成
@@ -10,8 +26,8 @@ export const SECURITY_CONFIG = {
   })(),
   
   // JWT設定（本番では必須）
-  JWT_SECRET: process.env.JWT_SECRET || (() => {
-    if (process.env.NODE_ENV === 'production') {
+  JWT_SECRET: (typeof import.meta !== 'undefined' && (import.meta as any).env?.VITE_JWT_SECRET) || process.env.JWT_SECRET || (() => {
+    if (process.env.NODE_ENV === 'production' || (typeof import.meta !== 'undefined' && (import.meta as any).env?.MODE === 'production')) {
       throw new Error('JWT_SECRET must be set in production environment');
     }
     // 開発環境でも予測不可能な一意キーを生成
@@ -19,8 +35,8 @@ export const SECURITY_CONFIG = {
   })(),
   
   // セッション設定（本番では必須）
-  SESSION_SECRET: process.env.SESSION_SECRET || (() => {
-    if (process.env.NODE_ENV === 'production') {
+  SESSION_SECRET: (typeof import.meta !== 'undefined' && (import.meta as any).env?.VITE_SESSION_SECRET) || process.env.SESSION_SECRET || (() => {
+    if (process.env.NODE_ENV === 'production' || (typeof import.meta !== 'undefined' && (import.meta as any).env?.MODE === 'production')) {
       throw new Error('SESSION_SECRET must be set in production environment');
     }
     // 開発環境でも予測不可能な一意キーを生成
