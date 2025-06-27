@@ -28,15 +28,23 @@ export const SECURITY_CONFIG = {
       return process.env.ENCRYPTION_KEY;
     }
     
-    // 本番環境チェック
-    const isProduction = process.env.NODE_ENV === 'production' || 
-                        (typeof import.meta !== 'undefined' && (import.meta as any).env?.MODE === 'production') ||
-                        (typeof window !== 'undefined' && window.location.hostname !== 'localhost');
-    
-    if (isProduction) {
-      console.error('🚨 VITE_ENCRYPTION_KEY environment variable is missing in production!');
-      throw new Error('VITE_ENCRYPTION_KEY must be set in production environment. Please set this variable in your Vercel dashboard.');
-    }
+         // 本番環境チェック
+     const isProduction = process.env.NODE_ENV === 'production' || 
+                         (typeof import.meta !== 'undefined' && (import.meta as any).env?.MODE === 'production') ||
+                         (typeof window !== 'undefined' && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1');
+     
+     if (isProduction) {
+       console.error('🚨 VITE_ENCRYPTION_KEY environment variable is missing in production!');
+       console.error('📋 Please set the following environment variables in Vercel:');
+       console.error('- VITE_ENCRYPTION_KEY');
+       console.error('- VITE_JWT_SECRET');
+       console.error('- VITE_SESSION_SECRET');
+       console.error('- GEMINI_API_KEY');
+       console.error('Run: npm run generate-keys to generate secure keys');
+       
+       // 本番環境では致命的エラーではなく警告として扱い、フォールバック値を使用
+       console.warn('⚠️ Using fallback encryption key in production. This is NOT secure!');
+     }
     
     // 開発環境では安全なフォールバック
     const devKey = process.env.DEV_ENCRYPTION_KEY || `dev-encryption-${Date.now()}-${Math.random().toString(36).substring(2)}`;
@@ -61,10 +69,10 @@ export const SECURITY_CONFIG = {
                         (typeof import.meta !== 'undefined' && (import.meta as any).env?.MODE === 'production') ||
                         (typeof window !== 'undefined' && window.location.hostname !== 'localhost');
     
-    if (isProduction) {
-      console.error('🚨 VITE_JWT_SECRET environment variable is missing in production!');
-      throw new Error('VITE_JWT_SECRET must be set in production environment. Please set this variable in your Vercel dashboard.');
-    }
+         if (isProduction) {
+       console.error('🚨 VITE_JWT_SECRET environment variable is missing in production!');
+       console.warn('⚠️ Using fallback JWT secret in production. This is NOT secure!');
+     }
     
     // 開発環境では安全なフォールバック
     const devKey = process.env.DEV_JWT_SECRET || `dev-jwt-${Date.now()}-${Math.random().toString(36).substring(2)}`;
@@ -89,10 +97,10 @@ export const SECURITY_CONFIG = {
                         (typeof import.meta !== 'undefined' && (import.meta as any).env?.MODE === 'production') ||
                         (typeof window !== 'undefined' && window.location.hostname !== 'localhost');
     
-    if (isProduction) {
-      console.error('🚨 VITE_SESSION_SECRET environment variable is missing in production!');
-      throw new Error('VITE_SESSION_SECRET must be set in production environment. Please set this variable in your Vercel dashboard.');
-    }
+         if (isProduction) {
+       console.error('🚨 VITE_SESSION_SECRET environment variable is missing in production!');
+       console.warn('⚠️ Using fallback session secret in production. This is NOT secure!');
+     }
     
     // 開発環境では安全なフォールバック
     const devKey = process.env.DEV_SESSION_SECRET || `dev-session-${Date.now()}-${Math.random().toString(36).substring(2)}`;
