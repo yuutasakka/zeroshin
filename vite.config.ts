@@ -15,8 +15,11 @@ export default defineConfig(({ mode }) => {
       strictPort: false,
       hmr: {
         port: 5175,
-        overlay: false
-      }
+        overlay: false,
+        clientPort: 5175
+      },
+      cors: true,
+      ws: false
     },
     build: {
       outDir: 'dist',
@@ -36,7 +39,8 @@ export default defineConfig(({ mode }) => {
     },
     define: {
       'process.env.API_KEY': JSON.stringify(env.GEMINI_API_KEY),
-      'process.env.GEMINI_API_KEY': JSON.stringify(env.GEMINI_API_KEY)
+      'process.env.GEMINI_API_KEY': JSON.stringify(env.GEMINI_API_KEY),
+      'process.env.WS_ENDPOINT': 'false'
     },
     resolve: {
       alias: {
@@ -44,7 +48,8 @@ export default defineConfig(({ mode }) => {
       }
     },
     optimizeDeps: {
-      exclude: ['plasmo']
-    }
+      exclude: ['plasmo', 'parcel', 'ws', 'websocket']
+    },
+    logLevel: 'warn'
   };
 });
