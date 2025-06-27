@@ -14,6 +14,13 @@ const Header: React.FC = () => {
   const loadHeaderFromSupabase = async () => {
     try {
       const supabaseConfig = createSupabaseClient();
+      
+      // 本番環境でSupabase設定がない場合はデフォルトデータを使用
+      if (!supabaseConfig.url || !supabaseConfig.key) {
+        secureLog('⚠️ Header: Supabase設定なし：デフォルトデータを使用');
+        return;
+      }
+
       const response = await fetch(`${supabaseConfig.url}/rest/v1/homepage_content_settings?setting_key=eq.header_data&select=*`, {
         headers: {
           'Authorization': `Bearer ${supabaseConfig.key}`,
@@ -33,6 +40,7 @@ const Header: React.FC = () => {
       }
     } catch (error) {
       secureLog('ヘッダーデータ読み込みエラー、デフォルトデータを使用:', error);
+      // エラーが発生してもデフォルトデータを使用するだけで、ユーザーにはエラーを表示しない
     }
   };
 

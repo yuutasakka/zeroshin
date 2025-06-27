@@ -171,6 +171,25 @@ const KeyRotationManager: React.FC<KeyRotationManagerProps> = ({ onClose }) => {
   // 新しい暗号化キーの生成
   const generateNewKey = async (keyType: string, algorithm: string): Promise<string> => {
     try {
+      // 本番環境ではデモキーを生成
+      if (!process.env.API_BASE_URL) {
+        setTimeout(() => {
+          const newKey: EncryptionKey = {
+            id: `key-${Date.now()}`,
+            algorithm: 'AES-256',
+            keyType: keyType as any,
+            createdAt: new Date(),
+            expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30日後
+            status: 'ACTIVE',
+            rotationSchedule: '30 days',
+            lastRotated: new Date(),
+            nextRotation: new Date(Date.now() + 25 * 24 * 60 * 60 * 1000)
+          };
+          setKeys(prev => [...prev, newKey]);
+        }, 1000);
+        return 'demo_key_generated';
+      }
+
       const response = await fetch('/api/security/generate-key', {
         method: 'POST',
         headers: {

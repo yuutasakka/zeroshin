@@ -63,6 +63,13 @@ const Footer: React.FC<FooterProps> = ({ onNavigateToAdminLogin }) => {
       }
 
       const supabaseConfig = createSupabaseClient();
+      
+      // 本番環境でSupabase設定がない場合はデフォルトデータを使用
+      if (!supabaseConfig.url || !supabaseConfig.key) {
+        secureLog('⚠️ Footer: Supabase設定なし：デフォルトデータを使用');
+        return;
+      }
+
       const response = await fetch(`${supabaseConfig.url}/rest/v1/homepage_content_settings?setting_key=eq.footer_data&select=*`, {
         headers: {
           'Authorization': `Bearer ${supabaseConfig.key}`,
@@ -82,6 +89,7 @@ const Footer: React.FC<FooterProps> = ({ onNavigateToAdminLogin }) => {
       }
     } catch (error) {
       secureLog('フッターデータ読み込みエラー、デフォルトデータを使用:', error);
+      // エラーが発生してもデフォルトデータを使用するだけで、ユーザーにはエラーを表示しない
     }
   };
 

@@ -78,17 +78,18 @@ const PhoneVerificationPage: React.FC<PhoneVerificationPageProps> = ({ phoneNumb
         setVerificationCode(''); // コードをクリア
         document.getElementById('verification-code')?.focus();
       }
-    } catch (error) {
-      secureLog('認証エラー:', error);
-      // 本番環境でエラーが発生した場合はデモとして認証成功
-      if (!process.env.API_BASE_URL) {
-        onVerificationComplete();
-      } else {
-        alert('サーバーとの通信に失敗しました。サーバーが起動しているか確認してください。');
+          } catch (error) {
+        secureLog('認証エラー:', error);
+        // 本番環境でエラーが発生した場合はデモとして認証成功
+        if (!process.env.API_BASE_URL) {
+          console.log('PhoneVerification: デモモードで認証成功');
+          onVerificationComplete();
+        } else {
+          alert('サーバーとの通信に失敗しました。サーバーが起動しているか確認してください。');
+        }
+      } finally {
+        setIsVerifying(false);
       }
-    } finally {
-      setIsVerifying(false);
-    }
   };
 
   const handleKeyPress = (e: KeyboardEvent<HTMLInputElement>) => {

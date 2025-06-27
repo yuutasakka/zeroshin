@@ -92,6 +92,13 @@ const MainVisualAndDiagnosis: React.FC<MainVisualAndDiagnosisProps> = ({ onProce
   const loadMainVisualFromSupabase = async () => {
     try {
       const supabaseConfig = createSupabaseClient();
+      
+      // 本番環境でSupabase設定がない場合はデフォルトデータを使用
+      if (!supabaseConfig.url || !supabaseConfig.key) {
+        secureLog('⚠️ Supabase設定なし：デフォルトデータを使用');
+        return;
+      }
+
       const response = await fetch(`${supabaseConfig.url}/rest/v1/homepage_content_settings?setting_key=eq.main_visual_data&select=*`, {
         headers: {
           'Authorization': `Bearer ${supabaseConfig.key}`,
@@ -111,6 +118,7 @@ const MainVisualAndDiagnosis: React.FC<MainVisualAndDiagnosisProps> = ({ onProce
       }
     } catch (error) {
       secureLog('メインビジュアルデータ読み込みエラー、デフォルトデータを使用:', error);
+      // エラーが発生してもデフォルトデータを使用するだけで、ユーザーにはエラーを表示しない
     }
   };
 
@@ -206,16 +214,18 @@ const MainVisualAndDiagnosis: React.FC<MainVisualAndDiagnosisProps> = ({ onProce
         } else {
           alert('SMS送信に失敗しました: ' + result.error);
         }
-      } catch (error) {
-        secureLog('SMS送信エラー:', error);
-        // 本番環境でエラーが発生した場合はデモとして認証成功
-        if (!process.env.API_BASE_URL) {
-          console.log('デモモード: SMS送信エラーをキャッチ、認証ページに進む');
-          onProceedToVerification(formData.phoneNumber, formData);
-        } else {
-          alert('サーバーとの通信に失敗しました。サーバーが起動しているか確認してください。');
+              } catch (error) {
+          secureLog('SMS送信エラー:', error);
+          console.log('MainVisual: API_BASE_URL =', process.env.API_BASE_URL);
+          console.log('MainVisual: エラー詳細:', error);
+          // 本番環境でエラーが発生した場合はデモとして認証成功
+          if (!process.env.API_BASE_URL) {
+            console.log('MainVisual: デモモードで認証ページに進む');
+            onProceedToVerification(formData.phoneNumber, formData);
+          } else {
+            alert('サーバーとの通信に失敗しました。サーバーが起動しているか確認してください。');
+          }
         }
-      }
     }
   };
   
