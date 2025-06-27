@@ -6,6 +6,7 @@ import FloatingHeartsBackground from './FloatingHeartsBackground';
 import { assetProjectionData, AgeGroup, InvestmentAmountKey } from '../data/assetProjectionData';
 import { allFinancialProducts as defaultFinancialProducts } from '../data/financialProductsData';
 import { secureLog } from '../security.config';
+import { MCPFinancialAssistant } from './MCPFinancialAssistant';
 
 // セキュリティ関数: URLの安全性を確認
 const sanitizeUrl = (url: string): string => {
@@ -313,6 +314,26 @@ const DiagnosisResultsPage: React.FC<DiagnosisResultsPageProps> = ({ diagnosisDa
               </div>
             </div>
           )}
+
+          {/* MCP AI Financial Assistant */}
+          <div className="mb-16">
+            <h3 className="heading-primary text-3xl mb-8 flex items-center justify-center">
+              <i className="fas fa-robot mr-3" style={{ color: 'var(--accent-gold)' }}></i>
+              AI財務アドバイザー
+              <span className="text-sm bg-gradient-to-r from-purple-500 to-pink-500 text-white px-3 py-1 rounded-full ml-3">
+                MCP対応
+              </span>
+            </h3>
+            <div className="p-4 mb-6 rounded-xl" style={{ background: 'linear-gradient(135deg, rgba(99, 102, 241, 0.1) 0%, rgba(168, 85, 247, 0.1) 100%)', border: '1px solid rgba(99, 102, 241, 0.2)' }}>
+              <p className="text-luxury text-center">
+                <i className="fas fa-star mr-2" style={{ color: 'var(--accent-gold)' }}></i>
+                最新のMCP（Model Context Protocol）技術を使った高度な財務分析機能を搭載！
+                より詳細な診断と個別化されたアドバイスをご利用いただけます。
+                <i className="fas fa-star ml-2" style={{ color: 'var(--accent-gold)' }}></i>
+              </p>
+            </div>
+            <MCPFinancialAssistant className="w-full" />
+          </div>
 
           {/* QR Code and Return Button */}
           <div className="mt-16 pt-8 border-t border-gray-300">
