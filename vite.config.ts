@@ -9,12 +9,26 @@ export default defineConfig(({ mode }) => {
       jsxRuntime: 'automatic'
     })],
     server: {
-      port: 5173,
+      port: 5174,
       open: true,
+      host: 'localhost',
+      strictPort: false,
+      hmr: {
+        port: 5175,
+        overlay: false
+      }
     },
     build: {
       outDir: 'dist',
       sourcemap: true,
+      rollupOptions: {
+        output: {
+          manualChunks: {
+            vendor: ['react', 'react-dom'],
+            utils: ['crypto-js', 'chart.js']
+          }
+        }
+      }
     },
     esbuild: {
       jsxFactory: 'React.createElement',
@@ -28,6 +42,9 @@ export default defineConfig(({ mode }) => {
       alias: {
         '@': path.resolve(__dirname, '.'),
       }
+    },
+    optimizeDeps: {
+      exclude: ['plasmo']
     }
   };
 });
