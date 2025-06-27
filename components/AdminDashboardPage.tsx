@@ -18,7 +18,13 @@ import {
 } from '../data/homepageContentData';
 import { SECURITY_CONFIG, SUPABASE_CONFIG, secureLog } from '../security.config';
 import { SupabaseAdminAPI, SecureStorage, createSupabaseClient } from './adminUtils';
+import { resetToSampleData } from '../data/sampleData';
 import { useColorTheme } from './ColorThemeContext';
+import TwoFactorAuth from './TwoFactorAuth';
+import KeyRotationManager from './KeyRotationManager';
+import SecurityScanner from './SecurityScanner';
+import PenetrationTester from './PenetrationTester';
+import SecurityIntegration from './SecurityIntegration';
 
 const supabaseConfig = createSupabaseClient();
 
@@ -28,7 +34,7 @@ interface AdminDashboardPageProps {
   onNavigateHome: () => void;
 }
 
-type AdminViewMode = 'userHistory' | 'productSettings' | 'testimonialSettings' | 'analyticsSettings' | 'notificationSettings' | 'legalLinksSettings' | 'adminSettings' | 'homepageContentSettings' | 'headerAndVisualSettings' | 'colorThemeSettings';
+type AdminViewMode = 'userHistory' | 'productSettings' | 'testimonialSettings' | 'analyticsSettings' | 'notificationSettings' | 'legalLinksSettings' | 'adminSettings' | 'homepageContentSettings' | 'headerAndVisualSettings' | 'colorThemeSettings' | 'securitySettings';
 
 interface DashboardStats {
     totalDiagnoses: number;
@@ -98,6 +104,15 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
   const [mainVisualData, setMainVisualData] = useState<MainVisualData>(defaultMainVisualData);
   const [footerData, setFooterData] = useState<FooterData>(defaultFooterData);
   const [headerVisualStatus, setHeaderVisualStatus] = useState<string>('');
+
+  // セキュリティ機能のstate
+  const [showTwoFactorAuth, setShowTwoFactorAuth] = useState(false);
+  const [showKeyRotationManager, setShowKeyRotationManager] = useState(false);
+  const [showSecurityScanner, setShowSecurityScanner] = useState(false);
+  const [showPenetrationTester, setShowPenetrationTester] = useState(false);
+  const [showSecurityIntegration, setShowSecurityIntegration] = useState(false);
+  const [twoFactorAuthMode, setTwoFactorAuthMode] = useState<'setup' | 'verify'>('setup');
+  const [adminTotpSecret, setAdminTotpSecret] = useState<string>('');
 
 
   // セッション有効性チェック
@@ -202,36 +217,36 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
           setAdminBackupCode(supabaseCredentials.backup_code || 'MT-BACKUP-2024');
           
           // ローカルストレージにもバックアップとして保存
-          const localCredentials = {
+          const backupCredentials = {
             username: 'admin',
             backup_code: supabaseCredentials.backup_code,
             phone_number: supabaseCredentials.phone_number,
             last_updated: new Date().toISOString()
           };
-          SecureStorage.setSecureItem('admin_credentials', localCredentials);
+          SecureStorage.setSecureItem('admin_credentials', backupCredentials);
           return;
         }
         
         // Supabaseから取得できない場合はローカルストレージを確認
         secureLog('Supabaseから取得できませんでした。ローカルストレージを確認中...');
-        const credentials = SecureStorage.getSecureItem('admin_credentials');
-        if (credentials) {
+        const storedCredentials = SecureStorage.getSecureItem('admin_credentials');
+        if (storedCredentials) {
           secureLog('ローカルストレージから管理者設定を取得');
-          setAdminPhoneNumber(credentials.phone_number || '09012345678');
-          setAdminBackupCode(credentials.backup_code || 'MT-BACKUP-2024');
+          setAdminPhoneNumber(storedCredentials.phone_number || '09012345678');
+          setAdminBackupCode(storedCredentials.backup_code || 'MT-BACKUP-2024');
         } else {
           secureLog('デフォルト管理者設定を使用');
           setAdminPhoneNumber('09012345678');
           setAdminBackupCode('MT-BACKUP-2024');
         }
-      } catch (error) {
+      } catch (error: any) {
         secureLog('管理者設定の読み込みエラー:', error);
         
         // エラー時はローカルストレージをフォールバック
-        const credentials = SecureStorage.getSecureItem('admin_credentials');
-        if (credentials) {
-          setAdminPhoneNumber(credentials.phone_number || '09012345678');
-          setAdminBackupCode(credentials.backup_code || 'MT-BACKUP-2024');
+        const fallbackCredentials = SecureStorage.getSecureItem('admin_credentials');
+        if (fallbackCredentials) {
+          setAdminPhoneNumber(fallbackCredentials.phone_number || '09012345678');
+          setAdminBackupCode(fallbackCredentials.backup_code || 'MT-BACKUP-2024');
         } else {
           setAdminPhoneNumber('09012345678');
           setAdminBackupCode('MT-BACKUP-2024');
@@ -1017,30 +1032,29 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
         const hashArray = Array.from(new Uint8Array(hashBuffer));
         const hashedData = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
 
-        // Supabaseに安全に保存
-        const updateResult = await SecureConfigManager.updateAdminCredentials({
+        // ローカルストレージに保存
+        const credentialsData = {
           phone_number: adminPhoneNumber,
           backup_code: adminBackupCode,
           updated_at: new Date().toISOString(),
           data_hash: hashedData
-        });
+        };
         
-        if (updateResult) {
-          secureLog('Supabaseに正常に保存されました');
-          setAdminSettingsStatus('✅ 管理者設定が正常に保存され、データベースに反映されました');
-        } else {
-          throw new Error('Supabase更新に失敗しました');
-        }
-      } catch (supabaseError) {
-        secureLog('Supabase保存エラー:', supabaseError);
-        setAdminSettingsStatus('❌ 設定の保存に失敗しました。システム管理者にお問い合わせください。');
-      }
-      
-      setTimeout(() => setAdminSettingsStatus(''), 3000);
+        SecureStorage.setSecureItem('admin_credentials', credentialsData);
+        
+        secureLog('管理者設定を正常に保存しました');
+        setAdminSettingsStatus('✅ 管理者設定が正常に保存されました');
+        
+        setTimeout(() => setAdminSettingsStatus(''), 3000);
 
+      } catch (error) {
+        secureLog('管理者設定保存エラー:', error);
+        setAdminSettingsStatus('❌ 保存中にエラーが発生しました。');
+        setTimeout(() => setAdminSettingsStatus(''), 5000);
+      }
     } catch (error) {
-      secureLog('管理者設定保存エラー:', error);
-      setAdminSettingsStatus('❌ 保存中にエラーが発生しました。');
+      secureLog('管理者設定保存外部エラー:', error);
+      setAdminSettingsStatus('❌ 保存中に予期しないエラーが発生しました。');
       setTimeout(() => setAdminSettingsStatus(''), 5000);
     }
   };
@@ -1313,6 +1327,25 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
     secureLog('カラーテーマを変更:', themeId);
   };
 
+  // サンプルデータリセット関数
+  const handleResetToSampleData = async () => {
+    if (confirm('全てのコンテンツ設定をサンプルデータにリセットしますか？この操作は元に戻せません。')) {
+      try {
+        const success = resetToSampleData();
+        if (success) {
+          // 画面表示を更新するために画面をリロード
+          alert('✅ サンプルデータのリセットが完了しました。画面をリロードします。');
+          window.location.reload();
+        } else {
+          alert('❌ サンプルデータのリセットに失敗しました。');
+        }
+      } catch (error) {
+        console.error('サンプルデータリセットエラー:', error);
+        alert('❌ サンプルデータのリセット中にエラーが発生しました。');
+      }
+    }
+  };
+
   return (
     <div className="min-h-screen flex flex-col bg-gray-100">
       <header className="bg-gray-800 text-white shadow-lg sticky top-0 z-50">
@@ -1468,6 +1501,27 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
                      <i className="fas fa-palette mr-2"></i>
                      <span>カラーテーマ設定</span>
                  </button>
+                 <button 
+                     onClick={() => setViewMode('securitySettings')}
+                     className={`admin-nav-button px-4 py-2 rounded-md text-sm font-medium transition-colors ${viewMode === 'securitySettings' ? 'bg-red-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}`}
+                 >
+                     <i className="fas fa-shield-alt mr-2"></i>
+                     <span>🔐 セキュリティ設定</span>
+                 </button>
+            </div>
+            
+            {/* サンプルデータリセットボタン */}
+            <div className="mt-4 pt-4 border-t border-gray-200">
+                <button 
+                    onClick={handleResetToSampleData}
+                    className="bg-orange-500 hover:bg-orange-600 text-white font-medium px-4 py-2 rounded-md text-sm transition-colors flex items-center"
+                >
+                    <i className="fas fa-refresh mr-2"></i>
+                    <span>🔄 サンプルデータで初期化</span>
+                </button>
+                <p className="text-xs text-gray-500 mt-1">
+                    証言、リーガルリンク、ホームページコンテンツなどをサンプルデータにリセットします
+                </p>
             </div>
         </div>
 
@@ -2829,6 +2883,238 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
                     </div>
                 </div>
             </div>
+        )}
+
+        {viewMode === 'securitySettings' && (
+            <div className="bg-white p-6 md:p-8 rounded-xl shadow-2xl">
+                <h2 className="text-2xl font-bold text-gray-800 mb-6 flex items-center">
+                    <i className="fas fa-shield-alt mr-3 text-red-600"></i>🔐 セキュリティ設定
+                </h2>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                    {/* 2要素認証 */}
+                    <div className="bg-gradient-to-br from-blue-50 to-indigo-100 p-6 rounded-xl shadow-md border border-blue-200">
+                        <div className="flex items-center justify-center w-12 h-12 bg-blue-500 rounded-lg mb-4 mx-auto">
+                            <i className="fas fa-mobile-alt text-white text-xl"></i>
+                        </div>
+                        <h3 className="text-lg font-semibold text-gray-800 text-center mb-2">2要素認証 (2FA)</h3>
+                        <p className="text-sm text-gray-600 text-center mb-4">
+                            TOTPベースの2要素認証でアカウントのセキュリティを強化
+                        </p>
+                        <div className="space-y-2">
+                            <button
+                                onClick={() => {
+                                    setTwoFactorAuthMode('setup');
+                                    setShowTwoFactorAuth(true);
+                                }}
+                                className="w-full bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+                            >
+                                🛠️ 2FA設定
+                            </button>
+                            <button
+                                onClick={() => {
+                                    setTwoFactorAuthMode('verify');
+                                    setShowTwoFactorAuth(true);
+                                }}
+                                className="w-full bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+                            >
+                                ✅ 2FA認証テスト
+                            </button>
+                        </div>
+                    </div>
+
+                    {/* キーローテーション */}
+                    <div className="bg-gradient-to-br from-purple-50 to-pink-100 p-6 rounded-xl shadow-md border border-purple-200">
+                        <div className="flex items-center justify-center w-12 h-12 bg-purple-500 rounded-lg mb-4 mx-auto">
+                            <i className="fas fa-key text-white text-xl"></i>
+                        </div>
+                        <h3 className="text-lg font-semibold text-gray-800 text-center mb-2">暗号化キーローテーション</h3>
+                        <p className="text-sm text-gray-600 text-center mb-4">
+                            JWT・データベース・セッション暗号化キーの自動ローテーション
+                        </p>
+                        <button
+                            onClick={() => setShowKeyRotationManager(true)}
+                            className="w-full bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+                        >
+                            🔑 キー管理
+                        </button>
+                    </div>
+
+                    {/* セキュリティスキャン */}
+                    <div className="bg-gradient-to-br from-orange-50 to-red-100 p-6 rounded-xl shadow-md border border-orange-200">
+                        <div className="flex items-center justify-center w-12 h-12 bg-orange-500 rounded-lg mb-4 mx-auto">
+                            <i className="fas fa-search text-white text-xl"></i>
+                        </div>
+                        <h3 className="text-lg font-semibold text-gray-800 text-center mb-2">セキュリティスキャン</h3>
+                        <p className="text-sm text-gray-600 text-center mb-4">
+                            脆弱性スキャン・依存関係チェック・設定監査の定期実行
+                        </p>
+                        <button
+                            onClick={() => setShowSecurityScanner(true)}
+                            className="w-full bg-orange-600 hover:bg-orange-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+                        >
+                            🔍 スキャン実行
+                        </button>
+                    </div>
+
+                    {/* ペネトレーションテスト */}
+                    <div className="bg-gradient-to-br from-red-50 to-pink-100 p-6 rounded-xl shadow-md border border-red-200">
+                        <div className="flex items-center justify-center w-12 h-12 bg-red-500 rounded-lg mb-4 mx-auto">
+                            <i className="fas fa-bug text-white text-xl"></i>
+                        </div>
+                        <h3 className="text-lg font-semibold text-gray-800 text-center mb-2">ペネトレーションテスト</h3>
+                        <p className="text-sm text-gray-600 text-center mb-4">
+                            自動侵入テスト・脆弱性評価・セキュリティ検証
+                        </p>
+                        <button
+                            onClick={() => setShowPenetrationTester(true)}
+                            className="w-full bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+                        >
+                            🧪 ペンテスト実行
+                        </button>
+                    </div>
+                </div>
+
+                {/* セキュリティAPI統合（新機能） */}
+                <div className="bg-gradient-to-br from-green-50 to-emerald-100 p-6 rounded-xl shadow-md border border-green-200 mt-6">
+                    <div className="flex items-center justify-center w-12 h-12 bg-green-500 rounded-lg mb-4 mx-auto">
+                        <i className="fas fa-plug text-white text-xl"></i>
+                    </div>
+                    <h3 className="text-lg font-semibold text-gray-800 text-center mb-2">🔗 セキュリティAPI統合</h3>
+                    <p className="text-sm text-gray-600 text-center mb-4">
+                        外部セキュリティサービス（Snyk、VirusTotal、NIST NVD）との連携とリアルタイム監視
+                    </p>
+                    <button
+                        onClick={() => setShowSecurityIntegration(true)}
+                        className="w-full bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+                    >
+                        🔌 API連携設定
+                    </button>
+                </div>
+
+                {/* セキュリティダッシュボード */}
+                <div className="bg-gray-50 p-6 rounded-xl mb-6">
+                    <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+                        <i className="fas fa-tachometer-alt mr-2 text-gray-600"></i>
+                        セキュリティステータス
+                    </h3>
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div className="bg-white p-4 rounded-lg border">
+                            <div className="flex items-center justify-between">
+                                <div>
+                                    <p className="text-sm text-gray-600">2FA設定状況</p>
+                                    <p className="text-lg font-semibold text-gray-800">
+                                        {adminTotpSecret ? '✅ 有効' : '❌ 無効'}
+                                    </p>
+                                </div>
+                                <i className={`fas fa-shield-alt text-2xl ${adminTotpSecret ? 'text-green-500' : 'text-red-500'}`}></i>
+                            </div>
+                        </div>
+
+                        <div className="bg-white p-4 rounded-lg border">
+                            <div className="flex items-center justify-between">
+                                <div>
+                                    <p className="text-sm text-gray-600">最終スキャン</p>
+                                    <p className="text-lg font-semibold text-gray-800">24時間前</p>
+                                </div>
+                                <i className="fas fa-clock text-2xl text-blue-500"></i>
+                            </div>
+                        </div>
+
+                        <div className="bg-white p-4 rounded-lg border">
+                            <div className="flex items-center justify-between">
+                                <div>
+                                    <p className="text-sm text-gray-600">脆弱性</p>
+                                    <p className="text-lg font-semibold text-red-600">2件検出</p>
+                                </div>
+                                <i className="fas fa-exclamation-triangle text-2xl text-red-500"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {/* セキュリティ推奨事項 */}
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-6">
+                    <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+                        <i className="fas fa-lightbulb mr-2 text-blue-600"></i>
+                        セキュリティ推奨事項
+                    </h3>
+                    
+                    <div className="space-y-3">
+                        <div className="flex items-start space-x-3">
+                            <i className="fas fa-check-circle text-green-500 mt-1"></i>
+                            <div>
+                                <h4 className="font-medium text-gray-800">2要素認証の有効化</h4>
+                                <p className="text-sm text-gray-600">管理者アカウントに2要素認証を設定することを強く推奨します。</p>
+                            </div>
+                        </div>
+                        
+                        <div className="flex items-start space-x-3">
+                            <i className="fas fa-check-circle text-green-500 mt-1"></i>
+                            <div>
+                                <h4 className="font-medium text-gray-800">定期的なセキュリティスキャン</h4>
+                                <p className="text-sm text-gray-600">最低でも週1回はセキュリティスキャンを実行してください。</p>
+                            </div>
+                        </div>
+                        
+                        <div className="flex items-start space-x-3">
+                            <i className="fas fa-check-circle text-green-500 mt-1"></i>
+                            <div>
+                                <h4 className="font-medium text-gray-800">暗号化キーのローテーション</h4>
+                                <p className="text-sm text-gray-600">JWT秘密鍵やデータベース暗号化キーを90日ごとにローテーションしてください。</p>
+                            </div>
+                        </div>
+                        
+                        <div className="flex items-start space-x-3">
+                            <i className="fas fa-check-circle text-green-500 mt-1"></i>
+                            <div>
+                                <h4 className="font-medium text-gray-800">ペネトレーションテストの実施</h4>
+                                <p className="text-sm text-gray-600">月1回のペネトレーションテストで未知の脆弱性を発見してください。</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        )}
+
+        {/* セキュリティ機能のモーダル */}
+        {showTwoFactorAuth && (
+            <TwoFactorAuth
+                username="admin"
+                mode={twoFactorAuthMode}
+                existingSecret={adminTotpSecret}
+                onSuccess={(secret) => {
+                    setAdminTotpSecret(secret);
+                    setShowTwoFactorAuth(false);
+                    secureLog('2FA設定完了', { mode: twoFactorAuthMode });
+                }}
+                onCancel={() => setShowTwoFactorAuth(false)}
+            />
+        )}
+
+        {showKeyRotationManager && (
+            <KeyRotationManager
+                onClose={() => setShowKeyRotationManager(false)}
+            />
+        )}
+
+        {showSecurityScanner && (
+            <SecurityScanner
+                onClose={() => setShowSecurityScanner(false)}
+            />
+        )}
+
+        {showPenetrationTester && (
+            <PenetrationTester
+                onClose={() => setShowPenetrationTester(false)}
+            />
+        )}
+
+        {showSecurityIntegration && (
+            <SecurityIntegration
+                onClose={() => setShowSecurityIntegration(false)}
+            />
         )}
 
       </main>

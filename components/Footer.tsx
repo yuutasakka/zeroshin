@@ -4,6 +4,40 @@ import { FooterData, defaultFooterData } from '../data/homepageContentData';
 import { secureLog } from '../security.config';
 import { createSupabaseClient } from './adminUtils';
 
+// セキュリティ関数: URLの安全性を確認
+const sanitizeUrl = (url: string): string => {
+  if (typeof url !== 'string') return '#';
+  
+  const dangerousProtocols = ['javascript:', 'data:', 'vbscript:', 'file:', 'ftp:'];
+  const urlLower = url.toLowerCase().trim();
+  
+  for (const protocol of dangerousProtocols) {
+    if (urlLower.startsWith(protocol)) {
+      console.warn('🚨 危険なURLプロトコルが検出されました:', url);
+      return '#';
+    }
+  }
+  
+  if (url.startsWith('http://') || url.startsWith('https://') || url.startsWith('/') || url.startsWith('#')) {
+    return url;
+  }
+  
+  return '#';
+};
+
+// セキュリティ関数: テキストのサニタイゼーション
+const sanitizeText = (text: string): string => {
+  if (typeof text !== 'string') return '';
+  
+  return text
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;')
+    .trim();
+};
+
 interface FooterProps {
   onNavigateToAdminLogin: () => void;
 }
@@ -19,6 +53,15 @@ const Footer: React.FC<FooterProps> = ({ onNavigateToAdminLogin }) => {
 
   const loadFooterFromSupabase = async () => {
     try {
+      // まずサンプルデータを確認
+      const sampleFooterData = localStorage.getItem('homepage_content_footer_data');
+      if (sampleFooterData) {
+        const parsedFooterData = JSON.parse(sampleFooterData);
+        setFooterData(parsedFooterData);
+        secureLog('✅ フッターデータをサンプルデータから読み込み');
+        return;
+      }
+
       const supabaseConfig = createSupabaseClient();
       const response = await fetch(`${supabaseConfig.url}/rest/v1/homepage_content_settings?setting_key=eq.footer_data&select=*`, {
         headers: {
@@ -44,6 +87,25 @@ const Footer: React.FC<FooterProps> = ({ onNavigateToAdminLogin }) => {
 
   const loadLegalLinks = () => {
     try {
+      // まずサンプルデータを確認
+      const sampleLegalLinks = localStorage.getItem('legal_links');
+      if (sampleLegalLinks) {
+        const parsedSampleLinks = JSON.parse(sampleLegalLinks);
+        // サンプルデータを既存の形式に変換
+        const convertedLinks = parsedSampleLinks.map((link: any, index: number) => ({
+          id: index + 1,
+          link_type: link.category || 'other',
+          title: link.title,
+          url: link.url,
+          is_active: true,
+          created_at: '',
+          updated_at: ''
+        }));
+        setLegalLinks(convertedLinks);
+        secureLog('✅ リーガルリンクをサンプルデータから読み込み');
+        return;
+      }
+
       const storedLinks = localStorage.getItem('customLegalLinks');
       if (storedLinks) {
         setLegalLinks(JSON.parse(storedLinks));
@@ -92,7 +154,9 @@ const Footer: React.FC<FooterProps> = ({ onNavigateToAdminLogin }) => {
             >
                 <i className="fas fa-coins text-white"></i>
             </div>
-            <h5 className="text-2xl font-bold" style={{ color: 'var(--accent-gold)' }}>{footerData.siteName}</h5>
+            <h5 className="text-2xl font-bold" style={{ color: 'var(--accent-gold)' }}>
+              {footerData.siteName || 'MoneyTicket'}
+            </h5>
         </div>
         
         <div className="text-center space-y-4">
@@ -107,12 +171,12 @@ const Footer: React.FC<FooterProps> = ({ onNavigateToAdminLogin }) => {
                       .map(link => (
                         <a 
                           key={link.id} 
-                          href={link.url} 
+                          href={sanitizeUrl(link.url)} 
                           className="footer-link"
                           target={link.url.startsWith('http') ? '_blank' : undefined}
                           rel={link.url.startsWith('http') ? 'noopener noreferrer' : undefined}
                         >
-                          {link.title}
+                          {sanitizeText(link.title)}
                         </a>
                       ))
                     }
@@ -127,7 +191,7 @@ const Footer: React.FC<FooterProps> = ({ onNavigateToAdminLogin }) => {
                       管理者ログイン
                     </a>
                 </nav>
-                <p className="mt-8 text-gray-500">&copy; {new Date().getFullYear()} {footerData.copyright}</p>
+                <p className="mt-8 text-gray-500">{footerData.copyright || `© ${new Date().getFullYear()} MoneyTicket株式会社. All rights reserved.`}</p>
             </div>
         </div>
       </div>

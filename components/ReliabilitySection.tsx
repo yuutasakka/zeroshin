@@ -43,16 +43,23 @@ const ReliabilitySection: React.FC = () => {
       
       // 選ばれる理由データの読み込み
       try {
-        const { data: reasonsResponse, error: reasonsError } = await supabase
-          .from('homepage_content_settings')
-          .select('setting_data')
-          .eq('setting_key', 'reasons_to_choose')
-          .single();
-
-        if (!reasonsError && reasonsResponse?.setting_data) {
-          setReasonsData(reasonsResponse.setting_data);
+        // まずサンプルデータを確認
+        const sampleReasonsData = localStorage.getItem('homepage_content_reasons_to_choose');
+        if (sampleReasonsData) {
+          const parsedReasonsData = JSON.parse(sampleReasonsData);
+          setReasonsData(parsedReasonsData);
         } else {
-          secureLog('選ばれる理由のデータが見つからないため、デフォルトデータを使用します');
+          const { data: reasonsResponse, error: reasonsError } = await supabase
+            .from('homepage_content_settings')
+            .select('setting_data')
+            .eq('setting_key', 'reasons_to_choose')
+            .single();
+
+          if (!reasonsError && reasonsResponse?.setting_data) {
+            setReasonsData(reasonsResponse.setting_data);
+          } else {
+            secureLog('選ばれる理由のデータが見つからないため、デフォルトデータを使用します');
+          }
         }
       } catch (error) {
         secureLog('選ばれる理由の読み込みエラー、デフォルトデータを使用:', error);
@@ -64,12 +71,19 @@ const ReliabilitySection: React.FC = () => {
         if (supabaseTestimonials && supabaseTestimonials.length > 0) {
           setTestimonials(supabaseTestimonials);
         } else {
-          const storedTestimonials = localStorage.getItem('customTestimonials');
-          if (storedTestimonials) {
-            const parsedTestimonials = JSON.parse(storedTestimonials);
-            setTestimonials(parsedTestimonials);
+          // 新しいサンプルデータを優先的に使用
+          const sampleTestimonials = localStorage.getItem('testimonials');
+          if (sampleTestimonials) {
+            const parsedSampleTestimonials = JSON.parse(sampleTestimonials);
+            setTestimonials(parsedSampleTestimonials);
           } else {
-            setTestimonials(defaultTestimonialsData);
+            const storedTestimonials = localStorage.getItem('customTestimonials');
+            if (storedTestimonials) {
+              const parsedTestimonials = JSON.parse(storedTestimonials);
+              setTestimonials(parsedTestimonials);
+            } else {
+              setTestimonials(defaultTestimonialsData);
+            }
           }
         }
       } catch (error) {
@@ -141,9 +155,11 @@ const ReliabilitySection: React.FC = () => {
                        <i className="fas fa-user"></i>}
                     </div>
                     <div>
-                      <p className="font-semibold" style={{color: 'var(--primary-navy)'}}>{testimonial.nameAndRole}</p>
+                      <p className="font-semibold" style={{color: 'var(--primary-navy)'}}>
+                        {testimonial.nameAndRole}
+                      </p>
                       <div style={{color: 'var(--accent-gold)'}}>
-                        {'★'.repeat(testimonial.ratingStars)}{'☆'.repeat(5 - testimonial.ratingStars)}
+                        {'★'.repeat(testimonial.ratingStars || 5)}{'☆'.repeat(5 - (testimonial.ratingStars || 5))}
                       </div>
                     </div>
                   </div>

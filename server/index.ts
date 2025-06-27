@@ -230,8 +230,14 @@ const verificationValidation = [
     .customSanitizer(value => value.toString().trim())
 ];
 
-// 日本の電話番号を国際形式に正規化
-function normalizeJapanesePhoneNumber(phoneNumber: string): string {
+// 日本の電話番号を国際形式に正規化（型安全性強化）
+function normalizeJapanesePhoneNumber(phoneNumber: unknown): string {
+  // 型検証: 文字列であることを確認
+  if (typeof phoneNumber !== 'string') {
+    throw new Error('電話番号は文字列である必要があります');
+  }
+  
+  // replaceメソッドが安全に使用できることを確認
   const digits = phoneNumber.replace(/\D/g, '');
   
   if (digits.startsWith('090') || digits.startsWith('080') || digits.startsWith('070')) {
@@ -320,30 +326,62 @@ app.post('/api/sms/send', smsLimiter, phoneValidation, async (req: Request, res:
       throw new Error('Twilio client not initialized');
     }
 
-    // TwilioでSMS送信
-    const smsResult = await client.messages.create({
-      body: message,
-      from: twilioPhoneNumber,
-      to: normalizedPhoneNumber,
-    });
+    try {
+      // TwilioでSMS送信
+      const smsResult = await client.messages.create({
+        body: message,
+        from: twilioPhoneNumber,
+        to: normalizedPhoneNumber,
+      });
 
-    logger.info('SMS送信成功', {
-      phoneNumber: normalizedPhoneNumber,
-      messageSid: smsResult.sid,
-      ip: clientIP
-    });
+      logger.info('SMS送信成功', {
+        phoneNumber: normalizedPhoneNumber,
+        messageSid: smsResult.sid,
+        ip: clientIP
+      });
 
-    console.log(`SMS送信成功: ${normalizedPhoneNumber} (SID: ${smsResult.sid})`);
+      console.log(`SMS送信成功: ${normalizedPhoneNumber} (SID: ${smsResult.sid})`);
 
-    res.json({
-      success: true,
-      message: 'SMS認証コードを送信しました',
-      phoneNumber: normalizedPhoneNumber
-    });
+      res.json({
+        success: true,
+        message: 'SMS認証コードを送信しました',
+        phoneNumber: normalizedPhoneNumber
+      });
+
+    } catch (twilioError) {
+      const isDevelopment = NODE_ENV === 'development';
+      const errorMessage = twilioError instanceof Error ? twilioError.message : 'Unknown error';
+      
+      // 開発環境でのTwilio認証エラーまたは設定不備の特別処理
+      if (isDevelopment && (errorMessage.includes('unverified') || errorMessage.includes('Account') || !client)) {
+        logger.warn('Twilio送信失敗（開発環境デモモード有効）', {
+          phoneNumber: normalizedPhoneNumber,
+          ip: clientIP,
+          twilioError: errorMessage
+        });
+        
+        console.log(`🚧 開発環境デモモード: ${normalizedPhoneNumber} - 認証コード: ${verificationCode}`);
+        
+        res.json({
+          success: true,
+          message: 'SMS認証コードを送信しました（開発環境モード）',
+          phoneNumber: normalizedPhoneNumber,
+          devMode: true,
+          devCode: verificationCode
+        });
+        return;
+      }
+
+      // その他のTwilioエラーは上位にスロー
+      throw twilioError;
+    }
 
   } catch (error) {
+    const isDevelopment = NODE_ENV === 'development';
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+
     logger.error('SMS送信エラー', {
-      error: error instanceof Error ? error.message : 'Unknown error',
+      error: errorMessage,
       stack: error instanceof Error ? error.stack : undefined,
       ip: req.ip
     });
@@ -352,7 +390,7 @@ app.post('/api/sms/send', smsLimiter, phoneValidation, async (req: Request, res:
     
     res.status(500).json({
       error: 'SMS送信に失敗しました',
-      details: NODE_ENV === 'development' ? (error instanceof Error ? error.message : 'Unknown error') : 'Internal server error'
+      details: isDevelopment ? errorMessage : 'Internal server error'
     });
   }
 });

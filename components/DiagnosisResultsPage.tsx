@@ -5,7 +5,44 @@ import { DiagnosisFormState, FinancialProduct, Company, RecommendedProductWithRe
 import FloatingHeartsBackground from './FloatingHeartsBackground';
 import { assetProjectionData, AgeGroup, InvestmentAmountKey } from '../data/assetProjectionData';
 import { allFinancialProducts as defaultFinancialProducts } from '../data/financialProductsData';
-import { secureLog } from '../security.config'; 
+import { secureLog } from '../security.config';
+
+// セキュリティ関数: URLの安全性を確認
+const sanitizeUrl = (url: string): string => {
+  if (typeof url !== 'string') return '#';
+  
+  // 危険なプロトコルを除去
+  const dangerousProtocols = ['javascript:', 'data:', 'vbscript:', 'file:', 'ftp:'];
+  const urlLower = url.toLowerCase().trim();
+  
+  for (const protocol of dangerousProtocols) {
+    if (urlLower.startsWith(protocol)) {
+      console.warn('🚨 危険なURLプロトコルが検出されました:', url);
+      return '#';
+    }
+  }
+  
+  // HTTPまたはHTTPSで始まるか、相対URLであることを確認
+  if (url.startsWith('http://') || url.startsWith('https://') || url.startsWith('/') || url.startsWith('#')) {
+    return url;
+  }
+  
+  return '#';
+};
+
+// セキュリティ関数: テキストのサニタイゼーション
+const sanitizeText = (text: string): string => {
+  if (typeof text !== 'string') return '';
+  
+  // HTMLエンティティをエスケープ
+  return text
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;')
+    .trim();
+}; 
 
 interface DiagnosisResultsPageProps {
   diagnosisData: DiagnosisFormState | null;
@@ -255,7 +292,7 @@ const DiagnosisResultsPage: React.FC<DiagnosisResultsPageProps> = ({ diagnosisDa
                           {product.representativeCompanies.map(company => (
                             <a 
                               key={company.id} 
-                              href={company.websiteUrl} 
+                              href={sanitizeUrl(company.websiteUrl)} 
                               target="_blank" 
                               rel="noopener noreferrer"
                               className="block premium-button w-full text-sm leading-relaxed"
@@ -263,8 +300,8 @@ const DiagnosisResultsPage: React.FC<DiagnosisResultsPageProps> = ({ diagnosisDa
                               onMouseOver={e => { e.currentTarget.style.background = 'var(--neutral-200)'; e.currentTarget.style.borderColor = 'var(--accent-gold)'; }}
                               onMouseOut={e => { e.currentTarget.style.background = 'var(--neutral-100)'; e.currentTarget.style.borderColor = 'var(--neutral-300)'; }}
                             >
-                              {company.logoUrl && <img src={company.logoUrl} alt={`${company.name} logo`} className="inline h-5 mr-2 align-middle"/>}
-                              <span className="align-middle">{company.name} - {company.actionText}</span>
+                              {company.logoUrl && <img src={sanitizeUrl(company.logoUrl)} alt={`${sanitizeText(company.name)} logo`} className="inline h-5 mr-2 align-middle"/>}
+                              <span className="align-middle">{sanitizeText(company.name)} - {sanitizeText(company.actionText)}</span>
                               <i className="fas fa-external-link-alt ml-2 text-xs opacity-70 align-middle"></i>
                             </a>
                           ))}

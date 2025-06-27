@@ -12,11 +12,63 @@ import AdminLoginPage from './components/AdminLoginPage';
 import AdminDashboardPage from './components/AdminDashboardPage';
 import { ColorThemeProvider } from './components/ColorThemeContext';
 import { DiagnosisFormState, PageView, UserSessionData } from './types';
+import { initializeSampleData } from './data/sampleData';
 
 // AI Client Initialization (GoogleGenAI) has been removed from the frontend.
 // API calls to Gemini API should be proxied through a secure backend server
 // to protect the API key and manage requests efficiently.
 // The backend will be responsible for interacting with the GoogleGenAI SDK.
+
+// セキュリティ関数: HTMLサニタイゼーション
+const sanitizeHTML = (html: string): string => {
+  // 危険なタグとスクリプトを除去
+  const dangerousPatterns = [
+    /<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi,
+    /<iframe\b[^<]*(?:(?!<\/iframe>)<[^<]*)*<\/iframe>/gi,
+    /<object\b[^<]*(?:(?!<\/object>)<[^<]*)*<\/object>/gi,
+    /<embed\b[^<]*>/gi,
+    /<form\b[^<]*(?:(?!<\/form>)<[^<]*)*<\/form>/gi,
+    /javascript:/gi,
+    /on\w+\s*=/gi,
+    /<[^>]*vbscript:/gi,
+    /<[^>]*data:/gi
+  ];
+  
+  let sanitized = html;
+  dangerousPatterns.forEach(pattern => {
+    sanitized = sanitized.replace(pattern, '');
+  });
+  
+  return sanitized.trim();
+};
+
+// HTML検証関数
+const isValidHTML = (html: string): boolean => {
+  // 基本的な安全性チェック
+  const allowedTags = ['link', 'meta', 'style', 'title', 'noscript'];
+  try {
+    const doc = new DOMParser().parseFromString(html, 'text/html');
+    const errorNode = doc.querySelector('parsererror');
+    
+    if (errorNode) {
+      return false;
+    }
+    
+    // すべての要素が許可されたタグかチェック
+    const elements = doc.body.querySelectorAll('*');
+    for (let element of elements) {
+      if (!allowedTags.includes(element.tagName.toLowerCase())) {
+        console.warn(`🚨 許可されていないタグ: ${element.tagName}`);
+        return false;
+      }
+    }
+    
+    return true;
+  } catch (error) {
+    console.error('HTML検証エラー:', error);
+    return false;
+  }
+};
 
 const App: React.FC = () => {
   const [currentPage, setCurrentPage] = useState<PageView>('diagnosis');
@@ -155,24 +207,45 @@ const App: React.FC = () => {
   }, [isAdminLoggedIn, currentPage]);
 
   useEffect(() => {
-    const scriptsString = localStorage.getItem('customTrackingScripts');
-    if (scriptsString) {
+    // アプリケーション初期化：サンプルデータとスクリプト読み込み
+    const initializeApp = () => {
       try {
-        const scripts: { head: string; bodyEnd: string } = JSON.parse(scriptsString);
+        // サンプルデータの初期化
+        console.log('🎯 アプリケーション初期化: サンプルデータを確認中...');
+        initializeSampleData();
 
-        if (scripts.head && typeof scripts.head === 'string' && scripts.head.trim() !== '') {
-          const headFragment = document.createRange().createContextualFragment(scripts.head);
-          document.head.appendChild(headFragment);
-        }
+        // トラッキングスクリプトの読み込み
+        const scriptsString = localStorage.getItem('customTrackingScripts');
+        if (scriptsString) {
+          const scripts: { head: string; bodyEnd: string } = JSON.parse(scriptsString);
 
-        if (scripts.bodyEnd && typeof scripts.bodyEnd === 'string' && scripts.bodyEnd.trim() !== '') {
-          const bodyEndFragment = document.createRange().createContextualFragment(scripts.bodyEnd);
-          document.body.appendChild(bodyEndFragment); // Appends at the end of body
+          // セキュリティ強化: HTMLの安全性を検証してからDOM操作
+          if (scripts.head && typeof scripts.head === 'string' && scripts.head.trim() !== '') {
+            const sanitizedHead = sanitizeHTML(scripts.head);
+            if (sanitizedHead && isValidHTML(sanitizedHead)) {
+              const headFragment = document.createRange().createContextualFragment(sanitizedHead);
+              document.head.appendChild(headFragment);
+            } else {
+              console.warn('🚨 セキュリティ警告: head スクリプトが安全でないため無視されました');
+            }
+          }
+
+          if (scripts.bodyEnd && typeof scripts.bodyEnd === 'string' && scripts.bodyEnd.trim() !== '') {
+            const sanitizedBodyEnd = sanitizeHTML(scripts.bodyEnd);
+            if (sanitizedBodyEnd && isValidHTML(sanitizedBodyEnd)) {
+              const bodyEndFragment = document.createRange().createContextualFragment(sanitizedBodyEnd);
+              document.body.appendChild(bodyEndFragment);
+            } else {
+              console.warn('🚨 セキュリティ警告: bodyEnd スクリプトが安全でないため無視されました');
+            }
+          }
         }
       } catch (e) {
-        console.error("Error loading or injecting custom tracking scripts:", e);
+        console.error("❌ アプリケーション初期化エラー:", e);
       }
-    }
+    };
+
+    initializeApp();
   }, []); // Empty dependency array means this runs once on mount
 
   const handleProceedToVerification = (phoneNumber: string, formData: DiagnosisFormState) => {
@@ -258,7 +331,7 @@ const App: React.FC = () => {
     console.log('Rendering AdminLoginPage');
     return (
       <ColorThemeProvider>
-        <AdminLoginPage onLoginSuccess={handleAdminLoginSuccess} onNavigateHome={navigateToHome} />
+        <AdminLoginPage onLogin={handleAdminLoginSuccess} onNavigateHome={navigateToHome} />
       </ColorThemeProvider>
     );
   }
@@ -270,7 +343,7 @@ const App: React.FC = () => {
       console.log('Not authenticated, redirecting to login');
       return (
         <ColorThemeProvider>
-          <AdminLoginPage onLoginSuccess={handleAdminLoginSuccess} onNavigateHome={navigateToHome} />
+          <AdminLoginPage onLogin={handleAdminLoginSuccess} onNavigateHome={navigateToHome} />
         </ColorThemeProvider>
       );
     }

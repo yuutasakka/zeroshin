@@ -54,6 +54,86 @@ export const SECURITY_CONFIG = {
       ? 'https://your-api-domain.com' 
       : 'http://localhost:8080'
   ),
+  
+  // セキュリティAPI設定
+  SECURITY_APIS: {
+    // 脆弱性スキャン
+    SNYK: {
+      enabled: !!process.env.SNYK_API_TOKEN,
+      apiKey: process.env.SNYK_API_TOKEN,
+      baseUrl: 'https://api.snyk.io/v1'
+    },
+    VIRUSTOTAL: {
+      enabled: !!process.env.VIRUSTOTAL_API_KEY,
+      apiKey: process.env.VIRUSTOTAL_API_KEY,
+      baseUrl: 'https://www.virustotal.com/vtapi/v2'
+    },
+    NIST_NVD: {
+      enabled: !!process.env.NIST_NVD_API_KEY,
+      apiKey: process.env.NIST_NVD_API_KEY,
+      baseUrl: 'https://services.nvd.nist.gov/rest/json/cves/2.0'
+    },
+    
+    // ペネトレーションテスト
+    OWASP_ZAP: {
+      enabled: !!process.env.OWASP_ZAP_API_KEY,
+      apiKey: process.env.OWASP_ZAP_API_KEY,
+      baseUrl: 'http://localhost:8080' // ZAP proxy
+    },
+    SHODAN: {
+      enabled: !!process.env.SHODAN_API_KEY,
+      apiKey: process.env.SHODAN_API_KEY,
+      baseUrl: 'https://api.shodan.io'
+    },
+    
+    // コンプライアンス
+    SECURITY_SCORECARD: {
+      enabled: !!process.env.SECURITY_SCORECARD_API_KEY,
+      apiKey: process.env.SECURITY_SCORECARD_API_KEY,
+      baseUrl: 'https://api.securityscorecard.io'
+    },
+    THREATSTACK: {
+      enabled: !!process.env.THREATSTACK_API_KEY,
+      apiKey: process.env.THREATSTACK_API_KEY,
+      baseUrl: 'https://api.threatstack.com/v2'
+    },
+    
+    // AI分析（オプション）
+    OPENAI: {
+      enabled: !!process.env.OPENAI_API_KEY,
+      apiKey: process.env.OPENAI_API_KEY,
+      baseUrl: 'https://api.openai.com/v1'
+    },
+    ANTHROPIC: {
+      enabled: !!process.env.ANTHROPIC_API_KEY,
+      apiKey: process.env.ANTHROPIC_API_KEY,
+      baseUrl: 'https://api.anthropic.com/v1'
+    }
+  },
+  
+  // SMS/Twilio設定
+  SMS_CONFIG: {
+    enabled: !!(process.env.TWILIO_ACCOUNT_SID && process.env.TWILIO_AUTH_TOKEN),
+    accountSid: process.env.TWILIO_ACCOUNT_SID,
+    authToken: process.env.TWILIO_AUTH_TOKEN,
+    phoneNumber: process.env.TWILIO_PHONE_NUMBER
+  },
+  
+  // 通知設定
+  NOTIFICATIONS: {
+    slack: {
+      enabled: !!process.env.SLACK_WEBHOOK_URL,
+      webhookUrl: process.env.SLACK_WEBHOOK_URL
+    },
+    discord: {
+      enabled: !!process.env.DISCORD_WEBHOOK_URL,
+      webhookUrl: process.env.DISCORD_WEBHOOK_URL
+    },
+    email: {
+      enabled: !!process.env.EMAIL_SERVICE_API_KEY,
+      apiKey: process.env.EMAIL_SERVICE_API_KEY
+    }
+  }
 };
 
 // Supabase設定の中央管理
@@ -89,6 +169,12 @@ export class SecureConfigManager {
   // Supabaseから安全に設定を取得
   static async getSecureConfig(key: string): Promise<string | null> {
     try {
+      // Supabase URLが設定されていない場合はnullを返す
+      if (!SUPABASE_CONFIG.url || SUPABASE_CONFIG.url === '') {
+        console.warn(`⚠️ Supabase URL not configured, returning null for key: ${key}`);
+        return null;
+      }
+
       // キャッシュチェック
       const cached = this.cache.get(key);
       if (cached && Date.now() < cached.expiry) {
@@ -126,6 +212,12 @@ export class SecureConfigManager {
   // 管理者認証情報を安全に取得
   static async getAdminCredentials(): Promise<any> {
     try {
+      // Supabase URLが設定されていない場合はnullを返す
+      if (!SUPABASE_CONFIG.url || SUPABASE_CONFIG.url === '') {
+        console.warn('⚠️ Supabase URL not configured, returning null for admin credentials');
+        return null;
+      }
+
       const response = await fetch(`${SUPABASE_CONFIG.url}/rest/v1/admin_credentials?username=eq.admin`, {
         method: 'GET',
         headers: {
@@ -150,6 +242,12 @@ export class SecureConfigManager {
   // 管理者認証情報を安全に更新
   static async updateAdminCredentials(updates: any): Promise<boolean> {
     try {
+      // Supabase URLが設定されていない場合はfalseを返す
+      if (!SUPABASE_CONFIG.url || SUPABASE_CONFIG.url === '') {
+        console.warn('⚠️ Supabase URL not configured, cannot update admin credentials');
+        return false;
+      }
+
       const response = await fetch(`${SUPABASE_CONFIG.url}/rest/v1/admin_credentials?username=eq.admin`, {
         method: 'PATCH',
         headers: {
