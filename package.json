@@ -12,7 +12,9 @@
     "build:clean": "node clear-dev-cache.js && npm run build",
     "preview": "vite preview",
     "lint": "tsc --noEmit",
-    "type-check": "tsc --noEmit"
+    "type-check": "tsc --noEmit",
+    "generate-keys": "node scripts/generate-env-keys.js",
+    "setup-env": "mkdir -p scripts && node scripts/generate-env-keys.js"
   },
   "dependencies": {
     "@ai-sdk/google": "^1.2.19",

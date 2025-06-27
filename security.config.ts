@@ -17,30 +17,87 @@ interface ImportMeta {
 
 export const SECURITY_CONFIG = {
   // 暗号化設定（本番では必須）
-  ENCRYPTION_KEY: (typeof import.meta !== 'undefined' && (import.meta as any).env?.VITE_ENCRYPTION_KEY) || process.env.ENCRYPTION_KEY || (() => {
-    if (process.env.NODE_ENV === 'production' || (typeof import.meta !== 'undefined' && (import.meta as any).env?.MODE === 'production')) {
-      throw new Error('ENCRYPTION_KEY must be set in production environment');
+  ENCRYPTION_KEY: (() => {
+    // Vite環境変数を最優先
+    if (typeof import.meta !== 'undefined' && (import.meta as any).env?.VITE_ENCRYPTION_KEY) {
+      return (import.meta as any).env.VITE_ENCRYPTION_KEY;
     }
-    // 開発環境でも予測不可能な一意キーを生成
-    return process.env.DEV_ENCRYPTION_KEY || `dev-${Date.now()}-${Math.random().toString(36).substring(2)}`;
+    
+    // 従来のNode.js環境変数
+    if (process.env.ENCRYPTION_KEY) {
+      return process.env.ENCRYPTION_KEY;
+    }
+    
+    // 本番環境チェック
+    const isProduction = process.env.NODE_ENV === 'production' || 
+                        (typeof import.meta !== 'undefined' && (import.meta as any).env?.MODE === 'production') ||
+                        (typeof window !== 'undefined' && window.location.hostname !== 'localhost');
+    
+    if (isProduction) {
+      console.error('🚨 VITE_ENCRYPTION_KEY environment variable is missing in production!');
+      throw new Error('VITE_ENCRYPTION_KEY must be set in production environment. Please set this variable in your Vercel dashboard.');
+    }
+    
+    // 開発環境では安全なフォールバック
+    const devKey = process.env.DEV_ENCRYPTION_KEY || `dev-encryption-${Date.now()}-${Math.random().toString(36).substring(2)}`;
+    console.warn('⚠️ Using development encryption key. Set VITE_ENCRYPTION_KEY for production.');
+    return devKey;
   })(),
   
   // JWT設定（本番では必須）
-  JWT_SECRET: (typeof import.meta !== 'undefined' && (import.meta as any).env?.VITE_JWT_SECRET) || process.env.JWT_SECRET || (() => {
-    if (process.env.NODE_ENV === 'production' || (typeof import.meta !== 'undefined' && (import.meta as any).env?.MODE === 'production')) {
-      throw new Error('JWT_SECRET must be set in production environment');
+  JWT_SECRET: (() => {
+    // Vite環境変数を最優先
+    if (typeof import.meta !== 'undefined' && (import.meta as any).env?.VITE_JWT_SECRET) {
+      return (import.meta as any).env.VITE_JWT_SECRET;
     }
-    // 開発環境でも予測不可能な一意キーを生成
-    return process.env.DEV_JWT_SECRET || `dev-jwt-${Date.now()}-${Math.random().toString(36).substring(2)}`;
+    
+    // 従来のNode.js環境変数
+    if (process.env.JWT_SECRET) {
+      return process.env.JWT_SECRET;
+    }
+    
+    // 本番環境チェック
+    const isProduction = process.env.NODE_ENV === 'production' || 
+                        (typeof import.meta !== 'undefined' && (import.meta as any).env?.MODE === 'production') ||
+                        (typeof window !== 'undefined' && window.location.hostname !== 'localhost');
+    
+    if (isProduction) {
+      console.error('🚨 VITE_JWT_SECRET environment variable is missing in production!');
+      throw new Error('VITE_JWT_SECRET must be set in production environment. Please set this variable in your Vercel dashboard.');
+    }
+    
+    // 開発環境では安全なフォールバック
+    const devKey = process.env.DEV_JWT_SECRET || `dev-jwt-${Date.now()}-${Math.random().toString(36).substring(2)}`;
+    console.warn('⚠️ Using development JWT secret. Set VITE_JWT_SECRET for production.');
+    return devKey;
   })(),
   
   // セッション設定（本番では必須）
-  SESSION_SECRET: (typeof import.meta !== 'undefined' && (import.meta as any).env?.VITE_SESSION_SECRET) || process.env.SESSION_SECRET || (() => {
-    if (process.env.NODE_ENV === 'production' || (typeof import.meta !== 'undefined' && (import.meta as any).env?.MODE === 'production')) {
-      throw new Error('SESSION_SECRET must be set in production environment');
+  SESSION_SECRET: (() => {
+    // Vite環境変数を最優先
+    if (typeof import.meta !== 'undefined' && (import.meta as any).env?.VITE_SESSION_SECRET) {
+      return (import.meta as any).env.VITE_SESSION_SECRET;
     }
-    // 開発環境でも予測不可能な一意キーを生成
-    return process.env.DEV_SESSION_SECRET || `dev-session-${Date.now()}-${Math.random().toString(36).substring(2)}`;
+    
+    // 従来のNode.js環境変数
+    if (process.env.SESSION_SECRET) {
+      return process.env.SESSION_SECRET;
+    }
+    
+    // 本番環境チェック
+    const isProduction = process.env.NODE_ENV === 'production' || 
+                        (typeof import.meta !== 'undefined' && (import.meta as any).env?.MODE === 'production') ||
+                        (typeof window !== 'undefined' && window.location.hostname !== 'localhost');
+    
+    if (isProduction) {
+      console.error('🚨 VITE_SESSION_SECRET environment variable is missing in production!');
+      throw new Error('VITE_SESSION_SECRET must be set in production environment. Please set this variable in your Vercel dashboard.');
+    }
+    
+    // 開発環境では安全なフォールバック
+    const devKey = process.env.DEV_SESSION_SECRET || `dev-session-${Date.now()}-${Math.random().toString(36).substring(2)}`;
+    console.warn('⚠️ Using development session secret. Set VITE_SESSION_SECRET for production.');
+    return devKey;
   })(),
   SESSION_TIMEOUT: 30 * 60 * 1000, // 30分
   
