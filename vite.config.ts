@@ -45,7 +45,8 @@ export default defineConfig(({ mode }) => {
       'process.env.GEMINI_API_KEY': JSON.stringify(env.GEMINI_API_KEY),
       'process.env.WS_ENDPOINT': 'false',
       'process.env.NODE_ENV': JSON.stringify(mode),
-      'process.env.DEV': JSON.stringify(isDev)
+      'process.env.DEV': JSON.stringify(isDev),
+      'process.env.API_BASE_URL': JSON.stringify(isDev ? 'http://localhost:8080' : '')
     },
     resolve: {
       alias: {
