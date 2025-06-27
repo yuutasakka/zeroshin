@@ -4,6 +4,8 @@ import react from '@vitejs/plugin-react';
 
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, '.', '');
+  const isDev = mode === 'development';
+  
   return {
     base: '/',
     plugins: [react({
@@ -14,17 +16,17 @@ export default defineConfig(({ mode }) => {
       open: true,
       host: 'localhost',
       strictPort: false,
-      hmr: {
+      hmr: isDev ? {
         port: 5175,
         overlay: false,
         clientPort: 5175
-      },
+      } : false,
       cors: true,
-      ws: false
+      ...(isDev ? {} : { ws: false })
     },
     build: {
       outDir: 'dist',
-      sourcemap: true,
+      sourcemap: isDev,
       rollupOptions: {
         output: {
           manualChunks: {
@@ -41,7 +43,9 @@ export default defineConfig(({ mode }) => {
     define: {
       'process.env.API_KEY': JSON.stringify(env.GEMINI_API_KEY),
       'process.env.GEMINI_API_KEY': JSON.stringify(env.GEMINI_API_KEY),
-      'process.env.WS_ENDPOINT': 'false'
+      'process.env.WS_ENDPOINT': 'false',
+      'process.env.NODE_ENV': JSON.stringify(mode),
+      'process.env.DEV': JSON.stringify(isDev)
     },
     resolve: {
       alias: {
