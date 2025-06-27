@@ -9,6 +9,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Playfair+Display:wght@400;500;600;700&family=Noto+Sans+JP:wght@300;400;500;700&display=swap" rel="stylesheet">
     <style>
         :root {
+            /* 🎨 Premium Color Palette - 高コントラスト */
             --primary-navy: #0B1426;
             --primary-midnight: #1A2332;
             --primary-slate: #2D3748;
@@ -16,6 +17,8 @@
             --accent-platinum: #E5E7EB;
             --accent-emerald: #059669;
             --accent-rose: #E11D48;
+            
+            /* 📖 高可読性グレースケール */
             --neutral-50: #FAFBFC;
             --neutral-100: #F7FAFC;
             --neutral-200: #EDF2F7;
@@ -26,12 +29,34 @@
             --neutral-700: #4A5568;
             --neutral-800: #2D3748;
             --neutral-900: #1A202C;
+            
+            /* ✨ プレミアムグラデーション */
             --gradient-primary: linear-gradient(135deg, #0B1426 0%, #2D3748 100%);
             --gradient-luxury: linear-gradient(135deg, #1A2332 0%, #374151 50%, #4B5563 100%);
             --gradient-gold: linear-gradient(135deg, #D4AF37 0%, #F59E0B 100%);
             --gradient-platinum: linear-gradient(135deg, #F8FAFC 0%, #E5E7EB 100%);
+            --gradient-emerald: linear-gradient(135deg, #059669 0%, #10B981 100%);
+            
+            /* 🔤 タイポグラフィー */
             --font-primary: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
             --font-display: 'Playfair Display', Georgia, serif;
+            --font-japanese: 'Noto Sans JP', sans-serif;
+            
+            /* 📏 レスポンシブスペーシング */
+            --space-xs: 0.25rem;
+            --space-sm: 0.5rem;
+            --space-md: 1rem;
+            --space-lg: 1.5rem;
+            --space-xl: 2rem;
+            --space-2xl: 3rem;
+            --space-3xl: 4rem;
+            
+            /* 🌟 エレガントシャドウ */
+            --shadow-sm: 0 2px 4px rgba(11, 20, 38, 0.06);
+            --shadow-md: 0 4px 12px rgba(11, 20, 38, 0.1);
+            --shadow-lg: 0 8px 24px rgba(11, 20, 38, 0.12);
+            --shadow-xl: 0 16px 40px rgba(11, 20, 38, 0.16);
+            --shadow-2xl: 0 24px 64px rgba(11, 20, 38, 0.2);
         }
 
         * {
@@ -46,35 +71,313 @@
             min-height: 100vh;
             margin: 0;
             padding: 0;
+            letter-spacing: -0.01em;
+            text-rendering: optimizeLegibility;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
         }
 
+        /* 🌸 日本語フォント対応 */
+        body.verification-page-active {
+            font-family: var(--font-japanese);
+            background: var(--gradient-luxury);
+        }
+
+        /* 📚 プレミアムタイポグラフィ */
+        .heading-display {
+            font-family: var(--font-display);
+            font-weight: 600;
+            color: var(--primary-navy);
+            line-height: 1.2;
+            letter-spacing: -0.02em;
+        }
+
+        .heading-primary {
+            font-family: var(--font-primary);
+            font-weight: 700;
+            color: var(--primary-navy);
+            line-height: 1.3;
+            letter-spacing: -0.01em;
+        }
+        
+        .text-luxury {
+            color: var(--neutral-600);
+            font-weight: 400;
+            line-height: 1.6;
+        }
+
+        .gradient-text {
+            background: var(--gradient-gold);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        /* 🎭 エレガントアニメーション */
+        @keyframes sophisticated-fade-in {
+            from { opacity: 0; transform: translateY(20px) scale(0.98); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+
+        @keyframes elegant-float {
+            0%, 100% { transform: translateY(0px) rotate(0deg); }
+            50% { transform: translateY(-8px) rotate(1deg); }
+        }
+
+        @keyframes luxury-glow {
+            0%, 100% { box-shadow: 0 0 20px rgba(212, 175, 55, 0.3); }
+            50% { box-shadow: 0 0 40px rgba(212, 175, 55, 0.5); }
+        }
+
+        /* 💎 ラグジュアリーカード */
         .luxury-card {
             background: rgba(255, 255, 255, 0.95);
             backdrop-filter: blur(20px);
             border: 1px solid rgba(255, 255, 255, 0.2);
             border-radius: 24px;
-            padding: 2rem;
-            box-shadow: 0 16px 40px rgba(11, 20, 38, 0.16);
-            transition: all 0.4s ease;
+            padding: var(--space-2xl);
+            box-shadow: var(--shadow-xl);
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            animation: sophisticated-fade-in 0.8s ease-out;
         }
 
+        .luxury-card:hover {
+            transform: translateY(-8px);
+            box-shadow: var(--shadow-2xl);
+            border-color: rgba(212, 175, 55, 0.3);
+        }
+
+        /* 🔘 プレミアムボタン */
         .premium-button {
             background: var(--gradient-primary);
             color: white;
             border: none;
             border-radius: 16px;
-            padding: 1rem 2rem;
+            padding: var(--space-lg) var(--space-2xl);
             font-family: var(--font-primary);
             font-weight: 600;
             font-size: 1.1rem;
+            letter-spacing: -0.01em;
             cursor: pointer;
-            transition: all 0.3s ease;
-            box-shadow: 0 8px 24px rgba(11, 20, 38, 0.12);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: var(--shadow-lg);
+            position: relative;
+            overflow: hidden;
+            text-align: center;
         }
 
         .premium-button:hover {
+            transform: translateY(-2px) scale(1.02);
+            box-shadow: var(--shadow-xl);
+            background: linear-gradient(135deg, #1A2332 0%, #374151 100%);
+        }
+
+        .gold-accent-button {
+            background: var(--gradient-gold);
+            color: var(--primary-navy);
+            animation: luxury-glow 3s infinite;
+        }
+
+        .gold-accent-button:hover {
+            background: linear-gradient(135deg, #F59E0B 0%, #D97706 100%);
+        }
+
+        /* 📝 エレガント入力フィールド */
+        .luxury-input {
+            background: rgba(255, 255, 255, 0.9);
+            border: 2px solid var(--neutral-200);
+            border-radius: 12px;
+            padding: var(--space-lg);
+            font-family: var(--font-primary);
+            font-size: 1rem;
+            color: var(--neutral-700);
+            transition: all 0.3s ease;
+            box-shadow: var(--shadow-sm);
+            width: 100%;
+        }
+
+        .luxury-input:focus {
+            outline: none;
+            border-color: var(--accent-gold);
+            box-shadow: 0 0 0 4px rgba(212, 175, 55, 0.1), var(--shadow-md);
+            background: white;
+        }
+
+        /* 🔽 プレミアムセレクト */
+        .luxury-select {
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3E%3Cpath stroke='%234A5568' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='m6 8 4 4 4-4'/%3E%3C/svg%3E");
+            background-position: right 1rem center;
+            background-repeat: no-repeat;
+            background-size: 1.5em 1.5em;
+            padding-right: 3rem;
+        }
+
+        /* 📊 エレガントプログレスバー */
+        .luxury-progress {
+            background: var(--neutral-200);
+            border-radius: 12px;
+            height: 8px;
+            overflow: hidden;
+            box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.06);
+        }
+
+        .luxury-progress-fill {
+            background: var(--gradient-gold);
+            height: 100%;
+            border-radius: 12px;
+            transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        /* 🏆 ヒーローセクション */
+        .hero-section-premium {
+            background: var(--gradient-luxury);
+            color: white;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero-section-premium::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.03'%3E%3Ccircle cx='30' cy='30' r='2'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+            opacity: 0.5;
+        }
+
+        .hero-content {
+            position: relative;
+            z-index: 2;
+        }
+
+        /* 📈 統計カード */
+        .stats-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: var(--space-xl);
+            text-align: center;
+            border: 1px solid rgba(212, 175, 55, 0.2);
+            transition: all 0.4s ease;
+            animation: elegant-float 6s ease-in-out infinite;
+        }
+
+        .stats-card:hover {
+            transform: translateY(-12px) scale(1.02);
+            box-shadow: var(--shadow-xl);
+            border-color: var(--accent-gold);
+        }
+
+        .stats-number {
+            font-family: var(--font-display);
+            font-size: 3rem;
+            font-weight: 700;
+            color: var(--primary-navy);
+            line-height: 1;
+            background: var(--gradient-gold);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        /* 🔘 ラジオオプション */
+        .radio-option {
+            background: var(--neutral-50);
+            border: 2px solid var(--neutral-200);
+            border-radius: 12px;
+            padding: var(--space-lg);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: var(--space-md);
+            position: relative;
+        }
+
+        .radio-option:hover {
+            border-color: var(--accent-gold);
+            background: rgba(212, 175, 55, 0.05);
+            transform: translateX(4px);
+        }
+
+        .radio-option:has(input[type="radio"]:checked) {
+            border-color: var(--accent-gold);
+            background: rgba(212, 175, 55, 0.1);
+            box-shadow: 0 0 0 4px rgba(212, 175, 55, 0.1);
+        }
+
+        .radio-option input[type="radio"] {
+            appearance: none;
+            width: 0;
+            height: 0;
+            opacity: 0;
+            position: absolute;
+        }
+
+        .radio-option:has(input[type="radio"]:checked)::after {
+            content: '\\f00c';
+            font-family: 'Font Awesome 6 Free';
+            font-weight: 900;
+            position: absolute;
+            top: 50%;
+            right: var(--space-lg);
+            transform: translateY(-50%);
+            color: var(--accent-gold);
+            font-size: 1.2rem;
+        }
+
+        /* 🌟 セキュリティバッジ */
+        .security-badge {
+            background: var(--gradient-emerald);
+            color: white;
+            border-radius: 16px;
+            padding: var(--space-md) var(--space-lg);
+            font-weight: 600;
+            font-size: 0.9rem;
+            text-align: center;
+            box-shadow: var(--shadow-md);
+            transition: all 0.3s ease;
+            display: inline-block;
+        }
+
+        .security-badge:hover {
             transform: translateY(-2px);
-            box-shadow: 0 12px 32px rgba(11, 20, 38, 0.2);
+            box-shadow: var(--shadow-lg);
+        }
+
+        /* 📱 レスポンシブデザイン */
+        @media (max-width: 768px) {
+            .luxury-card {
+                padding: var(--space-xl);
+                border-radius: 20px;
+            }
+            .stats-number {
+                font-size: 2.5rem;
+            }
+            .premium-button {
+                font-size: 1rem;
+                padding: var(--space-md) var(--space-lg);
+            }
+        }
+
+        /* ♿ アクセシビリティ */
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after {
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.01ms !important;
+            }
+        }
+
+        .premium-button:focus-visible,
+        .luxury-input:focus-visible,
+        .radio-option:focus-within {
+            outline: 3px solid var(--accent-gold);
+            outline-offset: 2px;
+            box-shadow: 0 0 0 5px rgba(212, 175, 55, 0.2);
         }
     </style>
 </head>
