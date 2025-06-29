@@ -236,9 +236,6 @@ const AdminLoginPage: React.FC<AdminLoginPageProps> = ({ onLogin, onNavigateHome
           </div>
           <h2 className="text-3xl font-bold text-gray-900">管理者ログイン</h2>
           <p className="mt-2 text-sm text-gray-600">MoneyTicket 管理画面</p>
-          <div className="mt-2 text-xs text-gray-500">
-            デフォルト認証情報: admin / MoneyTicket2024!
-          </div>
         </div>
 
         {/* ログインフォーム */}

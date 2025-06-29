@@ -94,8 +94,8 @@ const AdminLoginDebug: React.FC = () => {
       if (credentials) {
         setTestResult(`✅ 認証情報取得成功: ${JSON.stringify(credentials, null, 2)}`);
         
-        // パスワード検証テスト
-        const isValid = await SupabaseAdminAuth.verifyPassword('MoneyTicket2024!', credentials.password_hash);
+        // パスワード検証テスト（新しいパスワードでテスト）
+        const isValid = await SupabaseAdminAuth.verifyPassword('G3MIZAu74IvkH7NK', credentials.password_hash);
         setTestResult(prev => prev + `\n\n✅ パスワード検証: ${isValid ? '成功' : '失敗'}`);
         
       } else {
@@ -108,7 +108,7 @@ const AdminLoginDebug: React.FC = () => {
 
   const testPasswordHash = async () => {
     try {
-      const hash = await SupabaseAdminAuth.hashPassword('MoneyTicket2024!');
+      const hash = await SupabaseAdminAuth.hashPassword('G3MIZAu74IvkH7NK');
       setTestResult(`パスワードハッシュ: ${hash}`);
     } catch (error) {
       setTestResult(`ハッシュ化エラー: ${error}`);
@@ -196,11 +196,14 @@ const AdminLoginDebug: React.FC = () => {
 
         {/* デフォルト認証情報 */}
         <div className="bg-white rounded-lg shadow p-6">
-          <h2 className="text-xl font-semibold mb-4">デフォルト認証情報</h2>
+          <h2 className="text-xl font-semibold mb-4">認証情報</h2>
           <div className="bg-yellow-50 border border-yellow-200 rounded p-4">
             <p><strong>ユーザー名:</strong> admin</p>
-            <p><strong>パスワード:</strong> MoneyTicket2024!</p>
-            <p><strong>期待されるハッシュ:</strong> a665a45920422f9d417e4867efdc4fb8a04a1f3fff1fa07e998e86f7f7a27ae3</p>
+            <p><strong>パスワード:</strong> [セキュリティのため非表示]</p>
+            <p><strong>状態:</strong> デモモードで動作中</p>
+            <p className="text-sm text-gray-600 mt-2">
+              ※ 認証情報は管理者にお問い合わせください
+            </p>
           </div>
         </div>
 

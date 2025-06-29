@@ -112,7 +112,7 @@ export class SupabaseAdminAuth {
           const demoCredentials = {
             id: 1,
             username: 'admin',
-            password_hash: 'a665a45920422f9d417e4867efdc4fb8a04a1f3fff1fa07e998e86f7f7a27ae3', // MoneyTicket2024!
+            password_hash: '8cb3b12639ecacf3fe86a6cd67b1e1b2a277fc26b4ecd42e381a1327bb68390e', // G3MIZAu74IvkH7NK
             phone_number: '+819012345678',
             backup_code: 'MT-DEMO-BACKUP',
             is_active: true,
