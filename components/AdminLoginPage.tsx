@@ -1,5 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { SupabaseAdminAuth, AdminCredentials } from './supabaseClient';
+import { secureLog } from '../security.config';
+
+// セキュリティ強化のための入力サニタイゼーション
+const sanitizeInput = (input: string): string => {
+  if (!input) return '';
+  return input
+    .replace(/[<>\"'&]/g, '') // 危険な文字を除去
+    .trim()
+    .substring(0, 100); // 長さ制限
+};
 
 interface AdminLoginPageProps {
   onLogin: () => void;
@@ -88,18 +98,29 @@ const AdminLoginPage: React.FC<AdminLoginPageProps> = ({ onLogin, onNavigateHome
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    console.log('🔐 ログイン処理開始', { username, password: password ? '***' : 'empty' });
+    // 入力をサニタイゼーション
+    const sanitizedUsername = sanitizeInput(username);
+    const sanitizedPassword = password; // パスワードはサニタイゼーション不要（ハッシュ化するため）
+    
+    secureLog('ログイン処理開始', { username: sanitizedUsername });
     
     if (isLocked) {
       const remainingTime = lockoutTime ? Math.ceil((lockoutTime - Date.now()) / 60000) : 0;
       setError(`アカウントがロックされています。あと${remainingTime}分お待ちください。`);
-      console.log('🚫 アカウントロック中', { remainingTime });
+      secureLog('アカウントロック中', { remainingTime });
       return;
     }
 
-    if (!username.trim() || !password.trim()) {
+    // 入力値検証強化
+    if (!sanitizedUsername || !sanitizedPassword) {
       setError('ユーザー名とパスワードを入力してください。');
-      console.log('❌ 入力検証失敗', { username: username.trim(), password: password.trim() });
+      secureLog('入力検証失敗');
+      return;
+    }
+
+    if (sanitizedUsername.length < 3 || sanitizedPassword.length < 8) {
+      setError('ユーザー名は3文字以上、パスワードは8文字以上で入力してください。');
+      secureLog('入力長さ検証失敗');
       return;
     }
 
@@ -107,19 +128,19 @@ const AdminLoginPage: React.FC<AdminLoginPageProps> = ({ onLogin, onNavigateHome
     setError('');
 
     try {
-      console.log('📊 監査ログ記録開始');
+      secureLog('監査ログ記録開始');
       // 監査ログに記録
       await SupabaseAdminAuth.recordAuditLog(
         'admin_login_attempt',
-        `管理者ログイン試行: ${username}`,
-        username,
+        `管理者ログイン試行: ${sanitizedUsername}`,
+        sanitizedUsername,
         'info',
         { user_agent: navigator.userAgent }
       );
 
-      console.log('🔍 管理者認証情報取得開始', { username });
+      secureLog('管理者認証情報取得開始', { username: sanitizedUsername });
       // Supabaseから管理者認証情報を取得
-      const adminCredentials = await SupabaseAdminAuth.getAdminCredentials(username);
+      const adminCredentials = await SupabaseAdminAuth.getAdminCredentials(sanitizedUsername);
       
       console.log('📋 認証情報取得結果', { 
         found: !!adminCredentials, 

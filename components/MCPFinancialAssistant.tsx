@@ -2,11 +2,54 @@ import React, { useState, useRef, useEffect } from 'react';
 import { createSupabaseClient } from './adminUtils';
 import { secureLog } from '../security.config';
 
+// XSS攻撃防止のためのサニタイゼーション関数
+const sanitizeInput = (input: string): string => {
+  if (!input) return '';
+  
+  // HTMLタグとスクリプトを除去
+  const sanitized = input
+    .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
+    .replace(/<iframe\b[^<]*(?:(?!<\/iframe>)<[^<]*)*<\/iframe>/gi, '')
+    .replace(/<object\b[^<]*(?:(?!<\/object>)<[^<]*)*<\/object>/gi, '')
+    .replace(/<embed\b[^<]*>/gi, '')
+    .replace(/<form\b[^<]*(?:(?!<\/form>)<[^<]*)*<\/form>/gi, '')
+    .replace(/javascript:/gi, '')
+    .replace(/on\w+\s*=/gi, '')
+    .replace(/<[^>]*vbscript:/gi, '')
+    .replace(/<[^>]*data:/gi, '')
+    .replace(/&lt;script/gi, '')
+    .replace(/&lt;\/script/gi, '')
+    .trim();
+    
+  // 長すぎる入力を制限（DoS攻撃防止）
+  return sanitized.length > 1000 ? sanitized.substring(0, 1000) + '...' : sanitized;
+};
+
+// 入力値検証
+const validateInput = (input: string): boolean => {
+  if (!input || input.trim().length === 0) return false;
+  if (input.length > 1000) return false;
+  
+  // 危険なパターンをチェック
+  const dangerousPatterns = [
+    /<script/i,
+    /javascript:/i,
+    /vbscript:/i,
+    /data:/i,
+    /onload=/i,
+    /onerror=/i,
+    /onclick=/i
+  ];
+  
+  return !dangerousPatterns.some(pattern => pattern.test(input));
+};
+
 interface Message {
   id: string;
   role: 'user' | 'assistant';
   content: string;
   timestamp: Date;
+  sanitized?: boolean; // サニタイゼーション済みフラグ
 }
 
 interface ExpertContact {
@@ -41,7 +84,8 @@ export const MCPFinancialAssistant: React.FC<MCPFinancialAssistantProps> = ({ cl
 それ以降は専門家による電話相談をご案内いたします。
 
 どのような財務相談をお手伝いしましょうか？😊`,
-      timestamp: new Date()
+      timestamp: new Date(),
+      sanitized: true
     }
   ]);
   const [input, setInput] = useState('');
@@ -49,6 +93,8 @@ export const MCPFinancialAssistant: React.FC<MCPFinancialAssistantProps> = ({ cl
   const [questionCount, setQuestionCount] = useState(0);
   const [expertContact, setExpertContact] = useState<ExpertContact | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const [lastRequestTime, setLastRequestTime] = useState<number>(0);
+  const [rateLimitExceeded, setRateLimitExceeded] = useState<boolean>(false);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -140,6 +186,40 @@ export const MCPFinancialAssistant: React.FC<MCPFinancialAssistantProps> = ({ cl
     e.preventDefault();
     if (!input.trim() || isLoading) return;
 
+    // 入力値検証
+    if (!validateInput(input)) {
+      const errorMessage: Message = {
+        id: Date.now().toString(),
+        role: 'assistant',
+        content: '申し訳ありませんが、入力内容に問題があります。適切な質問を入力してください。',
+        timestamp: new Date(),
+        sanitized: true
+      };
+      setMessages(prev => [...prev, errorMessage]);
+      setInput('');
+      return;
+    }
+
+    // 入力をサニタイゼーション
+    const sanitizedInput = sanitizeInput(input);
+    
+    // レート制限チェック（3秒間隔）
+    const currentTime = Date.now();
+    if (currentTime - lastRequestTime < 3000) {
+      setRateLimitExceeded(true);
+      const rateLimitMessage: Message = {
+        id: Date.now().toString(),
+        role: 'assistant',
+        content: '申し訳ありませんが、リクエストが頻繁すぎます。3秒後に再度お試しください。',
+        timestamp: new Date(),
+        sanitized: true
+      };
+      setMessages(prev => [...prev, rateLimitMessage]);
+      setTimeout(() => setRateLimitExceeded(false), 3000);
+      return;
+    }
+    setLastRequestTime(currentTime);
+    
     // 3回制限チェック
     if (questionCount >= 3) {
       const limitMessage: Message = {
@@ -170,8 +250,9 @@ ${expertContact?.description || 'MoneyTicketの認定ファイナンシャルプ
     const userMessage: Message = {
       id: Date.now().toString(),
       role: 'user',
-      content: input,
-      timestamp: new Date()
+      content: sanitizedInput,
+      timestamp: new Date(),
+      sanitized: true
     };
 
     setMessages(prev => [...prev, userMessage]);
@@ -239,7 +320,8 @@ ${expertContact?.description || 'MoneyTicketの認定ファイナンシャルプ
         id: (Date.now() + 1).toString(),
         role: 'assistant',
         content: responseContent,
-        timestamp: new Date()
+        timestamp: new Date(),
+        sanitized: true
       };
 
       setMessages(prev => [...prev, assistantMessage]);
@@ -249,7 +331,8 @@ ${expertContact?.description || 'MoneyTicketの認定ファイナンシャルプ
         id: (Date.now() + 1).toString(),
         role: 'assistant',
         content: '申し訳ありません。エラーが発生しました。もう一度お試しください。',
-        timestamp: new Date()
+        timestamp: new Date(),
+        sanitized: true
       };
       setMessages(prev => [...prev, errorMessage]);
     } finally {
@@ -258,7 +341,11 @@ ${expertContact?.description || 'MoneyTicketの認定ファイナンシャルプ
   };
 
   const handlePredefinedQuestion = (prompt: string) => {
-    setInput(prompt);
+    // 定型質問もサニタイゼーション
+    const sanitizedPrompt = sanitizeInput(prompt);
+    if (validateInput(sanitizedPrompt)) {
+      setInput(sanitizedPrompt);
+    }
   };
 
 
@@ -407,7 +494,7 @@ ${expertContact?.description || 'MoneyTicketの認定ファイナンシャルプ
               </div>
               <button
                 type="submit"
-                disabled={!input.trim() || isLoading}
+                disabled={!input.trim() || isLoading || rateLimitExceeded}
                 className="bg-green-500 text-white w-12 h-12 rounded-full hover:bg-green-600 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors flex items-center justify-center"
               >
                 {isLoading ? (

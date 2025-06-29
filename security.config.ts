@@ -380,41 +380,137 @@ export class SecureConfigManager {
   }
 }
 
-// セキュアなログ出力関数
+// セキュアなログ出力（機密情報をマスクして出力）
 export const secureLog = (message: string, data?: any) => {
-  if (SECURITY_CONFIG.ENABLE_DEBUG_LOGS) {
-    if (data && typeof data === 'object') {
-      // 機密情報をマスクしてログ出力
-      const sanitizedData = sanitizeForLog(data);
-      console.log(message, sanitizedData);
-    } else {
-      console.log(message);
-    }
+  if (!SECURITY_CONFIG.ENABLE_DEBUG_LOGS) {
+    return; // 本番環境ではログを出力しない
+  }
+
+  // 機密情報をマスクするキーワード
+  const sensitiveKeywords = [
+    'password', 'secret', 'key', 'token', 'credential', 'auth',
+    'api_key', 'private', 'confidential', 'hash', 'salt'
+  ];
+
+  let maskedData = data;
+  if (data && typeof data === 'object') {
+    maskedData = { ...data };
+    
+    // オブジェクトの各プロパティをチェック
+    Object.keys(maskedData).forEach(key => {
+      const lowerKey = key.toLowerCase();
+      if (sensitiveKeywords.some(keyword => lowerKey.includes(keyword))) {
+        if (typeof maskedData[key] === 'string' && maskedData[key].length > 0) {
+          // 最初の2文字と最後の2文字以外をマスク
+          const value = maskedData[key];
+          if (value.length <= 4) {
+            maskedData[key] = '*'.repeat(value.length);
+          } else {
+            maskedData[key] = value.substring(0, 2) + '*'.repeat(value.length - 4) + value.substring(value.length - 2);
+          }
+        } else {
+          maskedData[key] = '[PROTECTED]';
+        }
+      }
+    });
+  }
+
+  // メッセージ内の機密情報もマスク
+  let maskedMessage = message;
+  sensitiveKeywords.forEach(keyword => {
+    const regex = new RegExp(`(${keyword}[\\s]*[:=][\\s]*['"\\s]*)(\\S+)`, 'gi');
+    maskedMessage = maskedMessage.replace(regex, '$1[PROTECTED]');
+  });
+
+  console.log(`[MoneyTicket Security] ${maskedMessage}`, maskedData);
+};
+
+// CSRFトークン生成
+export const generateCSRFToken = (): string => {
+  const array = new Uint8Array(32);
+  crypto.getRandomValues(array);
+  return Array.from(array, byte => byte.toString(16).padStart(2, '0')).join('');
+};
+
+// セキュアなランダム文字列生成
+export const generateSecureRandomString = (length: number = 32): string => {
+  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*';
+  const array = new Uint8Array(length);
+  crypto.getRandomValues(array);
+  return Array.from(array, byte => chars[byte % chars.length]).join('');
+};
+
+// 入力値検証
+export const validateInput = {
+  email: (email: string): boolean => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email) && email.length <= 254;
+  },
+  
+  phone: (phone: string): boolean => {
+    const phoneRegex = /^[\+]?[1-9][\d]{0,15}$/;
+    return phoneRegex.test(phone.replace(/[\s\-\(\)]/g, ''));
+  },
+  
+  username: (username: string): boolean => {
+    const usernameRegex = /^[a-zA-Z0-9_]{3,30}$/;
+    return usernameRegex.test(username);
+  },
+  
+  password: (password: string): boolean => {
+    // 最低8文字、大文字・小文字・数字・特殊文字を含む
+    const hasLower = /[a-z]/.test(password);
+    const hasUpper = /[A-Z]/.test(password);
+    const hasNumber = /\d/.test(password);
+    const hasSpecial = /[!@#$%^&*(),.?":{}|<>]/.test(password);
+    
+    return password.length >= 8 && hasLower && hasUpper && hasNumber && hasSpecial;
+  },
+  
+  // XSS攻撃防止
+  sanitizeHtml: (input: string): string => {
+    if (!input) return '';
+    
+    return input
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#x27;')
+      .replace(/\//g, '&#x2F;')
+      .trim();
   }
 };
 
-// ログ出力用のデータサニタイズ
-const sensitiveKeys = ['password', 'token', 'key', 'secret', 'auth', 'credential', 'jwt', 'session'];
-
-const sanitizeForLog = (obj: any): any => {
-  if (typeof obj !== 'object' || obj === null) {
-    return obj;
+// レート制限管理
+export class RateLimiter {
+  private static requests: Map<string, number[]> = new Map();
+  
+  static isAllowed(identifier: string, maxRequests: number = 10, windowMs: number = 60000): boolean {
+    const now = Date.now();
+    const windowStart = now - windowMs;
+    
+    if (!this.requests.has(identifier)) {
+      this.requests.set(identifier, []);
+    }
+    
+    const userRequests = this.requests.get(identifier)!;
+    
+    // 古いリクエストを削除
+    const validRequests = userRequests.filter(timestamp => timestamp > windowStart);
+    
+    if (validRequests.length >= maxRequests) {
+      return false;
+    }
+    
+    validRequests.push(now);
+    this.requests.set(identifier, validRequests);
+    
+    return true;
   }
   
-  const sanitized: any = {};
-  for (const [key, value] of Object.entries(obj)) {
-    const keyLower = key.toLowerCase();
-    const isSensitive = sensitiveKeys.some(sensitiveKey => keyLower.includes(sensitiveKey));
-    
-    if (isSensitive) {
-      sanitized[key] = '[REDACTED]';
-    } else if (typeof value === 'object') {
-      sanitized[key] = sanitizeForLog(value);
-    } else {
-      sanitized[key] = value;
-    }
+  static reset(identifier: string): void {
+    this.requests.delete(identifier);
   }
-  return sanitized;
-};
+}
 
 export default SECURITY_CONFIG; 
