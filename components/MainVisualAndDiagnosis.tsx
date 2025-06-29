@@ -246,11 +246,12 @@ const MainVisualAndDiagnosis: React.FC<MainVisualAndDiagnosisProps> = ({ onProce
   return (
     <section id="main-visual-section" className="hero-section-premium py-20 px-4">
       <div className="hero-content max-w-7xl mx-auto text-center">
-        <h2 className="heading-display text-6xl md:text-8xl mb-8 font-bold leading-tight" 
+        <h2 className="heading-display text-7xl md:text-9xl mb-8 font-bold leading-tight" 
             style={{ 
-              color: '#f8fafc',
-              textShadow: '0 4px 12px rgba(0, 0, 0, 0.9), 0 2px 6px rgba(0, 0, 0, 0.8)',
-              letterSpacing: '0.02em'
+              color: '#ffffff',
+              textShadow: '0 6px 20px rgba(0, 0, 0, 0.95), 0 3px 10px rgba(0, 0, 0, 0.9), 0 1px 3px rgba(0, 0, 0, 0.8)',
+              letterSpacing: '0.02em',
+              fontWeight: '900'
             }}>
             {mainVisualData.title.split('\n').map((line, index) => (
               <React.Fragment key={index}>
@@ -261,8 +262,9 @@ const MainVisualAndDiagnosis: React.FC<MainVisualAndDiagnosisProps> = ({ onProce
                       {partIndex < line.split(mainVisualData.highlightWord).length - 1 && (
                         <span style={{ 
                           color: '#fbbf24',
-                          textShadow: '0 4px 12px rgba(0, 0, 0, 0.95), 0 2px 6px rgba(0, 0, 0, 0.9)',
-                          fontWeight: '800'
+                          textShadow: '0 6px 20px rgba(0, 0, 0, 0.98), 0 3px 10px rgba(0, 0, 0, 0.95), 0 1px 3px rgba(0, 0, 0, 0.9)',
+                          fontWeight: '900',
+                          filter: 'brightness(1.2)'
                         }}>
                           {mainVisualData.highlightWord}
                         </span>
@@ -276,22 +278,36 @@ const MainVisualAndDiagnosis: React.FC<MainVisualAndDiagnosisProps> = ({ onProce
               </React.Fragment>
             ))}
         </h2>
-        <p className="text-xl md:text-2xl mb-12 text-gray-200 max-w-3xl mx-auto leading-relaxed">
+        <p className="text-2xl md:text-3xl mb-12 max-w-3xl mx-auto leading-relaxed" 
+           style={{
+             color: '#ffffff',
+             textShadow: '0 3px 10px rgba(0, 0, 0, 0.9), 0 1px 3px rgba(0, 0, 0, 0.8)',
+             fontWeight: '500'
+           }}>
             {mainVisualData.subtitle}
         </p>
           
-        <div id="diagnosis-form-section" className="luxury-card max-w-2xl mx-auto mb-16 text-left"> {/* text-left for card content */}
-            <h3 className="heading-primary text-2xl mb-2 text-center">
-                <i className="fas fa-chart-line mr-3" style={{color: 'var(--accent-gold)'}}></i>
+        <div id="diagnosis-form-section" className="max-w-2xl mx-auto mb-16 text-left" 
+             style={{
+               background: 'rgba(255, 255, 255, 0.98)',
+               backdropFilter: 'blur(20px)',
+               border: '2px solid rgba(212, 175, 55, 0.3)',
+               borderRadius: '24px',
+               padding: '2.5rem',
+               boxShadow: '0 20px 40px rgba(0, 0, 0, 0.15), 0 0 0 1px rgba(255, 255, 255, 0.1)',
+               transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)'
+             }}> {/* text-left for card content */}
+            <h3 className="heading-primary text-3xl mb-3 text-center" style={{color: 'var(--primary-navy)', fontWeight: '700'}}>
+                <i className="fas fa-chart-line mr-3" style={{color: 'var(--accent-gold)', fontSize: '1.2em'}}></i>
                 あなた専用の投資プラン診断
             </h3>
-            <p className="text-luxury mb-8 text-center">3分で完了する簡単診断</p>
+            <p className="text-xl mb-8 text-center" style={{color: 'var(--neutral-600)', fontWeight: '500'}}>3分で完了する簡単診断</p>
             
             <form onSubmit={(e) => e.preventDefault()} className="space-y-6">
               <div className="mb-8">
                 <div className="flex items-center justify-between mb-3">
-                    <span className="text-sm font-semibold" style={{color: 'var(--neutral-600)'}}>進捗状況</span>
-                    <span className="text-sm" style={{color: 'var(--neutral-600)'}}>
+                    <span className="text-base font-semibold" style={{color: 'var(--primary-navy)'}}>進捗状況</span>
+                    <span className="text-base font-semibold" style={{color: 'var(--primary-navy)'}}>
                         <span id="currentStepDisplay">{showAIConsent ? AI_CONSENT_STEP : currentStep}</span>/{totalSteps}
                     </span>
                 </div>
@@ -334,8 +350,8 @@ const MainVisualAndDiagnosis: React.FC<MainVisualAndDiagnosisProps> = ({ onProce
                 </div>
               ) : currentQuestionData && (
                 <div className="question-step" data-step={currentStep}>
-                  <label htmlFor={currentQuestionData.id} className="block text-left font-semibold mb-4" style={{color: 'var(--neutral-700)'}}>
-                    <span className="font-bold mr-2">{currentQuestionData.emojiPrefix}</span> {currentQuestionData.label}
+                  <label htmlFor={currentQuestionData.id} className="block text-left text-lg font-bold mb-4" style={{color: 'var(--primary-navy)'}}>
+                    <span className="font-bold mr-2 text-xl">{currentQuestionData.emojiPrefix}</span> {currentQuestionData.label}
                   </label>
                   {currentQuestionData.type === 'select' && currentQuestionData.options && (
                     <select
