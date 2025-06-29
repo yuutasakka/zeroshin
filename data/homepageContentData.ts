@@ -86,9 +86,9 @@ export const defaultHeaderData: HeaderData = {
 
 // デフォルトメインビジュアルメッセージ
 export const defaultMainVisualData: MainVisualData = {
-  title: "あなたの資産運用を\nプロフェッショナルが\n完全サポート",
-  highlightWord: "プロフェッショナル",
-  subtitle: "経験豊富なファイナンシャルプランナーが、あなただけの投資戦略を無料でご提案。 安心して始められる資産運用の第一歩を踏み出しませんか。"
+  title: "あなたの理想的な未来を\n今日から始めませんか？",
+  highlightWord: "今日から始めませんか？",
+  subtitle: "経験豊富なプロフェッショナルが、あなたの人生設計に合わせた最適な資産運用プランを無料でご提案いたします。"
 };
 
 // デフォルトフッター情報
