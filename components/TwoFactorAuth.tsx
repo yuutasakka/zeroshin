@@ -73,7 +73,7 @@ const TwoFactorAuth: React.FC<TwoFactorAuthProps> = ({
     try {
       // 本番環境ではクライアントサイドでの簡易検証を使用
       if (!process.env.API_BASE_URL) {
-        // フォールバック: クライアントサイドでの簡易検証
+        // クライアントサイドでの簡易検証
         const now = Math.floor(Date.now() / 1000);
         const window = Math.floor(now / 30);
         
@@ -103,7 +103,7 @@ const TwoFactorAuth: React.FC<TwoFactorAuthProps> = ({
       });
 
       if (!response.ok) {
-        // フォールバック: クライアントサイドでの簡易検証
+        // クライアントサイドでの簡易検証
         const now = Math.floor(Date.now() / 1000);
         const window = Math.floor(now / 30);
         
@@ -138,15 +138,9 @@ const TwoFactorAuth: React.FC<TwoFactorAuthProps> = ({
     return code.substring(0, 6);
   };
 
-  // バックアップコード検証
+  // バックアップコード検証（本番環境専用）
   const verifyBackupCode = async (code: string): Promise<boolean> => {
     try {
-      // 本番環境ではデモ用の簡易検証を使用
-      if (!process.env.API_BASE_URL) {
-        // デモ用: 任意の8桁コードを有効とする
-        return code.length === 8 && /^[0-9]+$/.test(code);
-      }
-
       const response = await fetch('/api/auth/verify-backup-code', {
         method: 'POST',
         headers: {

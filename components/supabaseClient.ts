@@ -1,55 +1,29 @@
-import { createClient } from '@supabase/supabase-js';
+import { createClient, SupabaseClient } from '@supabase/supabase-js';
 
-// Supabase設定 - 複数の環境変数形式に対応
-const getEnvVar = (viteVar: string, reactVar: string, fallback: string) => {
-  console.log('🌍 環境変数取得開始', { viteVar, reactVar, fallback });
-  
-  // Vite環境変数の取得（windowオブジェクト経由）
-  if (typeof window !== 'undefined') {
-    // ブラウザ環境
-    const viteEnv = (window as any).__VITE_ENV__ || {};
-    if (viteEnv[viteVar]) {
-      console.log('✅ Vite環境変数から取得', { viteVar, value: viteEnv[viteVar].substring(0, 20) + '...' });
-      return viteEnv[viteVar];
-    }
-    
-    // window.importMetaEnvからの取得を試行
-    const windowImportMeta = (window as any).importMetaEnv || {};
-    if (windowImportMeta[viteVar]) {
-      console.log('✅ window.importMetaEnvから取得', { viteVar, value: windowImportMeta[viteVar].substring(0, 20) + '...' });
-      return windowImportMeta[viteVar];
-    }
+// Supabase設定 - import.meta.envを使用
+const getEnvVar = (viteVar: string, fallback: string) => {
+  // import.meta.env から取得
+  const value = (import.meta as any).env?.[viteVar];
+  if (value) {
+    return value;
   }
   
-  // process.env からの取得
-  if (typeof process !== 'undefined' && process.env) {
-    const processValue = process.env[viteVar] || process.env[reactVar];
-    if (processValue) {
-      console.log('✅ process.envから取得', { var: viteVar || reactVar, value: processValue.substring(0, 20) + '...' });
-      return processValue;
-    }
-  }
-  
-  console.log('⚠️ フォールバック値使用', { fallback });
   return fallback;
 };
 
 const supabaseUrl = getEnvVar(
   'VITE_SUPABASE_URL',
-  'REACT_APP_SUPABASE_URL',
-  'https://your-project.supabase.co'
+  'https://eqirzbuqgymrtnfmvwhq.supabase.co'
 );
 
 const supabaseAnonKey = getEnvVar(
   'VITE_SUPABASE_ANON_KEY',
-  'REACT_APP_SUPABASE_ANON_KEY',
-  'your-anon-key'
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVxaXJ6YnVxZ3ltcnRuZm12d2hxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzU1Mjg1MTEsImV4cCI6MjA1MTEwNDUxMX0.bYgWmKdC9YMpuHhBEcmDfzQpO8j5qQWHnSPyLyKCyQE'
 );
 
 console.log('🚀 Supabaseクライアント初期化', { 
   url: supabaseUrl, 
-  keyPrefix: supabaseAnonKey.substring(0, 10) + '...',
-  isDemo: supabaseUrl === 'https://your-project.supabase.co' || supabaseAnonKey === 'your-anon-key'
+  keyPrefix: supabaseAnonKey.substring(0, 10) + '...'
 });
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey);
@@ -103,34 +77,6 @@ export class SupabaseAdminAuth {
     try {
       console.log('🔍 getAdminCredentials開始', { username, supabaseUrl, supabaseAnonKey: supabaseAnonKey.substring(0, 10) + '...' });
       
-      // デモモード（Supabaseが設定されていない場合）
-      if (supabaseUrl === 'https://your-project.supabase.co' || supabaseAnonKey === 'your-anon-key') {
-        console.log('🎭 デモモード: Supabaseが設定されていないため、デモ認証情報を使用します');
-        
-        // デモ用の管理者認証情報
-        if (username === 'admin') {
-          const demoCredentials = {
-            id: 1,
-            username: 'admin',
-            password_hash: '8cb3b12639ecacf3fe86a6cd67b1e1b2a277fc26b4ecd42e381a1327bb68390e', // G3MIZAu74IvkH7NK
-            phone_number: '+819012345678',
-            backup_code: 'MT-DEMO-BACKUP',
-            is_active: true,
-            failed_attempts: 0,
-            locked_until: undefined,
-            last_login: undefined,
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString(),
-            password_changed_at: new Date().toISOString(),
-            requires_password_change: false
-          };
-          console.log('✅ デモ認証情報返却', demoCredentials);
-          return demoCredentials;
-        }
-        console.log('❌ デモモード: 該当ユーザーなし');
-        return null;
-      }
-
       console.log('🗃️ Supabaseクエリ実行中...');
       const { data, error } = await supabase
         .from('admin_credentials')
@@ -162,18 +108,6 @@ export class SupabaseAdminAuth {
     sessionId?: string
   ): Promise<void> {
     try {
-      // デモモードの場合はローカルに記録
-      if (supabaseUrl === 'https://your-project.supabase.co' || supabaseAnonKey === 'your-anon-key') {
-        console.log('デモモード: ログイン試行記録', {
-          username,
-          success,
-          failureReason,
-          userAgent,
-          timestamp: new Date().toISOString()
-        });
-        return;
-      }
-
       const { error } = await supabase
         .from('admin_login_attempts')
         .insert({
@@ -196,12 +130,6 @@ export class SupabaseAdminAuth {
   // 失敗回数を更新
   static async updateFailedAttempts(username: string, attempts: number, lockUntil?: Date): Promise<void> {
     try {
-      // デモモードの場合はローカルストレージに記録
-      if (supabaseUrl === 'https://your-project.supabase.co' || supabaseAnonKey === 'your-anon-key') {
-        console.log('デモモード: 失敗回数更新', { username, attempts, lockUntil });
-        return;
-      }
-
       const updateData: any = {
         failed_attempts: attempts,
         updated_at: new Date().toISOString()
@@ -227,12 +155,6 @@ export class SupabaseAdminAuth {
   // ログイン成功時の更新
   static async updateSuccessfulLogin(username: string): Promise<void> {
     try {
-      // デモモードの場合はローカルに記録
-      if (supabaseUrl === 'https://your-project.supabase.co' || supabaseAnonKey === 'your-anon-key') {
-        console.log('デモモード: ログイン成功更新', { username, timestamp: new Date().toISOString() });
-        return;
-      }
-
       const { error } = await supabase
         .from('admin_credentials')
         .update({
@@ -262,19 +184,6 @@ export class SupabaseAdminAuth {
     userAgent?: string
   ): Promise<void> {
     try {
-      // デモモードの場合はコンソールに記録
-      if (supabaseUrl === 'https://your-project.supabase.co' || supabaseAnonKey === 'your-anon-key') {
-        console.log(`デモモード: 監査ログ [${severity.toUpperCase()}]`, {
-          eventType,
-          description,
-          username,
-          metadata,
-          userAgent,
-          timestamp: new Date().toISOString()
-        });
-        return;
-      }
-
       const { error } = await supabase
         .from('audit_logs')
         .insert({
@@ -337,4 +246,163 @@ export class SupabaseAdminAuth {
       return false;
     }
   }
-} 
+}
+
+// 診断履歴管理クラス
+export class DiagnosisSessionManager {
+  private supabase: SupabaseClient;
+
+  constructor() {
+    this.supabase = supabase;
+  }
+
+  // 電話番号の重複チェック
+  async checkPhoneNumberUsage(phoneNumber: string): Promise<boolean> {
+    try {
+      const normalizedPhone = phoneNumber.replace(/\D/g, '');
+      
+      const { data, error } = await this.supabase
+        .from('diagnosis_sessions')
+        .select('id')
+        .eq('phone_number', normalizedPhone)
+        .eq('sms_verified', true)
+        .limit(1);
+
+      if (error) {
+        console.error('電話番号重複チェックエラー:', error);
+        return false;
+      }
+
+      return data && data.length > 0;
+    } catch (error) {
+      console.error('電話番号重複チェック例外:', error);
+      return false;
+    }
+  }
+
+  // 新しい診断セッションを作成
+  async createDiagnosisSession(phoneNumber: string, diagnosisAnswers: any): Promise<string | null> {
+    try {
+      const normalizedPhone = phoneNumber.replace(/\D/g, '');
+      const sessionId = `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+
+      const { data, error } = await this.supabase
+        .from('diagnosis_sessions')
+        .insert({
+          phone_number: normalizedPhone,
+          diagnosis_answers: diagnosisAnswers,
+          session_id: sessionId,
+          sms_verified: false
+        })
+        .select('session_id')
+        .single();
+
+      if (error) {
+        console.error('診断セッション作成エラー:', error);
+        return null;
+      }
+
+      return data?.session_id || null;
+    } catch (error) {
+      console.error('診断セッション作成例外:', error);
+      return null;
+    }
+  }
+
+  // SMS認証完了時にセッションを更新
+  async updateSessionVerification(sessionId: string, phoneNumber: string): Promise<boolean> {
+    try {
+      const normalizedPhone = phoneNumber.replace(/\D/g, '');
+
+      const { error } = await this.supabase
+        .from('diagnosis_sessions')
+        .update({
+          sms_verified: true,
+          verification_timestamp: new Date().toISOString()
+        })
+        .eq('session_id', sessionId)
+        .eq('phone_number', normalizedPhone);
+
+      if (error) {
+        console.error('セッション認証更新エラー:', error);
+        return false;
+      }
+
+      return true;
+    } catch (error) {
+      console.error('セッション認証更新例外:', error);
+      return false;
+    }
+  }
+
+  // 認証済みセッション履歴を取得
+  async getVerifiedSessions(): Promise<any[]> {
+    try {
+      const { data, error } = await this.supabase
+        .from('diagnosis_sessions')
+        .select('*')
+        .eq('sms_verified', true)
+        .order('verification_timestamp', { ascending: false });
+
+      if (error) {
+        console.error('認証済みセッション取得エラー:', error);
+        return [];
+      }
+
+      return data || [];
+    } catch (error) {
+      console.error('認証済みセッション取得例外:', error);
+      return [];
+    }
+  }
+
+  // 特定の電話番号の最新の認証済みセッションを取得
+  async getLatestVerifiedSession(phoneNumber: string): Promise<any | null> {
+    try {
+      const normalizedPhone = phoneNumber.replace(/\D/g, '');
+
+      const { data, error } = await this.supabase
+        .from('diagnosis_sessions')
+        .select('*')
+        .eq('phone_number', normalizedPhone)
+        .eq('sms_verified', true)
+        .order('verification_timestamp', { ascending: false })
+        .limit(1)
+        .single();
+
+      if (error) {
+        console.error('最新認証セッション取得エラー:', error);
+        return null;
+      }
+
+      return data;
+    } catch (error) {
+      console.error('最新認証セッション取得例外:', error);
+      return null;
+    }
+  }
+
+  // セッションIDで診断データを取得
+  async getDiagnosisSession(sessionId: string): Promise<any | null> {
+    try {
+      const { data, error } = await this.supabase
+        .from('diagnosis_sessions')
+        .select('*')
+        .eq('session_id', sessionId)
+        .single();
+
+      if (error) {
+        console.error('診断セッション取得エラー:', error);
+        return null;
+      }
+
+      return data;
+    } catch (error) {
+      console.error('診断セッション取得例外:', error);
+      return null;
+    }
+  }
+}
+
+// 診断セッション管理のインスタンスをエクスポート
+export const diagnosisManager = new DiagnosisSessionManager(); 

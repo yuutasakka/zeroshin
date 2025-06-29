@@ -13,7 +13,6 @@ const sanitizeUrl = (url: string): string => {
   
   for (const protocol of dangerousProtocols) {
     if (urlLower.startsWith(protocol)) {
-      console.warn('🚨 危険なURLプロトコルが検出されました:', url);
       return '#';
     }
   }

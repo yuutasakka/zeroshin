@@ -99,10 +99,9 @@ const ReliabilitySection: React.FC = () => {
     try {
       const config = createSupabaseClient();
       
-      // Supabase設定が無効な場合はnullを返す（デモモード）
+      // Supabase設定が無効な場合はエラーを投げる
       if (!config.url || !config.key || config.url.includes('your-project') || config.key.includes('your-anon-key')) {
-        secureLog('Supabase設定が無効です。デモモードで動作します。');
-        return null;
+        throw new Error('Supabase設定が無効です。環境変数を確認してください。');
       }
 
       const supabase = createSupabaseHelper();
@@ -116,7 +115,7 @@ const ReliabilitySection: React.FC = () => {
         return data.setting_data;
       }
     } catch (error) {
-      secureLog('お客様の声Supabase読み込みエラー（デモモードに切り替え）:', error);
+      secureLog('お客様の声Supabase読み込みエラー:', error);
     }
     return null;
   };

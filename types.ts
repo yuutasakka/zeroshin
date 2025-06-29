@@ -63,6 +63,9 @@ export interface UserSessionData {
   timestamp: string; // ISO string format
   phoneNumber: string;
   diagnosisAnswers: DiagnosisFormState;
+  smsVerified?: boolean; // SMS認証済みフラグ
+  verifiedPhoneNumber?: string; // 認証済み電話番号
+  verificationTimestamp?: string; // 認証完了時刻
 }
 
 // Notification Settings Types

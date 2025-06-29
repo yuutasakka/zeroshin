@@ -18,7 +18,6 @@ const sanitizeUrl = (url: string): string => {
   
   for (const protocol of dangerousProtocols) {
     if (urlLower.startsWith(protocol)) {
-      console.warn('🚨 危険なURLプロトコルが検出されました:', url);
       return '#';
     }
   }
@@ -74,6 +73,84 @@ const DiagnosisResultsPage: React.FC<DiagnosisResultsPageProps> = ({ diagnosisDa
   const [currentFinancialProducts, setCurrentFinancialProducts] = useState<FinancialProduct[]>(defaultFinancialProducts);
   const [recommendedProducts, setRecommendedProducts] = useState<RecommendedProductWithReason[]>([]);
   const [financialPlanners, setFinancialPlanners] = useState<FinancialPlanner[]>([]);
+  const [isAuthorized, setIsAuthorized] = useState<boolean>(false);
+  const [authError, setAuthError] = useState<string | null>(null);
+
+  // SMS認証チェック（Supabaseベース）
+  useEffect(() => {
+    const checkSMSVerification = async () => {
+      try {
+        const currentSession = localStorage.getItem('currentUserSession');
+        
+        if (!currentSession) {
+          setAuthError('認証情報が見つかりません。診断を最初からやり直してください。');
+          return;
+        }
+
+        const sessionData = JSON.parse(currentSession);
+        
+        // SMS認証済みかチェック
+        if (!sessionData.smsVerified || !sessionData.sessionId) {
+          setAuthError('SMS認証が完了していません。診断を最初からやり直してください。');
+          return;
+        }
+
+        // Supabaseでセッションの有効性を確認
+        try {
+          const dbSession = await diagnosisManager.getDiagnosisSession(sessionData.sessionId);
+          
+          if (!dbSession || !dbSession.sms_verified) {
+            setAuthError('認証情報が無効です。診断を最初からやり直してください。');
+            return;
+          }
+
+          // 認証から一定時間以内かチェック（24時間）
+          if (dbSession.verification_timestamp) {
+            const verificationTime = new Date(dbSession.verification_timestamp);
+            const now = new Date();
+            const hoursSinceVerification = (now.getTime() - verificationTime.getTime()) / (1000 * 60 * 60);
+            
+            if (hoursSinceVerification > 24) {
+              setAuthError('認証の有効期限が切れています。診断を最初からやり直してください。');
+              return;
+            }
+          }
+
+          setIsAuthorized(true);
+        } catch (dbError) {
+          setAuthError('認証情報の確認中にエラーが発生しました。');
+        }
+      } catch (error) {
+        setAuthError('認証情報の確認中にエラーが発生しました。');
+      }
+    };
+
+    checkSMSVerification();
+  }, []);
+
+  // 認証されていない場合の表示
+  if (!isAuthorized) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-red-50 via-pink-50 to-orange-50 flex items-center justify-center p-4">
+        <div className="max-w-md w-full bg-white rounded-xl shadow-lg p-8 text-center">
+          <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <i className="fas fa-shield-alt text-red-600 text-2xl"></i>
+          </div>
+          <h1 className="text-2xl font-bold text-gray-800 mb-4">アクセス制限</h1>
+          <p className="text-gray-600 mb-6">
+            {authError || '診断結果を表示するにはSMS認証が必要です。'}
+          </p>
+          <button
+            onClick={onReturnToStart}
+            className="bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white font-semibold py-3 px-6 rounded-lg transition-all duration-200 transform hover:scale-105"
+          >
+            <i className="fas fa-arrow-left mr-2"></i>
+            診断を最初から始める
+          </button>
+        </div>
+      </div>
+    );
+  }
   
   const getProjectedAmount = (): number => {
     if (!diagnosisData || !diagnosisData.age || !diagnosisData.amount) {

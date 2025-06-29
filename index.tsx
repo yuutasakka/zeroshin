@@ -1,6 +1,7 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App';
+import './components/productionLogger'; // 本番環境でのログ無効化
 
 // 本番環境でWebSocket接続を無効化
 if (process.env.NODE_ENV === 'production') {

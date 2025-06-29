@@ -58,6 +58,7 @@ export default defineConfig(({ mode }) => {
       '__DEV__': JSON.stringify(isDev),
       '__PROD__': JSON.stringify(!isDev)
     },
+    envPrefix: ['VITE_', 'REACT_APP_'],
     resolve: {
       alias: {
         '@': path.resolve(__dirname, '.'),

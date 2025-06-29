@@ -10,6 +10,12 @@ import PhoneVerificationPage from './components/PhoneVerificationPage';
 import DiagnosisResultsPage from './components/DiagnosisResultsPage';
 import AdminLoginPage from './components/AdminLoginPage';
 import AdminDashboardPage from './components/AdminDashboardPage';
+// 新しいSupabase Auth関連のインポート
+import { SupabaseAuthLogin } from './components/SupabaseAuthLogin';
+import { AuthGuard, AuthenticatedHeader } from './components/AuthGuard';
+import { OneTimeUsageNotice } from './components/OneTimeUsageNotice';
+import { supabase, diagnosisManager } from './components/supabaseClient';
+import type { User } from '@supabase/supabase-js';
 
 import { ColorThemeProvider } from './components/ColorThemeContext';
 import { DiagnosisFormState, PageView, UserSessionData } from './types';
@@ -59,14 +65,12 @@ const isValidHTML = (html: string): boolean => {
     const elements = doc.body.querySelectorAll('*');
     for (let element of elements) {
       if (!allowedTags.includes(element.tagName.toLowerCase())) {
-        console.warn(`🚨 許可されていないタグ: ${element.tagName}`);
         return false;
       }
     }
     
     return true;
   } catch (error) {
-    console.error('HTML検証エラー:', error);
     return false;
   }
 };
@@ -76,12 +80,16 @@ const App: React.FC = () => {
   const [phoneNumberToVerify, setPhoneNumberToVerify] = useState<string | null>(null);
   const [diagnosisData, setDiagnosisData] = useState<DiagnosisFormState | null>(null);
   const [isAdminLoggedIn, setIsAdminLoggedIn] = useState<boolean>(false);
+  const [showUsageNotice, setShowUsageNotice] = useState<boolean>(false);
+  
+  // 新しいSupabase Auth関連の状態
+  const [supabaseUser, setSupabaseUser] = useState<User | null>(null);
+  const [isSupabaseAuth, setIsSupabaseAuth] = useState(false);
   
   // 状態変更を監視するuseEffect
   useEffect(() => {
-    console.log('📊 State changed - currentPage:', currentPage, 'isAdminLoggedIn:', isAdminLoggedIn);
-  }, [currentPage, isAdminLoggedIn]);
-
+    // 状態変更の処理（ログ出力は本番環境では無効）
+  }, [currentPage, isAdminLoggedIn, isSupabaseAuth]);
 
   useEffect(() => {
     // Apply body class for verification and results pages for consistent styling
@@ -97,26 +105,46 @@ const App: React.FC = () => {
     };
   }, [currentPage]);
 
-  // 🚨 緊急デバッグ用: URL hash で管理画面アクセス
+  // Supabase認証状態の監視
   useEffect(() => {
-    const checkHashForAdmin = () => {
-      if (window.location.hash === '#admin') {
-        console.log('🚨 緊急管理画面アクセス検出');
-        setIsAdminLoggedIn(true);
-        setCurrentPage('adminDashboard');
-      } else if (window.location.hash === '#login') {
-        setCurrentPage('login');
+    const initSupabaseAuth = async () => {
+      try {
+        // 現在のセッションを取得
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session?.user) {
+          setSupabaseUser(session.user);
+          setIsSupabaseAuth(true);
+          setIsAdminLoggedIn(true);
+          setCurrentPage('adminDashboard');
+        }
 
+        // 認証状態の変更を監視
+        const { data: { subscription } } = supabase.auth.onAuthStateChange(
+          (event, session) => {
+            
+            if (session?.user) {
+              setSupabaseUser(session.user);
+              setIsSupabaseAuth(true);
+              setIsAdminLoggedIn(true);
+              setCurrentPage('adminDashboard');
+            } else {
+              setSupabaseUser(null);
+              setIsSupabaseAuth(false);
+              setIsAdminLoggedIn(false);
+              setCurrentPage('diagnosis');
+            }
+          }
+        );
+
+        return () => subscription.unsubscribe();
+      } catch (error) {
       }
     };
 
-    checkHashForAdmin();
-    window.addEventListener('hashchange', checkHashForAdmin);
-    
-    return () => {
-      window.removeEventListener('hashchange', checkHashForAdmin);
-    };
+    initSupabaseAuth();
   }, []);
+
+
 
   // 🔐 セッション管理とページ閉じる時の処理
   useEffect(() => {
@@ -134,14 +162,12 @@ const App: React.FC = () => {
           
           if (session.expires && now > session.expires) {
             // 期限切れセッションをクリア
-            console.log('🔄 期限切れセッションをクリア');
             sessionStorage.removeItem('admin_authenticated');
             localStorage.removeItem('admin_session');
             setIsAdminLoggedIn(false);
             setCurrentPage('diagnosis');
           } else if (session.username === 'admin') {
             // 有効なセッションが存在する場合
-            console.log('🔐 有効なセッション復元');
             setIsAdminLoggedIn(true);
             setCurrentPage('adminDashboard');
           }
@@ -152,7 +178,6 @@ const App: React.FC = () => {
           setIsAdminLoggedIn(false);
         }
       } catch (error) {
-        console.error('セッション初期化エラー:', error);
         // エラー時は全セッション情報をクリア
         sessionStorage.clear();
         localStorage.removeItem('admin_session');
@@ -165,7 +190,6 @@ const App: React.FC = () => {
     const handleBeforeUnload = (event: BeforeUnloadEvent) => {
       // セッションストレージの一時情報をクリア（ローカルストレージの認証情報は保持）
       sessionStorage.removeItem('admin_authenticated');
-      console.log('🔄 ページ終了時: 一時セッション情報をクリア');
     };
 
     // ページの可視性変更時の処理（タブの切り替えなど）
@@ -187,7 +211,6 @@ const App: React.FC = () => {
           
           // 30分以上非アクティブの場合はログアウト
           if (timeDiff > 30 * 60 * 1000) {
-            console.log('🔄 非アクティブ時間超過: 自動ログアウト');
             setIsAdminLoggedIn(false);
             setCurrentPage('diagnosis');
             sessionStorage.clear();
@@ -213,8 +236,15 @@ const App: React.FC = () => {
     const initializeApp = () => {
       try {
         // サンプルデータの初期化
-        console.log('🎯 アプリケーション初期化: サンプルデータを確認中...');
         initializeSampleData();
+
+        // 診断完了履歴チェック（Supabaseベース）
+        diagnosisManager.getVerifiedSessions().then(verifiedSessions => {
+          if (verifiedSessions.length > 0 && currentPage === 'diagnosis') {
+            setTimeout(() => setShowUsageNotice(true), 1000); // 1秒後に表示
+          }
+        }).catch(error => {
+        });
 
         // トラッキングスクリプトの読み込み
         const scriptsString = localStorage.getItem('customTrackingScripts');
@@ -228,7 +258,6 @@ const App: React.FC = () => {
               const headFragment = document.createRange().createContextualFragment(sanitizedHead);
               document.head.appendChild(headFragment);
             } else {
-              console.warn('🚨 セキュリティ警告: head スクリプトが安全でないため無視されました');
             }
           }
 
@@ -238,44 +267,58 @@ const App: React.FC = () => {
               const bodyEndFragment = document.createRange().createContextualFragment(sanitizedBodyEnd);
               document.body.appendChild(bodyEndFragment);
             } else {
-              console.warn('🚨 セキュリティ警告: bodyEnd スクリプトが安全でないため無視されました');
             }
           }
         }
       } catch (e) {
-        console.error("❌ アプリケーション初期化エラー:", e);
       }
     };
 
     initializeApp();
   }, []); // Empty dependency array means this runs once on mount
 
-  const handleProceedToVerification = (phoneNumber: string, formData: DiagnosisFormState) => {
+  const handleProceedToVerification = async (phoneNumber: string, formData: DiagnosisFormState) => {
+    // 電話番号の重複チェック（最終確認）
+    try {
+      const normalizedPhone = phoneNumber.replace(/\D/g, '');
+      const isUsed = await diagnosisManager.checkPhoneNumberUsage(normalizedPhone);
+      
+      if (isUsed) {
+        return;
+      }
+    } catch (error) {
+      return;
+    }
+    
+    // 診断データを保存してSMS認証ページへ
+    const sessionData: UserSessionData = {
+      id: `session_${new Date().getTime()}_${Math.random().toString(36).substring(2,9)}`,
+      phoneNumber: phoneNumber,
+      diagnosisAnswers: formData,
+      timestamp: new Date().toISOString(),
+      smsVerified: false
+    };
+
+    // 一時的に診断データを保存（SMS認証前）
+    setDiagnosisData(formData);
     setPhoneNumberToVerify(phoneNumber);
-    setDiagnosisData(formData); // Store diagnosis data
+    localStorage.setItem('pendingUserSession', JSON.stringify(sessionData));
+    
     setCurrentPage('verification');
     window.scrollTo(0, 0); 
   };
 
   const handleVerificationComplete = () => {
-    if (diagnosisData && phoneNumberToVerify) {
-      const newSession: UserSessionData = {
-        id: `session_${new Date().getTime()}_${Math.random().toString(36).substring(2,9)}`,
-        timestamp: new Date().toISOString(),
-        phoneNumber: phoneNumberToVerify,
-        diagnosisAnswers: diagnosisData,
-      };
-
-      // Retrieve existing sessions or initialize if none
-      const existingSessionsString = localStorage.getItem('userSessions');
-      const existingSessions: UserSessionData[] = existingSessionsString ? JSON.parse(existingSessionsString) : [];
+    // SMS認証完了後の処理
+    const currentSession = localStorage.getItem('currentUserSession');
+    
+    if (currentSession) {
+      // 一時データをクリア（Supabaseに既に保存済み）
+      localStorage.removeItem('pendingUserSession');
       
-      // Add new session and save back to local storage
-      existingSessions.push(newSession);
-      localStorage.setItem('userSessions', JSON.stringify(existingSessions));
+      setCurrentPage('results');
+      window.scrollTo(0, 0);
     }
-    setCurrentPage('results'); 
-    window.scrollTo(0, 0);
   };
 
   const handleVerificationCancel = () => {
@@ -294,25 +337,39 @@ const App: React.FC = () => {
   }
 
   const handleAdminLoginSuccess = () => {
-    console.log('🚀 handleAdminLoginSuccess called');
-    console.log('Before state change - currentPage:', currentPage, 'isAdminLoggedIn:', isAdminLoggedIn);
     
-    // 状態を強制的に更新
-    setIsAdminLoggedIn(true);
-    setCurrentPage('adminDashboard');
+    if (isSupabaseAuth) {
+      // Supabase認証の場合
+      setCurrentPage('adminDashboard');
+    } else {
+      // 従来認証の場合（後方互換性）
+      setIsAdminLoggedIn(true);
+      setCurrentPage('adminDashboard');
+    }
+    
     window.scrollTo(0,0);
     
-    console.log('State changes requested - should navigate to adminDashboard');
     
     // 状態変更を確認するための遅延ログ
     setTimeout(() => {
-      console.log('遅延確認 - currentPage should be adminDashboard');
     }, 200);
   };
 
-  const handleAdminLogout = () => {
-    setIsAdminLoggedIn(false);
-    setCurrentPage('login'); // Redirect to admin login page after logout
+  const handleAdminLogout = async () => {
+    if (isSupabaseAuth) {
+      // Supabase認証の場合
+      try {
+        await supabase.auth.signOut();
+      } catch (error) {
+      }
+    } else {
+      // 従来認証の場合
+      setIsAdminLoggedIn(false);
+      sessionStorage.clear();
+      localStorage.removeItem('admin_session');
+    }
+    
+    setCurrentPage('diagnosis');
     window.scrollTo(0,0);
   };
   
@@ -327,49 +384,58 @@ const App: React.FC = () => {
   };
 
 
-  console.log('App render - currentPage:', currentPage, 'isAdminLoggedIn:', isAdminLoggedIn);
-
-
-
+  // ログインページのレンダリング
   if (currentPage === 'login') {
-    console.log('Rendering AdminLoginPage');
     return (
       <ColorThemeProvider>
-        <AdminLoginPage onLogin={handleAdminLoginSuccess} onNavigateHome={navigateToHome} />
+        <SupabaseAuthLogin onLogin={handleAdminLoginSuccess} onNavigateHome={navigateToHome} />
       </ColorThemeProvider>
     );
   }
 
+  // 管理画面のレンダリング
   if (currentPage === 'adminDashboard') {
-    console.log('Rendering AdminDashboard - isAdminLoggedIn:', isAdminLoggedIn);
-    if (!isAdminLoggedIn) {
-      // Redirect to login if not authenticated
-      console.log('Not authenticated, redirecting to login');
+    
+    if (isSupabaseAuth) {
+      // Supabase認証の場合
       return (
         <ColorThemeProvider>
-          <AdminLoginPage onLogin={handleAdminLoginSuccess} onNavigateHome={navigateToHome} />
+          <AuthGuard>
+            <AuthenticatedHeader />
+            <AdminDashboardPage onLogout={handleAdminLogout} onNavigateHome={navigateToHome} />
+          </AuthGuard>
+        </ColorThemeProvider>
+      );
+    } else if (isAdminLoggedIn) {
+      // 従来認証の場合（後方互換性）
+      return (
+        <ColorThemeProvider>
+          <AdminDashboardPage onLogout={handleAdminLogout} onNavigateHome={navigateToHome} />
+        </ColorThemeProvider>
+      );
+    } else {
+      // 認証されていない場合はログインページへ
+      return (
+        <ColorThemeProvider>
+          <SupabaseAuthLogin onLogin={handleAdminLoginSuccess} onNavigateHome={navigateToHome} />
         </ColorThemeProvider>
       );
     }
-    console.log('Authenticated, showing AdminDashboard');
-    return (
-      <ColorThemeProvider>
-        <AdminDashboardPage onLogout={handleAdminLogout} onNavigateHome={navigateToHome} />
-      </ColorThemeProvider>
-    );
   }
 
   if (currentPage === 'verification') {
-    return phoneNumberToVerify ? (
+    const pendingSession = localStorage.getItem('pendingUserSession');
+    const userSession = pendingSession ? JSON.parse(pendingSession) : null;
+    
+    return userSession ? (
       <ColorThemeProvider>
         <PhoneVerificationPage 
-          phoneNumber={phoneNumberToVerify} 
-          onVerificationComplete={handleVerificationComplete}
-          onCancel={handleVerificationCancel}
+          userSession={userSession}
+          onVerificationSuccess={handleVerificationComplete}
+          onBack={handleVerificationCancel}
         />
       </ColorThemeProvider>
     ) : (
-      // Fallback if somehow phoneNumberToVerify is null
       <ColorThemeProvider>
         <MainVisualAndDiagnosis onProceedToVerification={handleProceedToVerification} />
       </ColorThemeProvider>
@@ -393,6 +459,11 @@ const App: React.FC = () => {
       <SecurityTrustSection />
       <CallToActionSection />
       <Footer onNavigateToAdminLogin={navigateToAdminLogin} />
+      
+      {/* 一回限り診断の案内 */}
+      {showUsageNotice && (
+        <OneTimeUsageNotice onDismiss={() => setShowUsageNotice(false)} />
+      )}
     </ColorThemeProvider>
   );
 };

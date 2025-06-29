@@ -205,66 +205,55 @@ export const initializeSampleData = () => {
     const existingTestimonials = localStorage.getItem('testimonials');
     if (!existingTestimonials) {
       localStorage.setItem('testimonials', JSON.stringify(sampleTestimonials));
-      console.log('✅ 証言サンプルデータを初期化しました');
     }
 
     // リーガルリンクの初期化
     const existingLegalLinks = localStorage.getItem('legal_links');
     if (!existingLegalLinks) {
       localStorage.setItem('legal_links', JSON.stringify(sampleLegalLinks));
-      console.log('✅ リーガルリンクサンプルデータを初期化しました');
     }
 
     // ホームページコンテンツの初期化
     const existingReasonsToChoose = localStorage.getItem('homepage_content_reasons_to_choose');
     if (!existingReasonsToChoose) {
       localStorage.setItem('homepage_content_reasons_to_choose', JSON.stringify(sampleReasonsToChoose));
-      console.log('✅ 選ばれる理由サンプルデータを初期化しました');
     }
 
     const existingFirstConsultation = localStorage.getItem('first_consultation_offer');
     if (!existingFirstConsultation) {
       localStorage.setItem('first_consultation_offer', JSON.stringify(sampleFirstConsultationOffer));
-      console.log('✅ 初回相談特典データを初期化しました');
     }
 
     // ヘッダー・メインビジュアル・フッターの初期化
     const existingHeaderData = localStorage.getItem('homepage_content_header_data');
     if (!existingHeaderData) {
       localStorage.setItem('homepage_content_header_data', JSON.stringify(sampleHeaderData));
-      console.log('✅ ヘッダーサンプルデータを初期化しました');
     }
 
     const existingMainVisualData = localStorage.getItem('homepage_content_main_visual_data');
     if (!existingMainVisualData) {
       localStorage.setItem('homepage_content_main_visual_data', JSON.stringify(sampleMainVisualData));
-      console.log('✅ メインビジュアルサンプルデータを初期化しました');
     }
 
     const existingFooterData = localStorage.getItem('homepage_content_footer_data');
     if (!existingFooterData) {
       localStorage.setItem('homepage_content_footer_data', JSON.stringify(sampleFooterData));
-      console.log('✅ フッターサンプルデータを初期化しました');
     }
 
     // 通知設定の初期化
     const existingNotificationSettings = localStorage.getItem('notification_settings');
     if (!existingNotificationSettings) {
       localStorage.setItem('notification_settings', JSON.stringify(sampleNotificationSettings));
-      console.log('✅ 通知設定サンプルデータを初期化しました');
     }
 
     // 金融商品データの初期化
     const existingProductSettings = localStorage.getItem('productSettings');
     if (!existingProductSettings) {
       localStorage.setItem('productSettings', JSON.stringify(allFinancialProducts));
-      console.log('✅ 金融商品サンプルデータを初期化しました');
     }
 
-    console.log('🎉 全てのサンプルデータの初期化が完了しました');
     return true;
   } catch (error) {
-    console.error('❌ サンプルデータの初期化中にエラーが発生しました:', error);
     return false;
   }
 };
@@ -282,10 +271,8 @@ export const resetToSampleData = () => {
     localStorage.setItem('notification_settings', JSON.stringify(sampleNotificationSettings));
     localStorage.setItem('productSettings', JSON.stringify(allFinancialProducts));
     
-    console.log('🔄 全てのデータをサンプルデータにリセットしました');
     return true;
   } catch (error) {
-    console.error('❌ サンプルデータリセット中にエラーが発生しました:', error);
     return false;
   }
 }; 

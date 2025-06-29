@@ -168,28 +168,9 @@ const KeyRotationManager: React.FC<KeyRotationManagerProps> = ({ onClose }) => {
     }
   };
 
-  // 新しい暗号化キーの生成
+  // 新しい暗号化キーの生成（本番環境専用）
   const generateNewKey = async (keyType: string, algorithm: string): Promise<string> => {
     try {
-      // 本番環境ではデモキーを生成
-      if (!process.env.API_BASE_URL) {
-        setTimeout(() => {
-          const newKey: EncryptionKey = {
-            id: `key-${Date.now()}`,
-            algorithm: 'AES-256',
-            keyType: keyType as any,
-            createdAt: new Date(),
-            expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30日後
-            status: 'ACTIVE',
-            rotationSchedule: '30 days',
-            lastRotated: new Date(),
-            nextRotation: new Date(Date.now() + 25 * 24 * 60 * 60 * 1000)
-          };
-          setKeys(prev => [...prev, newKey]);
-        }, 1000);
-        return 'demo_key_generated';
-      }
-
       const response = await fetch('/api/security/generate-key', {
         method: 'POST',
         headers: {
@@ -202,16 +183,27 @@ const KeyRotationManager: React.FC<KeyRotationManagerProps> = ({ onClose }) => {
       });
 
       if (!response.ok) {
-        throw new Error('キー生成に失敗しました');
+        throw new Error(`キー生成に失敗しました: ${response.status}`);
       }
 
       const result = await response.json();
+      
+      const newKey: EncryptionKey = {
+        id: result.keyId,
+        algorithm: algorithm as any,
+        keyType: keyType as any,
+        createdAt: new Date(),
+        expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30日後
+        status: 'ACTIVE',
+        rotationSchedule: '30 days',
+        lastRotated: new Date(),
+        nextRotation: new Date(Date.now() + 25 * 24 * 60 * 60 * 1000)
+      };
+      
+      setKeys(prev => [...prev, newKey]);
       return result.keyId;
     } catch (error) {
-      // フォールバック: クライアントサイドでのキー生成
-      const keyId = `${keyType.toLowerCase()}-key-${Date.now()}`;
-      secureLog(`フォールバック: ${keyType}キーを生成`, { keyId });
-      return keyId;
+      throw new Error('本番環境でのキー生成に失敗しました。システム管理者にお問い合わせください。');
     }
   };
 

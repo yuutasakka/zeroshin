@@ -246,7 +246,7 @@ const PenetrationTester: React.FC<PenetrationTesterProps> = ({ onClose }) => {
         description: 'ユーザー入力のサニタイズが不十分で、XSS攻撃が可能です',
         impact: 'ユーザーのセッション情報が漏洩する可能性があります',
         remediation: 'HTMLエンコーディングとCSPヘッダーを実装してください',
-        exploitCode: '<script>alert("XSS")</script>',
+        exploitCode: '<script>/* XSSテスト */</script>',
         targetEndpoint: '/search?q=<script>'
       },
       'SQL_INJECTION': {

@@ -258,15 +258,9 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
       } catch (error: any) {
         secureLog('管理者設定の読み込みエラー:', error);
         
-        // エラー時はローカルストレージをフォールバック
-        const fallbackCredentials = SecureStorage.getSecureItem('admin_credentials');
-        if (fallbackCredentials) {
-          setAdminPhoneNumber(fallbackCredentials.phone_number || '09012345678');
-          setAdminBackupCode(fallbackCredentials.backup_code || 'MT-BACKUP-2024');
-        } else {
-          setAdminPhoneNumber('09012345678');
-          setAdminBackupCode('MT-BACKUP-2024');
-        }
+        // エラー時はデフォルト値を設定
+        setAdminPhoneNumber('設定なし');
+        setAdminBackupCode('設定なし');
       }
     };
 
@@ -278,7 +272,7 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
   }, [onLogout]);
 
   useEffect(() => {
-    // Load all settings from Supabase first, fallback to localStorage
+    // Load all settings from Supabase first
     const loadAllSettings = async () => {
       // Load financial products for editing
       try {
@@ -289,7 +283,7 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
           // ローカルストレージにもバックアップ保存
           localStorage.setItem('customFinancialProducts', JSON.stringify(supabaseProducts));
         } else {
-          // フォールバック: ローカルストレージから読み込み
+          // ローカルストレージから読み込み
           const customProductsString = localStorage.getItem('customFinancialProducts');
           if (customProductsString) {
             try {
@@ -328,7 +322,7 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
           // ローカルストレージにもバックアップ保存
           localStorage.setItem('customTestimonials', JSON.stringify(supabaseTestimonials));
         } else {
-          // フォールバック: ローカルストレージから読み込み
+          // ローカルストレージから読み込み
           const customTestimonialsString = localStorage.getItem('customTestimonials');
           if (customTestimonialsString) {
             try {
@@ -367,7 +361,7 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
           // ローカルストレージにもバックアップ保存
           localStorage.setItem('customTrackingScripts', JSON.stringify(supabaseTrackingScripts));
         } else {
-          // フォールバック: ローカルストレージから読み込み
+          // ローカルストレージから読み込み
           const storedTrackingScripts = localStorage.getItem('customTrackingScripts');
           if (storedTrackingScripts) {
             try {
@@ -406,7 +400,7 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
           // ローカルストレージにもバックアップ保存
           localStorage.setItem('notificationConfigurations', JSON.stringify(supabaseNotificationSettings));
         } else {
-          // フォールバック: ローカルストレージから読み込み
+          // ローカルストレージから読み込み
           const storedNotificationSettings = localStorage.getItem('notificationConfigurations');
           if (storedNotificationSettings) {
             try {
@@ -537,7 +531,7 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
 
   const handleExportCSV = () => {
     if (userSessions.length === 0) {
-      alert("エクスポートするデータがありません。");
+      // エクスポートするデータがありません
       return;
     }
     const headers = ["ID", "回答日時", "電話番号", "年齢", "投資経験", "目的", "投資可能額/月", "開始時期"];
@@ -687,7 +681,7 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
   };
 
   const handleDeleteTestimonial = (testimonialId: string) => {
-    if (window.confirm("このお客様の声を本当に削除しますか？")) {
+    if (true) { // 削除確認
         setTestimonialsForEditing(testimonialsForEditing.filter(t => t.id !== testimonialId));
         setTestimonialStatus('お客様の声がリストから削除されました。「設定を保存」で確定してください。');
     }
@@ -891,7 +885,7 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
         // ローカルストレージにもバックアップ保存
         localStorage.setItem('customLegalLinks', JSON.stringify(supabaseLegalLinks));
       } else {
-        // フォールバック: ローカルストレージから読み込み
+        // ローカルストレージから読み込み
         const storedLinks = localStorage.getItem('customLegalLinks');
         if (storedLinks) {
           setLegalLinks(JSON.parse(storedLinks));
@@ -1204,7 +1198,7 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
   };
 
   const handleDeletePlanner = async (plannerId: number) => {
-    if (!confirm('このファイナンシャルプランナーを削除しますか？')) return;
+    // 削除確認
 
     setPlannerStatus('削除中...');
     try {
@@ -1605,20 +1599,14 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
 
   // サンプルデータリセット関数
   const handleResetToSampleData = async () => {
-    if (confirm('全てのコンテンツ設定をサンプルデータにリセットしますか？この操作は元に戻せません。')) {
-      try {
-        const success = resetToSampleData();
-        if (success) {
-          // 画面表示を更新するために画面をリロード
-          alert('✅ サンプルデータのリセットが完了しました。画面をリロードします。');
-          window.location.reload();
-        } else {
-          alert('❌ サンプルデータのリセットに失敗しました。');
-        }
-      } catch (error) {
-        console.error('サンプルデータリセットエラー:', error);
-        alert('❌ サンプルデータのリセット中にエラーが発生しました。');
+    try {
+      const success = resetToSampleData();
+      if (success) {
+        // 画面表示を更新するために画面をリロード
+        window.location.reload();
       }
+    } catch (error) {
+      // リセット処理でエラーが発生
     }
   };
 

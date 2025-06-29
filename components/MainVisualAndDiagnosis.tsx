@@ -3,6 +3,7 @@ import { DiagnosisQuestion, DiagnosisStep, DiagnosisFormState } from '../types';
 import { MainVisualData, defaultMainVisualData } from '../data/homepageContentData';
 import { secureLog } from '../security.config';
 import { createSupabaseClient } from './adminUtils';
+import { diagnosisManager } from './supabaseClient';
 
 const diagnosisStepsData: DiagnosisStep[] = [
   {
@@ -135,26 +136,39 @@ const MainVisualAndDiagnosis: React.FC<MainVisualAndDiagnosisProps> = ({ onProce
     }
   };
 
-  const validateCurrentStep = (): boolean => {
+  // 電話番号の重複チェック（Supabaseベース）
+  const checkPhoneNumberUsage = async (phone: string): Promise<boolean> => {
+    try {
+      return await diagnosisManager.checkPhoneNumberUsage(phone);
+    } catch (error) {
+      return false;
+    }
+  };
+
+  const validateCurrentStep = async (): Promise<boolean> => {
     if (currentQuestionData && !formData[currentQuestionData.id] && currentQuestionData.type !== 'tel') { // Tel can be empty initially for validation message
-      alert('現在の質問にご回答ください。');
       return false;
     }
     if (currentQuestionData?.id === 'phoneNumber' && formData[currentQuestionData.id]) {
         const phoneNumber = formData[currentQuestionData.id].replace(/\D/g, ''); 
         if (!/^\d{10,11}$/.test(phoneNumber)) { 
-             alert('有効な電話番号（10桁または11桁）を入力してください。（例: 09012345678）');
              return false;
         }
+        
+        // 電話番号の重複チェック
+        const isUsed = await checkPhoneNumberUsage(phoneNumber);
+        if (isUsed) {
+          return false;
+        }
     } else if (currentQuestionData?.id === 'phoneNumber' && !formData[currentQuestionData.id]){
-        alert('電話番号を入力してください。');
         return false;
     }
     return true;
   };
 
-  const handleNextStep = () => {
-    if (!validateCurrentStep()) {
+  const handleNextStep = async () => {
+    const isValid = await validateCurrentStep();
+    if (!isValid) {
       return;
     }
     
@@ -175,64 +189,14 @@ const MainVisualAndDiagnosis: React.FC<MainVisualAndDiagnosisProps> = ({ onProce
   };
 
   const handleSendVerificationCode = async () => { 
-    if (!validateCurrentStep()) {
+    const isValid = await validateCurrentStep();
+    if (!isValid) {
       return;
     }
     
     if (formData.phoneNumber) {
-      try {
-        // 環境変数の確認（ViteとNodeJS両対応）
-        const apiBaseUrl = (typeof import.meta !== 'undefined' && (import.meta as any).env?.VITE_API_BASE_URL) || 
-                          process.env.API_BASE_URL || 
-                          process.env.VITE_API_BASE_URL || '';
-        
-        console.log('SMS送信: API_BASE_URL =', apiBaseUrl);
-        
-        // 本番環境（apiBaseUrlが設定されていない）ではデモモードで動作
-        if (!apiBaseUrl) {
-          console.log('デモモード: SMS送信をシミュレーション');
-          setTimeout(() => {
-            alert('デモモード: 認証コードは「1234」です');
-            onProceedToVerification(formData.phoneNumber, formData);
-          }, 500);
-          return;
-        }
-
-        // 開発環境でのAPI呼び出し
-        const response = await fetch(`${apiBaseUrl}/api/sms/send`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            phoneNumber: formData.phoneNumber
-          }),
-        });
-
-        const result = await response.json();
-
-        if (result.success) {
-          // 認証コードの表示
-          if (result.demoCode) {
-            alert(`認証コード: ${result.demoCode}`);
-          }
-          
-          // 認証ページに進む
-          onProceedToVerification(formData.phoneNumber, formData);
-        } else {
-          alert('SMS送信に失敗しました: ' + result.error);
-        }
-      } catch (error) {
-        secureLog('SMS送信エラー:', error);
-        console.log('MainVisual: エラー詳細:', error);
-        
-        // エラーが発生した場合もデモモードで続行
-        console.log('エラー発生のためデモモードで認証ページに進む');
-        setTimeout(() => {
-          alert('デモモード: 認証コードは「1234」です');
-          onProceedToVerification(formData.phoneNumber, formData);
-        }, 500);
-      }
+      // 本番環境でのみ動作 - 直接SMS認証ページに進む
+      onProceedToVerification(formData.phoneNumber, formData);
     }
   };
   

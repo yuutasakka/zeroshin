@@ -34,7 +34,7 @@ export const SECURITY_CONFIG = {
                          (typeof window !== 'undefined' && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1');
      
      if (isProduction) {
-       console.error('🚨 VITE_ENCRYPTION_KEY environment variable is missing in production!');
+       console.error('🚨 CRITICAL: VITE_ENCRYPTION_KEY environment variable is missing in production!');
        console.error('📋 Please set the following environment variables in Vercel:');
        console.error('- VITE_ENCRYPTION_KEY');
        console.error('- VITE_JWT_SECRET');
@@ -42,11 +42,11 @@ export const SECURITY_CONFIG = {
        console.error('- GEMINI_API_KEY');
        console.error('Run: npm run generate-keys to generate secure keys');
        
-       // 本番環境では致命的エラーではなく警告として扱い、フォールバック値を使用
-       console.warn('⚠️ Using fallback encryption key in production. This is NOT secure!');
+       // 本番環境では致命的エラーを発生
+       throw new Error('VITE_ENCRYPTION_KEY is required in production environment');
      }
     
-    // 開発環境では安全なフォールバック
+    // 開発環境でのみフォールバック
     const devKey = process.env.DEV_ENCRYPTION_KEY || `dev-encryption-${Date.now()}-${Math.random().toString(36).substring(2)}`;
     console.warn('⚠️ Using development encryption key. Set VITE_ENCRYPTION_KEY for production.');
     return devKey;
@@ -69,12 +69,12 @@ export const SECURITY_CONFIG = {
                         (typeof import.meta !== 'undefined' && (import.meta as any).env?.MODE === 'production') ||
                         (typeof window !== 'undefined' && window.location.hostname !== 'localhost');
     
-         if (isProduction) {
-       console.error('🚨 VITE_JWT_SECRET environment variable is missing in production!');
-       console.warn('⚠️ Using fallback JWT secret in production. This is NOT secure!');
-     }
+    if (isProduction) {
+      console.error('🚨 CRITICAL: VITE_JWT_SECRET environment variable is missing in production!');
+      throw new Error('VITE_JWT_SECRET is required in production environment');
+    }
     
-    // 開発環境では安全なフォールバック
+    // 開発環境でのみフォールバック
     const devKey = process.env.DEV_JWT_SECRET || `dev-jwt-${Date.now()}-${Math.random().toString(36).substring(2)}`;
     console.warn('⚠️ Using development JWT secret. Set VITE_JWT_SECRET for production.');
     return devKey;
@@ -97,12 +97,12 @@ export const SECURITY_CONFIG = {
                         (typeof import.meta !== 'undefined' && (import.meta as any).env?.MODE === 'production') ||
                         (typeof window !== 'undefined' && window.location.hostname !== 'localhost');
     
-         if (isProduction) {
-       console.error('🚨 VITE_SESSION_SECRET environment variable is missing in production!');
-       console.warn('⚠️ Using fallback session secret in production. This is NOT secure!');
-     }
+    if (isProduction) {
+      console.error('🚨 CRITICAL: VITE_SESSION_SECRET environment variable is missing in production!');
+      throw new Error('VITE_SESSION_SECRET is required in production environment');
+    }
     
-    // 開発環境では安全なフォールバック
+    // 開発環境でのみフォールバック
     const devKey = process.env.DEV_SESSION_SECRET || `dev-session-${Date.now()}-${Math.random().toString(36).substring(2)}`;
     console.warn('⚠️ Using development session secret. Set VITE_SESSION_SECRET for production.');
     return devKey;
@@ -380,10 +380,19 @@ export class SecureConfigManager {
   }
 }
 
-// セキュアなログ出力（機密情報をマスクして出力）
+// セキュアなログ出力（本番環境では完全無効化）
 export const secureLog = (message: string, data?: any) => {
+  // 本番環境では一切ログを出力しない
+  const isProduction = process.env.NODE_ENV === 'production' || 
+                      (typeof import.meta !== 'undefined' && (import.meta as any).env?.MODE === 'production') ||
+                      (typeof window !== 'undefined' && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1');
+  
+  if (isProduction) {
+    return; // 本番環境では何も出力しない
+  }
+
   if (!SECURITY_CONFIG.ENABLE_DEBUG_LOGS) {
-    return; // 本番環境ではログを出力しない
+    return; // 開発環境でもデバッグが無効の場合は出力しない
   }
 
   // 機密情報をマスクするキーワード

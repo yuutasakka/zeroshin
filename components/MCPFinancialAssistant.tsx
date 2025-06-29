@@ -261,60 +261,28 @@ ${expertContact?.description || 'MoneyTicketの認定ファイナンシャルプ
     setQuestionCount(prev => prev + 1);
 
     try {
-      // デモ用のAI応答（実際のMCP APIが利用できない場合）
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      
-      const demoResponses = [
-        `💰 財務分析結果
+      // 本番環境でのMCP AI API呼び出し
+      const response = await fetch('/api/mcp/chat', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          message: currentQuestion,
+          context: {
+            diagnosisData: diagnosisData,
+            questionCount: questionCount,
+            maxQuestions: 3
+          }
+        }),
+      });
 
-ご質問ありがとうございます！
-お客様の財務状況を分析いたします✨
+      if (!response.ok) {
+        throw new Error(`AI API エラー: ${response.status}`);
+      }
 
-📊 分析結果
-• 現在の財務健康度: 良好 👍
-• 推奨投資額: 月額3-5万円
-• リスク許容度: 中程度
-
-🎯 具体的なアドバイス
-1. 緊急資金: 生活費の3-6ヶ月分を確保
-2. 投資配分: 株式60%、債券40%のバランス型
-3. 税制優遇: つみたてNISAの活用を推奨
-
-残り${2 - questionCount}回のAI相談が可能です 💬`,
-
-        `📈 投資シミュレーション結果
-
-お客様の投資プランをシミュレーションいたします！
-
-💡 投資戦略
-• 長期投資: 15-20年の運用期間を推奨
-• 分散投資: 国内外の株式・債券に分散
-• 積立投資: 毎月定額での積立が効果的
-
-🔮 将来予測
-• 10年後: 約1,200万円（年利5%想定）
-• 20年後: 約2,400万円（複利効果）
-
-残り${2 - questionCount}回のAI相談が可能です 💬`,
-
-        `🎯 ポートフォリオ最適化
-
-お客様の投資ポートフォリオを分析いたします！
-
-⚖️ リスク・リターン分析
-• 期待リターン: 年率5-7%
-• リスク水準: 中程度
-• シャープレシオ: 良好
-
-🔄 リバランス提案
-• 株式比率: 60% → 65%（成長重視）
-• 債券比率: 40% → 35%（安定性確保）
-
-これでAI相談3回が終了しました！
-さらに詳しい相談は専門家にお電話ください 📞✨`
-      ];
-
-      const responseContent = demoResponses[Math.min(questionCount - 1, demoResponses.length - 1)];
+      const data = await response.json();
+      const responseContent = data.response || 'AI応答の取得に失敗しました。';
       
       const assistantMessage: Message = {
         id: (Date.now() + 1).toString(),
@@ -326,7 +294,6 @@ ${expertContact?.description || 'MoneyTicketの認定ファイナンシャルプ
 
       setMessages(prev => [...prev, assistantMessage]);
     } catch (error) {
-      console.error('Error:', error);
       const errorMessage: Message = {
         id: (Date.now() + 1).toString(),
         role: 'assistant',
