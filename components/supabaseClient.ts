@@ -2,18 +2,35 @@ import { createClient } from '@supabase/supabase-js';
 
 // Supabase設定 - 複数の環境変数形式に対応
 const getEnvVar = (viteVar: string, reactVar: string, fallback: string) => {
-  // Vite環境変数の取得
+  console.log('🌍 環境変数取得開始', { viteVar, reactVar, fallback });
+  
+  // Vite環境変数の取得（windowオブジェクト経由）
   if (typeof window !== 'undefined') {
     // ブラウザ環境
     const viteEnv = (window as any).__VITE_ENV__ || {};
-    if (viteEnv[viteVar]) return viteEnv[viteVar];
+    if (viteEnv[viteVar]) {
+      console.log('✅ Vite環境変数から取得', { viteVar, value: viteEnv[viteVar].substring(0, 20) + '...' });
+      return viteEnv[viteVar];
+    }
+    
+    // window.importMetaEnvからの取得を試行
+    const windowImportMeta = (window as any).importMetaEnv || {};
+    if (windowImportMeta[viteVar]) {
+      console.log('✅ window.importMetaEnvから取得', { viteVar, value: windowImportMeta[viteVar].substring(0, 20) + '...' });
+      return windowImportMeta[viteVar];
+    }
   }
   
   // process.env からの取得
   if (typeof process !== 'undefined' && process.env) {
-    return process.env[viteVar] || process.env[reactVar] || fallback;
+    const processValue = process.env[viteVar] || process.env[reactVar];
+    if (processValue) {
+      console.log('✅ process.envから取得', { var: viteVar || reactVar, value: processValue.substring(0, 20) + '...' });
+      return processValue;
+    }
   }
   
+  console.log('⚠️ フォールバック値使用', { fallback });
   return fallback;
 };
 
@@ -28,6 +45,12 @@ const supabaseAnonKey = getEnvVar(
   'REACT_APP_SUPABASE_ANON_KEY',
   'your-anon-key'
 );
+
+console.log('🚀 Supabaseクライアント初期化', { 
+  url: supabaseUrl, 
+  keyPrefix: supabaseAnonKey.substring(0, 10) + '...',
+  isDemo: supabaseUrl === 'https://your-project.supabase.co' || supabaseAnonKey === 'your-anon-key'
+});
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
@@ -78,13 +101,15 @@ export class SupabaseAdminAuth {
   // 管理者認証情報を取得
   static async getAdminCredentials(username: string): Promise<AdminCredentials | null> {
     try {
+      console.log('🔍 getAdminCredentials開始', { username, supabaseUrl, supabaseAnonKey: supabaseAnonKey.substring(0, 10) + '...' });
+      
       // デモモード（Supabaseが設定されていない場合）
       if (supabaseUrl === 'https://your-project.supabase.co' || supabaseAnonKey === 'your-anon-key') {
-        console.log('デモモード: Supabaseが設定されていないため、デモ認証情報を使用します');
+        console.log('🎭 デモモード: Supabaseが設定されていないため、デモ認証情報を使用します');
         
         // デモ用の管理者認証情報
         if (username === 'admin') {
-          return {
+          const demoCredentials = {
             id: 1,
             username: 'admin',
             password_hash: 'a665a45920422f9d417e4867efdc4fb8a04a1f3fff1fa07e998e86f7f7a27ae3', // MoneyTicket2024!
@@ -99,10 +124,14 @@ export class SupabaseAdminAuth {
             password_changed_at: new Date().toISOString(),
             requires_password_change: false
           };
+          console.log('✅ デモ認証情報返却', demoCredentials);
+          return demoCredentials;
         }
+        console.log('❌ デモモード: 該当ユーザーなし');
         return null;
       }
 
+      console.log('🗃️ Supabaseクエリ実行中...');
       const { data, error } = await supabase
         .from('admin_credentials')
         .select('*')
@@ -111,13 +140,14 @@ export class SupabaseAdminAuth {
         .single();
 
       if (error) {
-        console.error('管理者認証情報取得エラー:', error);
+        console.error('❌ 管理者認証情報取得エラー:', error);
         return null;
       }
 
+      console.log('✅ Supabase認証情報取得成功', { username: data?.username, isActive: data?.is_active });
       return data;
     } catch (error) {
-      console.error('Supabase接続エラー:', error);
+      console.error('💥 Supabase接続エラー:', error);
       return null;
     }
   }
@@ -265,18 +295,46 @@ export class SupabaseAdminAuth {
     }
   }
 
-  // パスワードハッシュ化
+  // パスワードハッシュ化（SHA-256）
   static async hashPassword(password: string): Promise<string> {
+    console.log('🔐 hashPassword開始', { passwordLength: password.length });
+    
     const encoder = new TextEncoder();
     const data = encoder.encode(password);
     const hashBuffer = await crypto.subtle.digest('SHA-256', data);
     const hashArray = Array.from(new Uint8Array(hashBuffer));
-    return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+    const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+    
+    console.log('🔐 hashPassword完了', { 
+      resultLength: hashHex.length,
+      resultPrefix: hashHex.substring(0, 10) + '...'
+    });
+    
+    return hashHex;
   }
 
   // パスワード検証
   static async verifyPassword(password: string, hash: string): Promise<boolean> {
-    const passwordHash = await this.hashPassword(password);
-    return passwordHash === hash;
+    try {
+      console.log('🔑 verifyPassword開始', { 
+        passwordLength: password.length, 
+        hashLength: hash.length,
+        hashPrefix: hash.substring(0, 10) + '...'
+      });
+      
+      const hashedInput = await this.hashPassword(password);
+      const isValid = hashedInput === hash;
+      
+      console.log('🔑 パスワード検証結果', { 
+        inputHash: hashedInput.substring(0, 10) + '...',
+        expectedHash: hash.substring(0, 10) + '...',
+        isValid 
+      });
+      
+      return isValid;
+    } catch (error) {
+      console.error('💥 パスワード検証エラー:', error);
+      return false;
+    }
   }
 } 

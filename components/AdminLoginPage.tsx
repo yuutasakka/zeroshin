@@ -88,14 +88,18 @@ const AdminLoginPage: React.FC<AdminLoginPageProps> = ({ onLogin, onNavigateHome
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     
+    console.log('🔐 ログイン処理開始', { username, password: password ? '***' : 'empty' });
+    
     if (isLocked) {
       const remainingTime = lockoutTime ? Math.ceil((lockoutTime - Date.now()) / 60000) : 0;
       setError(`アカウントがロックされています。あと${remainingTime}分お待ちください。`);
+      console.log('🚫 アカウントロック中', { remainingTime });
       return;
     }
 
     if (!username.trim() || !password.trim()) {
       setError('ユーザー名とパスワードを入力してください。');
+      console.log('❌ 入力検証失敗', { username: username.trim(), password: password.trim() });
       return;
     }
 
@@ -103,6 +107,7 @@ const AdminLoginPage: React.FC<AdminLoginPageProps> = ({ onLogin, onNavigateHome
     setError('');
 
     try {
+      console.log('📊 監査ログ記録開始');
       // 監査ログに記録
       await SupabaseAdminAuth.recordAuditLog(
         'admin_login_attempt',
@@ -112,10 +117,19 @@ const AdminLoginPage: React.FC<AdminLoginPageProps> = ({ onLogin, onNavigateHome
         { user_agent: navigator.userAgent }
       );
 
+      console.log('🔍 管理者認証情報取得開始', { username });
       // Supabaseから管理者認証情報を取得
       const adminCredentials = await SupabaseAdminAuth.getAdminCredentials(username);
       
+      console.log('📋 認証情報取得結果', { 
+        found: !!adminCredentials, 
+        username: adminCredentials?.username,
+        isActive: adminCredentials?.is_active,
+        failedAttempts: adminCredentials?.failed_attempts
+      });
+      
       if (!adminCredentials) {
+        console.log('❌ 認証情報なし - 失敗記録開始');
         await recordFailedAttempt('ユーザー名が見つかりません');
         setLoading(false);
         return;
@@ -127,19 +141,25 @@ const AdminLoginPage: React.FC<AdminLoginPageProps> = ({ onLogin, onNavigateHome
         if (Date.now() < lockedUntil) {
           const remainingTime = Math.ceil((lockedUntil - Date.now()) / 60000);
           setError(`アカウントがロックされています。あと${remainingTime}分お待ちください。`);
+          console.log('🚫 データベースアカウントロック中', { lockedUntil, remainingTime });
           setLoading(false);
           return;
         }
       }
 
+      console.log('🔑 パスワード検証開始');
       // パスワード検証
       const isPasswordValid = await SupabaseAdminAuth.verifyPassword(password, adminCredentials.password_hash);
+      console.log('🔑 パスワード検証結果', { isValid: isPasswordValid });
+      
       if (!isPasswordValid) {
+        console.log('❌ パスワード不一致 - 失敗記録開始');
         await recordFailedAttempt('パスワードが一致しません');
         setLoading(false);
         return;
       }
 
+      console.log('✅ ログイン成功 - 後処理開始');
       // ログイン成功
       await SupabaseAdminAuth.recordLoginAttempt(
         username,
@@ -167,16 +187,19 @@ const AdminLoginPage: React.FC<AdminLoginPageProps> = ({ onLogin, onNavigateHome
         authenticated: true
       };
       
+      console.log('💾 セッション保存', sessionData);
       localStorage.setItem('admin_session', JSON.stringify(sessionData));
       localStorage.removeItem('admin_lockout'); // ロックアウト情報をクリア
       
       setLoginAttempts(0);
       setIsLocked(false);
       setLockoutTime(null);
+      
+      console.log('🚀 onLogin コールバック実行');
       onLogin();
 
     } catch (error) {
-      console.error('管理者ログインエラー:', error);
+      console.error('💥 管理者ログインエラー:', error);
       await SupabaseAdminAuth.recordAuditLog(
         'admin_login_error',
         `管理者ログインエラー: ${error}`,
@@ -187,6 +210,7 @@ const AdminLoginPage: React.FC<AdminLoginPageProps> = ({ onLogin, onNavigateHome
       setError('ログイン処理中にエラーが発生しました。しばらく待ってから再試行してください。');
     } finally {
       setLoading(false);
+      console.log('🏁 ログイン処理終了');
     }
   };
 

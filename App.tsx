@@ -10,6 +10,7 @@ import PhoneVerificationPage from './components/PhoneVerificationPage';
 import DiagnosisResultsPage from './components/DiagnosisResultsPage';
 import AdminLoginPage from './components/AdminLoginPage';
 import AdminDashboardPage from './components/AdminDashboardPage';
+import AdminLoginDebug from './components/AdminLoginDebug';
 import { ColorThemeProvider } from './components/ColorThemeContext';
 import { DiagnosisFormState, PageView, UserSessionData } from './types';
 import { initializeSampleData } from './data/sampleData';
@@ -105,6 +106,8 @@ const App: React.FC = () => {
         setCurrentPage('adminDashboard');
       } else if (window.location.hash === '#login') {
         setCurrentPage('login');
+      } else if (window.location.hash === '#debug') {
+        setCurrentPage('debug');
       }
     };
 
@@ -326,6 +329,15 @@ const App: React.FC = () => {
 
 
   console.log('App render - currentPage:', currentPage, 'isAdminLoggedIn:', isAdminLoggedIn);
+
+  if (currentPage === 'debug') {
+    console.log('Rendering AdminLoginDebug');
+    return (
+      <ColorThemeProvider>
+        <AdminLoginDebug />
+      </ColorThemeProvider>
+    );
+  }
 
   if (currentPage === 'login') {
     console.log('Rendering AdminLoginPage');

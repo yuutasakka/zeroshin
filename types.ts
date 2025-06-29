@@ -1,5 +1,3 @@
-
-
 export interface Testimonial {
   id: string; // Unique identifier
   nameAndRole: string; // e.g., "田中さん（30代・会社員）"
@@ -58,7 +56,7 @@ export interface RecommendedProductWithReason extends FinancialProduct {
   recommendationReasons: string[];
 }
 
-export type PageView = 'diagnosis' | 'verification' | 'results' | 'login' | 'adminDashboard';
+export type PageView = 'diagnosis' | 'verification' | 'results' | 'login' | 'adminDashboard' | 'debug';
 
 export interface UserSessionData {
   id: string; // Unique ID for the session
