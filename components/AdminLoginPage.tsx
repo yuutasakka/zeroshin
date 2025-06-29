@@ -1,19 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { SecureConfigManager, secureLog, SECURITY_CONFIG } from '../security.config';
+import { SupabaseAdminAuth, AdminCredentials } from './supabaseClient';
 
 interface AdminLoginPageProps {
   onLogin: () => void;
   onNavigateHome: () => void;
-}
-
-interface AdminCredentials {
-  username: string;
-  password_hash: string;
-  phone_number: string;
-  backup_code: string;
-  last_updated: string;
-  failed_attempts: number;
-  locked_until?: string;
 }
 
 const AdminLoginPage: React.FC<AdminLoginPageProps> = ({ onLogin, onNavigateHome }) => {
@@ -25,6 +15,10 @@ const AdminLoginPage: React.FC<AdminLoginPageProps> = ({ onLogin, onNavigateHome
   const [loginAttempts, setLoginAttempts] = useState(0);
   const [isLocked, setIsLocked] = useState(false);
   const [lockoutTime, setLockoutTime] = useState<number | null>(null);
+
+  // セキュリティ設定
+  const MAX_LOGIN_ATTEMPTS = 5;
+  const LOCKOUT_DURATION = 15 * 60 * 1000; // 15分
 
   // ロックアウト状態チェック
   useEffect(() => {
@@ -53,18 +47,9 @@ const AdminLoginPage: React.FC<AdminLoginPageProps> = ({ onLogin, onNavigateHome
     return () => clearInterval(interval);
   }, []);
 
-  // パスワードハッシュ化関数（簡易版、本番ではより強力な実装を推奨）
-  const hashPassword = async (password: string): Promise<string> => {
-    const encoder = new TextEncoder();
-    const data = encoder.encode(password);
-    const hashBuffer = await crypto.subtle.digest('SHA-256', data);
-    const hashArray = Array.from(new Uint8Array(hashBuffer));
-    return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
-  };
-
   // ロックアウト設定
   const setLockout = (attempts: number) => {
-    const lockoutUntil = Date.now() + SECURITY_CONFIG.LOCKOUT_DURATION;
+    const lockoutUntil = Date.now() + LOCKOUT_DURATION;
     localStorage.setItem('admin_lockout', JSON.stringify({
       until: lockoutUntil,
       attempts: attempts
@@ -74,15 +59,29 @@ const AdminLoginPage: React.FC<AdminLoginPageProps> = ({ onLogin, onNavigateHome
   };
 
   // ログイン試行回数の記録
-  const recordFailedAttempt = () => {
+  const recordFailedAttempt = async (reason: string) => {
     const newAttempts = loginAttempts + 1;
     setLoginAttempts(newAttempts);
     
-    if (newAttempts >= SECURITY_CONFIG.MAX_LOGIN_ATTEMPTS) {
+    // Supabaseにログイン試行を記録
+    await SupabaseAdminAuth.recordLoginAttempt(
+      username,
+      false,
+      reason,
+      undefined, // IP address (ブラウザからは取得困難)
+      navigator.userAgent
+    );
+    
+    if (newAttempts >= MAX_LOGIN_ATTEMPTS) {
       setLockout(newAttempts);
-      setError(`ログイン試行回数が上限に達しました。${SECURITY_CONFIG.LOCKOUT_DURATION / 60000}分後に再試行してください。`);
+      setError(`ログイン試行回数が上限に達しました。${LOCKOUT_DURATION / 60000}分後に再試行してください。`);
+      
+      // Supabaseに失敗回数を更新
+      const lockUntil = new Date(Date.now() + LOCKOUT_DURATION);
+      await SupabaseAdminAuth.updateFailedAttempts(username, newAttempts, lockUntil);
     } else {
-      setError(`ログインに失敗しました。あと${SECURITY_CONFIG.MAX_LOGIN_ATTEMPTS - newAttempts}回試行できます。`);
+      setError(`ログインに失敗しました。あと${MAX_LOGIN_ATTEMPTS - newAttempts}回試行できます。`);
+      await SupabaseAdminAuth.updateFailedAttempts(username, newAttempts);
     }
   };
 
@@ -104,13 +103,20 @@ const AdminLoginPage: React.FC<AdminLoginPageProps> = ({ onLogin, onNavigateHome
     setError('');
 
     try {
-      secureLog('管理者ログイン試行開始', { username });
+      // 監査ログに記録
+      await SupabaseAdminAuth.recordAuditLog(
+        'admin_login_attempt',
+        `管理者ログイン試行: ${username}`,
+        username,
+        'info',
+        { user_agent: navigator.userAgent }
+      );
 
       // Supabaseから管理者認証情報を取得
-      const adminCredentials: AdminCredentials = await SecureConfigManager.getAdminCredentials();
+      const adminCredentials = await SupabaseAdminAuth.getAdminCredentials(username);
       
       if (!adminCredentials) {
-        setError('管理者認証情報が設定されていません。システム管理者にお問い合わせください。');
+        await recordFailedAttempt('ユーザー名が見つかりません');
         setLoading(false);
         return;
       }
@@ -126,31 +132,38 @@ const AdminLoginPage: React.FC<AdminLoginPageProps> = ({ onLogin, onNavigateHome
         }
       }
 
-      // ユーザー名チェック
-      if (username.trim() !== adminCredentials.username) {
-        recordFailedAttempt();
-        secureLog('管理者ログイン失敗: ユーザー名不一致', { providedUsername: username });
-        setLoading(false);
-        return;
-      }
-
-      // パスワードハッシュの検証
-      const providedPasswordHash = await hashPassword(password);
-      if (providedPasswordHash !== adminCredentials.password_hash) {
-        recordFailedAttempt();
-        secureLog('管理者ログイン失敗: パスワード不一致');
+      // パスワード検証
+      const isPasswordValid = await SupabaseAdminAuth.verifyPassword(password, adminCredentials.password_hash);
+      if (!isPasswordValid) {
+        await recordFailedAttempt('パスワードが一致しません');
         setLoading(false);
         return;
       }
 
       // ログイン成功
-      secureLog('管理者ログイン成功', { username });
+      await SupabaseAdminAuth.recordLoginAttempt(
+        username,
+        true,
+        undefined,
+        undefined,
+        navigator.userAgent
+      );
+
+      await SupabaseAdminAuth.updateSuccessfulLogin(username);
+
+      await SupabaseAdminAuth.recordAuditLog(
+        'admin_login_success',
+        `管理者ログイン成功: ${username}`,
+        username,
+        'info',
+        { user_agent: navigator.userAgent }
+      );
       
       // セッション情報を保存
       const sessionData = {
         username: adminCredentials.username,
         loginTime: new Date().toISOString(),
-        expiryTime: new Date(Date.now() + SECURITY_CONFIG.SESSION_TIMEOUT).toISOString(),
+        expiryTime: new Date(Date.now() + 30 * 60 * 1000).toISOString(), // 30分
         authenticated: true
       };
       
@@ -163,7 +176,14 @@ const AdminLoginPage: React.FC<AdminLoginPageProps> = ({ onLogin, onNavigateHome
       onLogin();
 
     } catch (error) {
-      secureLog('管理者ログインエラー', error);
+      console.error('管理者ログインエラー:', error);
+      await SupabaseAdminAuth.recordAuditLog(
+        'admin_login_error',
+        `管理者ログインエラー: ${error}`,
+        username,
+        'error',
+        { error: String(error), user_agent: navigator.userAgent }
+      );
       setError('ログイン処理中にエラーが発生しました。しばらく待ってから再試行してください。');
     } finally {
       setLoading(false);
@@ -192,6 +212,9 @@ const AdminLoginPage: React.FC<AdminLoginPageProps> = ({ onLogin, onNavigateHome
           </div>
           <h2 className="text-3xl font-bold text-gray-900">管理者ログイン</h2>
           <p className="mt-2 text-sm text-gray-600">MoneyTicket 管理画面</p>
+          <div className="mt-2 text-xs text-gray-500">
+            デフォルト認証情報: admin / MoneyTicket2024!
+          </div>
         </div>
 
         {/* ログインフォーム */}
@@ -199,14 +222,12 @@ const AdminLoginPage: React.FC<AdminLoginPageProps> = ({ onLogin, onNavigateHome
           {isLocked && (
             <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
               <div className="flex items-center">
-                <svg className="w-5 h-5 text-red-400 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                <svg className="h-5 w-5 text-red-400 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M10 1C5.03 1 1 5.03 1 10s4.03 9 9 9 9-4.03 9-9-4.03-9-9-9zM9 7v4h2V7H9zm0 6v2h2v-2H9z" clipRule="evenodd" />
                 </svg>
                 <div>
-                  <p className="text-sm text-red-800">
-                    アカウントがロックされています
-                  </p>
-                  <p className="text-xs text-red-600 mt-1">
+                  <h3 className="text-sm font-medium text-red-800">アカウントロック中</h3>
+                  <p className="text-sm text-red-700 mt-1">
                     残り時間: {getRemainingLockoutTime()}
                   </p>
                 </div>
@@ -214,7 +235,7 @@ const AdminLoginPage: React.FC<AdminLoginPageProps> = ({ onLogin, onNavigateHome
             </div>
           )}
 
-          <form className="space-y-6" onSubmit={handleLogin}>
+          <form onSubmit={handleLogin} className="space-y-6">
             <div>
               <label htmlFor="username" className="block text-sm font-medium text-gray-700 mb-2">
                 ユーザー名
@@ -224,10 +245,9 @@ const AdminLoginPage: React.FC<AdminLoginPageProps> = ({ onLogin, onNavigateHome
                 type="text"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
-                required
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                placeholder="管理者ユーザー名を入力"
                 disabled={loading || isLocked}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-100 disabled:cursor-not-allowed"
-                placeholder="管理者ユーザー名"
                 autoComplete="username"
               />
             </div>
@@ -239,27 +259,26 @@ const AdminLoginPage: React.FC<AdminLoginPageProps> = ({ onLogin, onNavigateHome
               <div className="relative">
                 <input
                   id="password"
-                  type={showPassword ? 'text' : 'password'}
+                  type={showPassword ? "text" : "password"}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  required
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent pr-12"
+                  placeholder="パスワードを入力"
                   disabled={loading || isLocked}
-                  className="w-full px-3 py-2 pr-10 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-100 disabled:cursor-not-allowed"
-                  placeholder="管理者パスワード"
                   autoComplete="current-password"
                 />
                 <button
                   type="button"
-                  className="absolute inset-y-0 right-0 pr-3 flex items-center"
                   onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
                   disabled={loading || isLocked}
                 >
                   {showPassword ? (
-                    <svg className="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.878 9.878L3 3m6.878 6.878L21 21" />
                     </svg>
                   ) : (
-                    <svg className="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
                     </svg>
@@ -269,57 +288,50 @@ const AdminLoginPage: React.FC<AdminLoginPageProps> = ({ onLogin, onNavigateHome
             </div>
 
             {error && (
-              <div className="p-3 bg-red-50 border border-red-200 rounded-md">
-                <p className="text-sm text-red-800">{error}</p>
+              <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
+                <div className="flex items-center">
+                  <svg className="h-5 w-5 text-red-400 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                  </svg>
+                  <span className="text-sm text-red-700">{error}</span>
+                </div>
               </div>
             )}
 
-            {loginAttempts > 0 && !isLocked && (
-              <div className="p-3 bg-yellow-50 border border-yellow-200 rounded-md">
-                <p className="text-sm text-yellow-800">
-                  ログイン試行回数: {loginAttempts}/{SECURITY_CONFIG.MAX_LOGIN_ATTEMPTS}
-                </p>
-              </div>
-            )}
-
-            <div className="flex space-x-4">
-              <button
-                type="submit"
-                disabled={loading || isLocked}
-                className="flex-1 flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
-              >
-                {loading ? (
-                  <div className="flex items-center">
-                    <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                    </svg>
-                    認証中...
-                  </div>
-                ) : (
-                  'ログイン'
-                )}
-              </button>
-
-              <button
-                type="button"
-                onClick={onNavigateHome}
-                disabled={loading}
-                className="flex-1 py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:bg-gray-100 disabled:cursor-not-allowed transition-colors"
-              >
-                ホームに戻る
-              </button>
-            </div>
+            <button
+              type="submit"
+              disabled={loading || isLocked}
+              className="w-full py-3 px-4 bg-gradient-to-r from-blue-500 to-purple-600 text-white font-medium rounded-lg hover:from-blue-600 hover:to-purple-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
+            >
+              {loading ? (
+                <div className="flex items-center justify-center">
+                  <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                  ログイン中...
+                </div>
+              ) : (
+                'ログイン'
+              )}
+            </button>
           </form>
 
-          {/* セキュリティ情報 */}
-          <div className="mt-6 pt-6 border-t border-gray-200">
-            <div className="text-xs text-gray-500 space-y-1">
-              <p>🔒 このページはSSL暗号化で保護されています</p>
-              <p>🛡️ ログイン試行は{SECURITY_CONFIG.MAX_LOGIN_ATTEMPTS}回まで制限されています</p>
-              <p>⏱️ セッションは{SECURITY_CONFIG.SESSION_TIMEOUT / 60000}分で自動タイムアウトします</p>
-            </div>
+          <div className="mt-6 text-center">
+            <button
+              onClick={onNavigateHome}
+              className="text-sm text-gray-600 hover:text-gray-800 underline"
+              disabled={loading}
+            >
+              ホームページに戻る
+            </button>
           </div>
+        </div>
+
+        {/* セキュリティ情報 */}
+        <div className="text-center text-xs text-gray-500">
+          <p>このページは暗号化された接続で保護されています</p>
+          <p className="mt-1">最大試行回数: {MAX_LOGIN_ATTEMPTS}回 | ロックアウト時間: {LOCKOUT_DURATION / 60000}分</p>
         </div>
       </div>
     </div>
