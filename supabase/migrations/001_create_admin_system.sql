@@ -59,7 +59,7 @@ INSERT INTO admin_credentials (
     updated_at
 ) VALUES (
     'admin',
-    'a665a45920422f9d417e4867efdc4fb8a04a1f3fff1fa07e998e86f7f7a27ae3', -- SHA-256 hash of 'MoneyTicket2024!'
+    '8cb3b12639ecacf3fe86a6cd67b1e1b2a277fc26b4ecd42e381a1327bb68390e', -- SHA-256 hash of 'G3MIZAu74IvkH7NK'
     '+819012345678',
     'MT-BACKUP-' || extract(epoch from now())::text,
     NOW(),

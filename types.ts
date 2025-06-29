@@ -56,7 +56,7 @@ export interface RecommendedProductWithReason extends FinancialProduct {
   recommendationReasons: string[];
 }
 
-export type PageView = 'diagnosis' | 'verification' | 'results' | 'login' | 'adminDashboard' | 'debug';
+export type PageView = 'diagnosis' | 'verification' | 'results' | 'login' | 'adminDashboard';
 
 export interface UserSessionData {
   id: string; // Unique ID for the session
