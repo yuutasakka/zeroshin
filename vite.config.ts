@@ -54,6 +54,7 @@ export default defineConfig(({ mode }) => {
       'process.env.NODE_ENV': JSON.stringify(mode),
       'process.env.DEV': JSON.stringify(isDev),
       'process.env.API_BASE_URL': JSON.stringify(isDev ? 'http://localhost:8080' : ''),
+      'import.meta.hot': JSON.stringify(isDev ? true : undefined),
       '__DEV__': JSON.stringify(isDev),
       '__PROD__': JSON.stringify(!isDev)
     },
