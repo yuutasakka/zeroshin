@@ -24,9 +24,15 @@ export default defineConfig(({ mode }) => {
       cors: true,
       ...(isDev ? {} : { ws: false })
     },
+    preview: {
+      port: 4173,
+      host: 'localhost',
+      strictPort: false
+    },
     build: {
       outDir: 'dist',
-      sourcemap: isDev,
+      sourcemap: false,
+      minify: 'esbuild',
       rollupOptions: {
         output: {
           manualChunks: {
@@ -38,15 +44,18 @@ export default defineConfig(({ mode }) => {
     },
     esbuild: {
       jsxFactory: 'React.createElement',
-      jsxFragment: 'React.Fragment'
+      jsxFragment: 'React.Fragment',
+      drop: isDev ? [] : ['console', 'debugger']
     },
     define: {
       'process.env.API_KEY': JSON.stringify(env.GEMINI_API_KEY),
       'process.env.GEMINI_API_KEY': JSON.stringify(env.GEMINI_API_KEY),
-      'process.env.WS_ENDPOINT': 'false',
+      'process.env.WS_ENDPOINT': JSON.stringify(false),
       'process.env.NODE_ENV': JSON.stringify(mode),
       'process.env.DEV': JSON.stringify(isDev),
-      'process.env.API_BASE_URL': JSON.stringify(isDev ? 'http://localhost:8080' : '')
+      'process.env.API_BASE_URL': JSON.stringify(isDev ? 'http://localhost:8080' : ''),
+      '__DEV__': JSON.stringify(isDev),
+      '__PROD__': JSON.stringify(!isDev)
     },
     resolve: {
       alias: {
@@ -54,8 +63,8 @@ export default defineConfig(({ mode }) => {
       }
     },
     optimizeDeps: {
-      exclude: ['plasmo', 'parcel', 'ws', 'websocket']
+      exclude: ['plasmo', 'parcel', 'ws', 'websocket', 'parcel-runtime']
     },
-    logLevel: 'warn'
+    logLevel: isDev ? 'info' : 'warn'
   };
 });

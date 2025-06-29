@@ -1,8 +1,23 @@
-
-
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App';
+
+// 本番環境でWebSocket接続を無効化
+if (process.env.NODE_ENV === 'production') {
+  // WebSocketコンストラクタを無効化
+  if (typeof window !== 'undefined') {
+    const originalWebSocket = window.WebSocket;
+    window.WebSocket = class extends originalWebSocket {
+      constructor(url: string | URL, protocols?: string | string[]) {
+        // localhost:1815への接続を阻止
+        if (typeof url === 'string' && url.includes('localhost:1815')) {
+          throw new Error('WebSocket connection disabled in production');
+        }
+        super(url, protocols);
+      }
+    };
+  }
+}
 
 const rootElement = document.getElementById('root');
 if (!rootElement) {
