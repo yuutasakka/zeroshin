@@ -515,6 +515,56 @@
             font-weight: 400;
         }
 
+        /* ✨ Sparkle & Heart アニメーション */
+        .sparkle {
+            position: absolute;
+            width: 4px;
+            height: 4px;
+            background: var(--accent-gold);
+            border-radius: 50%;
+            animation: sparkle-twinkle 2s infinite ease-in-out;
+            opacity: 0;
+        }
+
+        @keyframes sparkle-twinkle {
+            0%, 100% { opacity: 0; transform: scale(0); }
+            50% { opacity: 1; transform: scale(1); }
+        }
+
+        .heart {
+            position: absolute;
+            font-size: 20px;
+            opacity: 0.7;
+            animation: heart-float 8s infinite linear;
+            pointer-events: none;
+            user-select: none;
+        }
+
+        .heart-item {
+            position: absolute;
+            animation: heart-float 8s infinite linear;
+            pointer-events: none;
+            user-select: none;
+            z-index: 0;
+        }
+
+        @keyframes heart-float {
+            0% {
+                transform: translateY(100vh) rotate(0deg);
+                opacity: 0;
+            }
+            10% {
+                opacity: 0.7;
+            }
+            90% {
+                opacity: 0.7;
+            }
+            100% {
+                transform: translateY(-100px) rotate(360deg);
+                opacity: 0;
+            }
+        }
+
         /* ♿ アクセシビリティ */
         @media (prefers-reduced-motion: reduce) {
             *, *::before, *::after {
