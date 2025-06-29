@@ -2,10 +2,10 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { DiagnosisFormState, FinancialProduct, Company, RecommendedProductWithReason } from '../types';
-import FloatingHeartsBackground from './FloatingHeartsBackground';
 import { assetProjectionData, AgeGroup, InvestmentAmountKey } from '../data/assetProjectionData';
-import { allFinancialProducts as defaultFinancialProducts } from '../data/financialProductsData';
+import { createSupabaseClient } from './adminUtils';
 import { secureLog } from '../security.config';
+import { allFinancialProducts as defaultFinancialProducts } from '../data/financialProductsData';
 import { MCPFinancialAssistant } from './MCPFinancialAssistant';
 
 // セキュリティ関数: URLの安全性を確認
@@ -45,6 +45,22 @@ const sanitizeText = (text: string): string => {
     .trim();
 }; 
 
+// ファイナンシャルプランナーの型定義
+interface FinancialPlanner {
+  id: number;
+  name: string;
+  title: string;
+  experience_years: number;
+  specialties: string[];
+  profile_image_url: string;
+  bio: string;
+  phone_number: string;
+  email?: string;
+  certifications: string[];
+  is_active: boolean;
+  display_order: number;
+}
+
 interface DiagnosisResultsPageProps {
   diagnosisData: DiagnosisFormState | null;
   onReturnToStart: () => void;
@@ -57,6 +73,7 @@ const DiagnosisResultsPage: React.FC<DiagnosisResultsPageProps> = ({ diagnosisDa
   const [adviceError, setAdviceError] = useState<string | null>(null);
   const [currentFinancialProducts, setCurrentFinancialProducts] = useState<FinancialProduct[]>(defaultFinancialProducts);
   const [recommendedProducts, setRecommendedProducts] = useState<RecommendedProductWithReason[]>([]);
+  const [financialPlanners, setFinancialPlanners] = useState<FinancialPlanner[]>([]);
   
   const getProjectedAmount = (): number => {
     if (!diagnosisData || !diagnosisData.age || !diagnosisData.amount) {
@@ -92,6 +109,42 @@ const DiagnosisResultsPage: React.FC<DiagnosisResultsPageProps> = ({ diagnosisDa
         } else { setCurrentFinancialProducts(defaultFinancialProducts); }
       } catch (e) { setCurrentFinancialProducts(defaultFinancialProducts); }
     } else { setCurrentFinancialProducts(defaultFinancialProducts); }
+  }, []);
+
+  useEffect(() => {
+    const loadFinancialPlanners = async () => {
+      try {
+        const supabaseConfig = createSupabaseClient();
+        
+        // Supabase設定が無効な場合はデフォルト値を使用
+        if (!supabaseConfig.url || !supabaseConfig.key || supabaseConfig.url.includes('your-project')) {
+          setFinancialPlanners([]);
+          return;
+        }
+
+        const response = await fetch(`${supabaseConfig.url}/rest/v1/financial_planners?is_active=eq.true&order=display_order.asc&limit=4`, {
+          headers: {
+            'Authorization': `Bearer ${supabaseConfig.key}`,
+            'apikey': supabaseConfig.key,
+            'Content-Type': 'application/json'
+          }
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          setFinancialPlanners(data);
+          secureLog('Supabaseからファイナンシャルプランナーを読み込み:', data.length);
+        } else {
+          secureLog('ファイナンシャルプランナーの読み込みに失敗');
+          setFinancialPlanners([]);
+        }
+      } catch (error) {
+        secureLog('ファイナンシャルプランナーの読み込みエラー:', error);
+        setFinancialPlanners([]);
+      }
+    };
+
+    loadFinancialPlanners();
   }, []);
 
   useEffect(() => {
@@ -198,7 +251,6 @@ const DiagnosisResultsPage: React.FC<DiagnosisResultsPageProps> = ({ diagnosisDa
 
   return (
     <div className="min-h-screen pt-12 pb-20" style={{ fontFamily: 'var(--font-primary)' }}>
-      <FloatingHeartsBackground />
       <div className="container mx-auto px-4 max-w-3xl relative z-10">
         <div className="luxury-card p-6 md:p-10 text-center shadow-2xl">
           <div className="mb-8">
@@ -219,18 +271,41 @@ const DiagnosisResultsPage: React.FC<DiagnosisResultsPageProps> = ({ diagnosisDa
           </div>
 
           {/* Asset Projection */}
-          <div className="mb-12 p-6 rounded-xl shadow-xl" style={{ background: 'var(--primary-slate)'}}>
-            <h2 className="text-2xl font-semibold mb-2 text-white flex items-center justify-center">
-              <i className="fas fa-chart-line mr-3" style={{color: 'var(--accent-platinum)'}}></i>
+          <div className="mb-12 p-8 rounded-2xl shadow-2xl border-2" style={{ 
+            background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(248, 250, 252, 0.95) 100%)',
+            borderColor: 'var(--accent-gold)',
+            boxShadow: '0 20px 40px rgba(212, 175, 55, 0.2), 0 0 0 1px rgba(212, 175, 55, 0.1)'
+          }}>
+            <h2 className="text-2xl font-semibold mb-4 flex items-center justify-center" style={{ color: 'var(--primary-navy)' }}>
+              <i className="fas fa-chart-line mr-3" style={{color: 'var(--accent-gold)'}}></i>
               10年後 ({futureAge}歳) のあなたは...
             </h2>
-            <p className="text-lg mb-3" style={{color: 'var(--neutral-300)'}}>予想資産額は...</p>
-            <p className="number-display text-6xl md:text-7xl font-bold my-2" style={{lineHeight: '1.1'}}>
-              {displayedAmount}<span className="text-3xl md:text-4xl ml-1" style={{color: 'var(--accent-gold)'}}>万円</span>
-            </p>
-            <p className="text-xs mt-3" style={{color: 'var(--neutral-400)'}}>
+            <p className="text-xl mb-6 font-medium" style={{color: 'var(--primary-navy)'}}>予想資産額は...</p>
+            <div className="relative">
+              <p className="number-display text-7xl md:text-8xl font-bold my-4 relative z-10" style={{
+                lineHeight: '1.1',
+                color: 'var(--primary-navy)',
+                textShadow: '2px 2px 4px rgba(0, 0, 0, 0.1)',
+                background: 'var(--gradient-gold)',
+                WebkitBackgroundClip: 'text',
+                WebkitTextFillColor: 'transparent',
+                backgroundClip: 'text'
+              }}>
+                {displayedAmount}<span className="text-4xl md:text-5xl ml-2" style={{
+                  color: 'var(--accent-gold)',
+                  WebkitTextFillColor: 'var(--accent-gold)'
+                }}>万円</span>
+              </p>
+              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-yellow-200 to-transparent opacity-20 blur-xl"></div>
+            </div>
+            <p className="text-sm mt-6 px-4 py-3 rounded-lg" style={{
+              color: 'var(--neutral-600)',
+              background: 'rgba(212, 175, 55, 0.1)',
+              border: '1px solid rgba(212, 175, 55, 0.3)'
+            }}>
+                <i className="fas fa-info-circle mr-2" style={{color: 'var(--accent-gold)'}}></i>
                 ※これはAIによるシミュレーション結果です。あなたの選択と行動で未来はもっと輝きます！ 
-                <i className="fas fa-star ml-1" style={{color: 'var(--accent-gold)'}}></i>
+                <i className="fas fa-star ml-2" style={{color: 'var(--accent-gold)'}}></i>
             </p>
           </div>
           
@@ -255,6 +330,130 @@ const DiagnosisResultsPage: React.FC<DiagnosisResultsPageProps> = ({ diagnosisDa
               {financialAdvice && <p>{financialAdvice}</p>}
             </div>
           </div>
+
+          {/* Financial Planners */}
+          {financialPlanners.length > 0 && (
+            <div className="mb-12">
+              <h3 className="heading-primary text-2xl mb-8 flex items-center justify-center">
+                <i className="fas fa-user-tie mr-3" style={{ color: 'var(--accent-blue)' }}></i>
+                あなたにおすすめの認定ファイナンシャルプランナー
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {financialPlanners.map((planner) => (
+                  <div key={planner.id} className="luxury-card p-6 text-left transform hover:scale-105 transition-transform duration-300">
+                    <div className="flex items-start mb-4">
+                      <div className="w-20 h-20 rounded-full overflow-hidden mr-4 flex-shrink-0 border-4 border-white shadow-lg">
+                        <img 
+                          src={sanitizeUrl(planner.profile_image_url)} 
+                          alt={`${sanitizeText(planner.name)}の写真`}
+                          className="w-full h-full object-cover"
+                          onError={(e) => {
+                            (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=300&h=300&fit=crop&crop=face';
+                          }}
+                        />
+                      </div>
+                      <div className="flex-1">
+                        <h4 className="heading-primary text-xl mb-1">{sanitizeText(planner.name)}</h4>
+                        <p className="text-sm font-medium mb-2" style={{ color: 'var(--accent-blue)' }}>
+                          {sanitizeText(planner.title)}
+                        </p>
+                        <p className="text-xs text-luxury mb-2">
+                          <i className="fas fa-clock mr-1"></i>
+                          経験年数: {planner.experience_years}年
+                        </p>
+                        <div className="flex flex-wrap gap-1 mb-2">
+                          {planner.specialties.slice(0, 3).map((specialty, idx) => (
+                            <span 
+                              key={idx} 
+                              className="text-xs px-2 py-1 rounded-full border"
+                              style={{ 
+                                backgroundColor: 'rgba(59, 130, 246, 0.1)', 
+                                borderColor: 'var(--accent-blue)',
+                                color: 'var(--accent-blue)'
+                              }}
+                            >
+                              {sanitizeText(specialty)}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <p className="text-luxury mb-4 text-sm leading-relaxed line-clamp-3">
+                      {sanitizeText(planner.bio)}
+                    </p>
+                    
+                    <div className="mb-4 p-3 rounded-lg" style={{
+                      background: 'rgba(59, 130, 246, 0.05)', 
+                      borderLeft: '3px solid var(--accent-blue)'
+                    }}>
+                      <h5 className="font-semibold text-sm mb-2 flex items-center" style={{color: 'var(--accent-blue)'}}>
+                        <i className="fas fa-certificate mr-2"></i>保有資格
+                      </h5>
+                      <div className="flex flex-wrap gap-1">
+                        {planner.certifications.map((cert, idx) => (
+                          <span 
+                            key={idx} 
+                            className="text-xs px-2 py-1 rounded border"
+                            style={{ 
+                              backgroundColor: 'rgba(59, 130, 246, 0.1)', 
+                              borderColor: 'var(--accent-blue)',
+                              color: 'var(--accent-blue)'
+                            }}
+                          >
+                            {sanitizeText(cert)}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div className="border-t pt-4">
+                      <button
+                        onClick={() => window.open(`tel:${planner.phone_number}`, '_self')}
+                        className="w-full premium-button text-sm leading-relaxed flex items-center justify-center"
+                        style={{ 
+                          background: 'var(--accent-blue)', 
+                          color: 'white',
+                          border: 'none'
+                        }}
+                        onMouseOver={e => { 
+                          (e.currentTarget as HTMLElement).style.background = 'var(--primary-navy)'; 
+                        }}
+                        onMouseOut={e => { 
+                          (e.currentTarget as HTMLElement).style.background = 'var(--accent-blue)'; 
+                        }}
+                      >
+                        <i className="fas fa-phone mr-2"></i>
+                        電話で相談する ({planner.phone_number})
+                      </button>
+                      {planner.email && (
+                        <button
+                          onClick={() => window.open(`mailto:${planner.email}`, '_self')}
+                          className="w-full mt-2 premium-button text-sm leading-relaxed flex items-center justify-center"
+                          style={{ 
+                            background: 'var(--neutral-100)', 
+                            color: 'var(--primary-navy)', 
+                            border: '1px solid var(--neutral-300)'
+                          }}
+                          onMouseOver={e => { 
+                            (e.currentTarget as HTMLElement).style.background = 'var(--neutral-200)'; 
+                            (e.currentTarget as HTMLElement).style.borderColor = 'var(--accent-blue)'; 
+                          }}
+                          onMouseOut={e => { 
+                            (e.currentTarget as HTMLElement).style.background = 'var(--neutral-100)'; 
+                            (e.currentTarget as HTMLElement).style.borderColor = 'var(--neutral-300)'; 
+                          }}
+                        >
+                          <i className="fas fa-envelope mr-2"></i>
+                          メールで相談する
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
 
           {/* Recommended Products */}
           {recommendedProducts.length > 0 && (

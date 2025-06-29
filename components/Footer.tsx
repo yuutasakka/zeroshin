@@ -168,9 +168,9 @@ const Footer: React.FC<FooterProps> = ({ onNavigateToAdminLogin }) => {
         </div>
         
         <div className="text-center space-y-4">
-            <p className="text-gray-300">{footerData.description}</p>
+            <p className="footer-description">{footerData.description}</p>
             
-            <div className="text-sm text-gray-400 space-y-2">
+            <div className="footer-info space-y-2">
                 <p>{footerData.companyInfo}</p>
                 <p>{footerData.contactInfo}</p>
                 <nav className="flex flex-wrap justify-center space-x-4 md:space-x-6 mt-6">
@@ -199,7 +199,7 @@ const Footer: React.FC<FooterProps> = ({ onNavigateToAdminLogin }) => {
                       管理者ログイン
                     </a>
                 </nav>
-                <p className="mt-8 text-gray-500">{footerData.copyright || `© ${new Date().getFullYear()} MoneyTicket株式会社. All rights reserved.`}</p>
+                <p className="mt-8 footer-copyright">{footerData.copyright || `© ${new Date().getFullYear()} MoneyTicket株式会社. All rights reserved.`}</p>
             </div>
         </div>
       </div>

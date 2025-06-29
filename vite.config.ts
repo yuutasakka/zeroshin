@@ -65,6 +65,13 @@ export default defineConfig(({ mode }) => {
     optimizeDeps: {
       exclude: ['plasmo', 'parcel', 'ws', 'websocket', 'parcel-runtime']
     },
+    css: {
+      preprocessorOptions: {
+        scss: {
+          silenceDeprecations: ['legacy-js-api']
+        }
+      }
+    },
     logLevel: isDev ? 'info' : 'warn'
   };
 });

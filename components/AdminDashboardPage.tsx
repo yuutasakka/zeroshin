@@ -34,7 +34,7 @@ interface AdminDashboardPageProps {
   onNavigateHome: () => void;
 }
 
-type AdminViewMode = 'userHistory' | 'productSettings' | 'testimonialSettings' | 'analyticsSettings' | 'notificationSettings' | 'legalLinksSettings' | 'adminSettings' | 'homepageContentSettings' | 'headerAndVisualSettings' | 'colorThemeSettings' | 'securitySettings';
+type AdminViewMode = 'userHistory' | 'productSettings' | 'testimonialSettings' | 'analyticsSettings' | 'notificationSettings' | 'legalLinksSettings' | 'adminSettings' | 'homepageContentSettings' | 'headerAndVisualSettings' | 'colorThemeSettings' | 'securitySettings' | 'expertContactSettings' | 'financialPlannersSettings';
 
 interface DashboardStats {
     totalDiagnoses: number;
@@ -113,6 +113,22 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
   const [showSecurityIntegration, setShowSecurityIntegration] = useState(false);
   const [twoFactorAuthMode, setTwoFactorAuthMode] = useState<'setup' | 'verify'>('setup');
   const [adminTotpSecret, setAdminTotpSecret] = useState<string>('');
+
+  // 専門家設定のstate
+  const [expertContact, setExpertContact] = useState({
+    expert_name: 'MoneyTicket専門アドバイザー',
+    phone_number: '0120-123-456',
+    email: 'advisor@moneyticket.co.jp',
+    business_hours: '平日 9:00-18:00',
+    description: 'MoneyTicketの認定ファイナンシャルプランナーが、お客様の資産運用に関するご相談を承ります。'
+  });
+  const [expertContactStatus, setExpertContactStatus] = useState<string>('');
+
+  // ファイナンシャルプランナー設定のstate
+  const [financialPlanners, setFinancialPlanners] = useState<any[]>([]);
+  const [editingPlanner, setEditingPlanner] = useState<any | null>(null);
+  const [showPlannerModal, setShowPlannerModal] = useState<boolean>(false);
+  const [plannerStatus, setPlannerStatus] = useState<string>('');
 
 
   // セッション有効性チェック
@@ -423,6 +439,9 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
       // Load legal links
       await loadLegalLinksFromSupabase();
 
+      // Load expert contact settings
+      await loadExpertContactSettings();
+
       // Load homepage content settings
       try {
         // 選ばれる理由
@@ -482,6 +501,9 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
         setMainVisualData(defaultMainVisualData);
         setFooterData(defaultFooterData);
       }
+
+      // Load financial planners
+      await loadFinancialPlanners();
     };
 
     loadAllSettings();
@@ -958,6 +980,260 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
 
   const handleCancelLegalLinkEdit = () => {
     setEditingLegalLink(null);
+  };
+
+  const loadExpertContactSettings = async () => {
+    try {
+      const response = await fetch(`${supabaseConfig.url}/rest/v1/expert_contact_settings?setting_key=eq.primary_financial_advisor&is_active=eq.true&select=*`, {
+        headers: {
+          'Authorization': `Bearer ${supabaseConfig.key}`,
+          'apikey': supabaseConfig.key,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        if (data && data.length > 0) {
+          setExpertContact({
+            expert_name: data[0].expert_name,
+            phone_number: data[0].phone_number,
+            email: data[0].email || '',
+            business_hours: data[0].business_hours || '',
+            description: data[0].description || ''
+          });
+          secureLog('Supabaseから専門家連絡先を読み込み');
+          return;
+        }
+      }
+      
+      // デフォルト値を使用
+      setExpertContact({
+        expert_name: 'MoneyTicket専門アドバイザー',
+        phone_number: '0120-123-456',
+        email: 'advisor@moneyticket.co.jp',
+        business_hours: '平日 9:00-18:00',
+        description: 'MoneyTicketの認定ファイナンシャルプランナーが、お客様の資産運用に関するご相談を承ります。'
+      });
+    } catch (error) {
+      secureLog('専門家連絡先のSupabase読み込みエラー:', error);
+      // デフォルト値を使用
+      setExpertContact({
+        expert_name: 'MoneyTicket専門アドバイザー',
+        phone_number: '0120-123-456',
+        email: 'advisor@moneyticket.co.jp',
+        business_hours: '平日 9:00-18:00',
+        description: 'MoneyTicketの認定ファイナンシャルプランナーが、お客様の資産運用に関するご相談を承ります。'
+      });
+    }
+  };
+
+  const handleExpertContactChange = (field: string, value: string) => {
+    setExpertContact(prev => ({
+      ...prev,
+      [field]: value
+    }));
+  };
+
+  const handleSaveExpertContactSettings = async () => {
+    try {
+      setExpertContactStatus('💾 専門家設定を保存中...');
+
+      // Supabaseに保存を試行
+      const response = await fetch(`${supabaseConfig.url}/rest/v1/expert_contact_settings`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${supabaseConfig.key}`,
+          'apikey': supabaseConfig.key,
+          'Content-Type': 'application/json',
+          'Prefer': 'resolution=merge-duplicates'
+        },
+        body: JSON.stringify({
+          setting_key: 'primary_financial_advisor',
+          expert_name: expertContact.expert_name,
+          phone_number: expertContact.phone_number,
+          email: expertContact.email,
+          business_hours: expertContact.business_hours,
+          description: expertContact.description,
+          is_active: true
+        })
+      });
+
+      if (response.ok) {
+        setExpertContactStatus('✅ 専門家設定が正常に保存されました');
+        secureLog('専門家設定をSupabaseに保存完了');
+      } else {
+        // UPSERTを試行
+        const updateResponse = await fetch(`${supabaseConfig.url}/rest/v1/expert_contact_settings?setting_key=eq.primary_financial_advisor`, {
+          method: 'PATCH',
+          headers: {
+            'Authorization': `Bearer ${supabaseConfig.key}`,
+            'apikey': supabaseConfig.key,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            expert_name: expertContact.expert_name,
+            phone_number: expertContact.phone_number,
+            email: expertContact.email,
+            business_hours: expertContact.business_hours,
+            description: expertContact.description,
+            is_active: true,
+            updated_at: new Date().toISOString()
+          })
+        });
+
+        if (updateResponse.ok) {
+          setExpertContactStatus('✅ 専門家設定が正常に更新されました');
+          secureLog('専門家設定をSupabaseで更新完了');
+        } else {
+          throw new Error('Supabase保存に失敗');
+        }
+      }
+
+      setTimeout(() => setExpertContactStatus(''), 3000);
+    } catch (error) {
+      secureLog('専門家設定保存エラー:', error);
+      setExpertContactStatus('❌ 保存中にエラーが発生しました。');
+      setTimeout(() => setExpertContactStatus(''), 5000);
+    }
+  };
+
+  // ファイナンシャルプランナー管理関数
+  const loadFinancialPlanners = async () => {
+    try {
+      if (supabaseConfig.url && supabaseConfig.key && !supabaseConfig.url.includes('your-project')) {
+        const response = await fetch(`${supabaseConfig.url}/rest/v1/financial_planners?order=display_order.asc`, {
+          headers: {
+            'Authorization': `Bearer ${supabaseConfig.key}`,
+            'apikey': supabaseConfig.key,
+            'Content-Type': 'application/json'
+          }
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          setFinancialPlanners(data);
+          secureLog('ファイナンシャルプランナーを読み込み:', data.length);
+        } else {
+          secureLog('ファイナンシャルプランナーの読み込みに失敗');
+          setFinancialPlanners([]);
+        }
+      } else {
+        setFinancialPlanners([]);
+      }
+    } catch (error) {
+      secureLog('ファイナンシャルプランナーの読み込みエラー:', error);
+      setFinancialPlanners([]);
+    }
+  };
+
+  const handleOpenPlannerModal = (planner?: any) => {
+    if (planner) {
+      setEditingPlanner({ ...planner });
+    } else {
+      setEditingPlanner({
+        name: '',
+        title: '',
+        experience_years: 0,
+        specialties: [],
+        profile_image_url: '',
+        bio: '',
+        phone_number: '',
+        email: '',
+        certifications: [],
+        is_active: true,
+        display_order: financialPlanners.length + 1
+      });
+    }
+    setShowPlannerModal(true);
+  };
+
+  const handleClosePlannerModal = () => {
+    setEditingPlanner(null);
+    setShowPlannerModal(false);
+  };
+
+  const handlePlannerFormChange = (field: string, value: any) => {
+    if (editingPlanner) {
+      setEditingPlanner({ ...editingPlanner, [field]: value });
+    }
+  };
+
+  const handleSavePlanner = async () => {
+    if (!editingPlanner) return;
+
+    setPlannerStatus('保存中...');
+    try {
+      if (supabaseConfig.url && supabaseConfig.key && !supabaseConfig.url.includes('your-project')) {
+        const method = editingPlanner.id ? 'PATCH' : 'POST';
+        const url = editingPlanner.id 
+          ? `${supabaseConfig.url}/rest/v1/financial_planners?id=eq.${editingPlanner.id}`
+          : `${supabaseConfig.url}/rest/v1/financial_planners`;
+
+        const response = await fetch(url, {
+          method,
+          headers: {
+            'Authorization': `Bearer ${supabaseConfig.key}`,
+            'apikey': supabaseConfig.key,
+            'Content-Type': 'application/json',
+            'Prefer': 'return=representation'
+          },
+          body: JSON.stringify({
+            ...editingPlanner,
+            updated_at: new Date().toISOString()
+          })
+        });
+
+        if (response.ok) {
+          setPlannerStatus('✅ 保存されました');
+          await loadFinancialPlanners();
+          handleClosePlannerModal();
+        } else {
+          throw new Error('保存に失敗しました');
+        }
+      } else {
+        setPlannerStatus('❌ Supabaseが設定されていません');
+      }
+      
+      setTimeout(() => setPlannerStatus(''), 3000);
+    } catch (error) {
+      secureLog('ファイナンシャルプランナーの保存エラー:', error);
+      setPlannerStatus('❌ 保存に失敗しました');
+      setTimeout(() => setPlannerStatus(''), 3000);
+    }
+  };
+
+  const handleDeletePlanner = async (plannerId: number) => {
+    if (!confirm('このファイナンシャルプランナーを削除しますか？')) return;
+
+    setPlannerStatus('削除中...');
+    try {
+      if (supabaseConfig.url && supabaseConfig.key && !supabaseConfig.url.includes('your-project')) {
+        const response = await fetch(`${supabaseConfig.url}/rest/v1/financial_planners?id=eq.${plannerId}`, {
+          method: 'DELETE',
+          headers: {
+            'Authorization': `Bearer ${supabaseConfig.key}`,
+            'apikey': supabaseConfig.key,
+            'Content-Type': 'application/json'
+          }
+        });
+
+        if (response.ok) {
+          setPlannerStatus('✅ 削除されました');
+          await loadFinancialPlanners();
+        } else {
+          throw new Error('削除に失敗しました');
+        }
+      } else {
+        setPlannerStatus('❌ Supabaseが設定されていません');
+      }
+      
+      setTimeout(() => setPlannerStatus(''), 3000);
+    } catch (error) {
+      secureLog('ファイナンシャルプランナーの削除エラー:', error);
+      setPlannerStatus('❌ 削除に失敗しました');
+      setTimeout(() => setPlannerStatus(''), 3000);
+    }
   };
 
   // 管理者設定保存機能（ローカルストレージ優先、Supabaseはオプション）
@@ -1507,6 +1783,20 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
                  >
                      <i className="fas fa-shield-alt mr-2"></i>
                      <span>🔐 セキュリティ設定</span>
+                 </button>
+                 <button 
+                     onClick={() => setViewMode('financialPlannersSettings')}
+                     className={`admin-nav-button px-4 py-2 rounded-md text-sm font-medium transition-colors ${viewMode === 'financialPlannersSettings' ? 'bg-purple-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}`}
+                 >
+                     <i className="fas fa-user-tie mr-2"></i>
+                     <span>👔 FP管理</span>
+                 </button>
+                 <button 
+                     onClick={() => setViewMode('expertContactSettings')}
+                     className={`admin-nav-button px-4 py-2 rounded-md text-sm font-medium transition-colors ${viewMode === 'expertContactSettings' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}`}
+                 >
+                     <i className="fas fa-phone mr-2"></i>
+                     <span>📞 専門家設定</span>
                  </button>
             </div>
             
@@ -3075,6 +3365,408 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
                         </div>
                     </div>
                 </div>
+            </div>
+        )}
+
+        {viewMode === 'financialPlannersSettings' && (
+            <div className="bg-white p-6 md:p-8 rounded-xl shadow-2xl">
+                <h2 className="text-2xl font-bold text-gray-800 mb-6 flex items-center justify-between">
+                    <div className="flex items-center">
+                        <i className="fas fa-user-tie mr-3 text-purple-600"></i>ファイナンシャルプランナー管理
+                    </div>
+                    <button
+                        onClick={() => handleOpenPlannerModal()}
+                        className="bg-green-500 hover:bg-green-600 text-white font-semibold py-2 px-4 rounded-lg shadow-md transition duration-150 ease-in-out flex items-center text-sm"
+                    >
+                        <i className="fas fa-plus mr-2"></i>新規追加
+                    </button>
+                </h2>
+                
+                {plannerStatus && (
+                    <div className={`p-3 mb-4 rounded-md text-sm ${plannerStatus.includes('エラー') || plannerStatus.includes('❌') ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'}`}>
+                        {plannerStatus}
+                    </div>
+                )}
+
+                <div className="bg-purple-50 border border-purple-200 rounded-lg p-4 mb-6">
+                    <div className="flex items-start space-x-3">
+                        <i className="fas fa-info-circle text-purple-500 mt-1"></i>
+                        <div>
+                            <h3 className="font-medium text-gray-800 mb-2">ファイナンシャルプランナー管理について</h3>
+                            <p className="text-sm text-gray-600">
+                                診断結果ページに表示されるファイナンシャルプランナーの情報を管理できます。
+                                最大4人まで表示され、表示順序で並び順を調整できます。
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                {financialPlanners.length > 0 ? (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        {financialPlanners.map((planner) => (
+                            <div key={planner.id} className="border border-gray-200 rounded-lg p-4 bg-gray-50">
+                                <div className="flex items-start mb-4">
+                                    <div className="w-16 h-16 rounded-full overflow-hidden mr-4 flex-shrink-0 border-2 border-white shadow-md">
+                                        <img 
+                                            src={planner.profile_image_url} 
+                                            alt={`${planner.name}の写真`}
+                                            className="w-full h-full object-cover"
+                                            onError={(e) => {
+                                                (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=300&h=300&fit=crop&crop=face';
+                                            }}
+                                        />
+                                    </div>
+                                    <div className="flex-1">
+                                        <h4 className="font-semibold text-gray-800">{planner.name}</h4>
+                                        <p className="text-sm text-purple-600 font-medium">{planner.title}</p>
+                                        <p className="text-xs text-gray-500">経験年数: {planner.experience_years}年</p>
+                                        <p className="text-xs text-gray-500">表示順: {planner.display_order}</p>
+                                    </div>
+                                </div>
+                                
+                                <div className="mb-3">
+                                    <p className="text-sm text-gray-700 line-clamp-2">{planner.bio}</p>
+                                </div>
+                                
+                                <div className="mb-3">
+                                    <p className="text-sm"><strong>電話:</strong> {planner.phone_number}</p>
+                                    {planner.email && <p className="text-sm"><strong>メール:</strong> {planner.email}</p>}
+                                </div>
+
+                                <div className="mb-3">
+                                    <div className="flex flex-wrap gap-1">
+                                        {planner.specialties.slice(0, 3).map((specialty: string, idx: number) => (
+                                            <span 
+                                                key={idx} 
+                                                className="text-xs px-2 py-1 rounded-full bg-purple-100 text-purple-700"
+                                            >
+                                                {specialty}
+                                            </span>
+                                        ))}
+                                    </div>
+                                </div>
+
+                                <div className="flex space-x-2">
+                                    <button
+                                        onClick={() => handleOpenPlannerModal(planner)}
+                                        className="flex-1 bg-blue-500 hover:bg-blue-600 text-white text-sm py-2 px-3 rounded transition-colors"
+                                    >
+                                        <i className="fas fa-edit mr-1"></i>編集
+                                    </button>
+                                    <button
+                                        onClick={() => handleDeletePlanner(planner.id)}
+                                        className="flex-1 bg-red-500 hover:bg-red-600 text-white text-sm py-2 px-3 rounded transition-colors"
+                                    >
+                                        <i className="fas fa-trash mr-1"></i>削除
+                                    </button>
+                                </div>
+                                
+                                <div className="mt-2 flex items-center justify-between">
+                                    <span className={`text-xs px-2 py-1 rounded ${planner.is_active ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-700'}`}>
+                                        {planner.is_active ? '表示中' : '非表示'}
+                                    </span>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                ) : (
+                    <div className="text-center py-10">
+                        <i className="fas fa-user-tie text-4xl text-gray-400 mb-3"></i>
+                        <p className="text-gray-600">まだファイナンシャルプランナーが登録されていません。</p>
+                        <p className="text-sm text-gray-500">「新規追加」ボタンから登録してください。</p>
+                    </div>
+                )}
+
+                {/* プランナー編集モーダル */}
+                {showPlannerModal && editingPlanner && (
+                    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+                        <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+                            <div className="p-6">
+                                <h3 className="text-lg font-semibold text-gray-800 mb-4">
+                                    {editingPlanner.id ? 'ファイナンシャルプランナー編集' : '新規ファイナンシャルプランナー追加'}
+                                </h3>
+                                
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                                            <i className="fas fa-user mr-2"></i>名前 <span className="text-red-500">*</span>
+                                        </label>
+                                        <input
+                                            type="text"
+                                            value={editingPlanner.name}
+                                            onChange={(e) => handlePlannerFormChange('name', e.target.value)}
+                                            placeholder="田中 美咲"
+                                            className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-purple-500 focus:border-purple-500"
+                                        />
+                                    </div>
+
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                                            <i className="fas fa-briefcase mr-2"></i>役職 <span className="text-red-500">*</span>
+                                        </label>
+                                        <input
+                                            type="text"
+                                            value={editingPlanner.title}
+                                            onChange={(e) => handlePlannerFormChange('title', e.target.value)}
+                                            placeholder="シニアファイナンシャルプランナー"
+                                            className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-purple-500 focus:border-purple-500"
+                                        />
+                                    </div>
+
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                                            <i className="fas fa-clock mr-2"></i>経験年数
+                                        </label>
+                                        <input
+                                            type="number"
+                                            value={editingPlanner.experience_years}
+                                            onChange={(e) => handlePlannerFormChange('experience_years', parseInt(e.target.value) || 0)}
+                                            placeholder="12"
+                                            className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-purple-500 focus:border-purple-500"
+                                        />
+                                    </div>
+
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                                            <i className="fas fa-sort mr-2"></i>表示順序
+                                        </label>
+                                        <input
+                                            type="number"
+                                            value={editingPlanner.display_order}
+                                            onChange={(e) => handlePlannerFormChange('display_order', parseInt(e.target.value) || 1)}
+                                            placeholder="1"
+                                            className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-purple-500 focus:border-purple-500"
+                                        />
+                                    </div>
+
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                                            <i className="fas fa-phone mr-2"></i>電話番号 <span className="text-red-500">*</span>
+                                        </label>
+                                        <input
+                                            type="tel"
+                                            value={editingPlanner.phone_number}
+                                            onChange={(e) => handlePlannerFormChange('phone_number', e.target.value)}
+                                            placeholder="0120-111-111"
+                                            className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-purple-500 focus:border-purple-500"
+                                        />
+                                    </div>
+
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                                            <i className="fas fa-envelope mr-2"></i>メールアドレス
+                                        </label>
+                                        <input
+                                            type="email"
+                                            value={editingPlanner.email}
+                                            onChange={(e) => handlePlannerFormChange('email', e.target.value)}
+                                            placeholder="tanaka@moneyticket.co.jp"
+                                            className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-purple-500 focus:border-purple-500"
+                                        />
+                                    </div>
+                                </div>
+
+                                <div className="mt-4">
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                                        <i className="fas fa-image mr-2"></i>プロフィール画像URL
+                                    </label>
+                                    <input
+                                        type="url"
+                                        value={editingPlanner.profile_image_url}
+                                        onChange={(e) => handlePlannerFormChange('profile_image_url', e.target.value)}
+                                        placeholder="https://images.unsplash.com/photo-..."
+                                        className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-purple-500 focus:border-purple-500"
+                                    />
+                                </div>
+
+                                <div className="mt-4">
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                                        <i className="fas fa-user-edit mr-2"></i>経歴・紹介文 <span className="text-red-500">*</span>
+                                    </label>
+                                    <textarea
+                                        value={editingPlanner.bio}
+                                        onChange={(e) => handlePlannerFormChange('bio', e.target.value)}
+                                        placeholder="12年の経験を持つ資産運用のスペシャリストです..."
+                                        rows={3}
+                                        className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-purple-500 focus:border-purple-500"
+                                    />
+                                </div>
+
+                                <div className="mt-4">
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                                        <i className="fas fa-tags mr-2"></i>専門分野（カンマ区切り）
+                                    </label>
+                                    <input
+                                        type="text"
+                                        value={editingPlanner.specialties ? editingPlanner.specialties.join(', ') : ''}
+                                        onChange={(e) => handlePlannerFormChange('specialties', e.target.value.split(',').map(s => s.trim()).filter(s => s))}
+                                        placeholder="資産運用, 保険プランニング, 税務相談"
+                                        className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-purple-500 focus:border-purple-500"
+                                    />
+                                </div>
+
+                                <div className="mt-4">
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                                        <i className="fas fa-certificate mr-2"></i>保有資格（カンマ区切り）
+                                    </label>
+                                    <input
+                                        type="text"
+                                        value={editingPlanner.certifications ? editingPlanner.certifications.join(', ') : ''}
+                                        onChange={(e) => handlePlannerFormChange('certifications', e.target.value.split(',').map(s => s.trim()).filter(s => s))}
+                                        placeholder="CFP®, FP1級, 証券外務員1種"
+                                        className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-purple-500 focus:border-purple-500"
+                                    />
+                                </div>
+
+                                <div className="mt-4">
+                                    <label className="flex items-center">
+                                        <input
+                                            type="checkbox"
+                                            checked={editingPlanner.is_active}
+                                            onChange={(e) => handlePlannerFormChange('is_active', e.target.checked)}
+                                            className="mr-2"
+                                        />
+                                        <span className="text-sm font-medium text-gray-700">アクティブ（表示する）</span>
+                                    </label>
+                                </div>
+
+                                <div className="flex justify-end space-x-3 mt-6">
+                                    <button
+                                        onClick={handleClosePlannerModal}
+                                        className="px-4 py-2 text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300 transition-colors"
+                                    >
+                                        キャンセル
+                                    </button>
+                                    <button
+                                        onClick={handleSavePlanner}
+                                        className="px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 transition-colors"
+                                    >
+                                        <i className="fas fa-save mr-2"></i>保存
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                )}
+            </div>
+        )}
+
+        {viewMode === 'expertContactSettings' && (
+            <div className="bg-white p-6 md:p-8 rounded-xl shadow-2xl">
+                <h2 className="text-2xl font-bold text-gray-800 mb-6 flex items-center">
+                    <i className="fas fa-phone mr-3 text-blue-600"></i>専門家連絡先設定
+                </h2>
+                
+                {expertContactStatus && (
+                    <div className={`p-3 mb-4 rounded-md text-sm ${expertContactStatus.includes('エラー') ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'}`}>
+                        {expertContactStatus}
+                    </div>
+                )}
+
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+                    <div className="flex items-start space-x-3">
+                        <i className="fas fa-info-circle text-blue-500 mt-1"></i>
+                        <div>
+                            <h3 className="font-medium text-gray-800 mb-2">専門家設定について</h3>
+                            <p className="text-sm text-gray-600">
+                                AI財務アドバイザーで3回の相談回数上限に達したユーザーに表示される専門家の連絡先情報を設定できます。
+                                この情報はSupabaseに保存され、リアルタイムでAI相談画面に反映されます。
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                            <i className="fas fa-user mr-2"></i>専門家名
+                        </label>
+                        <input
+                            type="text"
+                            value={expertContact.expert_name}
+                            onChange={(e) => handleExpertContactChange('expert_name', e.target.value)}
+                            placeholder="MoneyTicket専門アドバイザー"
+                            className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                        />
+                    </div>
+
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                            <i className="fas fa-phone mr-2"></i>電話番号 <span className="text-red-500">*</span>
+                        </label>
+                        <input
+                            type="tel"
+                            value={expertContact.phone_number}
+                            onChange={(e) => handleExpertContactChange('phone_number', e.target.value)}
+                            placeholder="0120-123-456"
+                            className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                        />
+                    </div>
+
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                            <i className="fas fa-envelope mr-2"></i>メールアドレス
+                        </label>
+                        <input
+                            type="email"
+                            value={expertContact.email}
+                            onChange={(e) => handleExpertContactChange('email', e.target.value)}
+                            placeholder="advisor@moneyticket.co.jp"
+                            className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                        />
+                    </div>
+
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                            <i className="fas fa-clock mr-2"></i>受付時間
+                        </label>
+                        <input
+                            type="text"
+                            value={expertContact.business_hours}
+                            onChange={(e) => handleExpertContactChange('business_hours', e.target.value)}
+                            placeholder="平日 9:00-18:00"
+                            className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                        />
+                    </div>
+                </div>
+
+                <div className="mt-6">
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                        <i className="fas fa-comment mr-2"></i>説明文
+                    </label>
+                    <textarea
+                        value={expertContact.description}
+                        onChange={(e) => handleExpertContactChange('description', e.target.value)}
+                        placeholder="MoneyTicketの認定ファイナンシャルプランナーが、お客様の資産運用に関するご相談を承ります。"
+                        rows={3}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                    />
+                </div>
+
+                <div className="mt-8 bg-gray-50 border border-gray-200 rounded-lg p-4">
+                    <h3 className="font-medium text-gray-800 mb-3 flex items-center">
+                        <i className="fas fa-eye mr-2"></i>プレビュー
+                    </h3>
+                    <div className="bg-white border border-gray-200 rounded-lg p-4">
+                        <h4 className="font-semibold text-gray-800 mb-2">📞 専門家による個別相談をご利用ください</h4>
+                        <div className="text-sm text-gray-600 space-y-1">
+                            <p><strong>担当者:</strong> {expertContact.expert_name || 'MoneyTicket専門アドバイザー'}</p>
+                            <p><strong>電話番号:</strong> {expertContact.phone_number || '0120-123-456'}</p>
+                            <p><strong>受付時間:</strong> {expertContact.business_hours || '平日 9:00-18:00'}</p>
+                            {expertContact.email && <p><strong>メール:</strong> {expertContact.email}</p>}
+                        </div>
+                        <p className="text-sm text-gray-600 mt-2">
+                            {expertContact.description || 'MoneyTicketの認定ファイナンシャルプランナーが、お客様の資産運用に関するご相談を承ります。'}
+                        </p>
+                    </div>
+                </div>
+
+                <button
+                    onClick={handleSaveExpertContactSettings}
+                    className="mt-6 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-6 rounded-lg shadow-md transition duration-150 ease-in-out flex items-center"
+                >
+                    <i className="fas fa-save mr-2"></i>専門家設定を保存
+                </button>
             </div>
         )}
 

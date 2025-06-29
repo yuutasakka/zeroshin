@@ -298,6 +298,36 @@
             background-clip: text;
         }
 
+        /* 💰 予想資産額表示の特別スタイル */
+        .number-display {
+            font-family: var(--font-display);
+            font-weight: 800;
+            position: relative;
+            display: inline-block;
+            animation: number-glow 3s ease-in-out infinite;
+        }
+
+        @keyframes number-glow {
+            0%, 100% { 
+                filter: drop-shadow(0 0 10px rgba(212, 175, 55, 0.3));
+                transform: scale(1);
+            }
+            50% { 
+                filter: drop-shadow(0 0 20px rgba(212, 175, 55, 0.5));
+                transform: scale(1.02);
+            }
+        }
+
+        /* 高コントラスト資産額表示 */
+        .asset-amount-container {
+            background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+            border: 3px solid var(--accent-gold);
+            box-shadow: 
+                0 20px 40px rgba(212, 175, 55, 0.2),
+                0 0 0 1px rgba(212, 175, 55, 0.1),
+                inset 0 1px 0 rgba(255, 255, 255, 0.8);
+        }
+
         /* 🔘 ラジオオプション - 高コントラスト版 */
         .radio-option {
             background: rgba(255, 255, 255, 0.95);
@@ -422,6 +452,69 @@
             }
         }
 
+        /* 🦶 プレミアムフッター */
+        .premium-footer {
+            background: var(--gradient-primary);
+            color: white;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .premium-footer::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url("data:image/svg+xml,%3Csvg width='40' height='40' viewBox='0 0 40 40' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23D4AF37' fill-opacity='0.05'%3E%3Ccircle cx='20' cy='20' r='1'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+            opacity: 0.3;
+        }
+
+        .premium-footer > * {
+            position: relative;
+            z-index: 2;
+        }
+
+        .premium-footer .footer-description {
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 1.1rem;
+            line-height: 1.7;
+            font-weight: 400;
+            max-width: 600px;
+            margin: 0 auto;
+            text-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+        }
+
+        .premium-footer .footer-info {
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 0.95rem;
+            line-height: 1.6;
+        }
+
+        .premium-footer .footer-link {
+            color: rgba(255, 255, 255, 0.85);
+            text-decoration: none;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            padding: 0.25rem 0.5rem;
+            border-radius: 6px;
+            position: relative;
+        }
+
+        .premium-footer .footer-link:hover {
+            color: var(--accent-gold);
+            background: rgba(212, 175, 55, 0.1);
+            transform: translateY(-1px);
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        .premium-footer .footer-copyright {
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 0.9rem;
+            font-weight: 400;
+        }
+
         /* ♿ アクセシビリティ */
         @media (prefers-reduced-motion: reduce) {
             *, *::before, *::after {
@@ -433,7 +526,8 @@
 
         .premium-button:focus-visible,
         .luxury-input:focus-visible,
-        .radio-option:focus-within {
+        .radio-option:focus-within,
+        .footer-link:focus-visible {
             outline: 3px solid var(--accent-gold);
             outline-offset: 2px;
             box-shadow: 0 0 0 5px rgba(212, 175, 55, 0.2);

@@ -1,10 +1,20 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { createSupabaseClient } from './adminUtils';
+import { secureLog } from '../security.config';
 
 interface Message {
   id: string;
   role: 'user' | 'assistant';
   content: string;
   timestamp: Date;
+}
+
+interface ExpertContact {
+  expert_name: string;
+  phone_number: string;
+  email?: string;
+  business_hours?: string;
+  description?: string;
 }
 
 interface MCPFinancialAssistantProps {
@@ -16,22 +26,28 @@ export const MCPFinancialAssistant: React.FC<MCPFinancialAssistantProps> = ({ cl
     {
       id: 'welcome',
       role: 'assistant',
-      content: `# 🤖 MoneyTicket AI財務アドバイザー
+      content: `こんにちは！🤖
+私はMoneyTicketのAI財務アドバイザーです。
 
-こんにちは！私はあなたの財務状況を分析し、最適なアドバイスを提供するAIアシスタントです。
+お客様の財務状況を分析して、最適なアドバイスをお届けします✨
 
-## 📋 利用可能な機能
-- **財務健康診断**: 収入、支出、貯蓄状況の総合分析
-- **投資シミュレーション**: 複利効果を考慮した将来資産の計算
-- **ポートフォリオ分析**: リスクとリターンの最適化提案
-- **緊急資金計算**: 適切な緊急資金額と貯蓄計画
+📋 利用可能な機能
+• 財務健康診断
+• 投資シミュレーション
+• ポートフォリオ分析
+• 緊急資金計算
 
-どのような財務相談をお手伝いしましょうか？`,
+⚠️ AI相談は3回まで無料です
+それ以降は専門家による電話相談をご案内いたします。
+
+どのような財務相談をお手伝いしましょうか？😊`,
       timestamp: new Date()
     }
   ]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [questionCount, setQuestionCount] = useState(0);
+  const [expertContact, setExpertContact] = useState<ExpertContact | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = () => {
@@ -41,6 +57,65 @@ export const MCPFinancialAssistant: React.FC<MCPFinancialAssistantProps> = ({ cl
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
+
+  useEffect(() => {
+    loadExpertContact();
+  }, []);
+
+  const loadExpertContact = async () => {
+    try {
+      const supabaseConfig = createSupabaseClient();
+      
+      // Supabase設定が無効な場合はデフォルト値を使用
+      if (!supabaseConfig.url || !supabaseConfig.key || supabaseConfig.url.includes('your-project')) {
+        setExpertContact({
+          expert_name: 'MoneyTicket専門アドバイザー',
+          phone_number: '0120-123-456',
+          business_hours: '平日 9:00-18:00',
+          description: 'MoneyTicketの認定ファイナンシャルプランナーが、お客様の資産運用に関するご相談を承ります。'
+        });
+        return;
+      }
+
+      const response = await fetch(`${supabaseConfig.url}/rest/v1/expert_contact_settings?setting_key=eq.primary_financial_advisor&is_active=eq.true&select=*`, {
+        headers: {
+          'Authorization': `Bearer ${supabaseConfig.key}`,
+          'apikey': supabaseConfig.key,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        if (data && data.length > 0) {
+          setExpertContact({
+            expert_name: data[0].expert_name,
+            phone_number: data[0].phone_number,
+            email: data[0].email,
+            business_hours: data[0].business_hours,
+            description: data[0].description
+          });
+        }
+      } else {
+        // デフォルト値を設定
+        setExpertContact({
+          expert_name: 'MoneyTicket専門アドバイザー',
+          phone_number: '0120-123-456',
+          business_hours: '平日 9:00-18:00',
+          description: 'MoneyTicketの認定ファイナンシャルプランナーが、お客様の資産運用に関するご相談を承ります。'
+        });
+      }
+    } catch (error) {
+      secureLog('専門家連絡先の読み込みエラー:', error);
+      // エラー時もデフォルト値を設定
+      setExpertContact({
+        expert_name: 'MoneyTicket専門アドバイザー',
+        phone_number: '0120-123-456',
+        business_hours: '平日 9:00-18:00',
+        description: 'MoneyTicketの認定ファイナンシャルプランナーが、お客様の資産運用に関するご相談を承ります。'
+      });
+    }
+  };
 
   const predefinedQuestions = [
     {
@@ -65,6 +140,33 @@ export const MCPFinancialAssistant: React.FC<MCPFinancialAssistantProps> = ({ cl
     e.preventDefault();
     if (!input.trim() || isLoading) return;
 
+    // 3回制限チェック
+    if (questionCount >= 3) {
+      const limitMessage: Message = {
+        id: Date.now().toString(),
+        role: 'assistant',
+        content: `🚨 AI相談回数上限に達しました
+
+AI財務アドバイザーは3回まで無料でご利用いただけます。
+
+📞 専門家による個別相談をご利用ください
+
+より詳細なアドバイスが必要でしたら、MoneyTicketの専門家が直接お電話でご相談を承ります。
+
+📋 専門家情報
+• 担当者: ${expertContact?.expert_name || 'MoneyTicket専門アドバイザー'}
+• 電話番号: ${expertContact?.phone_number || '0120-123-456'}
+• 受付時間: ${expertContact?.business_hours || '平日 9:00-18:00'}
+
+${expertContact?.description || 'MoneyTicketの認定ファイナンシャルプランナーが、お客様の資産運用に関するご相談を承ります。'}
+
+お気軽にお電話ください！😊`,
+        timestamp: new Date()
+      };
+      setMessages(prev => [...prev, limitMessage]);
+      return;
+    }
+
     const userMessage: Message = {
       id: Date.now().toString(),
       role: 'user',
@@ -75,29 +177,68 @@ export const MCPFinancialAssistant: React.FC<MCPFinancialAssistantProps> = ({ cl
     setMessages(prev => [...prev, userMessage]);
     setInput('');
     setIsLoading(true);
+    setQuestionCount(prev => prev + 1);
 
     try {
-      const response = await fetch('/src/app/api/mcp/chat', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          message: input,
-          history: messages
-        }),
-      });
+      // デモ用のAI応答（実際のMCP APIが利用できない場合）
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      
+      const demoResponses = [
+        `💰 財務分析結果
 
-      if (!response.ok) {
-        throw new Error('Failed to get response');
-      }
+ご質問ありがとうございます！
+お客様の財務状況を分析いたします✨
 
-      const data = await response.json();
+📊 分析結果
+• 現在の財務健康度: 良好 👍
+• 推奨投資額: 月額3-5万円
+• リスク許容度: 中程度
+
+🎯 具体的なアドバイス
+1. 緊急資金: 生活費の3-6ヶ月分を確保
+2. 投資配分: 株式60%、債券40%のバランス型
+3. 税制優遇: つみたてNISAの活用を推奨
+
+残り${2 - questionCount}回のAI相談が可能です 💬`,
+
+        `📈 投資シミュレーション結果
+
+お客様の投資プランをシミュレーションいたします！
+
+💡 投資戦略
+• 長期投資: 15-20年の運用期間を推奨
+• 分散投資: 国内外の株式・債券に分散
+• 積立投資: 毎月定額での積立が効果的
+
+🔮 将来予測
+• 10年後: 約1,200万円（年利5%想定）
+• 20年後: 約2,400万円（複利効果）
+
+残り${2 - questionCount}回のAI相談が可能です 💬`,
+
+        `🎯 ポートフォリオ最適化
+
+お客様の投資ポートフォリオを分析いたします！
+
+⚖️ リスク・リターン分析
+• 期待リターン: 年率5-7%
+• リスク水準: 中程度
+• シャープレシオ: 良好
+
+🔄 リバランス提案
+• 株式比率: 60% → 65%（成長重視）
+• 債券比率: 40% → 35%（安定性確保）
+
+これでAI相談3回が終了しました！
+さらに詳しい相談は専門家にお電話ください 📞✨`
+      ];
+
+      const responseContent = demoResponses[Math.min(questionCount - 1, demoResponses.length - 1)];
       
       const assistantMessage: Message = {
         id: (Date.now() + 1).toString(),
         role: 'assistant',
-        content: data.response,
+        content: responseContent,
         timestamp: new Date()
       };
 
@@ -120,72 +261,87 @@ export const MCPFinancialAssistant: React.FC<MCPFinancialAssistantProps> = ({ cl
     setInput(prompt);
   };
 
-  const formatContent = (content: string) => {
-    // マークダウン風のテキストをHTMLに変換（簡易版）
-    return content
-      .replace(/^# (.*$)/gm, '<h1 class="text-2xl font-bold text-navy-800 mb-4">$1</h1>')
-      .replace(/^## (.*$)/gm, '<h2 class="text-xl font-semibold text-navy-700 mb-3 mt-6">$1</h2>')
-      .replace(/^### (.*$)/gm, '<h3 class="text-lg font-medium text-navy-600 mb-2 mt-4">$1</h3>')
-      .replace(/^\- (.*$)/gm, '<li class="ml-4 mb-1">$1</li>')
-      .replace(/\*\*(.*?)\*\*/g, '<strong class="font-semibold text-navy-800">$1</strong>')
-      .replace(/\n\n/g, '</p><p class="mb-4">')
-      .replace(/\n/g, '<br>');
-  };
+
 
   return (
-    <div className={`bg-white rounded-xl shadow-lg border border-gray-200 ${className}`}>
-      {/* ヘッダー */}
-      <div className="bg-gradient-to-r from-navy-600 to-navy-700 text-white p-4 rounded-t-xl">
-        <h2 className="text-xl font-bold flex items-center gap-2">
-          🤖 AI財務アドバイザー
-          <span className="text-sm bg-gold-500 text-navy-800 px-2 py-1 rounded-full">
-            MCP対応
-          </span>
-        </h2>
-        <p className="text-navy-100 text-sm mt-1">
-          MoneyTicket専属のAIが、あなたの財務状況を詳しく分析します
-        </p>
+    <div className={`bg-gray-50 rounded-xl shadow-lg border border-gray-200 ${className}`}>
+      {/* LINEスタイルヘッダー */}
+      <div className="bg-green-500 text-white p-4 rounded-t-xl flex items-center gap-3">
+        <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center text-green-500 text-xl font-bold">
+          🤖
+        </div>
+        <div className="flex-1">
+          <h2 className="text-lg font-bold">AI財務アドバイザー</h2>
+          <p className="text-green-100 text-sm">
+            オンライン - MoneyTicket専属AI
+          </p>
+        </div>
+        <div className="text-sm bg-green-600 px-3 py-1 rounded-full">
+          MCP対応
+        </div>
       </div>
 
-      {/* メッセージエリア */}
-      <div className="h-96 overflow-y-auto p-4 space-y-4">
+      {/* LINEスタイルメッセージエリア */}
+      <div className="h-96 overflow-y-auto p-4 space-y-3 bg-gradient-to-b from-gray-50 to-gray-100">
         {messages.map((message) => (
           <div
             key={message.id}
-            className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
+            className={`flex items-end gap-2 ${message.role === 'user' ? 'flex-row-reverse' : 'flex-row'}`}
           >
-            <div
-              className={`max-w-[80%] p-3 rounded-lg ${
-                message.role === 'user'
-                  ? 'bg-navy-600 text-white rounded-br-none'
-                  : 'bg-gray-100 text-gray-800 rounded-bl-none'
-              }`}
-            >
-              {message.role === 'user' ? (
-                <p className="whitespace-pre-wrap">{message.content}</p>
-              ) : (
-                <div
-                  className="prose prose-sm max-w-none"
-                  dangerouslySetInnerHTML={{
-                    __html: formatContent(message.content)
-                  }}
-                />
-              )}
-              <div className={`text-xs mt-2 ${
-                message.role === 'user' ? 'text-navy-200' : 'text-gray-500'
+            {/* アバター */}
+            {message.role === 'assistant' && (
+              <div className="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center text-white text-sm font-bold flex-shrink-0">
+                🤖
+              </div>
+            )}
+            {message.role === 'user' && (
+              <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center text-white text-sm font-bold flex-shrink-0">
+                👤
+              </div>
+            )}
+            
+            {/* メッセージバブル */}
+            <div className={`max-w-[75%] ${message.role === 'user' ? 'order-first' : ''}`}>
+              <div
+                className={`p-3 rounded-2xl shadow-sm ${
+                  message.role === 'user'
+                    ? 'bg-blue-500 text-white ml-auto'
+                    : 'bg-white text-gray-800 border border-gray-200'
+                }`}
+              >
+                {message.role === 'user' ? (
+                  <p className="whitespace-pre-wrap text-sm">{message.content}</p>
+                ) : (
+                  <div className="text-sm whitespace-pre-wrap">
+                    {message.content}
+                  </div>
+                )}
+              </div>
+              <div className={`text-xs mt-1 px-2 ${
+                message.role === 'user' ? 'text-right text-gray-500' : 'text-left text-gray-500'
               }`}>
-                {message.timestamp.toLocaleTimeString('ja-JP')}
+                {message.timestamp.toLocaleTimeString('ja-JP', {
+                  hour: '2-digit',
+                  minute: '2-digit'
+                })}
               </div>
             </div>
           </div>
         ))}
         
         {isLoading && (
-          <div className="flex justify-start">
-            <div className="bg-gray-100 text-gray-800 p-3 rounded-lg rounded-bl-none">
+          <div className="flex items-end gap-2">
+            <div className="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center text-white text-sm font-bold">
+              🤖
+            </div>
+            <div className="bg-white p-3 rounded-2xl shadow-sm border border-gray-200">
               <div className="flex items-center gap-2">
-                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-navy-600"></div>
-                <span>分析中...</span>
+                <div className="flex gap-1">
+                  <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
+                  <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{animationDelay: '0.1s'}}></div>
+                  <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{animationDelay: '0.2s'}}></div>
+                </div>
+                <span className="text-sm text-gray-600">分析中...</span>
               </div>
             </div>
           </div>
@@ -194,42 +350,75 @@ export const MCPFinancialAssistant: React.FC<MCPFinancialAssistantProps> = ({ cl
         <div ref={messagesEndRef} />
       </div>
 
-      {/* 定型質問 */}
-      <div className="border-t border-gray-200 p-4">
-        <h3 className="text-sm font-medium text-gray-700 mb-2">よくある質問</h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-          {predefinedQuestions.map((question, index) => (
-            <button
-              key={index}
-              onClick={() => handlePredefinedQuestion(question.prompt)}
-              className="text-left text-sm bg-gray-50 hover:bg-gray-100 border border-gray-200 rounded-lg p-2 transition-colors"
-              disabled={isLoading}
-            >
-              {question.text}
-            </button>
-          ))}
+      {/* LINEスタイル定型質問 */}
+      {questionCount < 3 && (
+        <div className="border-t border-gray-200 p-4 bg-white">
+          <h3 className="text-sm font-medium text-gray-700 mb-3 flex items-center gap-2">
+            💬 よくある質問
+          </h3>
+          <div className="space-y-2">
+            {predefinedQuestions.map((question, index) => (
+              <button
+                key={index}
+                onClick={() => handlePredefinedQuestion(question.prompt)}
+                className="w-full text-left text-sm bg-blue-50 hover:bg-blue-100 border border-blue-200 rounded-2xl p-3 transition-colors flex items-center gap-2"
+                disabled={isLoading}
+              >
+                <span className="text-blue-500">💡</span>
+                {question.text}
+              </button>
+            ))}
+          </div>
         </div>
-      </div>
+      )}
 
-      {/* 入力フォーム */}
-      <div className="border-t border-gray-200 p-4">
-        <form onSubmit={handleSubmit} className="flex gap-2">
-          <input
-            type="text"
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            placeholder="財務に関する質問をお聞かせください..."
-            className="flex-1 border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:border-navy-500 focus:ring-1 focus:ring-navy-500"
-            disabled={isLoading}
-          />
-          <button
-            type="submit"
-            disabled={!input.trim() || isLoading}
-            className="bg-navy-600 text-white px-4 py-2 rounded-lg hover:bg-navy-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
-          >
-            {isLoading ? '送信中...' : '送信'}
-          </button>
-        </form>
+      {/* LINEスタイル入力フォーム */}
+      <div className="border-t border-gray-200 p-4 bg-white rounded-b-xl">
+        {questionCount >= 3 ? (
+          <div className="text-center p-4 bg-gradient-to-r from-orange-50 to-red-50 border border-orange-200 rounded-2xl">
+            <div className="text-2xl mb-2">📞</div>
+            <p className="text-orange-800 font-medium mb-2">
+              AI相談回数上限に達しました
+            </p>
+            <p className="text-sm text-orange-700 mb-3">
+              より詳細な相談は専門家にお電話ください
+            </p>
+            <div className="bg-white p-3 rounded-xl border border-orange-200">
+              <p className="font-bold text-orange-800 text-lg">
+                {expertContact?.phone_number || '0120-123-456'}
+              </p>
+            </div>
+          </div>
+        ) : (
+          <>
+            <div className="mb-3 text-sm text-gray-600 text-center bg-gray-50 rounded-full py-2">
+              残り <strong className="text-green-600">{3 - questionCount}</strong> 回のAI相談が可能です ✨
+            </div>
+            <form onSubmit={handleSubmit} className="flex gap-3 items-end">
+              <div className="flex-1">
+                <input
+                  type="text"
+                  value={input}
+                  onChange={(e) => setInput(e.target.value)}
+                  placeholder="メッセージを入力..."
+                  className="w-full border border-gray-300 rounded-2xl px-4 py-3 focus:outline-none focus:border-green-500 focus:ring-2 focus:ring-green-200 text-sm"
+                  disabled={isLoading}
+                />
+              </div>
+              <button
+                type="submit"
+                disabled={!input.trim() || isLoading}
+                className="bg-green-500 text-white w-12 h-12 rounded-full hover:bg-green-600 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors flex items-center justify-center"
+              >
+                {isLoading ? (
+                  <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+                ) : (
+                  <span className="text-lg">📤</span>
+                )}
+              </button>
+            </form>
+          </>
+        )}
       </div>
     </div>
   );

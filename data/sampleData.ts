@@ -163,7 +163,7 @@ export const sampleMainVisualData: MainVisualData = {
 // フッターデータのサンプル
 export const sampleFooterData: FooterData = {
   siteName: "MoneyTicket",
-  description: "あなたの資産運用を成功に導く、信頼できるパートナーです。AI技術と金融の専門知識を組み合わせ、一人ひとりに最適な投資戦略をご提案いたします。",
+  description: "AI技術と金融の専門知識を組み合わせ、あなたの資産運用を成功に導く信頼できるパートナーです。一人ひとりに最適な投資戦略をご提案し、安心できる資産形成をサポートいたします。",
   contactInfo: "電話: 0120-123-456 | メール: info@moneyticket.co.jp",
   companyInfo: "〒100-0001 東京都千代田区千代田1-1-1 | 平日 9:00-18:00",
   copyright: "© 2024 MoneyTicket株式会社. All rights reserved."
