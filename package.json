@@ -12,7 +12,7 @@
     "dev:clean": "node clear-dev-cache.js && vite",
     "dev:server": "tsx server/index.ts",
     "dev:all": "concurrently \"npm run dev\" \"npm run dev:server\"",
-    "build": "tsc && vite build",
+    "build": "vite build",
     "build:clean": "node clear-dev-cache.js && npm run build",
     "preview": "vite preview",
     "lint": "tsc --noEmit",
@@ -48,7 +48,8 @@
     "react-dom": "^19.1.0",
     "twilio": "^5.7.1",
     "winston": "^3.17.0",
-    "zod": "^3.25.67"
+    "zod": "^3.25.67",
+    "typescript": "~5.7.2"
   },
   "devDependencies": {
     "@types/cors": "^2.8.19",
@@ -59,7 +60,6 @@
     "@vitejs/plugin-react": "^4.6.0",
     "concurrently": "^9.2.0",
     "tsx": "^4.20.3",
-    "typescript": "~5.7.2",
     "vite": "^6.2.0"
   }
 }
