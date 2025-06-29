@@ -246,12 +246,12 @@ const MainVisualAndDiagnosis: React.FC<MainVisualAndDiagnosisProps> = ({ onProce
   return (
     <section id="main-visual-section" className="hero-section-premium py-20 px-4">
       <div className="hero-content max-w-7xl mx-auto text-center">
-        <h2 className="heading-display text-7xl md:text-9xl mb-8 font-bold leading-tight" 
+        <h2 className="heading-display text-4xl md:text-6xl lg:text-7xl mb-8 font-bold leading-tight" 
             style={{ 
               color: '#ffffff',
-              textShadow: '0 6px 20px rgba(0, 0, 0, 0.95), 0 3px 10px rgba(0, 0, 0, 0.9), 0 1px 3px rgba(0, 0, 0, 0.8)',
-              letterSpacing: '0.02em',
-              fontWeight: '900'
+              textShadow: '0 4px 15px rgba(0, 0, 0, 0.9), 0 2px 8px rgba(0, 0, 0, 0.8), 0 1px 3px rgba(0, 0, 0, 0.7)',
+              letterSpacing: '0.01em',
+              fontWeight: '800'
             }}>
             {mainVisualData.title.split('\n').map((line, index) => (
               <React.Fragment key={index}>
@@ -278,11 +278,11 @@ const MainVisualAndDiagnosis: React.FC<MainVisualAndDiagnosisProps> = ({ onProce
               </React.Fragment>
             ))}
         </h2>
-        <p className="text-2xl md:text-3xl mb-12 max-w-3xl mx-auto leading-relaxed" 
+        <p className="text-lg md:text-xl lg:text-2xl mb-12 max-w-4xl mx-auto leading-relaxed" 
            style={{
              color: '#ffffff',
-             textShadow: '0 3px 10px rgba(0, 0, 0, 0.9), 0 1px 3px rgba(0, 0, 0, 0.8)',
-             fontWeight: '500'
+             textShadow: '0 2px 8px rgba(0, 0, 0, 0.8), 0 1px 3px rgba(0, 0, 0, 0.7)',
+             fontWeight: '400'
            }}>
             {mainVisualData.subtitle}
         </p>
