@@ -1,5 +1,18 @@
+-- MoneyTicket 管理者システム用データベーススキーマ
+-- 強化されたセキュリティ機能を含む
+
+-- 既存のポリシーとテーブルをクリーンアップ
+DROP POLICY IF EXISTS "admin_credentials_policy" ON admin_credentials;
+DROP POLICY IF EXISTS "Admin credentials access" ON admin_credentials;
+DROP POLICY IF EXISTS "Admin login attempts access" ON admin_login_attempts;
+DROP POLICY IF EXISTS "Audit logs access" ON audit_logs;
+
+DROP TABLE IF EXISTS admin_credentials CASCADE;
+DROP TABLE IF EXISTS admin_login_attempts CASCADE;
+DROP TABLE IF EXISTS audit_logs CASCADE;
+
 -- 管理者認証情報テーブル（セキュア）
-CREATE TABLE IF NOT EXISTS admin_credentials (
+CREATE TABLE admin_credentials (
     id BIGSERIAL PRIMARY KEY,
     username VARCHAR(50) UNIQUE NOT NULL,
     password_hash VARCHAR(255) NOT NULL, -- SHA-256 ハッシュ
@@ -16,7 +29,7 @@ CREATE TABLE IF NOT EXISTS admin_credentials (
 );
 
 -- 管理者ログイン試行履歴テーブル
-CREATE TABLE IF NOT EXISTS admin_login_attempts (
+CREATE TABLE admin_login_attempts (
     id BIGSERIAL PRIMARY KEY,
     username VARCHAR(50) NOT NULL,
     success BOOLEAN NOT NULL,
@@ -28,7 +41,7 @@ CREATE TABLE IF NOT EXISTS admin_login_attempts (
 );
 
 -- システム監査ログテーブル
-CREATE TABLE IF NOT EXISTS audit_logs (
+CREATE TABLE audit_logs (
     id BIGSERIAL PRIMARY KEY,
     event_type VARCHAR(100) NOT NULL,
     username VARCHAR(50),
@@ -47,9 +60,24 @@ CREATE INDEX IF NOT EXISTS idx_audit_logs_event_type ON audit_logs(event_type);
 CREATE INDEX IF NOT EXISTS idx_audit_logs_username ON audit_logs(username);
 CREATE INDEX IF NOT EXISTS idx_audit_logs_created_at ON audit_logs(created_at);
 
+-- Row Level Security (RLS) の有効化
+ALTER TABLE admin_credentials ENABLE ROW LEVEL SECURITY;
+ALTER TABLE admin_login_attempts ENABLE ROW LEVEL SECURITY;
+ALTER TABLE audit_logs ENABLE ROW LEVEL SECURITY;
+
+-- 管理者用のポリシー作成（サービスロールのみアクセス可能）
+CREATE POLICY "admin_credentials_access_policy" ON admin_credentials
+    FOR ALL USING (auth.role() = 'service_role');
+
+CREATE POLICY "admin_login_attempts_access_policy" ON admin_login_attempts
+    FOR ALL USING (auth.role() = 'service_role');
+
+CREATE POLICY "audit_logs_access_policy" ON audit_logs
+    FOR ALL USING (auth.role() = 'service_role');
+
 -- デフォルト管理者アカウント作成
 -- ユーザー名: admin
--- パスワード: MoneyTicket2024! (ハッシュ化済み)
+-- パスワード: G3MIZAu74IvkH7NK (ハッシュ化済み)
 INSERT INTO admin_credentials (
     username, 
     password_hash, 
@@ -80,6 +108,7 @@ END;
 $$ LANGUAGE plpgsql;
 
 -- トリガー作成
+DROP TRIGGER IF EXISTS trigger_admin_credentials_update ON admin_credentials;
 CREATE TRIGGER trigger_admin_credentials_update
     BEFORE UPDATE ON admin_credentials
     FOR EACH ROW
