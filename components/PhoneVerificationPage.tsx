@@ -15,8 +15,10 @@ const PhoneVerificationPage: React.FC<PhoneVerificationPageProps> = ({
   onVerificationSuccess,
   onBack
 }) => {
-  const [step, setStep] = useState<VerificationStep>('phone-input');
-  const [phoneNumber, setPhoneNumber] = useState('');
+  // トップページで入力された電話番号があれば、直接OTP送信ステップに進む
+  const hasPhoneFromSession = userSession.phoneNumber && userSession.phoneNumber.trim() !== '';
+  const [step, setStep] = useState<VerificationStep>(hasPhoneFromSession ? 'otp-verification' : 'phone-input');
+  const [phoneNumber, setPhoneNumber] = useState(userSession.phoneNumber || '');
   const [otpCode, setOtpCode] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -29,6 +31,50 @@ const PhoneVerificationPage: React.FC<PhoneVerificationPageProps> = ({
       return () => clearTimeout(timer);
     }
   }, [countdown]);
+
+  // トップページから電話番号が渡された場合、自動的にOTPを送信
+  useEffect(() => {
+    if (hasPhoneFromSession && step === 'otp-verification' && countdown === 0) {
+      const sendAutoOTP = async () => {
+        try {
+          if (!validatePhoneNumber(phoneNumber)) {
+            setError('有効な日本の電話番号を入力してください（例: 090-1234-5678）');
+            setStep('phone-input');
+            return;
+          }
+
+          const normalizedPhone = normalizePhoneNumber(phoneNumber);
+          
+          // 電話番号の重複チェック
+          const isUsed = await checkPhoneNumberUsage(normalizedPhone);
+          if (isUsed) {
+            setError('この電話番号は既に診断を完了しています。お一人様一回限りとなっております。');
+            setStep('phone-input');
+            return;
+          }
+
+          const { error } = await supabase.auth.signInWithOtp({
+            phone: normalizedPhone,
+            options: {
+              channel: 'sms'
+            }
+          });
+
+          if (error) {
+            throw error;
+          }
+
+          setCountdown(60); // 60秒のカウントダウン
+          
+        } catch (error: any) {
+          setError(error.message || 'SMS送信に失敗しました。しばらく後にもう一度お試しください。');
+          setStep('phone-input');
+        }
+      };
+
+      sendAutoOTP();
+    }
+  }, [hasPhoneFromSession, step, phoneNumber, countdown]);
 
   // 電話番号の形式を正規化
   const normalizePhoneNumber = (phone: string): string => {
@@ -261,6 +307,12 @@ const PhoneVerificationPage: React.FC<PhoneVerificationPageProps> = ({
           </div>
           <h1 className="text-2xl font-bold text-gray-800 mb-2">SMS認証</h1>
           <p className="text-gray-600">診断結果をご覧いただくために、SMS認証を行います</p>
+          {hasPhoneFromSession && step === 'otp-verification' && (
+            <p className="text-green-600 text-sm mt-2">
+              <i className="fas fa-check-circle mr-1"></i>
+              認証コードを送信しました
+            </p>
+          )}
         </div>
 
         {/* 電話番号入力ステップ */}
@@ -328,6 +380,11 @@ const PhoneVerificationPage: React.FC<PhoneVerificationPageProps> = ({
               <p className="text-gray-600 text-sm">
                 {phoneNumber} にSMSで6桁のコードを送信しました
               </p>
+              {hasPhoneFromSession && (
+                <p className="text-blue-600 text-xs mt-2">
+                  ※ 診断フォームで入力された電話番号に自動送信しました
+                </p>
+              )}
             </div>
 
             <form onSubmit={handleVerifyOTP} className="space-y-4">
@@ -382,7 +439,11 @@ const PhoneVerificationPage: React.FC<PhoneVerificationPageProps> = ({
             </div>
 
             <button
-              onClick={() => setStep('phone-input')}
+              onClick={() => {
+                setStep('phone-input');
+                setError(null);
+                setCountdown(0);
+              }}
               className="w-full mt-4 text-gray-600 hover:text-gray-800 py-2 transition-colors duration-200"
             >
               <i className="fas fa-arrow-left mr-2"></i>
