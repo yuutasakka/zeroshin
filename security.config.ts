@@ -262,7 +262,7 @@ export class SecureConfigManager {
         return cached.value;
       }
 
-      const response = await fetch(`${SUPABASE_CONFIG.url}/rest/v1/secure_config?key=eq.${key}`, {
+      const response = await fetch(`${SUPABASE_CONFIG.url}/rest/v1/secure_config?key.eq=${key}`, {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${SUPABASE_CONFIG.serviceRoleKey}`,
@@ -299,7 +299,7 @@ export class SecureConfigManager {
         return null;
       }
 
-      const response = await fetch(`${SUPABASE_CONFIG.url}/rest/v1/admin_credentials?username=eq.admin`, {
+      const response = await fetch(`${SUPABASE_CONFIG.url}/rest/v1/admin_credentials?username.eq=admin`, {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${SUPABASE_CONFIG.serviceRoleKey}`,
@@ -329,7 +329,7 @@ export class SecureConfigManager {
         return false;
       }
 
-      const response = await fetch(`${SUPABASE_CONFIG.url}/rest/v1/admin_credentials?username=eq.admin`, {
+      const response = await fetch(`${SUPABASE_CONFIG.url}/rest/v1/admin_credentials?username.eq=admin`, {
         method: 'PATCH',
         headers: {
           'Authorization': `Bearer ${SUPABASE_CONFIG.serviceRoleKey}`,

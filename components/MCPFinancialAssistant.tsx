@@ -123,7 +123,7 @@ export const MCPFinancialAssistant: React.FC<MCPFinancialAssistantProps> = ({ cl
         return;
       }
 
-      const response = await fetch(`${supabaseConfig.url}/rest/v1/expert_contact_settings?setting_key=eq.primary_financial_advisor&is_active=eq.true&select=*`, {
+      const response = await fetch(`${supabaseConfig.url}/rest/v1/expert_contact_settings?setting_key.eq=primary_financial_advisor&is_active.eq=true&select=*`, {
         headers: {
           'Authorization': `Bearer ${supabaseConfig.key}`,
           'apikey': supabaseConfig.key,

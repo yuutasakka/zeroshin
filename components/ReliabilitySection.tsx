@@ -13,7 +13,7 @@ const createSupabaseHelper = () => {
         eq: (column: string, value: any) => ({
           single: async () => {
             try {
-              const response = await fetch(`${config.url}/rest/v1/${table}?${column}=eq.${value}&select=${columns}`, {
+              const response = await fetch(`${config.url}/rest/v1/${table}?${column}.eq=${value}&select=${columns}`, {
                 headers: {
                   'apikey': config.key,
                   'Authorization': `Bearer ${config.key}`,

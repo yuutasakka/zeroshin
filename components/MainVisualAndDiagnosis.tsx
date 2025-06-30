@@ -100,7 +100,7 @@ const MainVisualAndDiagnosis: React.FC<MainVisualAndDiagnosisProps> = ({ onProce
         return;
       }
 
-      const response = await fetch(`${supabaseConfig.url}/rest/v1/homepage_content_settings?setting_key=eq.main_visual_data&select=*`, {
+      const response = await fetch(`${supabaseConfig.url}/rest/v1/homepage_content_settings?setting_key.eq=main_visual_data&select=*`, {
         headers: {
           'Authorization': `Bearer ${supabaseConfig.key}`,
           'apikey': supabaseConfig.key,

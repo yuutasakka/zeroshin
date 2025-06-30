@@ -62,7 +62,7 @@ export class SupabaseAdminAPI {
     try {
       secureLog('Supabase管理者認証情報取得を試行中...');
       
-      const response = await fetch(`${this.supabaseConfig.url}/rest/v1/admin_credentials?username=eq.${username}`, {
+      const response = await fetch(`${this.supabaseConfig.url}/rest/v1/admin_credentials?username.eq=${username}`, {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${this.supabaseConfig.key}`,
@@ -92,7 +92,7 @@ export class SupabaseAdminAPI {
     try {
       secureLog('Supabase管理者認証情報更新を試行中...', { id, updates });
       
-      const response = await fetch(`${this.supabaseConfig.url}/rest/v1/admin_credentials?id=eq.${id}`, {
+      const response = await fetch(`${this.supabaseConfig.url}/rest/v1/admin_credentials?id.eq=${id}`, {
         method: 'PATCH',
         headers: {
           'Authorization': `Bearer ${this.supabaseConfig.key}`,

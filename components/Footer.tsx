@@ -69,7 +69,7 @@ const Footer: React.FC<FooterProps> = ({ onNavigateToAdminLogin }) => {
         return;
       }
 
-      const response = await fetch(`${supabaseConfig.url}/rest/v1/homepage_content_settings?setting_key=eq.footer_data&select=*`, {
+      const response = await fetch(`${supabaseConfig.url}/rest/v1/homepage_content_settings?setting_key.eq=footer_data&select=*`, {
         headers: {
           'Authorization': `Bearer ${supabaseConfig.key}`,
           'apikey': supabaseConfig.key,

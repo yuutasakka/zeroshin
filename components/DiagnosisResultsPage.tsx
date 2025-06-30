@@ -199,7 +199,7 @@ const DiagnosisResultsPage: React.FC<DiagnosisResultsPageProps> = ({ diagnosisDa
           return;
         }
 
-        const response = await fetch(`${supabaseConfig.url}/rest/v1/financial_planners?is_active=eq.true&order=display_order.asc&limit=4`, {
+        const response = await fetch(`${supabaseConfig.url}/rest/v1/financial_planners?is_active.eq=true&order=display_order.asc&limit=4`, {
           headers: {
             'Authorization': `Bearer ${supabaseConfig.key}`,
             'apikey': supabaseConfig.key,

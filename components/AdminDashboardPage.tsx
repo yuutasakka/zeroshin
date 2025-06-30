@@ -855,7 +855,7 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
   // Legal Links Management Functions
   const loadHomepageContentFromSupabase = async (settingKey: string) => {
     try {
-      const response = await fetch(`${supabaseConfig.url}/rest/v1/homepage_content_settings?setting_key=eq.${settingKey}`, {
+      const response = await fetch(`${supabaseConfig.url}/rest/v1/homepage_content_settings?setting_key.eq=${settingKey}`, {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${supabaseConfig.key}`,
@@ -978,7 +978,7 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
 
   const loadExpertContactSettings = async () => {
     try {
-      const response = await fetch(`${supabaseConfig.url}/rest/v1/expert_contact_settings?setting_key=eq.primary_financial_advisor&is_active=eq.true&select=*`, {
+      const response = await fetch(`${supabaseConfig.url}/rest/v1/expert_contact_settings?setting_key.eq=primary_financial_advisor&is_active.eq=true&select=*`, {
         headers: {
           'Authorization': `Bearer ${supabaseConfig.key}`,
           'apikey': supabaseConfig.key,
@@ -1058,7 +1058,7 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
         secureLog('専門家設定をSupabaseに保存完了');
       } else {
         // UPSERTを試行
-        const updateResponse = await fetch(`${supabaseConfig.url}/rest/v1/expert_contact_settings?setting_key=eq.primary_financial_advisor`, {
+        const updateResponse = await fetch(`${supabaseConfig.url}/rest/v1/expert_contact_settings?setting_key.eq=primary_financial_advisor`, {
           method: 'PATCH',
           headers: {
             'Authorization': `Bearer ${supabaseConfig.key}`,
@@ -1161,7 +1161,7 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
       if (supabaseConfig.url && supabaseConfig.key && !supabaseConfig.url.includes('your-project')) {
         const method = editingPlanner.id ? 'PATCH' : 'POST';
         const url = editingPlanner.id 
-          ? `${supabaseConfig.url}/rest/v1/financial_planners?id=eq.${editingPlanner.id}`
+          ? `${supabaseConfig.url}/rest/v1/financial_planners?id.eq=${editingPlanner.id}`
           : `${supabaseConfig.url}/rest/v1/financial_planners`;
 
         const response = await fetch(url, {
@@ -1203,7 +1203,7 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
     setPlannerStatus('削除中...');
     try {
       if (supabaseConfig.url && supabaseConfig.key && !supabaseConfig.url.includes('your-project')) {
-        const response = await fetch(`${supabaseConfig.url}/rest/v1/financial_planners?id=eq.${plannerId}`, {
+        const response = await fetch(`${supabaseConfig.url}/rest/v1/financial_planners?id.eq=${plannerId}`, {
           method: 'DELETE',
           headers: {
             'Authorization': `Bearer ${supabaseConfig.key}`,
