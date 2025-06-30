@@ -22,9 +22,7 @@ import { ColorThemeProvider } from './components/ColorThemeContext';
 import { DiagnosisFormState, PageView, UserSessionData } from './types';
 import { initializeSampleData } from './data/sampleData';
 import RegistrationRequestPage from './components/RegistrationRequestPage';
-import ChangePasswordPage from './components/ChangePasswordPage';
 import ProductionSecurityValidator from './components/ProductionSecurityValidator';
-import WebSocketErrorSuppressor from './components/WebSocketErrorSuppressor';
 
 // AI Client Initialization (GoogleGenAI) has been removed from the frontend.
 // API calls to Gemini API should be proxied through a secure backend server
@@ -553,15 +551,10 @@ const App: React.FC = () => {
 
   // パスワード変更ページのレンダリング
   if (currentPage === 'changePassword') {
-    return (
-      <ColorThemeProvider>
-        <ChangePasswordPage 
-          onPasswordChanged={handlePasswordChanged}
-          onNavigateHome={navigateToHome}
-          onLogout={handleAdminLogout}
-        />
-      </ColorThemeProvider>
-    );
+    // パスワード変更機能は現在無効化されています
+    // 管理画面に直接リダイレクト
+    setCurrentPage('adminDashboard');
+    return null;
   }
 
   // Default page is 'diagnosis'
@@ -569,9 +562,6 @@ const App: React.FC = () => {
     <ColorThemeProvider>
       <div className="App min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
         <ProductionSecurityValidator />
-        
-        {/* WebSocket接続エラー抑制 */}
-        <WebSocketErrorSuppressor />
         
         <Header />
         <MainVisualAndDiagnosis onProceedToVerification={handleProceedToVerification} />
