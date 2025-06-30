@@ -129,9 +129,13 @@ const App: React.FC = () => {
               setCurrentPage('adminDashboard');
             } else {
               setSupabaseUser(null);
-              setIsSupabaseAuth(false);
-              setIsAdminLoggedIn(false);
-              setCurrentPage('diagnosis');
+              // Supabase認証が解除された場合のみ状態をリセット
+              // 従来認証（admin/password）が有効な場合は影響しない
+              if (isSupabaseAuth) {
+                setIsSupabaseAuth(false);
+                setIsAdminLoggedIn(false);
+                setCurrentPage('diagnosis');
+              }
             }
           }
         );
@@ -160,16 +164,21 @@ const App: React.FC = () => {
           const session = JSON.parse(adminSession);
           const now = Date.now();
           
-          if (session.expires && now > session.expires) {
+          // expiryTimeがある場合のみ有効期限をチェック
+          if (session.expiryTime && now > new Date(session.expiryTime).getTime()) {
             // 期限切れセッションをクリア
             sessionStorage.removeItem('admin_authenticated');
             localStorage.removeItem('admin_session');
             setIsAdminLoggedIn(false);
-            setCurrentPage('diagnosis');
-          } else if (session.username === 'admin') {
+            if (currentPage === 'adminDashboard') {
+              setCurrentPage('diagnosis');
+            }
+          } else if (session.username === 'admin' || session.authenticated === true) {
             // 有効なセッションが存在する場合
             setIsAdminLoggedIn(true);
-            setCurrentPage('adminDashboard');
+            if (currentPage !== 'adminDashboard') {
+              setCurrentPage('adminDashboard');
+            }
           }
         } else {
           // 不完全なセッション情報をクリア
@@ -344,7 +353,14 @@ const App: React.FC = () => {
     } else {
       // 従来認証の場合（後方互換性）
       setIsAdminLoggedIn(true);
+      setIsSupabaseAuth(false); // 従来認証であることを明示
       setCurrentPage('adminDashboard');
+      
+      // セッション情報が適切に保存されているかチェック
+      const adminSession = localStorage.getItem('admin_session');
+      if (adminSession) {
+        sessionStorage.setItem('admin_authenticated', 'true');
+      }
     }
     
     window.scrollTo(0,0);
