@@ -12,6 +12,7 @@ import AdminLoginPage from './components/AdminLoginPage';
 import AdminDashboardPage from './components/AdminDashboardPage';
 // 新しいSupabase Auth関連のインポート
 import { SupabaseAuthLogin } from './components/SupabaseAuthLogin';
+import LoginSelectionPage from './components/LoginSelectionPage';
 import { AuthGuard, AuthenticatedHeader } from './components/AuthGuard';
 import { OneTimeUsageNotice } from './components/OneTimeUsageNotice';
 import { supabase, diagnosisManager } from './components/supabaseClient';
@@ -93,7 +94,7 @@ const App: React.FC = () => {
 
   useEffect(() => {
     // Apply body class for verification and results pages for consistent styling
-    if (currentPage === 'verification' || currentPage === 'results' || currentPage === 'login' || currentPage === 'adminDashboard') {
+    if (currentPage === 'verification' || currentPage === 'results' || currentPage === 'loginSelection' || currentPage === 'traditionalLogin' || currentPage === 'supabaseLogin' || currentPage === 'adminDashboard') {
       document.body.classList.add('verification-page-active'); // This class now applies premium dark gradient
     } else {
       document.body.classList.remove('verification-page-active');
@@ -395,13 +396,45 @@ const App: React.FC = () => {
   };
 
   const navigateToAdminLogin = () => {
-    setCurrentPage('login');
+    setCurrentPage('loginSelection');
+    window.scrollTo(0,0);
+  };
+
+  const navigateToTraditionalLogin = () => {
+    setCurrentPage('traditionalLogin');
+    window.scrollTo(0,0);
+  };
+
+  const navigateToSupabaseLogin = () => {
+    setCurrentPage('supabaseLogin');
     window.scrollTo(0,0);
   };
 
 
-  // ログインページのレンダリング
-  if (currentPage === 'login') {
+  // ログイン選択ページのレンダリング
+  if (currentPage === 'loginSelection') {
+    return (
+      <ColorThemeProvider>
+        <LoginSelectionPage 
+          onSelectTraditionalAuth={navigateToTraditionalLogin}
+          onSelectSupabaseAuth={navigateToSupabaseLogin}
+          onNavigateHome={navigateToHome}
+        />
+      </ColorThemeProvider>
+    );
+  }
+
+  // 従来認証ログインページのレンダリング
+  if (currentPage === 'traditionalLogin') {
+    return (
+      <ColorThemeProvider>
+        <AdminLoginPage onLogin={handleAdminLoginSuccess} onNavigateHome={navigateToHome} />
+      </ColorThemeProvider>
+    );
+  }
+
+  // Supabase認証ログインページのレンダリング
+  if (currentPage === 'supabaseLogin') {
     return (
       <ColorThemeProvider>
         <SupabaseAuthLogin onLogin={handleAdminLoginSuccess} onNavigateHome={navigateToHome} />
@@ -430,10 +463,14 @@ const App: React.FC = () => {
         </ColorThemeProvider>
       );
     } else {
-      // 認証されていない場合はログインページへ
+      // 認証されていない場合はログイン選択ページへ
       return (
         <ColorThemeProvider>
-          <SupabaseAuthLogin onLogin={handleAdminLoginSuccess} onNavigateHome={navigateToHome} />
+          <LoginSelectionPage 
+            onSelectTraditionalAuth={navigateToTraditionalLogin}
+            onSelectSupabaseAuth={navigateToSupabaseLogin}
+            onNavigateHome={navigateToHome}
+          />
         </ColorThemeProvider>
       );
     }
