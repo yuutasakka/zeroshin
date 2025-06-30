@@ -101,23 +101,81 @@ const ReliabilitySection: React.FC = () => {
       
       // Supabase設定が無効な場合はエラーを投げる
       if (!config.url || !config.key || config.url.includes('your-project') || config.key.includes('your-anon-key')) {
-        throw new Error('Supabase設定が無効です。環境変数を確認してください。');
+        secureLog('Supabase設定が無効です。ローカルストレージを使用します。');
+        return null;
       }
 
-      const supabase = createSupabaseHelper();
-      const { data, error } = await supabase
-        .from('admin_settings')
-        .select('setting_data')
-        .eq('setting_key', 'testimonials')
-        .single();
+      // まずSupabaseから取得を試行
+      try {
+        const supabase = createSupabaseHelper();
+        const { data, error } = await supabase
+          .from('admin_settings')
+          .select('setting_data')
+          .eq('setting_key', 'testimonials')
+          .single();
 
-      if (!error && data?.setting_data) {
-        return data.setting_data;
+        if (!error && data?.setting_data) {
+          secureLog('Supabaseからお客様の声を正常取得');
+          return data.setting_data;
+        } else if (error) {
+          secureLog('Supabaseエラー（テーブル未作成の可能性）:', error);
+        }
+      } catch (supabaseError) {
+        secureLog('Supabaseアクセスエラー:', supabaseError);
       }
+
+      // Supabaseから取得できない場合はローカルストレージを確認
+      secureLog('ローカルストレージからお客様の声を取得を試行');
+      
+      // 1. 管理画面で保存されたカスタムデータ
+      const customTestimonials = localStorage.getItem('customTestimonials');
+      if (customTestimonials) {
+        try {
+          const parsedCustom = JSON.parse(customTestimonials);
+          if (parsedCustom && parsedCustom.length > 0) {
+            secureLog('カスタムお客様の声をローカルストレージから取得');
+            return parsedCustom;
+          }
+        } catch (parseError) {
+          secureLog('カスタムお客様の声の解析エラー:', parseError);
+        }
+      }
+
+      // 2. サンプルデータ
+      const sampleTestimonials = localStorage.getItem('testimonials');
+      if (sampleTestimonials) {
+        try {
+          const parsedSample = JSON.parse(sampleTestimonials);
+          if (parsedSample && parsedSample.length > 0) {
+            secureLog('サンプルお客様の声をローカルストレージから取得');
+            return parsedSample;
+          }
+        } catch (parseError) {
+          secureLog('サンプルお客様の声の解析エラー:', parseError);
+        }
+      }
+
+      secureLog('ローカルストレージにもデータがありません。デフォルトデータを使用します。');
+      return null;
     } catch (error) {
       secureLog('お客様の声Supabase読み込みエラー:', error);
+      
+      // エラー時でもローカルストレージから取得を試行
+      try {
+        const customTestimonials = localStorage.getItem('customTestimonials');
+        if (customTestimonials) {
+          const parsedCustom = JSON.parse(customTestimonials);
+          if (parsedCustom && parsedCustom.length > 0) {
+            secureLog('エラー時フォールバック: カスタムお客様の声を取得');
+            return parsedCustom;
+          }
+        }
+      } catch (fallbackError) {
+        secureLog('フォールバック取得エラー:', fallbackError);
+      }
+
+      return null;
     }
-    return null;
   };
 
   return (

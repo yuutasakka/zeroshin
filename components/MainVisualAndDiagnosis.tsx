@@ -92,14 +92,28 @@ const MainVisualAndDiagnosis: React.FC<MainVisualAndDiagnosisProps> = ({ onProce
 
   const loadMainVisualFromSupabase = async () => {
     try {
+      // まずローカルストレージを確認
+      const localMainVisualData = localStorage.getItem('customMainVisualData');
+      if (localMainVisualData) {
+        try {
+          const parsedLocal = JSON.parse(localMainVisualData);
+          setMainVisualData(parsedLocal);
+          secureLog('ローカルストレージからメインビジュアルデータを読み込み');
+          return;
+        } catch (parseError) {
+          secureLog('ローカルストレージのメインビジュアルデータ解析エラー:', parseError);
+        }
+      }
+
       const supabaseConfig = createSupabaseClient();
       
       // 本番環境でSupabase設定がない場合はデフォルトデータを使用
       if (!supabaseConfig.url || !supabaseConfig.key) {
-        secureLog('⚠️ Supabase設定なし：デフォルトデータを使用');
+        secureLog('⚠️ MainVisual: Supabase設定なし：デフォルトデータを使用');
         return;
       }
 
+      // Supabaseから取得を試行
       const response = await fetch(`${supabaseConfig.url}/rest/v1/homepage_content_settings?setting_key.eq=main_visual_data&select=*`, {
         headers: {
           'Authorization': `Bearer ${supabaseConfig.key}`,
@@ -111,15 +125,49 @@ const MainVisualAndDiagnosis: React.FC<MainVisualAndDiagnosisProps> = ({ onProce
       if (response.ok) {
         const data = await response.json();
         if (data && data.length > 0 && data[0].setting_data) {
-          secureLog('✅ メインビジュアルデータをSupabaseから読み込み:', data[0].setting_data);
-          setMainVisualData(data[0].setting_data);
+          const mainVisualDataFromSupabase = data[0].setting_data;
+          setMainVisualData(mainVisualDataFromSupabase);
+          // Supabaseデータをローカルストレージにバックアップ
+          localStorage.setItem('customMainVisualData', JSON.stringify(mainVisualDataFromSupabase));
+          secureLog('✅ メインビジュアルデータをSupabaseから読み込み、ローカルにバックアップ:', mainVisualDataFromSupabase);
+          return;
         }
       } else {
-        secureLog('メインビジュアルデータの読み込みに失敗、デフォルトデータを使用');
+        secureLog(`メインビジュアルデータの読み込みに失敗 ${response.status}、デフォルトデータを使用`);
       }
+
+      // サンプルデータフォールバック
+      const sampleMainVisualData = localStorage.getItem('main_visual_data');
+      if (sampleMainVisualData) {
+        try {
+          const parsedSample = JSON.parse(sampleMainVisualData);
+          setMainVisualData(parsedSample);
+          secureLog('サンプルメインビジュアルデータを使用');
+          return;
+        } catch (parseError) {
+          secureLog('サンプルメインビジュアルデータ解析エラー:', parseError);
+        }
+      }
+
+      secureLog('デフォルトメインビジュアルデータを使用');
     } catch (error) {
-      secureLog('メインビジュアルデータ読み込みエラー、デフォルトデータを使用:', error);
-      // エラーが発生してもデフォルトデータを使用するだけで、ユーザーにはエラーを表示しない
+      secureLog('メインビジュアルデータ読み込みエラー、フォールバック処理中:', error);
+      
+      // エラー時でもローカルストレージを確認
+      try {
+        const fallbackMainVisualData = localStorage.getItem('customMainVisualData');
+        if (fallbackMainVisualData) {
+          const parsedFallback = JSON.parse(fallbackMainVisualData);
+          setMainVisualData(parsedFallback);
+          secureLog('エラー時フォールバック: ローカルストレージからメインビジュアルデータを読み込み');
+          return;
+        }
+      } catch (fallbackError) {
+        secureLog('フォールバックメインビジュアルデータエラー:', fallbackError);
+      }
+
+      // 最終的にはデフォルトデータを使用（エラーを表示しない）
+      secureLog('最終フォールバック: デフォルトメインビジュアルデータを使用');
     }
   };
 

@@ -17,11 +17,16 @@ interface AdminLoginPageProps {
 }
 
 const AdminLoginPage: React.FC<AdminLoginPageProps> = ({ onLogin, onNavigateHome }) => {
+  const [mode, setMode] = useState<'login' | 'register'>('login');
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [phoneNumber, setPhoneNumber] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [loginAttempts, setLoginAttempts] = useState(0);
   const [isLocked, setIsLocked] = useState(false);
   const [lockoutTime, setLockoutTime] = useState<number | null>(null);
@@ -92,6 +97,114 @@ const AdminLoginPage: React.FC<AdminLoginPageProps> = ({ onLogin, onNavigateHome
     } else {
       setError(`ログインに失敗しました。あと${MAX_LOGIN_ATTEMPTS - newAttempts}回試行できます。`);
       await SupabaseAdminAuth.updateFailedAttempts(username, newAttempts);
+    }
+  };
+
+  // 新規登録ハンドラー
+  const handleRegister = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    // 入力をサニタイゼーション
+    const sanitizedUsername = sanitizeInput(username);
+    const sanitizedPhoneNumber = phoneNumber.replace(/\D/g, ''); // 数字のみ
+    
+    secureLog('新規管理者登録処理開始', { username: sanitizedUsername });
+    
+    // 入力値検証
+    if (!sanitizedUsername || !password || !confirmPassword || !sanitizedPhoneNumber) {
+      setError('すべての項目を入力してください。');
+      return;
+    }
+
+    if (sanitizedUsername.length < 3) {
+      setError('ユーザー名は3文字以上で入力してください。');
+      return;
+    }
+
+    if (password.length < 8) {
+      setError('パスワードは8文字以上で入力してください。');
+      return;
+    }
+
+    if (password !== confirmPassword) {
+      setError('パスワードが一致しません。');
+      return;
+    }
+
+    if (!/^\d{10,11}$/.test(sanitizedPhoneNumber)) {
+      setError('電話番号は10〜11桁の数字で入力してください。');
+      return;
+    }
+
+    // パスワード強度チェック
+    const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]/;
+    if (!passwordRegex.test(password)) {
+      setError('パスワードは大文字、小文字、数字、記号を含む必要があります。');
+      return;
+    }
+
+    setLoading(true);
+    setError('');
+    setSuccess('');
+
+    try {
+      // 管理者認証情報の作成
+      const result = await SupabaseAdminAuth.createAdminCredentials({
+        username: sanitizedUsername,
+        password: password,
+        phone_number: `+81${sanitizedPhoneNumber}`,
+        is_active: true
+      });
+
+      if (result.success) {
+        setSuccess('管理者アカウントが正常に作成されました。ログインページに切り替えてください。');
+        
+        // 監査ログに記録
+        await SupabaseAdminAuth.recordAuditLog(
+          'admin_register_success',
+          `新規管理者登録成功: ${sanitizedUsername}`,
+          sanitizedUsername,
+          'info',
+          { phone_number: `+81${sanitizedPhoneNumber}`, user_agent: navigator.userAgent }
+        );
+
+        // フォームをリセット
+        setUsername('');
+        setPassword('');
+        setConfirmPassword('');
+        setPhoneNumber('');
+        
+        // 3秒後にログインモードに切り替え
+        setTimeout(() => {
+          setMode('login');
+          setSuccess('');
+        }, 3000);
+      } else {
+        setError(result.error || '登録に失敗しました。');
+        
+        // 監査ログに記録
+        await SupabaseAdminAuth.recordAuditLog(
+          'admin_register_failure',
+          `新規管理者登録失敗: ${sanitizedUsername} - ${result.error}`,
+          sanitizedUsername,
+          'warning',
+          { phone_number: `+81${sanitizedPhoneNumber}`, error: result.error, user_agent: navigator.userAgent }
+        );
+      }
+    } catch (error) {
+      setError('登録処理中にエラーが発生しました。しばらく待ってから再試行してください。');
+      secureLog('新規管理者登録エラー:', error);
+      
+      // 監査ログに記録
+      await SupabaseAdminAuth.recordAuditLog(
+        'admin_register_error',
+        `新規管理者登録エラー: ${error}`,
+        sanitizedUsername,
+        'error',
+        { error: String(error), user_agent: navigator.userAgent }
+      );
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -243,10 +356,16 @@ const AdminLoginPage: React.FC<AdminLoginPageProps> = ({ onLogin, onNavigateHome
         <div className="text-center">
           <div className="mx-auto h-16 w-16 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center mb-4">
             <svg className="h-8 w-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+              {mode === 'login' ? (
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+              ) : (
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
+              )}
             </svg>
           </div>
-          <h2 className="text-3xl font-bold text-gray-900">管理者ログイン</h2>
+          <h2 className="text-3xl font-bold text-gray-900">
+            {mode === 'login' ? '管理者ログイン' : '新規管理者登録'}
+          </h2>
           <p className="mt-2 text-sm text-gray-600">MoneyTicket 管理画面</p>
         </div>
 
@@ -268,7 +387,7 @@ const AdminLoginPage: React.FC<AdminLoginPageProps> = ({ onLogin, onNavigateHome
             </div>
           )}
 
-          <form onSubmit={handleLogin} className="space-y-6">
+          <form onSubmit={mode === 'login' ? handleLogin : handleRegister} className="space-y-6">
             <div>
               <label htmlFor="username" className="block text-sm font-medium text-gray-700 mb-2">
                 ユーザー名
@@ -298,8 +417,13 @@ const AdminLoginPage: React.FC<AdminLoginPageProps> = ({ onLogin, onNavigateHome
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent pr-12"
                   placeholder="パスワードを入力"
                   disabled={loading || isLocked}
-                  autoComplete="current-password"
+                  autoComplete={mode === 'login' ? "current-password" : "new-password"}
                 />
+                {mode === 'register' && (
+                  <p className="text-xs text-gray-500 mt-1">
+                    8文字以上、大文字・小文字・数字・記号を含む
+                  </p>
+                )}
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
@@ -319,6 +443,73 @@ const AdminLoginPage: React.FC<AdminLoginPageProps> = ({ onLogin, onNavigateHome
                 </button>
               </div>
             </div>
+
+            {mode === 'register' && (
+              <>
+                <div>
+                  <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 mb-2">
+                    パスワード確認
+                  </label>
+                  <div className="relative">
+                    <input
+                      id="confirmPassword"
+                      type={showConfirmPassword ? "text" : "password"}
+                      value={confirmPassword}
+                      onChange={(e) => setConfirmPassword(e.target.value)}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent pr-12"
+                      placeholder="パスワードを再入力"
+                      disabled={loading}
+                      autoComplete="new-password"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                      className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                      disabled={loading}
+                    >
+                      {showConfirmPassword ? (
+                        <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.878 9.878L3 3m6.878 6.878L21 21" />
+                        </svg>
+                      ) : (
+                        <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                        </svg>
+                      )}
+                    </button>
+                  </div>
+                </div>
+
+                <div>
+                  <label htmlFor="phoneNumber" className="block text-sm font-medium text-gray-700 mb-2">
+                    電話番号
+                  </label>
+                  <input
+                    id="phoneNumber"
+                    type="tel"
+                    value={phoneNumber}
+                    onChange={(e) => setPhoneNumber(e.target.value)}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    placeholder="09012345678"
+                    disabled={loading}
+                    autoComplete="tel"
+                  />
+                  <p className="text-xs text-gray-500 mt-1">ハイフンなしで入力してください</p>
+                </div>
+              </>
+            )}
+
+            {success && (
+              <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
+                <div className="flex items-center">
+                  <svg className="h-5 w-5 text-green-400 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                  </svg>
+                  <span className="text-sm text-green-700">{success}</span>
+                </div>
+              </div>
+            )}
 
             {error && (
               <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
@@ -342,22 +533,41 @@ const AdminLoginPage: React.FC<AdminLoginPageProps> = ({ onLogin, onNavigateHome
                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                   </svg>
-                  ログイン中...
+                  {mode === 'login' ? 'ログイン中...' : '登録中...'}
                 </div>
               ) : (
-                'ログイン'
+                mode === 'login' ? 'ログイン' : '新規登録'
               )}
             </button>
           </form>
 
-          <div className="mt-6 text-center">
+          <div className="mt-6 text-center space-y-3">
             <button
-              onClick={onNavigateHome}
-              className="text-sm text-gray-600 hover:text-gray-800 underline"
+              type="button"
+              onClick={() => {
+                setMode(mode === 'login' ? 'register' : 'login');
+                setError('');
+                setSuccess('');
+                setUsername('');
+                setPassword('');
+                setConfirmPassword('');
+                setPhoneNumber('');
+              }}
+              className="text-sm text-blue-600 hover:text-blue-800 underline"
               disabled={loading}
             >
-              ホームページに戻る
+              {mode === 'login' ? '新規管理者登録はこちら' : 'ログインはこちら'}
             </button>
+            
+            <div>
+              <button
+                onClick={onNavigateHome}
+                className="text-sm text-gray-600 hover:text-gray-800 underline"
+                disabled={loading}
+              >
+                ホームページに戻る
+              </button>
+            </div>
           </div>
 
 

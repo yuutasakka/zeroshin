@@ -222,9 +222,73 @@ export class SupabaseAdminAuth {
     }
   }
 
+  // 新規管理者認証情報を作成
+  static async createAdminCredentials(credentials: {
+    username: string;
+    password: string;
+    phone_number: string;
+    is_active: boolean;
+  }): Promise<{ success: boolean; error?: string }> {
+    try {
+      console.log('🔧 新規管理者認証情報作成開始', { username: credentials.username });
+      
+      // ユーザー名の重複チェック
+      const existingUser = await this.getAdminCredentials(credentials.username);
+      if (existingUser) {
+        return { success: false, error: 'このユーザー名は既に使用されています。' };
+      }
+
+      // パスワードをハッシュ化
+      const passwordHash = await this.hashPassword(credentials.password);
+      
+      // バックアップコードを生成
+      const backupCode = `BACKUP-${credentials.username.toUpperCase()}-${Date.now()}`;
+
+      // Supabaseに新規管理者を作成
+      const { data, error } = await supabase
+        .from('admin_credentials')
+        .insert({
+          username: credentials.username,
+          password_hash: passwordHash,
+          phone_number: credentials.phone_number,
+          backup_code: backupCode,
+          is_active: credentials.is_active,
+          failed_attempts: 0,
+          requires_password_change: false,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+          password_changed_at: new Date().toISOString()
+        })
+        .select()
+        .single();
+
+      if (error) {
+        console.error('❌ 管理者認証情報作成エラー:', error);
+        
+        // エラーの種類に応じたメッセージを返す
+        if (error.code === '23505') { // PostgreSQL unique violation
+          return { success: false, error: 'このユーザー名は既に使用されています。' };
+        }
+        
+        return { success: false, error: 'データベースエラーが発生しました。' };
+      }
+
+      console.log('✅ 新規管理者認証情報作成成功', { username: credentials.username, id: data.id });
+      return { success: true };
+    } catch (error) {
+      console.error('💥 管理者認証情報作成失敗:', error);
+      return { success: false, error: '予期しないエラーが発生しました。' };
+    }
+  }
+
   // パスワードハッシュ化（bcrypt - セキュア版）
   static async hashPassword(password: string): Promise<string> {
-    console.log('🔐 hashPassword開始（bcrypt）', { passwordLength: password.length });
+    const isProduction = process.env.NODE_ENV === 'production';
+    const isDevelopment = !isProduction;
+    
+    if (isDevelopment) {
+      console.log('🔐 hashPassword開始（bcrypt）', { passwordLength: password.length });
+    }
     
     try {
       // bcryptを使用してソルト付きでハッシュ化（10ラウンド）
@@ -232,17 +296,21 @@ export class SupabaseAdminAuth {
       const saltRounds = 12; // 本番環境では12ラウンド推奨
       const hash = await bcrypt.hash(password, saltRounds);
       
-      console.log('🔐 bcryptハッシュ化完了', { 
-        resultLength: hash.length,
-        resultPrefix: hash.substring(0, 10) + '...'
-      });
+      if (isDevelopment) {
+        console.log('🔐 bcryptハッシュ化完了', { 
+          resultLength: hash.length,
+          resultPrefix: hash.substring(0, 10) + '...'
+        });
+      }
       
       return hash;
     } catch (error) {
-      console.error('💥 bcryptハッシュ化エラー:', error);
-      // フォールバック: 強化されたSHA-256（ソルト付き）
-      console.warn('⚠️ bcrypt失敗、強化SHA-256にフォールバック');
+      if (isDevelopment) {
+        console.error('💥 bcryptハッシュ化エラー:', error);
+        console.warn('⚠️ bcrypt失敗、強化SHA-256にフォールバック');
+      }
       
+      // フォールバック: 強化されたSHA-256（ソルト付き）
       const salt = crypto.getRandomValues(new Uint8Array(32));
       const saltBase64 = btoa(String.fromCharCode(...salt));
       const saltedPassword = password + saltBase64;
@@ -260,12 +328,17 @@ export class SupabaseAdminAuth {
 
   // パスワード検証（bcrypt対応版）
   static async verifyPassword(password: string, hash: string): Promise<boolean> {
+    const isProduction = process.env.NODE_ENV === 'production';
+    const isDevelopment = !isProduction;
+    
     try {
-      console.log('🔑 verifyPassword開始（bcrypt対応）', { 
-        passwordLength: password.length, 
-        hashLength: hash.length,
-        hashPrefix: hash.substring(0, 10) + '...'
-      });
+      if (isDevelopment) {
+        console.log('🔑 verifyPassword開始（bcrypt対応）', { 
+          passwordLength: password.length, 
+          hashLength: hash.length,
+          hashPrefix: hash.substring(0, 10) + '...'
+        });
+      }
       
       // bcryptハッシュかどうかを判定
       if (hash.startsWith('$2a$') || hash.startsWith('$2b$') || hash.startsWith('$2y$')) {
@@ -273,7 +346,9 @@ export class SupabaseAdminAuth {
         const bcrypt = await import('bcrypt');
         const isValid = await bcrypt.compare(password, hash);
         
-        console.log('🔑 bcryptパスワード検証結果', { isValid });
+        if (isDevelopment) {
+          console.log('🔑 bcryptパスワード検証結果', { isValid });
+        }
         return isValid;
       } 
       // 強化SHA-256（ソルト付き）の検証
@@ -292,12 +367,28 @@ export class SupabaseAdminAuth {
         const computedHash = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
         
         const isValid = computedHash === expectedHash;
-        console.log('🔑 強化SHA-256パスワード検証結果', { isValid });
+        if (isDevelopment) {
+          console.log('🔑 強化SHA-256パスワード検証結果', { isValid });
+        }
         return isValid;
       }
       // 従来のSHA-256（後方互換性）
       else {
-        console.warn('⚠️ 従来のSHA-256ハッシュ検出 - アップグレード推奨');
+        // 本番環境でデフォルトハッシュ検出時の警告
+        const defaultHashes = [
+          'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855', // CHANGE_IN_PRODUCTION
+          '8cb3b12639ecacf3fe86a6cd67b1e1b2a277fc26b4ecd42e381a1327bb68390e' // G3MIZAu74IvkH7NK
+        ];
+        
+        if (isProduction && defaultHashes.includes(hash)) {
+          console.error('🚨 CRITICAL SECURITY WARNING: デフォルトパスワードハッシュが検出されました！本番環境では必ず変更してください！');
+          throw new Error('Default password detected in production environment');
+        }
+        
+        if (isDevelopment) {
+          console.warn('⚠️ 従来のSHA-256ハッシュ検出 - アップグレード推奨');
+        }
+        
         const encoder = new TextEncoder();
         const data = encoder.encode(password);
         const hashBuffer = await crypto.subtle.digest('SHA-256', data);
@@ -305,11 +396,15 @@ export class SupabaseAdminAuth {
         const hashedInput = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
         const isValid = hashedInput === hash;
         
-        console.log('🔑 従来SHA-256パスワード検証結果', { isValid });
+        if (isDevelopment) {
+          console.log('🔑 従来SHA-256パスワード検証結果', { isValid });
+        }
         return isValid;
       }
     } catch (error) {
-      console.error('💥 パスワード検証エラー:', error);
+      if (isDevelopment) {
+        console.error('💥 パスワード検証エラー:', error);
+      }
       return false;
     }
   }
@@ -653,5 +748,429 @@ export class DiagnosisSessionManager {
   }
 }
 
+// 新規登録申請の型定義
+export interface RegistrationRequest {
+  id: number;
+  full_name: string;
+  email: string;
+  phone_number: string;
+  organization?: string;
+  purpose: string;
+  status: 'pending' | 'approved' | 'rejected';
+  admin_notes?: string;
+  created_at: string;
+  updated_at: string;
+  reviewed_by?: string;
+  reviewed_at?: string;
+}
+
+// 新規登録申請管理クラス
+export class RegistrationRequestManager {
+  private supabase: SupabaseClient;
+  private readonly STORAGE_KEY = 'registration_requests_backup';
+
+  constructor() {
+    this.supabase = supabase;
+  }
+
+  // ローカルストレージから申請を取得
+  private getLocalRequests(): any[] {
+    try {
+      const stored = localStorage.getItem(this.STORAGE_KEY);
+      return stored ? JSON.parse(stored) : [];
+    } catch (error) {
+      console.error('ローカル申請データ読み込みエラー:', error);
+      return [];
+    }
+  }
+
+  // ローカルストレージに申請を保存
+  private saveToLocalStorage(request: any): void {
+    try {
+      const requests = this.getLocalRequests();
+      const existingIndex = requests.findIndex(r => r.id === request.id);
+      
+      if (existingIndex >= 0) {
+        requests[existingIndex] = request;
+      } else {
+        requests.push(request);
+      }
+      
+      localStorage.setItem(this.STORAGE_KEY, JSON.stringify(requests));
+    } catch (error) {
+      console.error('ローカル申請データ保存エラー:', error);
+    }
+  }
+
+  // Supabaseの利用可能性をチェック
+  private async isSupabaseAvailable(): Promise<boolean> {
+    try {
+      const { error } = await this.supabase
+        .from('registration_requests')
+        .select('id')
+        .limit(1);
+      
+      return !error;
+    } catch (error) {
+      return false;
+    }
+  }
+
+  // 新規登録申請を作成
+  async createRegistrationRequest(requestData: {
+    full_name: string;
+    email: string;
+    phone_number: string;
+    organization?: string;
+    purpose: string;
+  }): Promise<{ success: boolean; error?: string; id?: string }> {
+    try {
+      const normalizedPhone = requestData.phone_number.replace(/\D/g, '');
+      const requestId = `req_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+      
+      const request = {
+        id: requestId,
+        full_name: requestData.full_name,
+        email: requestData.email.toLowerCase(),
+        phone_number: normalizedPhone,
+        organization: requestData.organization || null,
+        purpose: requestData.purpose,
+        status: 'pending' as const,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      };
+
+      // Supabaseを試行
+      if (await this.isSupabaseAvailable()) {
+        const { data, error } = await this.supabase
+          .from('registration_requests')
+          .insert(request)
+          .select()
+          .single();
+
+        if (!error && data) {
+          // ローカルストレージにもバックアップ
+          this.saveToLocalStorage(data);
+          return { success: true, id: data.id };
+        }
+      }
+
+      // フォールバック: ローカルストレージのみ
+      console.warn('Supabase利用不可、ローカルストレージに保存');
+      this.saveToLocalStorage(request);
+      return { success: true, id: request.id };
+
+    } catch (error) {
+      console.error('登録申請作成エラー:', error);
+      return { success: false, error: 'システムエラーが発生しました。時間をおいて再度お試しください。' };
+    }
+  }
+
+  // メールアドレスの重複チェック
+  async checkEmailExists(email: string): Promise<boolean> {
+    try {
+      const normalizedEmail = email.toLowerCase();
+
+      // Supabaseを試行
+      if (await this.isSupabaseAvailable()) {
+        const { data, error } = await this.supabase
+          .from('registration_requests')
+          .select('id')
+          .eq('email', normalizedEmail)
+          .limit(1);
+
+        if (!error && data && data.length > 0) {
+          return true;
+        }
+      }
+
+      // ローカルストレージからもチェック
+      const localRequests = this.getLocalRequests();
+      return localRequests.some(req => req.email === normalizedEmail);
+
+    } catch (error) {
+      console.error('メール重複チェックエラー:', error);
+      return false;
+    }
+  }
+
+  // 申請一覧を取得（管理者用）
+  async getRegistrationRequests(status?: 'pending' | 'approved' | 'rejected'): Promise<RegistrationRequest[]> {
+    try {
+      // Supabaseを試行
+      if (await this.isSupabaseAvailable()) {
+        let query = this.supabase
+          .from('registration_requests')
+          .select('*')
+          .order('created_at', { ascending: false });
+
+        if (status) {
+          query = query.eq('status', status);
+        }
+
+        const { data, error } = await query;
+
+        if (!error && data) {
+          return data;
+        }
+      }
+
+      // フォールバック: ローカルストレージから取得
+      console.warn('Supabase利用不可、ローカルストレージから取得');
+      const localRequests = this.getLocalRequests();
+      
+      let filteredRequests = localRequests;
+      if (status) {
+        filteredRequests = localRequests.filter(req => req.status === status);
+      }
+
+      return filteredRequests.sort((a, b) => 
+        new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+      );
+
+    } catch (error) {
+      console.error('申請一覧取得エラー:', error);
+      return [];
+    }
+  }
+
+  // Edge Function経由で申請を承認/却下
+  async approveOrRejectRequest(
+    requestId: string, 
+    action: 'approve' | 'reject',
+    adminNotes?: string,
+    reviewedBy?: string
+  ): Promise<{ success: boolean; error?: string; message?: string }> {
+    try {
+      // Edge Function呼び出し
+      const { data, error } = await this.supabase.functions.invoke('approve-registration', {
+        body: {
+          requestId,
+          action,
+          adminNotes: adminNotes || '',
+          reviewedBy: reviewedBy || 'admin'
+        }
+      });
+
+      if (error) {
+        console.error('Edge Function呼び出しエラー:', error);
+        
+        // フォールバック: 直接データベース更新
+        return await this.directUpdateRequestStatus(requestId, action, adminNotes, reviewedBy);
+      }
+
+      if (data && data.success) {
+        // ローカルストレージも更新
+        await this.updateLocalRequestStatus(requestId, action, adminNotes, reviewedBy);
+        
+        return {
+          success: true,
+          message: action === 'approve' ? 
+            '申請が承認され、ユーザーアカウントが作成されました。' : 
+            '申請が却下されました。'
+        };
+      }
+
+      return { 
+        success: false, 
+        error: data?.error || 'Edge Function処理中にエラーが発生しました' 
+      };
+
+    } catch (error) {
+      console.error('申請処理エラー:', error);
+      
+      // フォールバック処理
+      return await this.directUpdateRequestStatus(requestId, action, adminNotes, reviewedBy);
+    }
+  }
+
+  // 直接データベース更新（フォールバック）
+  private async directUpdateRequestStatus(
+    requestId: string,
+    action: 'approve' | 'reject',
+    adminNotes?: string,
+    reviewedBy?: string
+  ): Promise<{ success: boolean; error?: string; message?: string }> {
+    try {
+      console.warn('Edge Function利用不可、直接データベース更新を実行');
+
+      if (await this.isSupabaseAvailable()) {
+        const { error } = await this.supabase
+          .from('registration_requests')
+          .update({
+            status: action === 'approve' ? 'approved' : 'rejected',
+            admin_notes: adminNotes || '',
+            reviewed_by: reviewedBy || 'admin',
+            reviewed_at: new Date().toISOString(),
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', requestId);
+
+        if (!error) {
+          // ローカルストレージも更新
+          await this.updateLocalRequestStatus(requestId, action, adminNotes, reviewedBy);
+          
+          return {
+            success: true,
+            message: action === 'approve' ? 
+              '申請が承認されました（ユーザーアカウント作成は手動で行ってください）。' : 
+              '申請が却下されました。'
+          };
+        }
+      }
+
+      // ローカルストレージのみ更新
+      await this.updateLocalRequestStatus(requestId, action, adminNotes, reviewedBy);
+      
+      return {
+        success: true,
+        message: `申請が${action === 'approve' ? '承認' : '却下'}されました（ローカル保存のみ）。`
+      };
+
+    } catch (error) {
+      console.error('直接データベース更新エラー:', error);
+      return { 
+        success: false, 
+        error: 'システムエラーが発生しました。時間をおいて再度お試しください。' 
+      };
+    }
+  }
+
+  // ローカルストレージの申請状態を更新
+  private async updateLocalRequestStatus(
+    requestId: string,
+    action: 'approve' | 'reject',
+    adminNotes?: string,
+    reviewedBy?: string
+  ): Promise<void> {
+    try {
+      const requests = this.getLocalRequests();
+      const requestIndex = requests.findIndex(r => r.id === requestId);
+      
+      if (requestIndex >= 0) {
+        requests[requestIndex] = {
+          ...requests[requestIndex],
+          status: action === 'approve' ? 'approved' : 'rejected',
+          admin_notes: adminNotes || '',
+          reviewed_by: reviewedBy || 'admin',
+          reviewed_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        };
+        
+        localStorage.setItem(this.STORAGE_KEY, JSON.stringify(requests));
+      }
+    } catch (error) {
+      console.error('ローカル申請状態更新エラー:', error);
+    }
+  }
+
+  // 申請の詳細を取得
+  async getRequestById(requestId: string): Promise<RegistrationRequest | null> {
+    try {
+      // Supabaseを試行
+      if (await this.isSupabaseAvailable()) {
+        const { data, error } = await this.supabase
+          .from('registration_requests')
+          .select('*')
+          .eq('id', requestId)
+          .single();
+
+        if (!error && data) {
+          return data;
+        }
+      }
+
+      // フォールバック: ローカルストレージから取得
+      const localRequests = this.getLocalRequests();
+      return localRequests.find(req => req.id === requestId) || null;
+
+    } catch (error) {
+      console.error('申請詳細取得エラー:', error);
+      return null;
+    }
+  }
+
+  // データ同期機能
+  async syncLocalDataToSupabase(): Promise<void> {
+    try {
+      if (!(await this.isSupabaseAvailable())) {
+        return;
+      }
+
+      const localRequests = this.getLocalRequests();
+      
+      for (const request of localRequests) {
+        // Supabaseに既存かチェック
+        const { data: existing } = await this.supabase
+          .from('registration_requests')
+          .select('id')
+          .eq('id', request.id)
+          .single();
+
+        if (!existing) {
+          // 存在しない場合は挿入
+          await this.supabase
+            .from('registration_requests')
+            .insert(request);
+        }
+      }
+      
+      console.log('申請データの同期完了');
+    } catch (error) {
+      console.error('申請データ同期エラー:', error);
+    }
+  }
+}
+
 // 診断セッション管理のインスタンスをエクスポート
-export const diagnosisManager = new DiagnosisSessionManager(); 
+export const diagnosisManager = new DiagnosisSessionManager();
+// 登録申請管理のインスタンスをエクスポート
+export const registrationManager = new RegistrationRequestManager();
+
+// パスワード履歴管理（オプション）
+export class PasswordHistoryManager {
+  private supabase: SupabaseClient;
+
+  constructor() {
+    this.supabase = supabase;
+  }
+
+  // パスワード履歴をチェック（過去のパスワードとの重複を防ぐ）
+  async checkPasswordHistory(userId: string, newPasswordHash: string): Promise<boolean> {
+    try {
+      const { data, error } = await this.supabase
+        .from('password_history')
+        .select('password_hash')
+        .eq('user_id', userId)
+        .order('created_at', { ascending: false })
+        .limit(5); // 過去5回分をチェック
+
+      if (error) {
+        console.error('パスワード履歴チェックエラー:', error);
+        return true; // エラー時は通す
+      }
+
+      return !data?.some(record => record.password_hash === newPasswordHash);
+    } catch (error) {
+      console.error('パスワード履歴チェック例外:', error);
+      return true;
+    }
+  }
+
+  // パスワード履歴を記録
+  async recordPasswordChange(userId: string, passwordHash: string): Promise<void> {
+    try {
+      await this.supabase
+        .from('password_history')
+        .insert({
+          user_id: userId,
+          password_hash: passwordHash,
+          created_at: new Date().toISOString()
+        });
+    } catch (error) {
+      console.error('パスワード履歴記録エラー:', error);
+    }
+  }
+}
+
+export const passwordHistoryManager = new PasswordHistoryManager(); 

@@ -112,8 +112,26 @@ export const MCPFinancialAssistant: React.FC<MCPFinancialAssistantProps> = ({ cl
     try {
       const supabaseConfig = createSupabaseClient();
       
-      // Supabase設定が無効な場合はデフォルト値を使用
-      if (!supabaseConfig.url || !supabaseConfig.key || supabaseConfig.url.includes('your-project')) {
+      // Supabase設定を確認
+      if (!supabaseConfig.url || !supabaseConfig.key || 
+          supabaseConfig.url.includes('your-project') || 
+          supabaseConfig.key.includes('your-anon-key')) {
+        secureLog('Supabase設定が無効、ローカルストレージを確認中...');
+        
+        // ローカルストレージから取得
+        const localExpertContact = localStorage.getItem('customExpertContact');
+        if (localExpertContact) {
+          try {
+            const parsedLocal = JSON.parse(localExpertContact);
+            setExpertContact(parsedLocal);
+            secureLog('ローカルストレージから専門家連絡先を読み込み');
+            return;
+          } catch (parseError) {
+            secureLog('ローカルストレージ解析エラー:', parseError);
+          }
+        }
+
+        // デフォルト値を設定
         setExpertContact({
           expert_name: 'MoneyTicket専門アドバイザー',
           phone_number: '0120-123-456',
@@ -123,6 +141,20 @@ export const MCPFinancialAssistant: React.FC<MCPFinancialAssistantProps> = ({ cl
         return;
       }
 
+      // まずローカルストレージを確認
+      const localExpertContact = localStorage.getItem('customExpertContact');
+      if (localExpertContact) {
+        try {
+          const parsedLocal = JSON.parse(localExpertContact);
+          setExpertContact(parsedLocal);
+          secureLog('ローカルストレージから専門家連絡先を読み込み');
+          return;
+        } catch (parseError) {
+          secureLog('ローカルストレージ解析エラー:', parseError);
+        }
+      }
+
+      // Supabaseから取得を試行
       const response = await fetch(`${supabaseConfig.url}/rest/v1/expert_contact_settings?setting_key.eq=primary_financial_advisor&is_active.eq=true&select=*`, {
         headers: {
           'Authorization': `Bearer ${supabaseConfig.key}`,
@@ -134,25 +166,46 @@ export const MCPFinancialAssistant: React.FC<MCPFinancialAssistantProps> = ({ cl
       if (response.ok) {
         const data = await response.json();
         if (data && data.length > 0) {
-          setExpertContact({
+          const expertContactData = {
             expert_name: data[0].expert_name,
             phone_number: data[0].phone_number,
             email: data[0].email,
             business_hours: data[0].business_hours,
             description: data[0].description
-          });
+          };
+          setExpertContact(expertContactData);
+          // Supabaseデータをローカルストレージにバックアップ
+          localStorage.setItem('customExpertContact', JSON.stringify(expertContactData));
+          secureLog('Supabaseから専門家連絡先を読み込み、ローカルにバックアップ');
+          return;
         }
       } else {
-        // デフォルト値を設定
-        setExpertContact({
-          expert_name: 'MoneyTicket専門アドバイザー',
-          phone_number: '0120-123-456',
-          business_hours: '平日 9:00-18:00',
-          description: 'MoneyTicketの認定ファイナンシャルプランナーが、お客様の資産運用に関するご相談を承ります。'
-        });
+        secureLog(`Supabase専門家連絡先取得エラー: ${response.status}`);
       }
+
+      // デフォルト値を設定
+      setExpertContact({
+        expert_name: 'MoneyTicket専門アドバイザー',
+        phone_number: '0120-123-456',
+        business_hours: '平日 9:00-18:00',
+        description: 'MoneyTicketの認定ファイナンシャルプランナーが、お客様の資産運用に関するご相談を承ります。'
+      });
     } catch (error) {
       secureLog('専門家連絡先の読み込みエラー:', error);
+      
+      // エラー時でもローカルストレージを確認
+      try {
+        const fallbackExpertContact = localStorage.getItem('customExpertContact');
+        if (fallbackExpertContact) {
+          const parsedFallback = JSON.parse(fallbackExpertContact);
+          setExpertContact(parsedFallback);
+          secureLog('エラー時フォールバック: ローカルストレージから専門家連絡先を読み込み');
+          return;
+        }
+      } catch (fallbackError) {
+        secureLog('フォールバック専門家連絡先エラー:', fallbackError);
+      }
+
       // エラー時もデフォルト値を設定
       setExpertContact({
         expert_name: 'MoneyTicket専門アドバイザー',
@@ -314,8 +367,6 @@ ${expertContact?.description || 'MoneyTicketの認定ファイナンシャルプ
       setInput(sanitizedPrompt);
     }
   };
-
-
 
   return (
     <div className={`bg-gray-50 rounded-xl shadow-lg border border-gray-200 ${className}`}>

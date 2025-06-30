@@ -21,6 +21,10 @@ import type { User } from '@supabase/supabase-js';
 import { ColorThemeProvider } from './components/ColorThemeContext';
 import { DiagnosisFormState, PageView, UserSessionData } from './types';
 import { initializeSampleData } from './data/sampleData';
+import RegistrationRequestPage from './components/RegistrationRequestPage';
+import ChangePasswordPage from './components/ChangePasswordPage';
+import ProductionSecurityValidator from './components/ProductionSecurityValidator';
+import WebSocketErrorSuppressor from './components/WebSocketErrorSuppressor';
 
 // AI Client Initialization (GoogleGenAI) has been removed from the frontend.
 // API calls to Gemini API should be proxied through a secure backend server
@@ -116,22 +120,45 @@ const App: React.FC = () => {
           setSupabaseUser(session.user);
           setIsSupabaseAuth(true);
           setIsAdminLoggedIn(true);
-          setCurrentPage('adminDashboard');
+          
+          // プロファイルからパスワード変更要求をチェック
+          const { data: profile, error: profileError } = await supabase
+            .from('profiles')
+            .select('requires_password_change')
+            .eq('id', session.user.id)
+            .single();
+
+          if (!profileError && profile?.requires_password_change) {
+            setCurrentPage('changePassword');
+          } else {
+            setCurrentPage('adminDashboard');
+          }
         }
 
         // 認証状態の変更を監視
         const { data: { subscription } } = supabase.auth.onAuthStateChange(
-          (event, session) => {
+          async (event, session) => {
             
             if (session?.user) {
               setSupabaseUser(session.user);
               setIsSupabaseAuth(true);
               setIsAdminLoggedIn(true);
-              setCurrentPage('adminDashboard');
+              
+              // パスワード変更要求をチェック
+              const { data: profile, error: profileError } = await supabase
+                .from('profiles')
+                .select('requires_password_change')
+                .eq('id', session.user.id)
+                .single();
+
+              if (!profileError && profile?.requires_password_change) {
+                setCurrentPage('changePassword');
+              } else {
+                setCurrentPage('adminDashboard');
+              }
             } else {
               setSupabaseUser(null);
               // Supabase認証が解除された場合のみ状態をリセット
-              // 従来認証（admin/password）が有効な場合は影響しない
               if (isSupabaseAuth) {
                 setIsSupabaseAuth(false);
                 setIsAdminLoggedIn(false);
@@ -410,6 +437,17 @@ const App: React.FC = () => {
     window.scrollTo(0,0);
   };
 
+  // 新規登録申請ページへのナビゲーション
+  const navigateToRegistrationRequest = () => {
+    setCurrentPage('registrationRequest');
+    window.scrollTo(0, 0);
+  };
+
+  // パスワード変更完了時の処理
+  const handlePasswordChanged = () => {
+    setCurrentPage('adminDashboard');
+    window.scrollTo(0, 0);
+  };
 
   // ログイン選択ページのレンダリング
   if (currentPage === 'loginSelection') {
@@ -419,6 +457,7 @@ const App: React.FC = () => {
           onSelectTraditionalAuth={navigateToTraditionalLogin}
           onSelectSupabaseAuth={navigateToSupabaseLogin}
           onNavigateHome={navigateToHome}
+          onNavigateToRegistration={navigateToRegistrationRequest}
         />
       </ColorThemeProvider>
     );
@@ -503,20 +542,49 @@ const App: React.FC = () => {
     );
   }
 
+  // 新規登録申請ページのレンダリング
+  if (currentPage === 'registrationRequest') {
+    return (
+      <ColorThemeProvider>
+        <RegistrationRequestPage onNavigateHome={navigateToHome} />
+      </ColorThemeProvider>
+    );
+  }
+
+  // パスワード変更ページのレンダリング
+  if (currentPage === 'changePassword') {
+    return (
+      <ColorThemeProvider>
+        <ChangePasswordPage 
+          onPasswordChanged={handlePasswordChanged}
+          onNavigateHome={navigateToHome}
+          onLogout={handleAdminLogout}
+        />
+      </ColorThemeProvider>
+    );
+  }
+
   // Default page is 'diagnosis'
   return (
     <ColorThemeProvider>
-      <Header />
-      <MainVisualAndDiagnosis onProceedToVerification={handleProceedToVerification} />
-      <ReliabilitySection />
-      <SecurityTrustSection />
-      <CallToActionSection />
-      <Footer onNavigateToAdminLogin={navigateToAdminLogin} />
-      
-      {/* 一回限り診断の案内 */}
-      {showUsageNotice && (
-        <OneTimeUsageNotice onDismiss={() => setShowUsageNotice(false)} />
-      )}
+      <div className="App min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
+        <ProductionSecurityValidator />
+        
+        {/* WebSocket接続エラー抑制 */}
+        <WebSocketErrorSuppressor />
+        
+        <Header />
+        <MainVisualAndDiagnosis onProceedToVerification={handleProceedToVerification} />
+        <ReliabilitySection />
+        <SecurityTrustSection />
+        <CallToActionSection />
+        <Footer onNavigateToAdminLogin={navigateToAdminLogin} />
+        
+        {/* 一回限り診断の案内 */}
+        {showUsageNotice && (
+          <OneTimeUsageNotice onDismiss={() => setShowUsageNotice(false)} />
+        )}
+      </div>
     </ColorThemeProvider>
   );
 };

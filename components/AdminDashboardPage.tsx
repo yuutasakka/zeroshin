@@ -1022,6 +1022,20 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
 
   const loadExpertContactSettings = async () => {
     try {
+      // まずローカルストレージからカスタム設定を確認
+      const localExpertContact = localStorage.getItem('customExpertContact');
+      if (localExpertContact) {
+        try {
+          const parsedLocal = JSON.parse(localExpertContact);
+          setExpertContact(parsedLocal);
+          secureLog('ローカルストレージから専門家連絡先を読み込み');
+          return;
+        } catch (parseError) {
+          secureLog('ローカルストレージの専門家連絡先解析エラー:', parseError);
+        }
+      }
+
+      // Supabaseから取得を試行
       const response = await fetch(`${supabaseConfig.url}/rest/v1/expert_contact_settings?setting_key.eq=primary_financial_advisor&is_active.eq=true&select=*`, {
         headers: {
           'Authorization': `Bearer ${supabaseConfig.key}`,
@@ -1033,29 +1047,50 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
       if (response.ok) {
         const data = await response.json();
         if (data && data.length > 0) {
-          setExpertContact({
+          const expertContactData = {
             expert_name: data[0].expert_name,
             phone_number: data[0].phone_number,
             email: data[0].email || '',
             business_hours: data[0].business_hours || '',
             description: data[0].description || ''
-          });
-          secureLog('Supabaseから専門家連絡先を読み込み');
+          };
+          setExpertContact(expertContactData);
+          // Supabaseデータをローカルストレージにもバックアップ
+          localStorage.setItem('customExpertContact', JSON.stringify(expertContactData));
+          secureLog('Supabaseから専門家連絡先を読み込み、ローカルにバックアップ');
           return;
         }
+      } else {
+        secureLog(`Supabase専門家連絡先取得エラー: ${response.status}`);
       }
       
       // デフォルト値を使用
-      setExpertContact({
+      const defaultExpertContact = {
         expert_name: 'MoneyTicket専門アドバイザー',
         phone_number: '0120-123-456',
         email: 'advisor@moneyticket.co.jp',
         business_hours: '平日 9:00-18:00',
         description: 'MoneyTicketの認定ファイナンシャルプランナーが、お客様の資産運用に関するご相談を承ります。'
-      });
+      };
+      setExpertContact(defaultExpertContact);
+      secureLog('デフォルト専門家連絡先を使用');
     } catch (error) {
       secureLog('専門家連絡先のSupabase読み込みエラー:', error);
-      // デフォルト値を使用
+      
+      // エラー時でもローカルストレージを確認
+      try {
+        const fallbackExpertContact = localStorage.getItem('customExpertContact');
+        if (fallbackExpertContact) {
+          const parsedFallback = JSON.parse(fallbackExpertContact);
+          setExpertContact(parsedFallback);
+          secureLog('エラー時フォールバック: ローカルストレージから専門家連絡先を読み込み');
+          return;
+        }
+      } catch (fallbackError) {
+        secureLog('フォールバック専門家連絡先エラー:', fallbackError);
+      }
+
+      // 最終デフォルト値を使用
       setExpertContact({
         expert_name: 'MoneyTicket専門アドバイザー',
         phone_number: '0120-123-456',
@@ -1099,7 +1134,9 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
 
       if (response.ok) {
         setExpertContactStatus('✅ 専門家設定が正常に保存されました');
-        secureLog('専門家設定をSupabaseに保存完了');
+        // ローカルストレージにもバックアップ
+        localStorage.setItem('customExpertContact', JSON.stringify(expertContact));
+        secureLog('専門家設定をSupabaseに保存完了、ローカルにバックアップ');
       } else {
         // UPSERTを試行
         const updateResponse = await fetch(`${supabaseConfig.url}/rest/v1/expert_contact_settings?setting_key.eq=primary_financial_advisor`, {
@@ -1122,7 +1159,9 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
 
         if (updateResponse.ok) {
           setExpertContactStatus('✅ 専門家設定が正常に更新されました');
-          secureLog('専門家設定をSupabaseで更新完了');
+          // ローカルストレージにもバックアップ
+          localStorage.setItem('customExpertContact', JSON.stringify(expertContact));
+          secureLog('専門家設定をSupabaseで更新完了、ローカルにバックアップ');
         } else {
           throw new Error('Supabase保存に失敗');
         }
@@ -1131,7 +1170,17 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
       setTimeout(() => setExpertContactStatus(''), 3000);
     } catch (error) {
       secureLog('専門家設定保存エラー:', error);
-      setExpertContactStatus('❌ 保存中にエラーが発生しました。');
+      
+      // エラー時でもローカルストレージに保存
+      try {
+        localStorage.setItem('customExpertContact', JSON.stringify(expertContact));
+        setExpertContactStatus('⚠️ Supabaseエラーですが、ローカルに保存しました');
+        secureLog('エラー時フォールバック: 専門家設定をローカルストレージに保存');
+      } catch (fallbackError) {
+        secureLog('ローカルストレージ保存も失敗:', fallbackError);
+        setExpertContactStatus('❌ 保存中にエラーが発生しました。');
+      }
+      
       setTimeout(() => setExpertContactStatus(''), 5000);
     }
   };

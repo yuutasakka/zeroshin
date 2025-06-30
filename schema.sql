@@ -180,9 +180,9 @@ INSERT INTO admin_credentials (
     updated_at
 ) VALUES (
     'admin',
-    -- 開発環境用のハッシュ化されたパスワード（本番では変更必須）
+    -- 本番環境用のハッシュ化されたパスワード（本番では変更必須）
     'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855', -- SHA-256 hash of 'CHANGE_IN_PRODUCTION'
-    '+819012345678', -- 開発環境用（本番では変更必須）
+    '+819012345678', -- 本番環境用（本番では変更必須）
     'MT-SECURE-BACKUP-' || extract(epoch from now())::text, -- 動的バックアップコード
     NOW(),
     NOW()

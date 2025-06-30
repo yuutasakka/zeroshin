@@ -4,12 +4,14 @@ interface LoginSelectionPageProps {
   onSelectTraditionalAuth: () => void;
   onSelectSupabaseAuth: () => void;
   onNavigateHome: () => void;
+  onNavigateToRegistration?: () => void;
 }
 
 const LoginSelectionPage: React.FC<LoginSelectionPageProps> = ({
   onSelectTraditionalAuth,
   onSelectSupabaseAuth,
-  onNavigateHome
+  onNavigateHome,
+  onNavigateToRegistration
 }) => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 flex items-center justify-center p-4">
@@ -94,6 +96,32 @@ const LoginSelectionPage: React.FC<LoginSelectionPageProps> = ({
             </button>
           </div>
         </div>
+
+        {/* 新規登録申請セクション */}
+        {onNavigateToRegistration && (
+          <div className="mt-8 text-center">
+            <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-6">
+              <div className="flex items-center justify-center mb-4">
+                <div className="w-12 h-12 bg-yellow-100 rounded-full flex items-center justify-center">
+                  <i className="fas fa-user-plus text-yellow-600 text-xl"></i>
+                </div>
+              </div>
+              <h4 className="text-lg font-semibold text-gray-800 mb-2">
+                アカウントをお持ちでない方
+              </h4>
+              <p className="text-gray-600 mb-4">
+                新規ユーザー申請を行い、管理者の承認をお待ちください
+              </p>
+              <button
+                onClick={onNavigateToRegistration}
+                className="bg-yellow-500 hover:bg-yellow-600 text-white font-semibold py-2 px-6 rounded-lg transition-all duration-200"
+              >
+                <i className="fas fa-edit mr-2"></i>
+                新規ユーザー申請
+              </button>
+            </div>
+          </div>
+        )}
 
         {/* フッター */}
         <div className="mt-12 text-center">

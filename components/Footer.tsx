@@ -52,13 +52,30 @@ const Footer: React.FC<FooterProps> = ({ onNavigateToAdminLogin }) => {
 
   const loadFooterFromSupabase = async () => {
     try {
-      // まずサンプルデータを確認
+      // まずローカルストレージからカスタムデータを確認
+      const localFooterData = localStorage.getItem('customFooterData');
+      if (localFooterData) {
+        try {
+          const parsedLocal = JSON.parse(localFooterData);
+          setFooterData(parsedLocal);
+          secureLog('ローカルストレージからフッターデータを読み込み');
+          return;
+        } catch (parseError) {
+          secureLog('ローカルストレージのフッターデータ解析エラー:', parseError);
+        }
+      }
+
+      // 次にサンプルデータを確認
       const sampleFooterData = localStorage.getItem('homepage_content_footer_data');
       if (sampleFooterData) {
-        const parsedFooterData = JSON.parse(sampleFooterData);
-        setFooterData(parsedFooterData);
-        secureLog('✅ フッターデータをサンプルデータから読み込み');
-        return;
+        try {
+          const parsedFooterData = JSON.parse(sampleFooterData);
+          setFooterData(parsedFooterData);
+          secureLog('✅ フッターデータをサンプルデータから読み込み');
+          return;
+        } catch (parseError) {
+          secureLog('サンプルフッターデータ解析エラー:', parseError);
+        }
       }
 
       const supabaseConfig = createSupabaseClient();
@@ -69,6 +86,7 @@ const Footer: React.FC<FooterProps> = ({ onNavigateToAdminLogin }) => {
         return;
       }
 
+      // Supabaseから取得を試行
       const response = await fetch(`${supabaseConfig.url}/rest/v1/homepage_content_settings?setting_key.eq=footer_data&select=*`, {
         headers: {
           'Authorization': `Bearer ${supabaseConfig.key}`,
@@ -80,15 +98,36 @@ const Footer: React.FC<FooterProps> = ({ onNavigateToAdminLogin }) => {
       if (response.ok) {
         const data = await response.json();
         if (data && data.length > 0 && data[0].setting_data) {
-          secureLog('✅ フッターデータをSupabaseから読み込み');
-          setFooterData(data[0].setting_data);
+          const footerDataFromSupabase = data[0].setting_data;
+          setFooterData(footerDataFromSupabase);
+          // Supabaseデータをローカルストレージにバックアップ
+          localStorage.setItem('customFooterData', JSON.stringify(footerDataFromSupabase));
+          secureLog('✅ フッターデータをSupabaseから読み込み、ローカルにバックアップ');
+          return;
         }
       } else {
-        secureLog('フッターデータの読み込みに失敗、デフォルトデータを使用');
+        secureLog(`フッターデータの読み込みに失敗 ${response.status}、デフォルトデータを使用`);
       }
+
+      secureLog('デフォルトフッターデータを使用');
     } catch (error) {
-      secureLog('フッターデータ読み込みエラー、デフォルトデータを使用:', error);
-      // エラーが発生してもデフォルトデータを使用するだけで、ユーザーにはエラーを表示しない
+      secureLog('フッターデータ読み込みエラー、フォールバック処理中:', error);
+      
+      // エラー時でもローカルストレージを確認
+      try {
+        const fallbackFooterData = localStorage.getItem('customFooterData');
+        if (fallbackFooterData) {
+          const parsedFallback = JSON.parse(fallbackFooterData);
+          setFooterData(parsedFallback);
+          secureLog('エラー時フォールバック: ローカルストレージからフッターデータを読み込み');
+          return;
+        }
+      } catch (fallbackError) {
+        secureLog('フォールバックフッターデータエラー:', fallbackError);
+      }
+
+      // 最終的にはデフォルトデータを使用（エラーを表示しない）
+      secureLog('最終フォールバック: デフォルトフッターデータを使用');
     }
   };
 

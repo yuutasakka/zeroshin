@@ -35,6 +35,21 @@ export const SupabaseAuthLogin: React.FC<SupabaseAuthLoginProps> = ({ onLogin, o
           setError(`ログインエラー: ${error.message}`);
         }
       } else if (data.user) {
+        // プロファイルからパスワード変更要求をチェック
+        const { data: profile, error: profileError } = await supabase
+          .from('profiles')
+          .select('requires_password_change')
+          .eq('id', data.user.id)
+          .single();
+
+        // 最後にログイン時刻を更新
+        if (!profileError) {
+          await supabase
+            .from('profiles')
+            .update({ last_login: new Date().toISOString() })
+            .eq('id', data.user.id);
+        }
+
         onLogin();
       }
     } catch (err) {

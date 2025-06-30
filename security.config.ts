@@ -15,6 +15,50 @@ interface ImportMeta {
   readonly env: ImportMetaEnv;
 }
 
+// 本番環境での必須環境変数チェック
+const validateProductionEnvironment = () => {
+  const isProduction = process.env.NODE_ENV === 'production' || 
+                      (typeof import.meta !== 'undefined' && (import.meta as any).env?.MODE === 'production') ||
+                      (typeof window !== 'undefined' && window.location.hostname !== 'localhost' && 
+                       !window.location.hostname.includes('127.0.0.1') && 
+                       !window.location.hostname.includes('preview'));
+
+  if (isProduction) {
+    const requiredEnvVars = [
+      'VITE_JWT_SECRET',
+      'VITE_SESSION_SECRET', 
+      'VITE_ENCRYPTION_KEY',
+      'VITE_SUPABASE_URL',
+      'VITE_SUPABASE_ANON_KEY'
+    ];
+
+    const missingVars: string[] = [];
+    
+    requiredEnvVars.forEach(varName => {
+      const value = (typeof import.meta !== 'undefined' && (import.meta as any).env?.[varName]) || 
+                   process.env[varName];
+      
+      if (!value || value === '' || 
+          value.includes('CHANGE_ME') || 
+          value.includes('CHANGE_IN_PRODUCTION') ||
+          value.includes('dev-')) {
+        missingVars.push(varName);
+      }
+    });
+
+    if (missingVars.length > 0) {
+      console.error('🚨 CRITICAL SECURITY ERROR: 本番環境で必須環境変数が未設定または不正な値です:');
+      console.error('Missing or invalid variables:', missingVars);
+      throw new Error(`Production environment requires valid values for: ${missingVars.join(', ')}`);
+    }
+
+    console.log('✅ 本番環境の必須環境変数が正しく設定されています');
+  }
+};
+
+// 本番環境チェックを実行
+validateProductionEnvironment();
+
 export const SECURITY_CONFIG = {
   // 暗号化設定（本番では必須）
   ENCRYPTION_KEY: (() => {
@@ -214,7 +258,34 @@ export const SECURITY_CONFIG = {
       enabled: !!process.env.EMAIL_SERVICE_API_KEY,
       apiKey: process.env.EMAIL_SERVICE_API_KEY
     }
-  }
+  },
+
+  // デフォルトハッシュ検出機能
+  DEFAULT_PASSWORD_HASHES: [
+    'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855', // CHANGE_IN_PRODUCTION
+    '8cb3b12639ecacf3fe86a6cd67b1e1b2a277fc26b4ecd42e381a1327bb68390e'  // G3MIZAu74IvkH7NK
+  ],
+
+  // セキュリティ検証
+  validateProductionSecurity: () => {
+    const isProduction = process.env.NODE_ENV === 'production';
+    
+    if (!isProduction) return true;
+
+    // デフォルトパスワードハッシュの検出
+    return new Promise((resolve, reject) => {
+      // SecureConfigManagerを使用してデフォルト認証情報をチェック
+      SecureConfigManager.getAdminCredentials()
+        .then(credentials => {
+          if (credentials && SECURITY_CONFIG.DEFAULT_PASSWORD_HASHES.includes(credentials.password_hash)) {
+            reject(new Error('🚨 SECURITY VIOLATION: デフォルトパスワードが本番環境で検出されました'));
+          } else {
+            resolve(true);
+          }
+        })
+        .catch(() => resolve(true)); // データベース接続エラー時は通す
+    });
+  },
 };
 
 // Supabase設定の中央管理

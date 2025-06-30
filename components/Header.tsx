@@ -13,6 +13,19 @@ const Header: React.FC = () => {
 
   const loadHeaderFromSupabase = async () => {
     try {
+      // まずローカルストレージを確認
+      const localHeaderData = localStorage.getItem('customHeaderData');
+      if (localHeaderData) {
+        try {
+          const parsedLocal = JSON.parse(localHeaderData);
+          setHeaderData(parsedLocal);
+          secureLog('ローカルストレージからヘッダーデータを読み込み');
+          return;
+        } catch (parseError) {
+          secureLog('ローカルストレージのヘッダーデータ解析エラー:', parseError);
+        }
+      }
+
       const supabaseConfig = createSupabaseClient();
       
       // 本番環境でSupabase設定がない場合はデフォルトデータを使用
@@ -21,6 +34,7 @@ const Header: React.FC = () => {
         return;
       }
 
+      // Supabaseから取得を試行
       const response = await fetch(`${supabaseConfig.url}/rest/v1/homepage_content_settings?setting_key.eq=header_data&select=*`, {
         headers: {
           'Authorization': `Bearer ${supabaseConfig.key}`,
@@ -32,15 +46,49 @@ const Header: React.FC = () => {
       if (response.ok) {
         const data = await response.json();
         if (data && data.length > 0 && data[0].setting_data) {
-          secureLog('✅ ヘッダーデータをSupabaseから読み込み');
-          setHeaderData(data[0].setting_data);
+          const headerDataFromSupabase = data[0].setting_data;
+          setHeaderData(headerDataFromSupabase);
+          // Supabaseデータをローカルストレージにバックアップ
+          localStorage.setItem('customHeaderData', JSON.stringify(headerDataFromSupabase));
+          secureLog('✅ ヘッダーデータをSupabaseから読み込み、ローカルにバックアップ');
+          return;
         }
       } else {
-        secureLog('ヘッダーデータの読み込みに失敗、デフォルトデータを使用');
+        secureLog(`ヘッダーデータの読み込みに失敗 ${response.status}、デフォルトデータを使用`);
       }
+
+      // サンプルデータフォールバック
+      const sampleHeaderData = localStorage.getItem('header_data');
+      if (sampleHeaderData) {
+        try {
+          const parsedSample = JSON.parse(sampleHeaderData);
+          setHeaderData(parsedSample);
+          secureLog('サンプルヘッダーデータを使用');
+          return;
+        } catch (parseError) {
+          secureLog('サンプルヘッダーデータ解析エラー:', parseError);
+        }
+      }
+
+      secureLog('デフォルトヘッダーデータを使用');
     } catch (error) {
-      secureLog('ヘッダーデータ読み込みエラー、デフォルトデータを使用:', error);
-      // エラーが発生してもデフォルトデータを使用するだけで、ユーザーにはエラーを表示しない
+      secureLog('ヘッダーデータ読み込みエラー、フォールバック処理中:', error);
+      
+      // エラー時でもローカルストレージを確認
+      try {
+        const fallbackHeaderData = localStorage.getItem('customHeaderData');
+        if (fallbackHeaderData) {
+          const parsedFallback = JSON.parse(fallbackHeaderData);
+          setHeaderData(parsedFallback);
+          secureLog('エラー時フォールバック: ローカルストレージからヘッダーデータを読み込み');
+          return;
+        }
+      } catch (fallbackError) {
+        secureLog('フォールバックヘッダーデータエラー:', fallbackError);
+      }
+
+      // 最終的にはデフォルトデータを使用（エラーを表示しない）
+      secureLog('最終フォールバック: デフォルトヘッダーデータを使用');
     }
   };
 

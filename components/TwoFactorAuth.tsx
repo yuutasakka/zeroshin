@@ -1,12 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import { SecureConfigManager, secureLog, SECURITY_CONFIG } from '../security.config';
+import { supabase } from './supabaseClient';
+import QRCode from 'qrcode.react';
 
 interface TwoFactorAuthProps {
   username: string;
   onSuccess: (totpSecret: string) => void;
   onCancel: () => void;
-  mode: 'setup' | 'verify';
+  mode: 'setup' | 'verify' | 'enabled';
   existingSecret?: string;
+  onMFAEnabled: () => void;
+  onMFADisabled: () => void;
 }
 
 interface TotpSetup {
@@ -20,15 +24,20 @@ const TwoFactorAuth: React.FC<TwoFactorAuthProps> = ({
   onSuccess, 
   onCancel, 
   mode, 
-  existingSecret 
+  existingSecret,
+  onMFAEnabled,
+  onMFADisabled
 }) => {
   const [totpCode, setTotpCode] = useState('');
   const [totpSetup, setTotpSetup] = useState<TotpSetup | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [step, setStep] = useState<'setup' | 'verify' | 'backup'>('setup');
+  const [step, setStep] = useState<'setup' | 'verify' | 'enabled'>('setup');
   const [backupCodeInput, setBackupCodeInput] = useState('');
   const [showBackupCodes, setShowBackupCodes] = useState(false);
+  const [qrCodeUrl, setQrCodeUrl] = useState<string>('');
+  const [verificationCode, setVerificationCode] = useState<string>('');
+  const [backupCodes, setBackupCodes] = useState<string[]>([]);
 
   // TOTP Secret生成（Base32形式）
   const generateTotpSecret = (): string => {
@@ -209,7 +218,7 @@ const TwoFactorAuth: React.FC<TwoFactorAuthProps> = ({
         if (mode === 'setup') {
           // セットアップ完了時はバックアップコードを表示
           setShowBackupCodes(true);
-          setStep('backup');
+          setStep('enabled');
         } else {
           // 認証成功
           onSuccess(secret);
@@ -256,6 +265,45 @@ const TwoFactorAuth: React.FC<TwoFactorAuthProps> = ({
   const handleSetupComplete = () => {
     if (totpSetup) {
       onSuccess(totpSetup.secret);
+    }
+  };
+
+  const setupMFA = async () => {
+    try {
+      // TOTP設定を開始
+      const { data, error } = await supabase.auth.mfa.enroll({
+        factorType: 'totp',
+        friendlyName: 'MoneyTicket TOTP'
+      });
+
+      if (error) throw error;
+
+      setQrCodeUrl(data.totp.qr_code);
+      setStep('verify');
+    } catch (error) {
+      console.error('MFA設定エラー:', error);
+    }
+  };
+
+  const verifyMFA = async () => {
+    try {
+      const { data, error } = await supabase.auth.mfa.verify({
+        factorId: 'factor-id', // 実際のfactor IDを使用
+        challengeId: 'challenge-id', // 実際のchallenge IDを使用
+        code: verificationCode
+      });
+
+      if (error) throw error;
+
+      // バックアップコード生成
+      const codes = Array.from({ length: 10 }, () => 
+        Math.random().toString(36).substr(2, 8).toUpperCase()
+      );
+      setBackupCodes(codes);
+      setStep('enabled');
+      onMFAEnabled();
+    } catch (error) {
+      console.error('MFA検証エラー:', error);
     }
   };
 
@@ -337,7 +385,7 @@ const TwoFactorAuth: React.FC<TwoFactorAuthProps> = ({
     );
   }
 
-  if (mode === 'setup' && step === 'backup' && totpSetup && showBackupCodes) {
+  if (mode === 'setup' && step === 'enabled' && totpSetup && showBackupCodes) {
     return (
       <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
         <div className="bg-white rounded-lg shadow-xl p-8 max-w-md w-full mx-4">
@@ -411,8 +459,8 @@ const TwoFactorAuth: React.FC<TwoFactorAuthProps> = ({
                   </label>
                   <input
                     type="text"
-                    value={totpCode}
-                    onChange={(e) => setTotpCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                    value={verificationCode}
+                    onChange={(e) => setVerificationCode(e.target.value)}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md text-center text-lg font-mono"
                     placeholder="123456"
                     maxLength={6}
@@ -422,8 +470,8 @@ const TwoFactorAuth: React.FC<TwoFactorAuthProps> = ({
 
                 <div className="flex space-x-3">
                   <button
-                    onClick={handleTotpVerify}
-                    disabled={loading || totpCode.length !== 6}
+                    onClick={verifyMFA}
+                    disabled={loading || verificationCode.length !== 6}
                     className="flex-1 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white font-medium py-2 px-4 rounded-md transition-colors"
                   >
                     {loading ? '認証中...' : '認証'}
@@ -439,7 +487,7 @@ const TwoFactorAuth: React.FC<TwoFactorAuthProps> = ({
 
                 <div className="text-center">
                   <button
-                    onClick={() => setStep('backup')}
+                    onClick={() => setStep('enabled')}
                     className="text-sm text-blue-600 hover:text-blue-800 underline"
                   >
                     バックアップコードを使用
@@ -448,7 +496,7 @@ const TwoFactorAuth: React.FC<TwoFactorAuthProps> = ({
               </>
             )}
 
-            {step === 'backup' && (
+            {step === 'enabled' && (
               <>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">

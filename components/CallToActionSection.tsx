@@ -36,9 +36,23 @@ const CallToActionSection: React.FC = () => {
 
   useEffect(() => {
     const loadConsultationOffer = async () => {
-      const supabase = createSupabaseHelper();
-      
       try {
+        // まずローカルストレージを確認
+        const localConsultationOffer = localStorage.getItem('customFirstConsultationOffer');
+        if (localConsultationOffer) {
+          try {
+            const parsedLocal = JSON.parse(localConsultationOffer);
+            setConsultationOffer(parsedLocal);
+            secureLog('ローカルストレージから初回相談限定特典データを読み込み');
+            return;
+          } catch (parseError) {
+            secureLog('ローカルストレージの初回相談限定特典データ解析エラー:', parseError);
+          }
+        }
+
+        const supabase = createSupabaseHelper();
+        
+        // Supabaseから取得を試行
         const { data: offerResponse, error: offerError } = await supabase
           .from('homepage_content_settings')
           .select('setting_data')
@@ -46,12 +60,48 @@ const CallToActionSection: React.FC = () => {
           .single();
 
         if (!offerError && offerResponse?.setting_data) {
-          setConsultationOffer(offerResponse.setting_data);
+          const consultationOfferFromSupabase = offerResponse.setting_data;
+          setConsultationOffer(consultationOfferFromSupabase);
+          // Supabaseデータをローカルストレージにバックアップ
+          localStorage.setItem('customFirstConsultationOffer', JSON.stringify(consultationOfferFromSupabase));
+          secureLog('Supabaseから初回相談限定特典データを読み込み、ローカルにバックアップ');
+          return;
         } else {
-          secureLog('初回相談限定特典のデータが見つからないため、デフォルトデータを使用します');
+          secureLog('初回相談限定特典のデータが見つからないため、サンプルデータを確認中');
         }
+
+        // サンプルデータフォールバック
+        const sampleConsultationOffer = localStorage.getItem('first_consultation_offer');
+        if (sampleConsultationOffer) {
+          try {
+            const parsedSample = JSON.parse(sampleConsultationOffer);
+            setConsultationOffer(parsedSample);
+            secureLog('サンプル初回相談限定特典データを使用');
+            return;
+          } catch (parseError) {
+            secureLog('サンプル初回相談限定特典データ解析エラー:', parseError);
+          }
+        }
+
+        secureLog('初回相談限定特典のデフォルトデータを使用');
       } catch (error) {
-        secureLog('初回相談限定特典の読み込みエラー、デフォルトデータを使用:', error);
+        secureLog('初回相談限定特典の読み込みエラー、フォールバック処理中:', error);
+        
+        // エラー時でもローカルストレージを確認
+        try {
+          const fallbackConsultationOffer = localStorage.getItem('customFirstConsultationOffer');
+          if (fallbackConsultationOffer) {
+            const parsedFallback = JSON.parse(fallbackConsultationOffer);
+            setConsultationOffer(parsedFallback);
+            secureLog('エラー時フォールバック: ローカルストレージから初回相談限定特典データを読み込み');
+            return;
+          }
+        } catch (fallbackError) {
+          secureLog('フォールバック初回相談限定特典データエラー:', fallbackError);
+        }
+
+        // 最終的にはデフォルトデータを使用
+        secureLog('最終フォールバック: デフォルト初回相談限定特典データを使用');
       }
     };
 

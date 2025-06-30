@@ -36,16 +36,24 @@ export default defineConfig(({ mode }) => {
     },
     build: {
       outDir: 'dist',
-      sourcemap: false,
-      minify: 'esbuild',
+      sourcemap: mode === 'production' ? false : true,
+      minify: mode === 'production' ? 'terser' : 'esbuild',
       rollupOptions: {
         output: {
           manualChunks: {
             vendor: ['react', 'react-dom'],
-            utils: ['crypto-js', 'chart.js']
+            utils: ['crypto-js', 'chart.js'],
+            supabase: ['@supabase/supabase-js']
           }
         }
-      }
+      },
+      // 本番環境でのビルド最適化
+      ...(mode === 'production' ? {
+        target: 'es2020',
+        cssCodeSplit: true,
+        assetsInlineLimit: 4096,
+        chunkSizeWarningLimit: 500
+      } : {})
     },
     esbuild: {
       jsxFactory: 'React.createElement',
