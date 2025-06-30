@@ -142,6 +142,7 @@ const AdminLoginPage: React.FC<AdminLoginPageProps> = ({ onLogin, onNavigateHome
       // Supabaseから管理者認証情報を取得
       const adminCredentials = await SupabaseAdminAuth.getAdminCredentials(sanitizedUsername);
       
+      secureLog('管理者認証情報取得結果', {
         found: !!adminCredentials, 
         username: adminCredentials?.username,
         isActive: adminCredentials?.is_active,
