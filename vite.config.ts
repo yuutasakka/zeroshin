@@ -37,7 +37,7 @@ export default defineConfig(({ mode }) => {
     build: {
       outDir: 'dist',
       sourcemap: mode === 'production' ? false : true,
-      minify: mode === 'production' ? 'terser' : 'esbuild',
+      minify: mode === 'production' ? 'esbuild' : 'esbuild',
       rollupOptions: {
         output: {
           manualChunks: {
