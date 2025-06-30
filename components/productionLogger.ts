@@ -54,4 +54,81 @@ if (isProduction && typeof window !== 'undefined') {
   window.alert = () => {};
   window.confirm = () => false;
   window.prompt = () => null;
+}
+
+// 本番環境でのログとエラーを制御
+
+// WebSocket関連のエラーメッセージパターン
+const DEVELOPMENT_ERROR_PATTERNS = [
+  /WebSocket connection.*localhost:\d+.*failed/i,
+  /ws:\/\/localhost:\d+/i,
+  /HMR.*connection/i,
+  /Hot.*reload/i,
+  /Parcel.*HMR/i,
+  /Plasmo.*HMR/i,
+  /LiveReload/i,
+  /webpack.*HMR/i,
+  /Fast.*Refresh/i
+];
+
+// グローバルエラーハンドラーの設定
+if (typeof window !== 'undefined') {
+  // コンソールエラーの抑制
+  const originalConsoleError = console.error;
+  console.error = (...args: any[]) => {
+    const message = args.join(' ');
+    
+    // 開発環境関連のエラーは抑制
+    const isDevelopmentError = DEVELOPMENT_ERROR_PATTERNS.some(pattern => 
+      pattern.test(message)
+    );
+    
+    if (isDevelopmentError) {
+      // 開発環境エラーは警告レベルに変更
+      console.warn('🔧 Development tool warning:', ...args);
+      return;
+    }
+    
+    // その他のエラーは通常通り出力
+    originalConsoleError.apply(console, args);
+  };
+
+  // unhandledrejection イベントハンドラー
+  window.addEventListener('unhandledrejection', (event) => {
+    const message = event.reason?.message || event.reason?.toString() || '';
+    
+    // WebSocket関連のエラーは抑制
+    const isDevelopmentError = DEVELOPMENT_ERROR_PATTERNS.some(pattern => 
+      pattern.test(message)
+    );
+    
+    if (isDevelopmentError) {
+      console.warn('🔧 Development tool promise rejection:', event.reason);
+      event.preventDefault(); // エラーの伝播を防ぐ
+      return;
+    }
+  });
+
+  // error イベントハンドラー
+  window.addEventListener('error', (event) => {
+    const message = event.message || '';
+    
+    // WebSocket関連のエラーは抑制
+    const isDevelopmentError = DEVELOPMENT_ERROR_PATTERNS.some(pattern => 
+      pattern.test(message)
+    );
+    
+    if (isDevelopmentError) {
+      console.warn('🔧 Development tool error:', event.message);
+      event.preventDefault(); // エラーの伝播を防ぐ
+      return;
+    }
+  });
+}
+
+// 本番環境でのconsole.log無効化
+if (import.meta.env.PROD) {
+  console.log = () => {};
+  console.info = () => {};
+  console.debug = () => {};
 } 

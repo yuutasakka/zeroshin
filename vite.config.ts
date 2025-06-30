@@ -19,15 +19,20 @@ export default defineConfig(({ mode }) => {
       hmr: isDev ? {
         port: 5175,
         overlay: false,
-        clientPort: 5175
+        clientPort: 5175,
+        // WebSocket接続エラーを抑制
+        skipRestartOnNegotiation: true
       } : false,
       cors: true,
-      ...(isDev ? {} : { ws: false })
+      // 本番環境ではWebSocketを完全に無効化
+      ...(isDev ? {} : { ws: false, hmr: false })
     },
     preview: {
       port: 4173,
       host: 'localhost',
-      strictPort: false
+      strictPort: false,
+      // プレビューでもWebSocketを無効化
+      ws: false
     },
     build: {
       outDir: 'dist',
@@ -56,7 +61,10 @@ export default defineConfig(({ mode }) => {
       'process.env.API_BASE_URL': JSON.stringify(isDev ? 'http://localhost:8080' : ''),
       'import.meta.hot': JSON.stringify(isDev ? true : undefined),
       '__DEV__': JSON.stringify(isDev),
-      '__PROD__': JSON.stringify(!isDev)
+      '__PROD__': JSON.stringify(!isDev),
+      // WebSocket関連の定数を無効化
+      'WEBSOCKET_ENABLED': JSON.stringify(false),
+      'HMR_WEBSOCKET_URL': JSON.stringify('')
     },
     envPrefix: ['VITE_', 'REACT_APP_'],
     resolve: {
@@ -65,7 +73,7 @@ export default defineConfig(({ mode }) => {
       }
     },
     optimizeDeps: {
-      exclude: ['plasmo', 'parcel', 'ws', 'websocket', 'parcel-runtime']
+      exclude: ['plasmo', 'parcel', 'ws', 'websocket', 'parcel-runtime', 'socket.io-client']
     },
     css: {
       preprocessorOptions: {
