@@ -467,13 +467,29 @@ export const validateInput = {
   },
   
   password: (password: string): boolean => {
-    // 最低8文字、大文字・小文字・数字・特殊文字を含む
+    // より厳格なパスワード要件
     const hasLower = /[a-z]/.test(password);
     const hasUpper = /[A-Z]/.test(password);
     const hasNumber = /\d/.test(password);
     const hasSpecial = /[!@#$%^&*(),.?":{}|<>]/.test(password);
+    const hasMinLength = password.length >= SECURITY_CONFIG.PASSWORD_MIN_LENGTH;
     
-    return password.length >= 8 && hasLower && hasUpper && hasNumber && hasSpecial;
+    // 弱いパスワードパターンをチェック
+    const weakPatterns = [
+      /password/i,
+      /admin/i,
+      /123/,
+      /qwerty/i,
+      /abc/i,
+      /moneyticket/i // アプリ名を含むパスワードを禁止
+    ];
+    
+    const hasWeakPattern = weakPatterns.some(pattern => pattern.test(password));
+    
+    // 連続する文字をチェック
+    const hasSequentialChars = /(.)\1{2,}/.test(password); // 同じ文字3回以上連続
+    
+    return hasMinLength && hasLower && hasUpper && hasNumber && hasSpecial && !hasWeakPattern && !hasSequentialChars;
   },
   
   // XSS攻撃防止

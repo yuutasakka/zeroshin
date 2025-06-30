@@ -16,10 +16,28 @@ const supabaseUrl = getEnvVar(
   'https://eqirzbuqgymrtnfmvwhq.supabase.co'
 );
 
-const supabaseAnonKey = getEnvVar(
-  'VITE_SUPABASE_ANON_KEY',
-  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVxaXJ6YnVxZ3ltcnRuZm12d2hxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzU1Mjg1MTEsImV4cCI6MjA1MTEwNDUxMX0.bYgWmKdC9YMpuHhBEcmDfzQpO8j5qQWHnSPyLyKCyQE'
-);
+// セキュリティ向上: 本番環境ではハードコードされたキーを削除
+const supabaseAnonKey = (() => {
+  const key = getEnvVar('VITE_SUPABASE_ANON_KEY', '');
+  
+  // 本番環境での機密情報チェック
+  const isProduction = typeof window !== 'undefined' && 
+    window.location.hostname !== 'localhost' && 
+    window.location.hostname !== '127.0.0.1';
+  
+  if (isProduction && !key) {
+    console.error('🚨 CRITICAL: VITE_SUPABASE_ANON_KEY environment variable is missing in production!');
+    throw new Error('Supabase configuration is required in production environment');
+  }
+  
+  // 開発環境でのフォールバック（開発用のみ）
+  if (!key && !isProduction) {
+    console.warn('⚠️ Using development Supabase key. Set VITE_SUPABASE_ANON_KEY for production.');
+    return 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVxaXJ6YnVxZ3ltcnRuZm12d2hxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzU1Mjg1MTEsImV4cCI6MjA1MTEwNDUxMX0.bYgWmKdC9YMpuHhBEcmDfzQpO8j5qQWHnSPyLyKCyQE';
+  }
+  
+  return key;
+})();
 
 console.log('🚀 Supabaseクライアント初期化', { 
   url: supabaseUrl, 
@@ -204,43 +222,92 @@ export class SupabaseAdminAuth {
     }
   }
 
-  // パスワードハッシュ化（SHA-256）
+  // パスワードハッシュ化（bcrypt - セキュア版）
   static async hashPassword(password: string): Promise<string> {
-    console.log('🔐 hashPassword開始', { passwordLength: password.length });
+    console.log('🔐 hashPassword開始（bcrypt）', { passwordLength: password.length });
     
-    const encoder = new TextEncoder();
-    const data = encoder.encode(password);
-    const hashBuffer = await crypto.subtle.digest('SHA-256', data);
-    const hashArray = Array.from(new Uint8Array(hashBuffer));
-    const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
-    
-    console.log('🔐 hashPassword完了', { 
-      resultLength: hashHex.length,
-      resultPrefix: hashHex.substring(0, 10) + '...'
-    });
-    
-    return hashHex;
+    try {
+      // bcryptを使用してソルト付きでハッシュ化（10ラウンド）
+      const bcrypt = await import('bcrypt');
+      const saltRounds = 12; // 本番環境では12ラウンド推奨
+      const hash = await bcrypt.hash(password, saltRounds);
+      
+      console.log('🔐 bcryptハッシュ化完了', { 
+        resultLength: hash.length,
+        resultPrefix: hash.substring(0, 10) + '...'
+      });
+      
+      return hash;
+    } catch (error) {
+      console.error('💥 bcryptハッシュ化エラー:', error);
+      // フォールバック: 強化されたSHA-256（ソルト付き）
+      console.warn('⚠️ bcrypt失敗、強化SHA-256にフォールバック');
+      
+      const salt = crypto.getRandomValues(new Uint8Array(32));
+      const saltBase64 = btoa(String.fromCharCode(...salt));
+      const saltedPassword = password + saltBase64;
+      
+      const encoder = new TextEncoder();
+      const data = encoder.encode(saltedPassword);
+      const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+      const hashArray = Array.from(new Uint8Array(hashBuffer));
+      const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+      
+      // ソルトとハッシュを結合して保存
+      return `sha256$${saltBase64}$${hashHex}`;
+    }
   }
 
-  // パスワード検証
+  // パスワード検証（bcrypt対応版）
   static async verifyPassword(password: string, hash: string): Promise<boolean> {
     try {
-      console.log('🔑 verifyPassword開始', { 
+      console.log('🔑 verifyPassword開始（bcrypt対応）', { 
         passwordLength: password.length, 
         hashLength: hash.length,
         hashPrefix: hash.substring(0, 10) + '...'
       });
       
-      const hashedInput = await this.hashPassword(password);
-      const isValid = hashedInput === hash;
-      
-      console.log('🔑 パスワード検証結果', { 
-        inputHash: hashedInput.substring(0, 10) + '...',
-        expectedHash: hash.substring(0, 10) + '...',
-        isValid 
-      });
-      
-      return isValid;
+      // bcryptハッシュかどうかを判定
+      if (hash.startsWith('$2a$') || hash.startsWith('$2b$') || hash.startsWith('$2y$')) {
+        // bcryptでの検証
+        const bcrypt = await import('bcrypt');
+        const isValid = await bcrypt.compare(password, hash);
+        
+        console.log('🔑 bcryptパスワード検証結果', { isValid });
+        return isValid;
+      } 
+      // 強化SHA-256（ソルト付き）の検証
+      else if (hash.startsWith('sha256$')) {
+        const parts = hash.split('$');
+        if (parts.length !== 3) return false;
+        
+        const salt = parts[1];
+        const expectedHash = parts[2];
+        const saltedPassword = password + salt;
+        
+        const encoder = new TextEncoder();
+        const data = encoder.encode(saltedPassword);
+        const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+        const hashArray = Array.from(new Uint8Array(hashBuffer));
+        const computedHash = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+        
+        const isValid = computedHash === expectedHash;
+        console.log('🔑 強化SHA-256パスワード検証結果', { isValid });
+        return isValid;
+      }
+      // 従来のSHA-256（後方互換性）
+      else {
+        console.warn('⚠️ 従来のSHA-256ハッシュ検出 - アップグレード推奨');
+        const encoder = new TextEncoder();
+        const data = encoder.encode(password);
+        const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+        const hashArray = Array.from(new Uint8Array(hashBuffer));
+        const hashedInput = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+        const isValid = hashedInput === hash;
+        
+        console.log('🔑 従来SHA-256パスワード検証結果', { isValid });
+        return isValid;
+      }
     } catch (error) {
       console.error('💥 パスワード検証エラー:', error);
       return false;

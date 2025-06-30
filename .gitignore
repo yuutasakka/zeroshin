@@ -53,3 +53,4 @@ ADMIN_CREDENTIALS.md
 *.njsproj
 *.sln
 *.sw?
+.vercel

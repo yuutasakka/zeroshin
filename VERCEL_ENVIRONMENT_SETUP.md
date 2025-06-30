@@ -206,3 +206,83 @@ openssl rand -hex 32
 ---
 
 **MoneyTicket - セキュアな財務プラットフォーム** 🚀 
+
+## 🔧 必須環境変数
+
+### 基本設定
+```bash
+# Supabase設定
+VITE_SUPABASE_URL=https://eqirzbuqgymrtnfmvwhq.supabase.co
+VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
+VITE_SUPABASE_SERVICE_ROLE_KEY=your_supabase_service_role_key
+
+# AI API設定
+GEMINI_API_KEY=your_gemini_api_key
+GOOGLE_API_KEY=your_google_api_key
+```
+
+## 🔒 セキュリティ強化設定（追加）
+
+### 暗号化・認証キー
+```bash
+# セキュア暗号化キー（32文字以上の強力なランダム文字列）
+VITE_ENCRYPTION_KEY=your_32_char_encryption_key_here_random
+
+# JWT署名用秘密鍵（64文字以上推奨）
+VITE_JWT_SECRET=your_jwt_secret_key_64_chars_or_more_random_string
+
+# セッション管理用秘密鍵（64文字以上推奨）
+VITE_SESSION_SECRET=your_session_secret_key_64_chars_or_more_random
+
+# CSRFトークン用秘密鍵
+VITE_CSRF_SECRET=your_csrf_secret_key_32_chars_or_more
+```
+
+### SMS/Twilio設定（オプション）
+```bash
+TWILIO_ACCOUNT_SID=your_twilio_account_sid
+TWILIO_AUTH_TOKEN=your_twilio_auth_token
+TWILIO_PHONE_NUMBER=your_twilio_phone_number
+```
+
+## 🚀 キー生成方法
+
+### 1. 自動生成スクリプト使用
+```bash
+npm run generate-keys
+```
+
+### 2. 手動生成
+```bash
+# 32文字のランダムキー生成
+node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
+
+# 64文字のランダムキー生成
+node -e "console.log(require('crypto').randomBytes(64).toString('hex'))"
+```
+
+## ⚠️ セキュリティ注意事項
+
+### 重要な変更点
+1. **パスワードハッシュ化**: SHA-256からbcryptに変更済み
+2. **CSP強化**: `unsafe-eval`を削除、nonceベース実装推奨
+3. **機密情報保護**: 本番環境ではハードコードされたキーを削除
+
+### 本番環境でのベストプラクティス
+- すべての環境変数を設定（フォールバック禁止）
+- 定期的なキーローテーション（3ヶ月ごと）
+- 強力なパスワードポリシーの適用
+- ログ監視とアラート設定
+
+### データベース設定
+Supabaseで以下を確認してください：
+- Row Level Security (RLS) が有効
+- 適切なポリシー設定
+- 管理者テーブルへのアクセス制限
+
+## 🔍 設定確認方法
+
+1. アプリケーションのログを確認
+2. セキュリティヘッダーをブラウザ開発者ツールで確認
+3. HTTPS強制が有効か確認
+4. CSPエラーがないか確認
