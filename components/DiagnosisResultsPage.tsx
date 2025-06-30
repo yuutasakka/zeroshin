@@ -315,7 +315,7 @@ const DiagnosisResultsPage: React.FC<DiagnosisResultsPageProps> = ({ diagnosisDa
 
 
         if (reasons.size === 0) {
-          reasons.add("あなたにぴったりの商品です！"); // Corrected line
+          reasons.add("あなたにぴったりの商品です！");
         }
         return { ...product, recommendationReasons: Array.from(reasons) };
       });

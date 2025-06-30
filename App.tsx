@@ -126,11 +126,8 @@ const App: React.FC = () => {
             .eq('id', session.user.id)
             .single();
 
-          if (!profileError && profile?.requires_password_change) {
-            setCurrentPage('changePassword');
-          } else {
-            setCurrentPage('adminDashboard');
-          }
+          // パスワード変更機能は現在無効化されているため、常に管理画面に遷移
+          setCurrentPage('adminDashboard');
         }
 
         // 認証状態の変更を監視
@@ -149,11 +146,8 @@ const App: React.FC = () => {
                 .eq('id', session.user.id)
                 .single();
 
-              if (!profileError && profile?.requires_password_change) {
-                setCurrentPage('changePassword');
-              } else {
-                setCurrentPage('adminDashboard');
-              }
+              // パスワード変更機能は現在無効化されているため、常に管理画面に遷移
+              setCurrentPage('adminDashboard');
             } else {
               setSupabaseUser(null);
               // Supabase認証が解除された場合のみ状態をリセット
@@ -168,6 +162,7 @@ const App: React.FC = () => {
 
         return () => subscription.unsubscribe();
       } catch (error) {
+        // Supabase認証初期化エラーは無視（フォールバック認証が動作）
       }
     };
 
@@ -229,27 +224,34 @@ const App: React.FC = () => {
 
     // ページの可視性変更時の処理（タブの切り替えなど）
     const handleVisibilityChange = () => {
-      if (document.hidden && isAdminLoggedIn) {
+      // 現在の認証状態をその場で取得
+      const currentAuth = sessionStorage.getItem('admin_authenticated') === 'true';
+      
+      if (document.hidden && currentAuth) {
         // ページが非表示になった時、セッション時間を記録
         const sessionData = {
           lastActivity: Date.now(),
-          isLoggedIn: isAdminLoggedIn,
-          currentPage: currentPage
+          isLoggedIn: currentAuth
         };
         sessionStorage.setItem('admin_session_state', JSON.stringify(sessionData));
       } else if (!document.hidden) {
         // ページが再び表示された時、セッション状態をチェック
         const sessionState = sessionStorage.getItem('admin_session_state');
         if (sessionState) {
-          const data = JSON.parse(sessionState);
-          const timeDiff = Date.now() - data.lastActivity;
-          
-          // 30分以上非アクティブの場合はログアウト
-          if (timeDiff > 30 * 60 * 1000) {
-            setIsAdminLoggedIn(false);
-            setCurrentPage('diagnosis');
+          try {
+            const data = JSON.parse(sessionState);
+            const timeDiff = Date.now() - data.lastActivity;
+            
+            // 30分以上非アクティブの場合はログアウト
+            if (timeDiff > 30 * 60 * 1000) {
+              sessionStorage.clear();
+              localStorage.removeItem('admin_session');
+              setIsAdminLoggedIn(false);
+              setCurrentPage('diagnosis');
+            }
+          } catch (error) {
+            // セッション状態パースエラーの場合はクリア
             sessionStorage.clear();
-            localStorage.removeItem('admin_session');
           }
         }
       }
@@ -262,9 +264,9 @@ const App: React.FC = () => {
 
     return () => {
       window.removeEventListener('beforeunload', handleBeforeUnload);
-      document.addEventListener('visibilitychange', handleVisibilityChange);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
-  }, [isAdminLoggedIn, currentPage]);
+  }, []); // isAdminLoggedInやcurrentPageに依存するとuseEffectが頻繁に再実行される
 
   useEffect(() => {
     // アプリケーション初期化：サンプルデータとスクリプト読み込み
@@ -275,10 +277,15 @@ const App: React.FC = () => {
 
         // 診断完了履歴チェック（Supabaseベース）
         diagnosisManager.getVerifiedSessions().then(verifiedSessions => {
-          if (verifiedSessions.length > 0 && currentPage === 'diagnosis') {
+          // 現在のページ状態をその場で確認
+          const currentUrl = window.location.href;
+          const isOnDiagnosisPage = !currentUrl.includes('/admin') && !currentUrl.includes('/login');
+          
+          if (verifiedSessions.length > 0 && isOnDiagnosisPage) {
             setTimeout(() => setShowUsageNotice(true), 1000); // 1秒後に表示
           }
-        }).catch(error => {
+        }).catch(() => {
+          // Supabase接続エラーは無視（ローカルストレージフォールバックが動作）
         });
 
         // トラッキングスクリプトの読み込み
@@ -292,7 +299,6 @@ const App: React.FC = () => {
             if (sanitizedHead && isValidHTML(sanitizedHead)) {
               const headFragment = document.createRange().createContextualFragment(sanitizedHead);
               document.head.appendChild(headFragment);
-            } else {
             }
           }
 
@@ -301,11 +307,11 @@ const App: React.FC = () => {
             if (sanitizedBodyEnd && isValidHTML(sanitizedBodyEnd)) {
               const bodyEndFragment = document.createRange().createContextualFragment(sanitizedBodyEnd);
               document.body.appendChild(bodyEndFragment);
-            } else {
             }
           }
         }
       } catch (e) {
+        // アプリケーション初期化エラーは無視（基本機能は動作する）
       }
     };
 
@@ -390,11 +396,6 @@ const App: React.FC = () => {
     }
     
     window.scrollTo(0,0);
-    
-    
-    // 状態変更を確認するための遅延ログ
-    setTimeout(() => {
-    }, 200);
   };
 
   const handleAdminLogout = async () => {
@@ -403,6 +404,7 @@ const App: React.FC = () => {
       try {
         await supabase.auth.signOut();
       } catch (error) {
+        // ログアウトエラーは無視（状態はクリアされる）
       }
     } else {
       // 従来認証の場合

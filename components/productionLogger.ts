@@ -126,8 +126,9 @@ if (typeof window !== 'undefined') {
   });
 }
 
-// 本番環境でのconsole.log無効化
-if (import.meta.env.PROD) {
+// 本番環境でのconsole.log無効化（window.consoleで既に設定済みのため、冗長性回避）
+if (import.meta.env.PROD && typeof window === 'undefined') {
+  // サーバーサイドでのみconsole無効化
   console.log = () => {};
   console.info = () => {};
   console.debug = () => {};
