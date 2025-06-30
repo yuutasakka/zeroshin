@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { SecureConfigManager, secureLog, SECURITY_CONFIG } from '../security.config';
 import { supabase } from './supabaseClient';
-import QRCode from 'qrcode.react';
+import { QRCodeSVG } from 'qrcode.react';
 
 interface TwoFactorAuthProps {
   username: string;
@@ -323,11 +323,13 @@ const TwoFactorAuth: React.FC<TwoFactorAuthProps> = ({
 
           <div className="space-y-6">
             <div className="text-center">
-              <img 
-                src={totpSetup.qrCodeUrl} 
-                alt="QR Code for 2FA setup"
-                className="mx-auto border rounded-lg shadow-sm"
-              />
+              <div className="flex justify-center mb-4">
+                <QRCodeSVG
+                  value={`otpauth://totp/MoneyTicket:${username}?secret=${totpSetup.secret}&issuer=MoneyTicket`}
+                  size={256}
+                  className="border rounded-lg shadow-sm bg-white p-4"
+                />
+              </div>
               <p className="text-sm text-gray-600 mt-3">
                 Google AuthenticatorまたはAuthy等の認証アプリでQRコードをスキャンしてください
               </p>

@@ -3863,6 +3863,12 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
                     secureLog('2FA設定完了', { mode: twoFactorAuthMode });
                 }}
                 onCancel={() => setShowTwoFactorAuth(false)}
+                onMFAEnabled={() => {
+                    secureLog('2FA有効化完了');
+                }}
+                onMFADisabled={() => {
+                    secureLog('2FA無効化完了');
+                }}
             />
         )}
 

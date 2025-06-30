@@ -62,9 +62,10 @@ interface ExpertContact {
 
 interface MCPFinancialAssistantProps {
   className?: string;
+  diagnosisData?: any;
 }
 
-export const MCPFinancialAssistant: React.FC<MCPFinancialAssistantProps> = ({ className = '' }) => {
+export const MCPFinancialAssistant: React.FC<MCPFinancialAssistantProps> = ({ className = '', diagnosisData }) => {
   const [messages, setMessages] = useState<Message[]>([
     {
       id: 'welcome',
@@ -321,7 +322,7 @@ ${expertContact?.description || 'MoneyTicketの認定ファイナンシャルプ
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          message: currentQuestion,
+          message: userMessage.content,
           context: {
             diagnosisData: diagnosisData,
             questionCount: questionCount,

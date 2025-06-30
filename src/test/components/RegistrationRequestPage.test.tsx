@@ -1,4 +1,4 @@
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import RegistrationRequestPage from '../../components/RegistrationRequestPage';
@@ -31,5 +31,13 @@ describe('RegistrationRequestPage', () => {
   });
 
   it('必須項目が未入力の場合エラーメッセージが表示される', async () => {
-    const
+    render(<RegistrationRequestPage {...mockProps} />);
+    
+    const submitButton = screen.getByRole('button', { name: '申請する' });
+    fireEvent.click(submitButton);
+    
+    await waitFor(() => {
+      expect(screen.getByText('氏名を入力してください')).toBeInTheDocument();
+    });
+  });
 }); 

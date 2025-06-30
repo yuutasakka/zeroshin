@@ -4,6 +4,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { DiagnosisFormState, FinancialProduct, Company, RecommendedProductWithReason } from '../types';
 import { assetProjectionData, AgeGroup, InvestmentAmountKey } from '../data/assetProjectionData';
 import { createSupabaseClient } from './adminUtils';
+import { DiagnosisSessionManager } from './supabaseClient';
 import { secureLog } from '../security.config';
 import { allFinancialProducts as defaultFinancialProducts } from '../data/financialProductsData';
 import { MCPFinancialAssistant } from './MCPFinancialAssistant';
@@ -67,6 +68,7 @@ interface DiagnosisResultsPageProps {
 
 const DiagnosisResultsPage: React.FC<DiagnosisResultsPageProps> = ({ diagnosisData, onReturnToStart }) => {
   const [displayedAmount, setDisplayedAmount] = useState<string>("0");
+  const diagnosisManager = new DiagnosisSessionManager();
   const [financialAdvice, setFinancialAdvice] = useState<string | null>(null);
   const [isLoadingAdvice, setIsLoadingAdvice] = useState<boolean>(false);
   const [adviceError, setAdviceError] = useState<string | null>(null);
