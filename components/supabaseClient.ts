@@ -318,9 +318,53 @@ export class SupabaseAdminAuth {
 // 診断履歴管理クラス
 export class DiagnosisSessionManager {
   private supabase: SupabaseClient;
+  private readonly STORAGE_KEY = 'diagnosis_sessions_backup';
 
   constructor() {
     this.supabase = supabase;
+  }
+
+  // ローカルストレージのバックアップ機能
+  private getLocalSessions(): any[] {
+    try {
+      const stored = localStorage.getItem(this.STORAGE_KEY);
+      return stored ? JSON.parse(stored) : [];
+    } catch (error) {
+      console.error('ローカルセッション取得エラー:', error);
+      return [];
+    }
+  }
+
+  private saveToLocalStorage(session: any): void {
+    try {
+      const sessions = this.getLocalSessions();
+      const existingIndex = sessions.findIndex(s => s.session_id === session.session_id);
+      
+      if (existingIndex >= 0) {
+        sessions[existingIndex] = session;
+      } else {
+        sessions.push(session);
+      }
+      
+      localStorage.setItem(this.STORAGE_KEY, JSON.stringify(sessions));
+    } catch (error) {
+      console.error('ローカルセッション保存エラー:', error);
+    }
+  }
+
+  // Supabaseが利用可能かチェック
+  private async isSupabaseAvailable(): Promise<boolean> {
+    try {
+      const { data, error } = await this.supabase
+        .from('diagnosis_sessions')
+        .select('id')
+        .limit(1);
+      
+      return !error;
+    } catch (error) {
+      console.warn('Supabase接続不可、ローカルストレージを使用:', error);
+      return false;
+    }
   }
 
   // 電話番号の重複チェック
@@ -328,22 +372,33 @@ export class DiagnosisSessionManager {
     try {
       const normalizedPhone = phoneNumber.replace(/\D/g, '');
       
-      const { data, error } = await this.supabase
-        .from('diagnosis_sessions')
-        .select('id')
-        .eq('phone_number', normalizedPhone)
-        .eq('sms_verified', true)
-        .limit(1);
+      // Supabaseを試行
+      if (await this.isSupabaseAvailable()) {
+        const { data, error } = await this.supabase
+          .from('diagnosis_sessions')
+          .select('id')
+          .eq('phone_number', normalizedPhone)
+          .eq('sms_verified', true)
+          .limit(1);
 
-      if (error) {
-        console.error('電話番号重複チェックエラー:', error);
-        return false;
+        if (!error && data) {
+          return data.length > 0;
+        }
       }
-
-      return data && data.length > 0;
+      
+      // フォールバック: ローカルストレージをチェック
+      const localSessions = this.getLocalSessions();
+      return localSessions.some(session => 
+        session.phone_number === normalizedPhone && session.sms_verified === true
+      );
     } catch (error) {
       console.error('電話番号重複チェック例外:', error);
-      return false;
+      
+      // ローカルストレージのフォールバック
+      const localSessions = this.getLocalSessions();
+      return localSessions.some(session => 
+        session.phone_number === phoneNumber.replace(/\D/g, '') && session.sms_verified === true
+      );
     }
   }
 
@@ -352,27 +407,53 @@ export class DiagnosisSessionManager {
     try {
       const normalizedPhone = phoneNumber.replace(/\D/g, '');
       const sessionId = `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+      
+      const sessionData = {
+        id: sessionId,
+        phone_number: normalizedPhone,
+        diagnosis_answers: diagnosisAnswers,
+        session_id: sessionId,
+        sms_verified: false,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      };
 
-      const { data, error } = await this.supabase
-        .from('diagnosis_sessions')
-        .insert({
-          phone_number: normalizedPhone,
-          diagnosis_answers: diagnosisAnswers,
-          session_id: sessionId,
-          sms_verified: false
-        })
-        .select('session_id')
-        .single();
+      // Supabaseを試行
+      if (await this.isSupabaseAvailable()) {
+        const { data, error } = await this.supabase
+          .from('diagnosis_sessions')
+          .insert(sessionData)
+          .select('session_id')
+          .single();
 
-      if (error) {
-        console.error('診断セッション作成エラー:', error);
-        return null;
+        if (!error && data) {
+          // ローカルストレージにもバックアップ
+          this.saveToLocalStorage(sessionData);
+          return data.session_id;
+        }
       }
-
-      return data?.session_id || null;
+      
+      // フォールバック: ローカルストレージのみ
+      console.warn('Supabase利用不可、ローカルストレージに保存');
+      this.saveToLocalStorage(sessionData);
+      return sessionId;
     } catch (error) {
       console.error('診断セッション作成例外:', error);
-      return null;
+      
+      // エラー時もローカルストレージにフォールバック
+      const sessionId = `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+      const sessionData = {
+        id: sessionId,
+        phone_number: phoneNumber.replace(/\D/g, ''),
+        diagnosis_answers: diagnosisAnswers,
+        session_id: sessionId,
+        sms_verified: false,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      };
+      
+      this.saveToLocalStorage(sessionData);
+      return sessionId;
     }
   }
 
@@ -380,24 +461,59 @@ export class DiagnosisSessionManager {
   async updateSessionVerification(sessionId: string, phoneNumber: string): Promise<boolean> {
     try {
       const normalizedPhone = phoneNumber.replace(/\D/g, '');
+      const updateData = {
+        sms_verified: true,
+        verification_timestamp: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      };
 
-      const { error } = await this.supabase
-        .from('diagnosis_sessions')
-        .update({
-          sms_verified: true,
-          verification_timestamp: new Date().toISOString()
-        })
-        .eq('session_id', sessionId)
-        .eq('phone_number', normalizedPhone);
+      // Supabaseを試行
+      if (await this.isSupabaseAvailable()) {
+        const { error } = await this.supabase
+          .from('diagnosis_sessions')
+          .update(updateData)
+          .eq('session_id', sessionId)
+          .eq('phone_number', normalizedPhone);
 
-      if (error) {
-        console.error('セッション認証更新エラー:', error);
-        return false;
+        if (!error) {
+          // ローカルストレージも更新
+          const sessions = this.getLocalSessions();
+          const sessionIndex = sessions.findIndex(s => s.session_id === sessionId);
+          if (sessionIndex >= 0) {
+            sessions[sessionIndex] = { ...sessions[sessionIndex], ...updateData };
+            localStorage.setItem(this.STORAGE_KEY, JSON.stringify(sessions));
+          }
+          return true;
+        }
       }
-
-      return true;
+      
+      // フォールバック: ローカルストレージのみ更新
+      console.warn('Supabase利用不可、ローカルストレージを更新');
+      const sessions = this.getLocalSessions();
+      const sessionIndex = sessions.findIndex(s => s.session_id === sessionId);
+      
+      if (sessionIndex >= 0) {
+        sessions[sessionIndex] = { ...sessions[sessionIndex], ...updateData };
+        localStorage.setItem(this.STORAGE_KEY, JSON.stringify(sessions));
+        return true;
+      }
+      
+      return false;
     } catch (error) {
       console.error('セッション認証更新例外:', error);
+      
+      // エラー時もローカルストレージで試行
+      const sessions = this.getLocalSessions();
+      const sessionIndex = sessions.findIndex(s => s.session_id === sessionId);
+      
+      if (sessionIndex >= 0) {
+        sessions[sessionIndex].sms_verified = true;
+        sessions[sessionIndex].verification_timestamp = new Date().toISOString();
+        sessions[sessionIndex].updated_at = new Date().toISOString();
+        localStorage.setItem(this.STORAGE_KEY, JSON.stringify(sessions));
+        return true;
+      }
+      
       return false;
     }
   }
@@ -405,21 +521,32 @@ export class DiagnosisSessionManager {
   // 認証済みセッション履歴を取得
   async getVerifiedSessions(): Promise<any[]> {
     try {
-      const { data, error } = await this.supabase
-        .from('diagnosis_sessions')
-        .select('*')
-        .eq('sms_verified', true)
-        .order('verification_timestamp', { ascending: false });
+      // Supabaseを試行
+      if (await this.isSupabaseAvailable()) {
+        const { data, error } = await this.supabase
+          .from('diagnosis_sessions')
+          .select('*')
+          .eq('sms_verified', true)
+          .order('verification_timestamp', { ascending: false });
 
-      if (error) {
-        console.error('認証済みセッション取得エラー:', error);
-        return [];
+        if (!error && data) {
+          return data;
+        }
       }
-
-      return data || [];
+      
+      // フォールバック: ローカルストレージから取得
+      console.warn('Supabase利用不可、ローカルストレージから取得');
+      const localSessions = this.getLocalSessions();
+      return localSessions
+        .filter(session => session.sms_verified === true)
+        .sort((a, b) => new Date(b.verification_timestamp || b.created_at).getTime() - 
+                       new Date(a.verification_timestamp || a.created_at).getTime());
     } catch (error) {
       console.error('認証済みセッション取得例外:', error);
-      return [];
+      
+      // エラー時もローカルストレージから返す
+      const localSessions = this.getLocalSessions();
+      return localSessions.filter(session => session.sms_verified === true);
     }
   }
 
@@ -428,45 +555,100 @@ export class DiagnosisSessionManager {
     try {
       const normalizedPhone = phoneNumber.replace(/\D/g, '');
 
-      const { data, error } = await this.supabase
-        .from('diagnosis_sessions')
-        .select('*')
-        .eq('phone_number', normalizedPhone)
-        .eq('sms_verified', true)
-        .order('verification_timestamp', { ascending: false })
-        .limit(1)
-        .single();
+      // Supabaseを試行
+      if (await this.isSupabaseAvailable()) {
+        const { data, error } = await this.supabase
+          .from('diagnosis_sessions')
+          .select('*')
+          .eq('phone_number', normalizedPhone)
+          .eq('sms_verified', true)
+          .order('verification_timestamp', { ascending: false })
+          .limit(1)
+          .single();
 
-      if (error) {
-        console.error('最新認証セッション取得エラー:', error);
-        return null;
+        if (!error && data) {
+          return data;
+        }
       }
-
-      return data;
+      
+      // フォールバック: ローカルストレージから取得
+      console.warn('Supabase利用不可、ローカルストレージから取得');
+      const localSessions = this.getLocalSessions();
+      const userSessions = localSessions
+        .filter(session => session.phone_number === normalizedPhone && session.sms_verified === true)
+        .sort((a, b) => new Date(b.verification_timestamp || b.created_at).getTime() - 
+                       new Date(a.verification_timestamp || a.created_at).getTime());
+      
+      return userSessions.length > 0 ? userSessions[0] : null;
     } catch (error) {
       console.error('最新認証セッション取得例外:', error);
-      return null;
+      
+      // エラー時もローカルストレージから試行
+      const localSessions = this.getLocalSessions();
+      const userSessions = localSessions
+        .filter(session => session.phone_number === phoneNumber.replace(/\D/g, '') && session.sms_verified === true);
+      
+      return userSessions.length > 0 ? userSessions[0] : null;
     }
   }
 
   // セッションIDで診断データを取得
   async getDiagnosisSession(sessionId: string): Promise<any | null> {
     try {
-      const { data, error } = await this.supabase
-        .from('diagnosis_sessions')
-        .select('*')
-        .eq('session_id', sessionId)
-        .single();
+      // Supabaseを試行
+      if (await this.isSupabaseAvailable()) {
+        const { data, error } = await this.supabase
+          .from('diagnosis_sessions')
+          .select('*')
+          .eq('session_id', sessionId)
+          .single();
 
-      if (error) {
-        console.error('診断セッション取得エラー:', error);
-        return null;
+        if (!error && data) {
+          return data;
+        }
       }
-
-      return data;
+      
+      // フォールバック: ローカルストレージから取得
+      console.warn('Supabase利用不可、ローカルストレージから取得');
+      const localSessions = this.getLocalSessions();
+      return localSessions.find(session => session.session_id === sessionId) || null;
     } catch (error) {
       console.error('診断セッション取得例外:', error);
-      return null;
+      
+      // エラー時もローカルストレージから試行
+      const localSessions = this.getLocalSessions();
+      return localSessions.find(session => session.session_id === sessionId) || null;
+    }
+  }
+
+  // データ同期機能（Supabaseが復旧した時にローカルデータを同期）
+  async syncLocalDataToSupabase(): Promise<void> {
+    try {
+      if (!(await this.isSupabaseAvailable())) {
+        return;
+      }
+
+      const localSessions = this.getLocalSessions();
+      
+      for (const session of localSessions) {
+        // Supabaseに既存かチェック
+        const { data: existing } = await this.supabase
+          .from('diagnosis_sessions')
+          .select('id')
+          .eq('session_id', session.session_id)
+          .single();
+
+        if (!existing) {
+          // 存在しない場合は挿入
+          await this.supabase
+            .from('diagnosis_sessions')
+            .insert(session);
+        }
+      }
+      
+      console.log('ローカルデータの同期完了');
+    } catch (error) {
+      console.error('データ同期エラー:', error);
     }
   }
 }

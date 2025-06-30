@@ -18,6 +18,7 @@ import {
 } from '../data/homepageContentData';
 import { SECURITY_CONFIG, SUPABASE_CONFIG, secureLog } from '../security.config';
 import { SupabaseAdminAPI, SecureStorage, createSupabaseClient } from './adminUtils';
+import { diagnosisManager } from './supabaseClient';
 import { resetToSampleData } from '../data/sampleData';
 import { useColorTheme } from './ColorThemeContext';
 import TwoFactorAuth from './TwoFactorAuth';
@@ -196,24 +197,67 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
     // Load user sessions from Supabase
     const loadUserSessions = async () => {
       try {
-        // まずローカルストレージから読み込み（後方互換性）
+        let allSessions: UserSessionData[] = [];
+
+        // 1. 診断セッション管理から認証済みセッションを取得
+        try {
+          const verifiedSessions = await diagnosisManager.getVerifiedSessions();
+          if (verifiedSessions && verifiedSessions.length > 0) {
+            secureLog('認証済み診断セッションを取得:', verifiedSessions.length);
+            
+            // Supabaseの形式からUserSessionData形式に変換
+            const convertedSessions: UserSessionData[] = verifiedSessions.map((session: any) => ({
+              id: session.session_id || session.id,
+              timestamp: session.verification_timestamp || session.created_at,
+              phoneNumber: session.phone_number,
+              diagnosisAnswers: session.diagnosis_answers || {},
+              smsVerified: session.sms_verified || false,
+              verifiedPhoneNumber: session.sms_verified ? session.phone_number : undefined,
+              verificationTimestamp: session.verification_timestamp
+            }));
+            
+            allSessions = [...allSessions, ...convertedSessions];
+          }
+        } catch (diagnosisError) {
+          secureLog('診断セッション取得エラー:', diagnosisError);
+        }
+
+        // 2. ローカルストレージから従来のセッションデータを取得（後方互換性）
         const storedSessionsString = localStorage.getItem('userSessions');
-        let loadedSessions: UserSessionData[] = [];
         if (storedSessionsString) {
           try {
-            loadedSessions = JSON.parse(storedSessionsString);
-            setUserSessions(loadedSessions);
-            calculateDashboardStats(loadedSessions);
+            const storedSessions: UserSessionData[] = JSON.parse(storedSessionsString);
+            // 重複を避けるため、IDで既存チェック
+            const existingIds = new Set(allSessions.map(s => s.id));
+            const newStoredSessions = storedSessions.filter(s => !existingIds.has(s.id));
+            allSessions = [...allSessions, ...newStoredSessions];
           } catch (e) {
             secureLog("Error parsing user sessions from localStorage:", e);
           }
         }
 
-        // Supabaseからも読み込み（将来的にはこちらがメイン）
-        // 実装はローカルストレージのデータで動作
+        // 3. セッションデータを時系列でソート
+        allSessions.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
 
+        setUserSessions(allSessions);
+        calculateDashboardStats(allSessions);
+
+        secureLog('総ユーザーセッション数:', allSessions.length);
       } catch (error) {
         secureLog('ユーザーセッションの読み込みエラー:', error);
+        
+        // エラー時はローカルストレージのみ使用
+        try {
+          const storedSessionsString = localStorage.getItem('userSessions');
+          if (storedSessionsString) {
+            const storedSessions: UserSessionData[] = JSON.parse(storedSessionsString);
+            setUserSessions(storedSessions);
+            calculateDashboardStats(storedSessions);
+          }
+        } catch (fallbackError) {
+          secureLog('フォールバック読み込みもエラー:', fallbackError);
+          setUserSessions([]);
+        }
       }
     };
 
