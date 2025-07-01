@@ -39,11 +39,39 @@ export default defineConfig(({ mode }) => {
       sourcemap: mode === 'production' ? false : true,
       minify: mode === 'production' ? 'esbuild' : 'esbuild',
       rollupOptions: {
+        external: [
+          // サーバーサイド専用ライブラリを外部化
+          'bcrypt',
+          'fs',
+          'path',
+          'crypto',
+          'os',
+          'events',
+          'util',
+          'stream',
+          'buffer',
+          'child_process',
+          'assert',
+          'url',
+          'twilio',
+          'express',
+          'helmet',
+          'cors',
+          'express-rate-limit',
+          'express-validator',
+          'winston',
+          '@mapbox/node-pre-gyp',
+          'detect-libc',
+          'mock-aws-s3',
+          'aws-sdk',
+          'nock'
+        ],
         output: {
           manualChunks: {
             vendor: ['react', 'react-dom'],
             utils: ['crypto-js', 'chart.js'],
-            supabase: ['@supabase/supabase-js']
+            supabase: ['@supabase/supabase-js'],
+            ai: ['@ai-sdk/google', '@google/generative-ai']
           }
         }
       },
@@ -52,7 +80,7 @@ export default defineConfig(({ mode }) => {
         target: 'es2020',
         cssCodeSplit: true,
         assetsInlineLimit: 4096,
-        chunkSizeWarningLimit: 500
+        chunkSizeWarningLimit: 1000
       } : {})
     },
     esbuild: {
@@ -81,7 +109,20 @@ export default defineConfig(({ mode }) => {
       }
     },
     optimizeDeps: {
-      exclude: ['plasmo', 'parcel', 'ws', 'websocket', 'parcel-runtime', 'socket.io-client']
+      exclude: [
+        'plasmo', 
+        'parcel', 
+        'ws', 
+        'websocket', 
+        'parcel-runtime', 
+        'socket.io-client',
+        'bcrypt',
+        'twilio',
+        'express',
+        'helmet',
+        'cors',
+        'winston'
+      ]
     },
     css: {
       preprocessorOptions: {
