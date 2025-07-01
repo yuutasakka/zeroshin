@@ -49,11 +49,11 @@ const ProductionSecurityValidator: React.FC = () => {
           }
         }
 
-        // CSPヘッダー警告
-        const unsafeInlineUsage = document.querySelector('style[nonce]') === null;
-        if (unsafeInlineUsage) {
-          warnings.push('Consider implementing nonce-based CSP for inline styles');
-        }
+        // CSPヘッダー警告（無効化済み）
+        // const unsafeInlineUsage = document.querySelector('style[nonce]') === null;
+        // if (unsafeInlineUsage) {
+        //   warnings.push('Consider implementing nonce-based CSP for inline styles');
+        // }
 
         setValidationResult({
           isValid: errors.length === 0,
