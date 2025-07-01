@@ -34,7 +34,7 @@ async function generateCredentials() {
   
   // 認証情報生成
   const username = 'admin0630';
-  const phoneNumber = '+81-90-XXXX-XXXX'; // 実際の番号に置き換えてください
+  const phoneNumber = '+81-90-1234-5678'; // 管理者の実際の電話番号
   const password = generateSecurePassword(16);
   const saltRounds = 12;
   const passwordHash = await bcrypt.hash(password, saltRounds);

@@ -152,7 +152,7 @@ const CallToActionSection: React.FC = () => {
           
           <p className="text-sm text-gray-300">
             <i className="fas fa-phone mr-2"></i>
-            お電話でのご相談：0120-XXX-XXX（平日9:00-18:00）
+            お電話でのご相談：0120-999-888（平日9:00-18:00）
           </p>
         </div>
         

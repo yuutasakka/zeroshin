@@ -167,7 +167,7 @@ ${'─'.repeat(40)}
 
    'prod_admin_user' → '${username}'
    '$2b$12$REPLACE_WITH_ACTUAL_BCRYPT_HASH' → '${passwordHash}'
-   '+81XX-XXXX-XXXX' → '${phoneNumber}'
+   '+81-90-1234-5678' → '${phoneNumber}'
 
 3. マイグレーション実行:
    supabase db push

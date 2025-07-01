@@ -2901,7 +2901,7 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
                                     value={footerData.contactInfo}
                                     onChange={(e) => handleFooterDataChange('contactInfo', e.target.value)}
                                     className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
-                                    placeholder="例: 〒XXX-XXXX 東京都○○区○○ X-X-X | TEL：0120-XXX-XXX"
+                                    placeholder="例: 〒150-0001 東京都渋谷区神宮前1-1-1 | TEL：0120-999-888"
                                 />
                             </div>
                             

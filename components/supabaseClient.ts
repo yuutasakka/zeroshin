@@ -13,7 +13,7 @@ const getEnvVar = (viteVar: string, fallback: string) => {
 
 const supabaseUrl = getEnvVar(
   'VITE_SUPABASE_URL',
-  'https://eqirzbuqgymrtnfmvwhq.supabase.co'
+  'https://your-project.supabase.co'
 );
 
 // セキュリティ向上: 本番環境ではハードコードされたキーを削除
@@ -33,7 +33,7 @@ const supabaseAnonKey = (() => {
   // 開発環境でのフォールバック（開発用のみ）
   if (!key && !isProduction) {
     console.warn('⚠️ Using development Supabase key. Set VITE_SUPABASE_ANON_KEY for production.');
-    return 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVxaXJ6YnVxZ3ltcnRuZm12d2hxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzU1Mjg1MTEsImV4cCI6MjA1MTEwNDUxMX0.bYgWmKdC9YMpuHhBEcmDfzQpO8j5qQWHnSPyLyKCyQE';
+    return 'your-supabase-anon-key';
   }
   
   return key;
