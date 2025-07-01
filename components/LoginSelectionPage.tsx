@@ -134,23 +134,7 @@ const LoginSelectionPage: React.FC<LoginSelectionPageProps> = ({
           </button>
         </div>
 
-        {/* 説明セクション */}
-        <div className="mt-12 bg-gray-50 rounded-xl p-6">
-          <h4 className="text-lg font-semibold text-gray-800 mb-4 text-center">
-            <i className="fas fa-info-circle mr-2 text-blue-500"></i>
-            認証方式について
-          </h4>
-          <div className="grid md:grid-cols-2 gap-6 text-sm text-gray-600">
-            <div>
-              <h5 className="font-semibold text-gray-700 mb-2">従来認証</h5>
-              <p>システム管理者が設定した固定のユーザー名・パスワードでログインします。セキュリティ強化のため、ログイン試行制限やアカウントロック機能が有効です。</p>
-            </div>
-            <div>
-              <h5 className="font-semibold text-gray-700 mb-2">Supabase認証</h5>
-              <p>メールアドレスとパスワードでアカウントを作成するか、GoogleやGitHubアカウントでログインできます。新規管理者の追加が容易です。</p>
-            </div>
-          </div>
-        </div>
+
       </div>
     </div>
   );
