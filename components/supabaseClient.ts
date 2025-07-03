@@ -1167,4 +1167,664 @@ export class PasswordHistoryManager {
   }
 }
 
-export const passwordHistoryManager = new PasswordHistoryManager(); 
+export const passwordHistoryManager = new PasswordHistoryManager();
+
+// 管理者パスワードリセットクラス
+export class AdminPasswordReset {
+  
+  // パスワードリセットメールの送信
+  static async sendPasswordResetEmail(email: string): Promise<{ 
+    success: boolean; 
+    error?: string 
+  }> {
+    try {
+      console.log('📧 パスワードリセットメール送信開始', { email });
+      
+      // 管理者アカウントの存在確認
+      const { data: adminExists } = await supabase
+        .from('admin_credentials')
+        .select('id, username')
+        .eq('username', email)
+        .single();
+
+      if (!adminExists) {
+        return { success: false, error: '指定されたメールアドレスは管理者として登録されていません。' };
+      }
+
+      // Supabase Auth でパスワードリセットメールを送信
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/admin-password-reset`
+      });
+
+      if (error) {
+        console.error('❌ パスワードリセットメール送信エラー:', error);
+        return { success: false, error: 'パスワードリセットメールの送信に失敗しました。' };
+      }
+
+      console.log('✅ パスワードリセットメール送信完了');
+      return { success: true };
+    } catch (error) {
+      console.error('💥 パスワードリセットメール送信エラー:', error);
+      return { success: false, error: 'パスワードリセットメールの送信中にエラーが発生しました。' };
+    }
+  }
+
+  // パスワードの更新
+  static async updatePassword(
+    newPassword: string,
+    confirmPassword: string
+  ): Promise<{ success: boolean; error?: string }> {
+    try {
+      console.log('🔑 パスワード更新開始');
+      
+      // パスワード確認チェック
+      if (newPassword !== confirmPassword) {
+        return { success: false, error: 'パスワードが一致しません。' };
+      }
+
+      // パスワード強度チェック
+      const passwordValidation = AdminEmailAuth.validatePassword(newPassword);
+      if (!passwordValidation.isValid) {
+        return { success: false, error: passwordValidation.errors.join(', ') };
+      }
+
+      // Supabase Auth でパスワード更新
+      const { error } = await supabase.auth.updateUser({
+        password: newPassword
+      });
+
+      if (error) {
+        console.error('❌ パスワード更新エラー:', error);
+        return { success: false, error: 'パスワードの更新に失敗しました。' };
+      }
+
+      // 現在のユーザー情報を取得
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        // admin_credentialsテーブルのパスワードハッシュも更新
+        const passwordHash = CryptoJS.PBKDF2(newPassword, 'moneyticket-salt-2024', {
+          keySize: 256/32,
+          iterations: 10000
+        }).toString();
+
+        await supabase
+          .from('admin_credentials')
+          .update({
+            password_hash: passwordHash,
+            password_changed_at: new Date().toISOString(),
+            requires_password_change: false,
+            updated_at: new Date().toISOString()
+          })
+          .eq('username', user.email);
+      }
+
+      console.log('✅ パスワード更新完了');
+      return { success: true };
+    } catch (error) {
+      console.error('💥 パスワード更新エラー:', error);
+      return { success: false, error: 'パスワードの更新中にエラーが発生しました。' };
+    }
+  }
+}
+
+// 管理者承認システムクラス
+export class AdminApprovalSystem {
+  
+  // 承認待ち管理者の申請を作成
+  static async createApprovalRequest(requestData: {
+    email: string;
+    password_hash: string;
+    phone_number: string;
+    full_name?: string;
+    department?: string;
+    reason?: string;
+  }): Promise<{ success: boolean; approvalId?: string; error?: string }> {
+    try {
+      console.log('📝 管理者承認申請作成', { email: requestData.email });
+      
+      // 既存の申請をチェック
+      const { data: existingRequest } = await supabase
+        .from('pending_admin_approvals')
+        .select('*')
+        .eq('email', requestData.email)
+        .eq('status', 'pending')
+        .single();
+
+      if (existingRequest) {
+        return { success: false, error: 'このメールアドレスで既に承認待ちの申請があります。' };
+      }
+
+      // 承認申請を作成
+      const { data, error } = await supabase
+        .from('pending_admin_approvals')
+        .insert({
+          email: requestData.email,
+          password_hash: requestData.password_hash,
+          phone_number: requestData.phone_number,
+          full_name: requestData.full_name,
+          department: requestData.department,
+          reason: requestData.reason,
+          status: 'pending',
+          requested_by: requestData.email
+        })
+        .select()
+        .single();
+
+      if (error) {
+        console.error('❌ 承認申請作成エラー:', error);
+        return { success: false, error: '承認申請の作成に失敗しました。' };
+      }
+
+      // 承認履歴に記録
+      await supabase
+        .from('admin_approval_history')
+        .insert({
+          pending_approval_id: data.id,
+          action: 'submitted',
+          comment: '新規管理者登録申請が提出されました',
+          metadata: { 
+            email: requestData.email,
+            full_name: requestData.full_name,
+            department: requestData.department 
+          }
+        });
+
+      console.log('✅ 管理者承認申請作成完了', { approvalId: data.id });
+      return { success: true, approvalId: data.id };
+    } catch (error) {
+      console.error('💥 承認申請作成エラー:', error);
+      return { success: false, error: '承認申請の作成中にエラーが発生しました。' };
+    }
+  }
+
+  // 承認待ち一覧を取得
+  static async getPendingApprovals(): Promise<{ 
+    success: boolean; 
+    approvals?: any[]; 
+    error?: string 
+  }> {
+    try {
+      const { data, error } = await supabase
+        .from('pending_admin_approvals')
+        .select('*')
+        .eq('status', 'pending')
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        console.error('❌ 承認待ち一覧取得エラー:', error);
+        return { success: false, error: '承認待ち一覧の取得に失敗しました。' };
+      }
+
+      return { success: true, approvals: data || [] };
+    } catch (error) {
+      console.error('💥 承認待ち一覧取得エラー:', error);
+      return { success: false, error: '承認待ち一覧の取得中にエラーが発生しました。' };
+    }
+  }
+
+  // 管理者申請を承認
+  static async approveAdminRequest(
+    approvalId: string, 
+    approverId: number,
+    comment?: string
+  ): Promise<{ success: boolean; adminId?: number; error?: string }> {
+    try {
+      console.log('✅ 管理者申請承認開始', { approvalId, approverId });
+      
+      // 承認待ちデータを取得
+      const { data: approvalData, error: approvalError } = await supabase
+        .from('pending_admin_approvals')
+        .select('*')
+        .eq('id', approvalId)
+        .eq('status', 'pending')
+        .single();
+
+      if (approvalError || !approvalData) {
+        return { success: false, error: '承認対象の申請が見つかりません。' };
+      }
+
+      // 管理者アカウントを作成
+      const { data: newAdmin, error: adminError } = await supabase
+        .from('admin_credentials')
+        .insert({
+          username: approvalData.email,
+          password_hash: approvalData.password_hash,
+          phone_number: approvalData.phone_number,
+          backup_code: `BACKUP-${approvalData.email.toUpperCase()}-${Date.now()}`,
+          is_active: true,
+          failed_attempts: 0,
+          requires_password_change: false,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+          password_changed_at: new Date().toISOString()
+        })
+        .select()
+        .single();
+
+      if (adminError) {
+        console.error('❌ 管理者アカウント作成エラー:', adminError);
+        return { success: false, error: '管理者アカウントの作成に失敗しました。' };
+      }
+
+      // 承認状態を更新
+      await supabase
+        .from('pending_admin_approvals')
+        .update({
+          status: 'approved',
+          approved_by: approverId,
+          approved_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', approvalId);
+
+      // 承認履歴に記録
+      await supabase
+        .from('admin_approval_history')
+        .insert({
+          pending_approval_id: approvalId,
+          action: 'approved',
+          performed_by: approverId,
+          comment: comment || '管理者申請が承認されました',
+          metadata: { 
+            new_admin_id: newAdmin.id,
+            approver_id: approverId 
+          }
+        });
+
+      console.log('🎉 管理者申請承認完了', { adminId: newAdmin.id });
+      return { success: true, adminId: newAdmin.id };
+    } catch (error) {
+      console.error('💥 管理者申請承認エラー:', error);
+      return { success: false, error: '管理者申請の承認中にエラーが発生しました。' };
+    }
+  }
+
+  // 管理者申請を拒否
+  static async rejectAdminRequest(
+    approvalId: string, 
+    rejectorId: number,
+    reason: string
+  ): Promise<{ success: boolean; error?: string }> {
+    try {
+      console.log('❌ 管理者申請拒否開始', { approvalId, rejectorId });
+      
+      // 承認状態を更新
+      const { error: updateError } = await supabase
+        .from('pending_admin_approvals')
+        .update({
+          status: 'rejected',
+          approved_by: rejectorId,
+          approved_at: new Date().toISOString(),
+          rejection_reason: reason,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', approvalId)
+        .eq('status', 'pending');
+
+      if (updateError) {
+        console.error('❌ 申請拒否更新エラー:', updateError);
+        return { success: false, error: '申請の拒否処理に失敗しました。' };
+      }
+
+      // 承認履歴に記録
+      await supabase
+        .from('admin_approval_history')
+        .insert({
+          pending_approval_id: approvalId,
+          action: 'rejected',
+          performed_by: rejectorId,
+          comment: reason,
+          metadata: { 
+            rejector_id: rejectorId,
+            rejection_reason: reason 
+          }
+        });
+
+      console.log('✅ 管理者申請拒否完了', { approvalId });
+      return { success: true };
+    } catch (error) {
+      console.error('💥 管理者申請拒否エラー:', error);
+      return { success: false, error: '管理者申請の拒否中にエラーが発生しました。' };
+    }
+  }
+
+  // 承認履歴を取得
+  static async getApprovalHistory(approvalId: string): Promise<{
+    success: boolean;
+    history?: any[];
+    error?: string;
+  }> {
+    try {
+      const { data, error } = await supabase
+        .from('admin_approval_history')
+        .select(`
+          *,
+          admin_credentials:performed_by (
+            username
+          )
+        `)
+        .eq('pending_approval_id', approvalId)
+        .order('created_at', { ascending: true });
+
+      if (error) {
+        console.error('❌ 承認履歴取得エラー:', error);
+        return { success: false, error: '承認履歴の取得に失敗しました。' };
+      }
+
+      return { success: true, history: data || [] };
+    } catch (error) {
+      console.error('💥 承認履歴取得エラー:', error);
+      return { success: false, error: '承認履歴の取得中にエラーが発生しました。' };
+    }
+  }
+}
+
+// 管理者メール認証クラス
+export class AdminEmailAuth {
+  
+  // 管理者メール認証の開始
+  static async initiateEmailVerification(credentials: {
+    email: string;
+    password: string;
+    phone_number: string;
+    full_name?: string;
+    department?: string;
+    reason?: string;
+  }): Promise<{ success: boolean; token?: string; error?: string }> {
+    try {
+      console.log('🔧 管理者メール認証開始', { email: credentials.email });
+      
+      // メールアドレスの重複チェック
+      const { data: existingVerification } = await supabase
+        .from('admin_email_verification')
+        .select('*')
+        .eq('email', credentials.email)
+        .single();
+
+      if (existingVerification && !existingVerification.is_verified) {
+        // 既存の未認証データがあれば削除
+        await supabase
+          .from('admin_email_verification')
+          .delete()
+          .eq('email', credentials.email);
+      }
+
+      // パスワードをハッシュ化
+      const passwordHash = await SupabaseAdminAuth.hashPassword(credentials.password);
+      
+      // 一時テーブルに保存
+      const { data, error } = await supabase
+        .from('admin_email_verification')
+        .insert({
+          email: credentials.email,
+          password_hash: passwordHash,
+          phone_number: credentials.phone_number,
+          full_name: credentials.full_name,
+          department: credentials.department,
+          reason: credentials.reason,
+          verification_token: crypto.randomUUID(),
+          expires_at: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString() // 24時間後
+        })
+        .select()
+        .single();
+
+      if (error) {
+        console.error('❌ メール認証データ保存エラー:', error);
+        return { success: false, error: 'データベースエラーが発生しました。' };
+      }
+
+      // メール送信（本番環境では実際のメール送信サービスを使用）
+      console.log('📧 認証メール送信', {
+        to: credentials.email,
+        verificationUrl: `${window.location.origin}/admin/verify-email?token=${data.verification_token}`
+      });
+
+      return { 
+        success: true, 
+        token: data.verification_token,
+        error: undefined 
+      };
+    } catch (error) {
+      console.error('💥 メール認証開始エラー:', error);
+      return { success: false, error: 'メール認証の開始に失敗しました。' };
+    }
+  }
+
+  // メール認証トークンの検証
+  static async verifyEmailToken(token: string): Promise<{ 
+    success: boolean; 
+    adminData?: any; 
+    error?: string 
+  }> {
+    try {
+      console.log('🔍 メール認証トークン検証', { token });
+      
+      const { data, error } = await supabase
+        .from('admin_email_verification')
+        .select('*')
+        .eq('verification_token', token)
+        .single();
+
+      if (error || !data) {
+        return { success: false, error: '無効な認証トークンです。' };
+      }
+
+      // 期限チェック
+      if (new Date() > new Date(data.expires_at)) {
+        return { success: false, error: '認証トークンの有効期限が切れています。' };
+      }
+
+      // 既に認証済みかチェック
+      if (data.is_verified) {
+        return { success: false, error: 'このトークンは既に使用済みです。' };
+      }
+
+      return { success: true, adminData: data };
+    } catch (error) {
+      console.error('💥 メール認証トークン検証エラー:', error);
+      return { success: false, error: 'トークンの検証に失敗しました。' };
+    }
+  }
+
+  // メール認証の完了と承認申請作成
+  static async completeEmailVerification(token: string): Promise<{ 
+    success: boolean; 
+    approvalId?: string;
+    message?: string;
+    error?: string 
+  }> {
+    try {
+      console.log('✅ メール認証完了処理', { token });
+      
+      // トークン検証
+      const verificationResult = await this.verifyEmailToken(token);
+      if (!verificationResult.success) {
+        return verificationResult;
+      }
+
+      const adminData = verificationResult.adminData;
+
+      // 承認申請を作成
+      const approvalResult = await AdminApprovalSystem.createApprovalRequest({
+        email: adminData.email,
+        password_hash: adminData.password_hash,
+        phone_number: adminData.phone_number,
+        full_name: adminData.full_name,
+        department: adminData.department,
+        reason: adminData.reason
+      });
+
+      if (!approvalResult.success) {
+        return { success: false, error: approvalResult.error };
+      }
+
+      // メール認証を完了としてマーク
+      await supabase
+        .from('admin_email_verification')
+        .update({ 
+          is_verified: true,
+          updated_at: new Date().toISOString()
+        })
+        .eq('verification_token', token);
+
+      console.log('🎉 管理者承認申請作成完了', { approvalId: approvalResult.approvalId });
+      return { 
+        success: true, 
+        approvalId: approvalResult.approvalId,
+        message: 'メール認証が完了しました。既存の管理者による承認をお待ちください。'
+      };
+    } catch (error) {
+      console.error('💥 メール認証完了エラー:', error);
+      return { success: false, error: 'メール認証の完了に失敗しました。' };
+    }
+  }
+}
+
+// 管理者SMS認証クラス
+export class AdminSMSAuth {
+  
+  // SMS認証コードの生成と送信
+  static async sendSMSCode(adminId: number, phoneNumber: string): Promise<{ 
+    success: boolean; 
+    error?: string 
+  }> {
+    try {
+      console.log('📱 管理者SMS認証コード送信', { adminId, phoneNumber });
+      
+      // 既存の未認証SMSコードを無効化
+      await supabase
+        .from('admin_sms_verification')
+        .delete()
+        .eq('admin_id', adminId)
+        .eq('is_verified', false);
+
+      // 6桁のSMSコードを生成
+      const smsCode = Math.floor(100000 + Math.random() * 900000).toString();
+      
+      // SMS認証データを保存
+      const { data, error } = await supabase
+        .from('admin_sms_verification')
+        .insert({
+          admin_id: adminId,
+          phone_number: phoneNumber,
+          sms_code: smsCode,
+          is_verified: false,
+          expires_at: new Date(Date.now() + 10 * 60 * 1000).toISOString(), // 10分後
+          attempts: 0,
+          max_attempts: 3
+        })
+        .select()
+        .single();
+
+      if (error) {
+        console.error('❌ SMS認証データ保存エラー:', error);
+        return { success: false, error: 'SMS認証データの保存に失敗しました。' };
+      }
+
+      // SMS送信（本番環境では実際のSMS送信サービスを使用）
+      console.log('📱 SMS認証コード送信', {
+        to: phoneNumber,
+        code: smsCode,
+        message: `MoneyTicket管理者認証コード: ${smsCode} (10分間有効)`
+      });
+
+      return { success: true };
+    } catch (error) {
+      console.error('💥 SMS認証コード送信エラー:', error);
+      return { success: false, error: 'SMS認証コードの送信に失敗しました。' };
+    }
+  }
+
+  // SMS認証コードの検証
+  static async verifySMSCode(adminId: number, inputCode: string): Promise<{ 
+    success: boolean; 
+    error?: string 
+  }> {
+    try {
+      console.log('🔢 SMS認証コード検証', { adminId, inputCode });
+      
+      // 最新のSMS認証データを取得
+      const { data, error } = await supabase
+        .from('admin_sms_verification')
+        .select('*')
+        .eq('admin_id', adminId)
+        .eq('is_verified', false)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .single();
+
+      if (error || !data) {
+        return { success: false, error: '有効なSMS認証コードが見つかりません。' };
+      }
+
+      // 期限チェック
+      if (new Date() > new Date(data.expires_at)) {
+        return { success: false, error: 'SMS認証コードの有効期限が切れています。' };
+      }
+
+      // 試行回数チェック
+      if (data.attempts >= data.max_attempts) {
+        return { success: false, error: 'SMS認証の試行回数が上限に達しました。' };
+      }
+
+      // コード検証
+      if (data.sms_code !== inputCode) {
+        // 試行回数を増やす
+        await supabase
+          .from('admin_sms_verification')
+          .update({ 
+            attempts: data.attempts + 1,
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', data.id);
+
+        return { success: false, error: 'SMS認証コードが正しくありません。' };
+      }
+
+      // 認証成功
+      await supabase
+        .from('admin_sms_verification')
+        .update({ 
+          is_verified: true,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', data.id);
+
+      console.log('🎉 SMS認証成功', { adminId });
+      return { success: true };
+    } catch (error) {
+      console.error('💥 SMS認証コード検証エラー:', error);
+      return { success: false, error: 'SMS認証コードの検証に失敗しました。' };
+    }
+  }
+
+  // SMS認証状態の確認
+  static async checkSMSVerificationStatus(adminId: number): Promise<{ 
+    isVerified: boolean; 
+    error?: string 
+  }> {
+    try {
+      const { data, error } = await supabase
+        .from('admin_sms_verification')
+        .select('*')
+        .eq('admin_id', adminId)
+        .eq('is_verified', true)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .single();
+
+      if (error) {
+        return { isVerified: false };
+      }
+
+      // 認証から1時間以内かチェック（セッション有効期間）
+      const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000);
+      const verificationTime = new Date(data.updated_at);
+      
+      return { isVerified: verificationTime > oneHourAgo };
+    } catch (error) {
+      console.error('💥 SMS認証状態確認エラー:', error);
+      return { isVerified: false, error: 'SMS認証状態の確認に失敗しました。' };
+    }
+  }
+} 

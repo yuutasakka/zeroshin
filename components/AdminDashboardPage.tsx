@@ -26,6 +26,7 @@ import KeyRotationManager from './KeyRotationManager';
 import SecurityScanner from './SecurityScanner';
 import PenetrationTester from './PenetrationTester';
 import SecurityIntegration from './SecurityIntegration';
+import AdminApprovalDashboard from './AdminApprovalDashboard';
 
 const supabaseConfig = createSupabaseClient();
 
@@ -35,7 +36,7 @@ interface AdminDashboardPageProps {
   onNavigateHome: () => void;
 }
 
-type AdminViewMode = 'userHistory' | 'productSettings' | 'testimonialSettings' | 'analyticsSettings' | 'notificationSettings' | 'legalLinksSettings' | 'adminSettings' | 'homepageContentSettings' | 'headerAndVisualSettings' | 'colorThemeSettings' | 'securitySettings' | 'expertContactSettings' | 'financialPlannersSettings';
+type AdminViewMode = 'userHistory' | 'productSettings' | 'testimonialSettings' | 'analyticsSettings' | 'notificationSettings' | 'legalLinksSettings' | 'adminSettings' | 'homepageContentSettings' | 'headerAndVisualSettings' | 'colorThemeSettings' | 'securitySettings' | 'expertContactSettings' | 'financialPlannersSettings' | 'approvalRequests';
 
 interface DashboardStats {
     totalDiagnoses: number;
@@ -130,6 +131,9 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
   const [editingPlanner, setEditingPlanner] = useState<any | null>(null);
   const [showPlannerModal, setShowPlannerModal] = useState<boolean>(false);
   const [plannerStatus, setPlannerStatus] = useState<string>('');
+
+  // 承認システム用のstate
+  const [currentAdminId, setCurrentAdminId] = useState<number>(1); // デフォルト値、実際はセッションから取得
 
 
   // セッション有効性チェック
@@ -275,6 +279,11 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
           secureLog('Supabaseから管理者設定を取得');
           setAdminPhoneNumber(supabaseCredentials.phone_number || '09012345678');
           setAdminBackupCode(supabaseCredentials.backup_code || 'MT-BACKUP-2024');
+          
+          // 管理者IDを設定
+          if (supabaseCredentials.id) {
+            setCurrentAdminId(supabaseCredentials.id);
+          }
           
           // ローカルストレージにもバックアップとして保存
           const backupCredentials = {
@@ -1878,6 +1887,13 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
                  >
                      <i className="fas fa-phone mr-2"></i>
                      <span>📞 専門家設定</span>
+                 </button>
+                 <button 
+                     onClick={() => setViewMode('approvalRequests')}
+                     className={`admin-nav-button px-4 py-2 rounded-md text-sm font-medium transition-colors ${viewMode === 'approvalRequests' ? 'bg-orange-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}`}
+                 >
+                     <i className="fas fa-user-check mr-2"></i>
+                     <span>🔰 承認申請一覧</span>
                  </button>
             </div>
             
@@ -3849,6 +3865,16 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
                     <i className="fas fa-save mr-2"></i>専門家設定を保存
                 </button>
             </div>
+        )}
+
+        {viewMode === 'approvalRequests' && (
+            <AdminApprovalDashboard 
+                currentAdminId={currentAdminId}
+                onApprovalUpdate={() => {
+                    // 必要に応じて他のデータを再読み込み
+                    secureLog('承認処理完了、関連データを再読み込み');
+                }}
+            />
         )}
 
         {/* セキュリティ機能のモーダル */}

@@ -25,6 +25,7 @@ import { ColorThemeProvider } from './components/ColorThemeContext';
 import { DiagnosisFormState, PageView, UserSessionData } from './types';
 import { initializeSampleData } from './data/sampleData';
 import RegistrationRequestPage from './components/RegistrationRequestPage';
+import AdminPasswordResetPage from './components/AdminPasswordResetPage';
 import ProductionSecurityValidator from './components/ProductionSecurityValidator';
 import DebugSupabaseConnection from './components/DebugSupabaseConnection';
 import { measurePageLoad } from './components/PerformanceMonitor';
@@ -435,7 +436,7 @@ const App: React.FC = () => {
   };
 
   const navigateToAdminLogin = () => {
-    setCurrentPage('loginSelection');
+    setCurrentPage('traditionalLogin');
     window.scrollTo(0,0);
   };
 
@@ -452,6 +453,12 @@ const App: React.FC = () => {
   // 新規登録申請ページへのナビゲーション
   const navigateToRegistrationRequest = () => {
     setCurrentPage('registrationRequest');
+    window.scrollTo(0, 0);
+  };
+
+  // パスワードリセットページへのナビゲーション
+  const navigateToPasswordReset = () => {
+    setCurrentPage('passwordReset');
     window.scrollTo(0, 0);
   };
 
@@ -489,6 +496,7 @@ const App: React.FC = () => {
       return <AdminLoginPage 
         onLogin={handleAdminLoginSuccess}
         onNavigateHome={navigateToHome}
+        onNavigateToPasswordReset={navigateToPasswordReset}
       />;
     }
 
@@ -501,6 +509,10 @@ const App: React.FC = () => {
 
     if (currentPage === 'registrationRequest') {
       return <RegistrationRequestPage onNavigateHome={navigateToHome} />;
+    }
+
+    if (currentPage === 'passwordReset') {
+      return <AdminPasswordResetPage onNavigateBack={() => setCurrentPage('traditionalLogin')} />;
     }
 
     // 既存の電話認証ページ（後で削除予定）

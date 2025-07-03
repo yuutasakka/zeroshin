@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { SupabaseAdminAuth, AdminCredentials } from './supabaseClient';
+import { SupabaseAdminAuth, AdminCredentials, AdminEmailAuth, AdminSMSAuth, AdminApprovalSystem } from './supabaseClient';
 import { secureLog } from '../security.config';
 
 // セキュリティ強化のための入力サニタイゼーション
@@ -14,14 +14,20 @@ const sanitizeInput = (input: string): string => {
 interface AdminLoginPageProps {
   onLogin: () => void;
   onNavigateHome: () => void;
+  onNavigateToPasswordReset?: () => void;
 }
 
-const AdminLoginPage: React.FC<AdminLoginPageProps> = ({ onLogin, onNavigateHome }) => {
-  const [mode, setMode] = useState<'login' | 'register'>('login');
+const AdminLoginPage: React.FC<AdminLoginPageProps> = ({ onLogin, onNavigateHome, onNavigateToPasswordReset }) => {
+  const [mode, setMode] = useState<'login' | 'register' | 'email-verify' | 'sms-verify'>('login');
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [phoneNumber, setPhoneNumber] = useState('');
+  const [email, setEmail] = useState('');
+  const [smsCode, setSmsCode] = useState('');
+  const [fullName, setFullName] = useState('');
+  const [department, setDepartment] = useState('');
+  const [reason, setReason] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
@@ -30,6 +36,8 @@ const AdminLoginPage: React.FC<AdminLoginPageProps> = ({ onLogin, onNavigateHome
   const [loginAttempts, setLoginAttempts] = useState(0);
   const [isLocked, setIsLocked] = useState(false);
   const [lockoutTime, setLockoutTime] = useState<number | null>(null);
+  const [pendingAdminId, setPendingAdminId] = useState<number | null>(null);
+  const [pendingPhoneNumber, setPendingPhoneNumber] = useState<string>('');
 
   // セキュリティ設定
   const MAX_LOGIN_ATTEMPTS = 5;
@@ -100,24 +108,26 @@ const AdminLoginPage: React.FC<AdminLoginPageProps> = ({ onLogin, onNavigateHome
     }
   };
 
-  // 新規登録ハンドラー
+  // メール認証付き新規登録ハンドラー
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     
     // 入力をサニタイゼーション
-    const sanitizedUsername = sanitizeInput(username);
+    const sanitizedEmail = sanitizeInput(email);
     const sanitizedPhoneNumber = phoneNumber.replace(/\D/g, ''); // 数字のみ
     
-    secureLog('新規管理者登録処理開始', { username: sanitizedUsername });
+    secureLog('新規管理者メール認証開始', { email: sanitizedEmail });
     
     // 入力値検証
-    if (!sanitizedUsername || !password || !confirmPassword || !sanitizedPhoneNumber) {
-      setError('すべての項目を入力してください。');
+    if (!sanitizedEmail || !password || !confirmPassword || !sanitizedPhoneNumber || !fullName || !reason) {
+      setError('すべての必須項目を入力してください。');
       return;
     }
 
-    if (sanitizedUsername.length < 3) {
-      setError('ユーザー名は3文字以上で入力してください。');
+    // メールアドレス形式チェック
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(sanitizedEmail)) {
+      setError('有効なメールアドレスを入力してください。');
       return;
     }
 
@@ -137,9 +147,35 @@ const AdminLoginPage: React.FC<AdminLoginPageProps> = ({ onLogin, onNavigateHome
     }
 
     // パスワード強度チェック
-    const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]/;
-    if (!passwordRegex.test(password)) {
-      setError('パスワードは大文字、小文字、数字、記号を含む必要があります。');
+    const hasLowerCase = /[a-z]/.test(password);
+    const hasUpperCase = /[A-Z]/.test(password);
+    const hasNumber = /\d/.test(password);
+    const hasSymbol = /[@$!%*?&]/.test(password);
+    const hasMinLength = password.length >= 8;
+    const hasOnlyAllowedChars = /^[A-Za-z\d@$!%*?&]+$/.test(password);
+
+    if (!hasMinLength) {
+      setError('パスワードは8文字以上で入力してください。');
+      return;
+    }
+    if (!hasLowerCase) {
+      setError('パスワードに小文字（a-z）を含めてください。');
+      return;
+    }
+    if (!hasUpperCase) {
+      setError('パスワードに大文字（A-Z）を含めてください。');
+      return;
+    }
+    if (!hasNumber) {
+      setError('パスワードに数字（0-9）を含めてください。');
+      return;
+    }
+    if (!hasSymbol) {
+      setError('パスワードに記号（@$!%*?&）のいずれかを含めてください。');
+      return;
+    }
+    if (!hasOnlyAllowedChars) {
+      setError('パスワードに使用できない文字が含まれています。使用可能な記号: @$!%*?&');
       return;
     }
 
@@ -148,97 +184,80 @@ const AdminLoginPage: React.FC<AdminLoginPageProps> = ({ onLogin, onNavigateHome
     setSuccess('');
 
     try {
-      // 管理者認証情報の作成
-      const result = await SupabaseAdminAuth.createAdminCredentials({
-        username: sanitizedUsername,
+      // メール認証の開始
+      const result = await AdminEmailAuth.initiateEmailVerification({
+        email: sanitizedEmail,
         password: password,
         phone_number: `+81${sanitizedPhoneNumber}`,
-        is_active: true
+        full_name: fullName.trim(),
+        department: department.trim() || undefined,
+        reason: reason.trim()
       });
 
       if (result.success) {
-        setSuccess('管理者アカウントが正常に作成されました。ログインページに切り替えてください。');
+        setSuccess('認証メールを送信しました。メールボックスを確認してリンクをクリックしてください。');
+        setMode('email-verify');
         
         // 監査ログに記録
         await SupabaseAdminAuth.recordAuditLog(
-          'admin_register_success',
-          `新規管理者登録成功: ${sanitizedUsername}`,
-          sanitizedUsername,
+          'admin_email_verification_sent',
+          `管理者メール認証送信: ${sanitizedEmail}`,
+          sanitizedEmail,
           'info',
           { phone_number: `+81${sanitizedPhoneNumber}`, user_agent: navigator.userAgent }
         );
-
-        // フォームをリセット
-        setUsername('');
-        setPassword('');
-        setConfirmPassword('');
-        setPhoneNumber('');
-        
-        // 3秒後にログインモードに切り替え
-        setTimeout(() => {
-          setMode('login');
-          setSuccess('');
-        }, 3000);
       } else {
-        setError(result.error || '登録に失敗しました。');
+        setError(result.error || 'メール認証の開始に失敗しました。');
         
         // 監査ログに記録
         await SupabaseAdminAuth.recordAuditLog(
-          'admin_register_failure',
-          `新規管理者登録失敗: ${sanitizedUsername} - ${result.error}`,
-          sanitizedUsername,
+          'admin_email_verification_failure',
+          `管理者メール認証失敗: ${sanitizedEmail} - ${result.error}`,
+          sanitizedEmail,
           'warning',
           { phone_number: `+81${sanitizedPhoneNumber}`, error: result.error, user_agent: navigator.userAgent }
         );
       }
     } catch (error) {
-      setError('登録処理中にエラーが発生しました。しばらく待ってから再試行してください。');
-      secureLog('新規管理者登録エラー:', error);
+      setError('メール認証処理中にエラーが発生しました。しばらく待ってから再試行してください。');
+      secureLog('管理者メール認証エラー:', error);
       
       // 監査ログに記録
       await SupabaseAdminAuth.recordAuditLog(
-        'admin_register_error',
-        `新規管理者登録エラー: ${error}`,
-        sanitizedUsername,
+        'admin_email_verification_error',
+        `管理者メール認証エラー: ${sanitizedEmail}`,
+        sanitizedEmail,
         'error',
-        { error: String(error), user_agent: navigator.userAgent }
+        { error: error instanceof Error ? error.message : String(error), user_agent: navigator.userAgent }
       );
     } finally {
       setLoading(false);
     }
   };
 
+  // ログインハンドラー
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
+    setLoading(true);
+    setError('');
     
     // 入力をサニタイゼーション
     const sanitizedUsername = sanitizeInput(username);
-    const sanitizedPassword = password; // パスワードはサニタイゼーション不要（ハッシュ化するため）
     
-    secureLog('ログイン処理開始', { username: sanitizedUsername });
-    
-    if (isLocked) {
-      const remainingTime = lockoutTime ? Math.ceil((lockoutTime - Date.now()) / 60000) : 0;
-      setError(`アカウントがロックされています。あと${remainingTime}分お待ちください。`);
-      secureLog('アカウントロック中', { remainingTime });
-      return;
-    }
+    secureLog('管理者ログイン処理開始', { username: sanitizedUsername });
 
-    // 入力値検証強化
-    if (!sanitizedUsername || !sanitizedPassword) {
+    // 基本検証
+    if (!sanitizedUsername || !password) {
       setError('ユーザー名とパスワードを入力してください。');
-      secureLog('入力検証失敗');
+      setLoading(false);
       return;
     }
 
-    if (sanitizedUsername.length < 3 || sanitizedPassword.length < 8) {
-      setError('ユーザー名は3文字以上、パスワードは8文字以上で入力してください。');
-      secureLog('入力長さ検証失敗');
+    if (isLocked) {
+      setError('アカウントがロックされています。時間をおいて再試行してください。');
+      setLoading(false);
       return;
     }
-
-    setLoading(true);
-    setError('');
 
     try {
       secureLog('監査ログ記録開始');
@@ -289,7 +308,7 @@ const AdminLoginPage: React.FC<AdminLoginPageProps> = ({ onLogin, onNavigateHome
         return;
       }
 
-      // ログイン成功
+      // パスワード認証成功 - SMS認証に進む
       await SupabaseAdminAuth.recordLoginAttempt(
         username,
         true,
@@ -298,81 +317,222 @@ const AdminLoginPage: React.FC<AdminLoginPageProps> = ({ onLogin, onNavigateHome
         navigator.userAgent
       );
 
-      await SupabaseAdminAuth.updateSuccessfulLogin(username);
+      await SupabaseAdminAuth.updateSuccessfulLogin(sanitizedUsername);
 
-      await SupabaseAdminAuth.recordAuditLog(
-        'admin_login_success',
-        `管理者ログイン成功: ${username}`,
-        username,
-        'info',
-        { user_agent: navigator.userAgent }
-      );
+      // SMS認証の開始
+      setPendingAdminId(adminCredentials.id);
+      setPendingPhoneNumber(adminCredentials.phone_number);
       
-      // セッション情報を保存
-      const sessionData = {
-        username: adminCredentials.username,
-        loginTime: new Date().toISOString(),
-        expiryTime: new Date(Date.now() + 30 * 60 * 1000).toISOString(), // 30分
-        authenticated: true
-      };
+      const smsResult = await AdminSMSAuth.sendSMSCode(adminCredentials.id, adminCredentials.phone_number);
       
-      localStorage.setItem('admin_session', JSON.stringify(sessionData));
-      localStorage.removeItem('admin_lockout'); // ロックアウト情報をクリア
+      if (smsResult.success) {
+        setMode('sms-verify');
+        setSuccess('SMS認証コードを送信しました。携帯電話を確認してください。');
+        
+        // 監査ログに記録
+        await SupabaseAdminAuth.recordAuditLog(
+          'admin_sms_code_sent',
+          `管理者SMS認証コード送信: ${sanitizedUsername}`,
+          sanitizedUsername,
+          'info',
+          { phone_number: adminCredentials.phone_number, user_agent: navigator.userAgent }
+        );
+      } else {
+        setError('SMS認証コードの送信に失敗しました。');
+        
+        // 監査ログに記録
+        await SupabaseAdminAuth.recordAuditLog(
+          'admin_sms_code_failure',
+          `管理者SMS認証コード送信失敗: ${sanitizedUsername} - ${smsResult.error}`,
+          sanitizedUsername,
+          'warning',
+          { phone_number: adminCredentials.phone_number, error: smsResult.error, user_agent: navigator.userAgent }
+        );
+      }
+
+      secureLog('管理者パスワード認証成功、SMS認証に進行', { username: sanitizedUsername });
       
+      // ログイン試行カウンターをリセット
       setLoginAttempts(0);
-      setIsLocked(false);
-      setLockoutTime(null);
-      
-      onLogin();
-
+      localStorage.removeItem('admin_lockout');
     } catch (error) {
+      setError('ログイン処理中にエラーが発生しました。しばらく待ってから再試行してください。');
+      secureLog('管理者ログインエラー:', error);
+      
+      // 監査ログに記録
       await SupabaseAdminAuth.recordAuditLog(
         'admin_login_error',
-        `管理者ログインエラー: ${error}`,
-        username,
+        `管理者ログインエラー: ${sanitizedUsername}`,
+        sanitizedUsername,
         'error',
-        { error: String(error), user_agent: navigator.userAgent }
+        { error: error instanceof Error ? error.message : String(error), user_agent: navigator.userAgent }
       );
-      setError('ログイン処理中にエラーが発生しました。しばらく待ってから再試行してください。');
     } finally {
       setLoading(false);
     }
   };
 
+  // SMS認証コード検証ハンドラー
+  const handleSMSVerification = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!pendingAdminId || !smsCode) {
+      setError('SMS認証コードを入力してください。');
+      return;
+    }
+
+    if (smsCode.length !== 6) {
+      setError('SMS認証コードは6桁で入力してください。');
+      return;
+    }
+
+    setLoading(true);
+    setError('');
+
+    try {
+      const result = await AdminSMSAuth.verifySMSCode(pendingAdminId, smsCode);
+
+      if (result.success) {
+        // SMS認証成功 - 最終ログイン完了
+        const sessionData = {
+          username: username,
+          loginTime: new Date().toISOString(),
+          sessionId: crypto.randomUUID(),
+          adminId: pendingAdminId
+        };
+        
+        localStorage.setItem('admin_session', JSON.stringify(sessionData));
+        sessionStorage.setItem('admin_authenticated', 'true');
+
+        // 監査ログに記録
+        await SupabaseAdminAuth.recordAuditLog(
+          'admin_login_success',
+          `管理者ログイン成功（2段階認証完了）: ${username}`,
+          username,
+          'info',
+          { session_id: sessionData.sessionId, admin_id: pendingAdminId, user_agent: navigator.userAgent }
+        );
+
+        secureLog('管理者ログイン成功（2段階認証完了）', { username, adminId: pendingAdminId });
+        
+        // 状態をリセット
+        setPendingAdminId(null);
+        setPendingPhoneNumber('');
+        setSmsCode('');
+        
+        onLogin();
+      } else {
+        setError(result.error || 'SMS認証に失敗しました。');
+        
+        // 監査ログに記録
+        await SupabaseAdminAuth.recordAuditLog(
+          'admin_sms_verification_failure',
+          `管理者SMS認証失敗: ${username} - ${result.error}`,
+          username,
+          'warning',
+          { admin_id: pendingAdminId, error: result.error, user_agent: navigator.userAgent }
+        );
+      }
+    } catch (error) {
+      setError('SMS認証処理中にエラーが発生しました。');
+      secureLog('管理者SMS認証エラー:', error);
+      
+      // 監査ログに記録
+      await SupabaseAdminAuth.recordAuditLog(
+        'admin_sms_verification_error',
+        `管理者SMS認証エラー: ${username}`,
+        username,
+        'error',
+        { admin_id: pendingAdminId, error: error instanceof Error ? error.message : String(error), user_agent: navigator.userAgent }
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // SMS認証コード再送信ハンドラー
+  const handleResendSMSCode = async () => {
+    if (!pendingAdminId || !pendingPhoneNumber) {
+      setError('認証セッションが無効です。もう一度ログインしてください。');
+      return;
+    }
+
+    setLoading(true);
+    setError('');
+
+    try {
+      const result = await AdminSMSAuth.sendSMSCode(pendingAdminId, pendingPhoneNumber);
+      
+      if (result.success) {
+        setSuccess('SMS認証コードを再送信しました。');
+      } else {
+        setError('SMS認証コードの再送信に失敗しました。');
+      }
+    } catch (error) {
+      setError('SMS認証コード再送信中にエラーが発生しました。');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // 残りロックアウト時間の計算
   const getRemainingLockoutTime = (): string => {
     if (!lockoutTime) return '';
-    const remaining = Math.ceil((lockoutTime - Date.now()) / 1000);
-    if (remaining <= 0) return '';
     
-    const minutes = Math.floor(remaining / 60);
-    const seconds = remaining % 60;
+    const remaining = Math.max(0, lockoutTime - Date.now());
+    const minutes = Math.floor(remaining / 60000);
+    const seconds = Math.floor((remaining % 60000) / 1000);
+    
     return `${minutes}:${seconds.toString().padStart(2, '0')}`;
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
-      <div className="max-w-md w-full space-y-8">
-        {/* ヘッダー */}
-        <div className="text-center">
-          <div className="mx-auto h-16 w-16 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center mb-4">
-            <svg className="h-8 w-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              {mode === 'login' ? (
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-              ) : (
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
-              )}
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-white flex items-center justify-center p-4">
+      <div className="max-w-md w-full">
+        {/* ロゴアイコン */}
+        <div className="text-center mb-8">
+          <div className="mx-auto h-20 w-20 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-3xl flex items-center justify-center mb-6 shadow-lg">
+            <svg className="h-10 w-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
             </svg>
           </div>
-          <h2 className="text-3xl font-bold text-gray-900">
-            {mode === 'login' ? '管理者ログイン' : '新規管理者登録'}
-          </h2>
-          <p className="mt-2 text-sm text-gray-600">MoneyTicket 管理画面</p>
         </div>
 
-        {/* ログインフォーム */}
-        <div className="bg-white rounded-lg shadow-xl p-8">
+        {/* メインカード */}
+        <div className="bg-white rounded-2xl shadow-xl border border-gray-100 p-8">
+          {/* ヘッダー */}
+          <div className="text-center mb-8">
+            <h1 className="text-2xl font-bold text-gray-900 mb-2">
+              {mode === 'login' && 'アカウントにログインします。'}
+              {mode === 'register' && '新規管理者アカウント作成'}
+              {mode === 'email-verify' && 'メール認証待ち'}
+              {mode === 'sms-verify' && 'SMS認証'}
+            </h1>
+            {mode === 'login' && (
+              <p className="text-gray-600 text-sm">
+                MoneyTicket管理画面にアクセスするため、認証情報を入力してください。
+              </p>
+            )}
+            {mode === 'register' && (
+              <p className="text-gray-600 text-sm">
+                管理者アカウントを作成します。メール認証が必要です。
+              </p>
+            )}
+            {mode === 'email-verify' && (
+              <p className="text-gray-600 text-sm">
+                認証メールを送信しました。メールボックスを確認してリンクをクリックしてください。
+              </p>
+            )}
+            {mode === 'sms-verify' && (
+              <p className="text-gray-600 text-sm">
+                SMS認証コードを入力してログインを完了してください。
+              </p>
+            )}
+          </div>
+
+          {/* ロックアウト警告 */}
           {isLocked && (
-            <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
+            <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl">
               <div className="flex items-center">
                 <svg className="h-5 w-5 text-red-400 mr-2" fill="currentColor" viewBox="0 0 20 20">
                   <path fillRule="evenodd" d="M10 1C5.03 1 1 5.03 1 10s4.03 9 9 9 9-4.03 9-9-4.03-9-9-9zM9 7v4h2V7H9zm0 6v2h2v-2H9z" clipRule="evenodd" />
@@ -387,23 +547,177 @@ const AdminLoginPage: React.FC<AdminLoginPageProps> = ({ onLogin, onNavigateHome
             </div>
           )}
 
-          <form onSubmit={mode === 'login' ? handleLogin : handleRegister} className="space-y-6">
-            <div>
-              <label htmlFor="username" className="block text-sm font-medium text-gray-700 mb-2">
-                ユーザー名
-              </label>
-              <input
-                id="username"
-                type="text"
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                placeholder="管理者ユーザー名を入力"
-                disabled={loading || isLocked}
-                autoComplete="username"
-              />
+          {/* メール認証待ち画面 */}
+          {mode === 'email-verify' && (
+            <div className="text-center space-y-6">
+              <div className="mx-auto w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center">
+                <svg className="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                </svg>
+              </div>
+              <p className="text-gray-600">
+                認証メールのリンクをクリックすると、管理者アカウントが作成されます。
+              </p>
+              <button
+                type="button"
+                onClick={() => {
+                  setMode('register');
+                  setSuccess('');
+                  setError('');
+                }}
+                className="text-blue-600 hover:text-blue-800 font-medium transition-colors duration-200"
+              >
+                ← 登録画面に戻る
+              </button>
             </div>
+          )}
 
+          {/* SMS認証画面 */}
+          {mode === 'sms-verify' && (
+            <form onSubmit={handleSMSVerification} className="space-y-6">
+              <div className="text-center">
+                <div className="mx-auto w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mb-4">
+                  <svg className="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                  </svg>
+                </div>
+                <p className="text-gray-600 mb-2">
+                  {pendingPhoneNumber} に認証コードを送信しました。
+                </p>
+                <p className="text-sm text-gray-500">
+                  SMSが届かない場合は、迷惑メールフォルダを確認してください。
+                </p>
+              </div>
+
+              <div>
+                <label htmlFor="smsCode" className="block text-sm font-medium text-gray-700 mb-2">
+                  SMS認証コード（6桁）
+                </label>
+                <input
+                  id="smsCode"
+                  type="text"
+                  value={smsCode}
+                  onChange={(e) => setSmsCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 text-gray-900 placeholder-gray-400 text-center text-lg font-mono tracking-widest"
+                  placeholder="123456"
+                  disabled={loading}
+                  maxLength={6}
+                />
+              </div>
+
+              {/* エラー・成功メッセージ */}
+              {success && (
+                <div className="p-4 bg-green-50 border border-green-200 rounded-xl">
+                  <div className="flex items-center">
+                    <svg className="h-5 w-5 text-green-400 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                    </svg>
+                    <span className="text-sm text-green-700">{success}</span>
+                  </div>
+                </div>
+              )}
+
+              {error && (
+                <div className="p-4 bg-red-50 border border-red-200 rounded-xl">
+                  <div className="flex items-center">
+                    <svg className="h-5 w-5 text-red-400 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                    </svg>
+                    <span className="text-sm text-red-700">{error}</span>
+                  </div>
+                </div>
+              )}
+
+              <button
+                type="submit"
+                disabled={loading || smsCode.length !== 6}
+                className="w-full py-4 px-6 bg-gradient-to-r from-pink-500 to-pink-600 text-white font-semibold rounded-xl hover:from-pink-600 hover:to-pink-700 focus:ring-2 focus:ring-pink-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 shadow-lg"
+              >
+                {loading ? (
+                  <div className="flex items-center justify-center">
+                    <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    認証中...
+                  </div>
+                ) : (
+                  'ログイン完了'
+                )}
+              </button>
+
+              <div className="text-center">
+                <button
+                  type="button"
+                  onClick={handleResendSMSCode}
+                  disabled={loading}
+                  className="text-blue-600 hover:text-blue-800 font-medium transition-colors duration-200"
+                >
+                  認証コードを再送信
+                </button>
+              </div>
+
+              <div className="text-center">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setMode('login');
+                    setPendingAdminId(null);
+                    setPendingPhoneNumber('');
+                    setSmsCode('');
+                    setError('');
+                    setSuccess('');
+                  }}
+                  className="text-gray-500 hover:text-gray-700 text-sm transition-colors duration-200"
+                >
+                  ← ログイン画面に戻る
+                </button>
+              </div>
+            </form>
+          )}
+
+          {/* ログイン・新規登録フォーム */}
+          {(mode === 'login' || mode === 'register') && (
+            <form onSubmit={mode === 'login' ? handleLogin : handleRegister} className="space-y-6">
+              {/* ユーザー名またはメールアドレス */}
+              {mode === 'login' && (
+                <div>
+                  <label htmlFor="username" className="block text-sm font-medium text-gray-700 mb-2">
+                    メールアドレスまたはユーザー名
+                  </label>
+                  <input
+                    id="username"
+                    type="text"
+                    value={username}
+                    onChange={(e) => setUsername(e.target.value)}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 text-gray-900 placeholder-gray-400"
+                    placeholder="admin@example.com"
+                    disabled={loading || isLocked}
+                    autoComplete="username"
+                  />
+                </div>
+              )}
+
+              {/* 新規登録時のメールアドレス */}
+              {mode === 'register' && (
+                <div>
+                  <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
+                    メールアドレス
+                  </label>
+                  <input
+                    id="email"
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 text-gray-900 placeholder-gray-400"
+                    placeholder="admin@example.com"
+                    disabled={loading}
+                    autoComplete="email"
+                  />
+                </div>
+              )}
+
+            {/* パスワード */}
             <div>
               <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
                 パスワード
@@ -414,20 +728,15 @@ const AdminLoginPage: React.FC<AdminLoginPageProps> = ({ onLogin, onNavigateHome
                   type={showPassword ? "text" : "password"}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent pr-12"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 text-gray-900 placeholder-gray-400 pr-12"
                   placeholder="パスワードを入力"
                   disabled={loading || isLocked}
                   autoComplete={mode === 'login' ? "current-password" : "new-password"}
                 />
-                {mode === 'register' && (
-                  <p className="text-xs text-gray-500 mt-1">
-                    8文字以上、大文字・小文字・数字・記号を含む
-                  </p>
-                )}
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
                   disabled={loading || isLocked}
                 >
                   {showPassword ? (
@@ -442,8 +751,46 @@ const AdminLoginPage: React.FC<AdminLoginPageProps> = ({ onLogin, onNavigateHome
                   )}
                 </button>
               </div>
+              {mode === 'register' && (
+                <div className="text-xs mt-2 space-y-1">
+                  <p className="font-medium text-gray-700">パスワード要件：</p>
+                  <ul className="space-y-0.5 pl-2">
+                    <li className={`flex items-center space-x-2 ${password.length >= 8 ? 'text-green-600' : 'text-gray-500'}`}>
+                      <span className={password.length >= 8 ? '✓' : '○'}>
+                        {password.length >= 8 ? '✓' : '○'}
+                      </span>
+                      <span>8文字以上</span>
+                    </li>
+                    <li className={`flex items-center space-x-2 ${/[A-Z]/.test(password) ? 'text-green-600' : 'text-gray-500'}`}>
+                      <span>
+                        {/[A-Z]/.test(password) ? '✓' : '○'}
+                      </span>
+                      <span>大文字（A-Z）を含む</span>
+                    </li>
+                    <li className={`flex items-center space-x-2 ${/[a-z]/.test(password) ? 'text-green-600' : 'text-gray-500'}`}>
+                      <span>
+                        {/[a-z]/.test(password) ? '✓' : '○'}
+                      </span>
+                      <span>小文字（a-z）を含む</span>
+                    </li>
+                    <li className={`flex items-center space-x-2 ${/\d/.test(password) ? 'text-green-600' : 'text-gray-500'}`}>
+                      <span>
+                        {/\d/.test(password) ? '✓' : '○'}
+                      </span>
+                      <span>数字（0-9）を含む</span>
+                    </li>
+                    <li className={`flex items-center space-x-2 ${/[@$!%*?&]/.test(password) ? 'text-green-600' : 'text-gray-500'}`}>
+                      <span>
+                        {/[@$!%*?&]/.test(password) ? '✓' : '○'}
+                      </span>
+                      <span>記号（@$!%*?&）のいずれかを含む</span>
+                    </li>
+                  </ul>
+                </div>
+              )}
             </div>
 
+            {/* 新規登録時の追加フィールド */}
             {mode === 'register' && (
               <>
                 <div>
@@ -456,7 +803,7 @@ const AdminLoginPage: React.FC<AdminLoginPageProps> = ({ onLogin, onNavigateHome
                       type={showConfirmPassword ? "text" : "password"}
                       value={confirmPassword}
                       onChange={(e) => setConfirmPassword(e.target.value)}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent pr-12"
+                      className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 text-gray-900 placeholder-gray-400 pr-12"
                       placeholder="パスワードを再入力"
                       disabled={loading}
                       autoComplete="new-password"
@@ -464,7 +811,7 @@ const AdminLoginPage: React.FC<AdminLoginPageProps> = ({ onLogin, onNavigateHome
                     <button
                       type="button"
                       onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                      className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                      className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
                       disabled={loading}
                     >
                       {showConfirmPassword ? (
@@ -483,25 +830,83 @@ const AdminLoginPage: React.FC<AdminLoginPageProps> = ({ onLogin, onNavigateHome
 
                 <div>
                   <label htmlFor="phoneNumber" className="block text-sm font-medium text-gray-700 mb-2">
-                    電話番号
+                    電話番号 <span className="text-red-500">*</span>
                   </label>
                   <input
                     id="phoneNumber"
                     type="tel"
                     value={phoneNumber}
                     onChange={(e) => setPhoneNumber(e.target.value)}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 text-gray-900 placeholder-gray-400"
                     placeholder="09012345678"
                     disabled={loading}
                     autoComplete="tel"
                   />
                   <p className="text-xs text-gray-500 mt-1">ハイフンなしで入力してください</p>
                 </div>
+
+                <div>
+                  <label htmlFor="fullName" className="block text-sm font-medium text-gray-700 mb-2">
+                    氏名 <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    id="fullName"
+                    type="text"
+                    value={fullName}
+                    onChange={(e) => setFullName(e.target.value)}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 text-gray-900 placeholder-gray-400"
+                    placeholder="山田太郎"
+                    disabled={loading}
+                    autoComplete="name"
+                  />
+                </div>
+
+                <div>
+                  <label htmlFor="department" className="block text-sm font-medium text-gray-700 mb-2">
+                    所属部署（任意）
+                  </label>
+                  <input
+                    id="department"
+                    type="text"
+                    value={department}
+                    onChange={(e) => setDepartment(e.target.value)}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 text-gray-900 placeholder-gray-400"
+                    placeholder="例：システム部"
+                    disabled={loading}
+                    autoComplete="organization"
+                  />
+                </div>
+
+                <div>
+                  <label htmlFor="reason" className="block text-sm font-medium text-gray-700 mb-2">
+                    申請理由 <span className="text-red-500">*</span>
+                  </label>
+                  <textarea
+                    id="reason"
+                    value={reason}
+                    onChange={(e) => setReason(e.target.value)}
+                    rows={3}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 text-gray-900 placeholder-gray-400 resize-none"
+                    placeholder="管理者アクセスが必要な理由を記載してください"
+                    disabled={loading}
+                  />
+                  <p className="text-xs text-gray-500 mt-1">既存の管理者が承認の判断をするために使用されます</p>
+                </div>
               </>
             )}
 
+            {/* 利用規約同意（ログイン時のみ） */}
+            {mode === 'login' && (
+              <div className="text-center">
+                <p className="text-sm text-gray-600">
+                  続行すると、<span className="text-blue-600 underline">利用規約</span>に同意したものとみなされます。
+                </p>
+              </div>
+            )}
+
+            {/* エラー・成功メッセージ */}
             {success && (
-              <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
+              <div className="p-4 bg-green-50 border border-green-200 rounded-xl">
                 <div className="flex items-center">
                   <svg className="h-5 w-5 text-green-400 mr-2" fill="currentColor" viewBox="0 0 20 20">
                     <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
@@ -512,7 +917,7 @@ const AdminLoginPage: React.FC<AdminLoginPageProps> = ({ onLogin, onNavigateHome
             )}
 
             {error && (
-              <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
+              <div className="p-4 bg-red-50 border border-red-200 rounded-xl">
                 <div className="flex items-center">
                   <svg className="h-5 w-5 text-red-400 mr-2" fill="currentColor" viewBox="0 0 20 20">
                     <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
@@ -522,10 +927,11 @@ const AdminLoginPage: React.FC<AdminLoginPageProps> = ({ onLogin, onNavigateHome
               </div>
             )}
 
+            {/* メインボタン */}
             <button
               type="submit"
               disabled={loading || isLocked}
-              className="w-full py-3 px-4 bg-gradient-to-r from-blue-500 to-purple-600 text-white font-medium rounded-lg hover:from-blue-600 hover:to-purple-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
+              className="w-full py-4 px-6 bg-gradient-to-r from-pink-500 to-pink-600 text-white font-semibold rounded-xl hover:from-pink-600 hover:to-pink-700 focus:ring-2 focus:ring-pink-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 shadow-lg"
             >
               {loading ? (
                 <div className="flex items-center justify-center">
@@ -533,48 +939,122 @@ const AdminLoginPage: React.FC<AdminLoginPageProps> = ({ onLogin, onNavigateHome
                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                   </svg>
-                  {mode === 'login' ? 'ログイン中...' : '登録中...'}
+                  {mode === 'login' ? 'ログイン中...' : '作成中...'}
                 </div>
               ) : (
-                mode === 'login' ? 'ログイン' : '新規登録'
+                mode === 'login' ? '続ける' : 'アカウント作成'
               )}
             </button>
           </form>
+                      )}
 
-          <div className="mt-6 text-center space-y-3">
-            <button
-              type="button"
-              onClick={() => {
-                setMode(mode === 'login' ? 'register' : 'login');
-                setError('');
-                setSuccess('');
-                setUsername('');
-                setPassword('');
-                setConfirmPassword('');
-                setPhoneNumber('');
-              }}
-              className="text-sm text-blue-600 hover:text-blue-800 underline"
-              disabled={loading}
-            >
-              {mode === 'login' ? '新規管理者登録はこちら' : 'ログインはこちら'}
-            </button>
-            
-            <div>
+          {/* 区切り線 */}
+          {(mode === 'login' || mode === 'register') && (
+            <div className="mt-8 flex items-center">
+              <hr className="flex-grow border-gray-200" />
+              <span className="mx-4 text-gray-500 text-sm">または</span>
+              <hr className="flex-grow border-gray-200" />
+            </div>
+          )}
+
+          {/* OAuth認証ボタン（将来の拡張用 - 現在は無効化） */}
+          {(mode === 'login' || mode === 'register') && (
+            <div className="mt-6 space-y-3" style={{ display: 'none' }}>
               <button
-                onClick={onNavigateHome}
-                className="text-sm text-gray-600 hover:text-gray-800 underline"
-                disabled={loading}
+                type="button"
+                disabled={true}
+                className="w-full flex items-center justify-center py-3 px-4 border border-gray-300 rounded-xl text-gray-700 bg-white hover:bg-gray-50 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 transition-all duration-200"
               >
-                ホームページに戻る
+                <svg className="w-5 h-5 mr-3" viewBox="0 0 24 24">
+                  <path fill="currentColor" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                  <path fill="currentColor" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                  <path fill="currentColor" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+                  <path fill="currentColor" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+                </svg>
+                Google で続行
+              </button>
+              
+              <button
+                type="button"
+                disabled={true}
+                className="w-full flex items-center justify-center py-3 px-4 border border-gray-300 rounded-xl text-gray-700 bg-white hover:bg-gray-50 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 transition-all duration-200"
+              >
+                <svg className="w-5 h-5 mr-3" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M12.017 0C5.396 0 .029 5.367.029 11.987c0 5.079 3.158 9.417 7.618 11.174-.105-.949-.199-2.403.041-3.439.219-.937 1.406-5.957 1.406-5.957s-.359-.72-.359-1.781c0-1.663.967-2.911 2.168-2.911 1.024 0 1.518.769 1.518 1.688 0 1.029-.653 2.567-.992 3.992-.285 1.193.6 2.165 1.775 2.165 2.128 0 3.768-2.245 3.768-5.487 0-2.861-2.063-4.869-5.008-4.869-3.41 0-5.409 2.562-5.409 5.199 0 1.033.394 2.143.889 2.741.099.12.112.225.085.347-.09.375-.293 1.199-.334 1.363-.053.225-.172.271-.402.163-1.495-.69-2.433-2.878-2.433-4.646 0-3.776 2.748-7.252 7.92-7.252 4.158 0 7.392 2.967 7.392 6.923 0 4.135-2.607 7.462-6.233 7.462-1.214 0-2.357-.629-2.750-1.378l-.748 2.853c-.271 1.043-1.002 2.35-1.492 3.146C9.57 23.812 10.763 24.009 12.017 24.009c6.624 0 11.990-5.367 11.990-11.986C24.007 5.367 18.641.001.012 0z"/>
+                </svg>
+                Apple で続行
               </button>
             </div>
+          )}
+
+          {/* 新規登録・パスワードリセットへのリンク */}
+          {(mode === 'login' || mode === 'register') && (
+            <div className="mt-8 text-center space-y-4">
+              {mode === 'login' && (
+                <div className="space-y-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (onNavigateToPasswordReset) {
+                        onNavigateToPasswordReset();
+                      } else {
+                        window.location.href = '/admin-password-reset';
+                      }
+                    }}
+                    className="text-blue-600 hover:text-blue-800 text-sm font-medium transition-colors duration-200"
+                    disabled={loading}
+                  >
+                    🔑 パスワードを忘れた方はこちら
+                  </button>
+                </div>
+              )}
+              
+              <div>
+                <p className="text-sm text-gray-600 mb-4">
+                  {mode === 'login' 
+                    ? 'アカウントをお持ちでない場合は、新規作成してください。'
+                    : 'すでにアカウントをお持ちの場合は、ログインしてください。'
+                  }
+                </p>
+                
+                <button
+                  type="button"
+                  onClick={() => {
+                    setMode(mode === 'login' ? 'register' : 'login');
+                    setError('');
+                    setSuccess('');
+                    setUsername('');
+                    setPassword('');
+                    setConfirmPassword('');
+                    setPhoneNumber('');
+                    setEmail('');
+                    setFullName('');
+                    setDepartment('');
+                    setReason('');
+                  }}
+                  className="text-blue-600 hover:text-blue-800 font-medium transition-colors duration-200"
+                  disabled={loading}
+                >
+                  {mode === 'login' ? 'アカウントを新規作成' : 'ログインはこちら'}
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* ホームへ戻るリンク */}
+          <div className="mt-6 text-center">
+            <button
+              onClick={onNavigateHome}
+              className="text-gray-500 hover:text-gray-700 text-sm transition-colors duration-200"
+              disabled={loading}
+            >
+              ← ホームページに戻る
+            </button>
           </div>
-
-
         </div>
 
         {/* セキュリティ情報 */}
-        <div className="text-center text-xs text-gray-500">
+        <div className="mt-6 text-center text-xs text-gray-500">
           <p>このページは暗号化された接続で保護されています</p>
           <p className="mt-1">最大試行回数: {MAX_LOGIN_ATTEMPTS}回 | ロックアウト時間: {LOCKOUT_DURATION / 60000}分</p>
         </div>

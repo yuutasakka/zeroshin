@@ -23,6 +23,13 @@ const PhoneVerificationPage: React.FC<PhoneVerificationPageProps> = ({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [countdown, setCountdown] = useState(0);
+  
+  // 試行回数制限の状態
+  const [failedAttempts, setFailedAttempts] = useState(0);
+  const [lockoutTime, setLockoutTime] = useState<number | null>(null);
+  const [lockoutEndTime, setLockoutEndTime] = useState<Date | null>(null);
+  const MAX_ATTEMPTS = 5;
+  const LOCKOUT_DURATION = 15 * 60 * 1000; // 15分
 
   // カウントダウンタイマー
   useEffect(() => {
@@ -31,6 +38,21 @@ const PhoneVerificationPage: React.FC<PhoneVerificationPageProps> = ({
       return () => clearTimeout(timer);
     }
   }, [countdown]);
+
+  // ロックアウトタイマー
+  useEffect(() => {
+    if (lockoutTime && lockoutTime > 0) {
+      const timer = setTimeout(() => {
+        setLockoutTime(lockoutTime - 1000);
+        if (lockoutTime <= 1000) {
+          setFailedAttempts(0);
+          setLockoutEndTime(null);
+          setError(null);
+        }
+      }, 1000);
+      return () => clearTimeout(timer);
+    }
+  }, [lockoutTime]);
 
   // 診断フォームから電話番号が渡された場合、自動的にSMS送信を行う
   useEffect(() => {
@@ -155,12 +177,37 @@ const PhoneVerificationPage: React.FC<PhoneVerificationPageProps> = ({
     }
   };
 
+  // ロックアウト処理
+  const handleFailedAttempt = () => {
+    const newFailedAttempts = failedAttempts + 1;
+    setFailedAttempts(newFailedAttempts);
+    
+    if (newFailedAttempts >= MAX_ATTEMPTS) {
+      const endTime = new Date(Date.now() + LOCKOUT_DURATION);
+      setLockoutEndTime(endTime);
+      setLockoutTime(LOCKOUT_DURATION);
+      setError(`認証に${MAX_ATTEMPTS}回失敗したため、${Math.floor(LOCKOUT_DURATION / 60000)}分間ロックされます。`);
+    }
+  };
 
+  // 残り時間をフォーマット
+  const formatLockoutTime = (ms: number): string => {
+    const minutes = Math.floor(ms / 60000);
+    const seconds = Math.floor((ms % 60000) / 1000);
+    return `${minutes}:${seconds.toString().padStart(2, '0')}`;
+  };
 
   // OTP検証
   const handleVerifyOTP = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
+
+    // ロックアウト中はブロック
+    if (lockoutTime && lockoutTime > 0) {
+      setError(`認証がロックされています。残り時間: ${formatLockoutTime(lockoutTime)}`);
+      return;
+    }
+
     setLoading(true);
 
     try {
@@ -183,11 +230,17 @@ const PhoneVerificationPage: React.FC<PhoneVerificationPageProps> = ({
       });
 
       if (error) {
+        handleFailedAttempt();
         throw error;
       }
 
       if (data.user) {
         try {
+          // 認証成功時は失敗回数をリセット
+          setFailedAttempts(0);
+          setLockoutTime(null);
+          setLockoutEndTime(null);
+
           // Supabaseに診断セッションを作成
           const sessionId = await diagnosisManager.createDiagnosisSession(
             normalizedPhone, 
@@ -230,7 +283,13 @@ const PhoneVerificationPage: React.FC<PhoneVerificationPageProps> = ({
       }
       
     } catch (error: any) {
-      setError(error.message || '認証コードが正しくありません。もう一度お試しください。');
+      const errorMessage = error.message || '認証コードが正しくありません。もう一度お試しください。';
+      setError(errorMessage);
+      
+      // 認証失敗時は失敗回数をカウント（認証コード間違いの場合のみ）
+      if (errorMessage.includes('認証コード') || errorMessage.includes('正しくありません')) {
+        handleFailedAttempt();
+      }
     } finally {
       setLoading(false);
     }
@@ -267,28 +326,103 @@ const PhoneVerificationPage: React.FC<PhoneVerificationPageProps> = ({
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 flex items-center justify-center p-4">
-      <div className="max-w-md w-full">
+    <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-blue-50 to-indigo-50 flex items-center justify-center p-4">
+      <div className="max-w-lg w-full">
         
-        {/* ヘッダー */}
-        <div className="text-center mb-8">
-          <div className="w-16 h-16 bg-gradient-to-r from-blue-500 to-indigo-600 rounded-full flex items-center justify-center mx-auto mb-4">
-            <i className="fas fa-mobile-alt text-white text-2xl"></i>
+        {/* プログレス表示 */}
+        <div className="mb-8">
+          <div className="flex items-center justify-center space-x-4 mb-4">
+            <div className="flex items-center">
+              <div className="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center text-white text-sm font-bold">
+                ✓
+              </div>
+              <span className="ml-2 text-sm text-gray-600">診断完了</span>
+            </div>
+            <div className="w-16 h-1 bg-green-500 rounded"></div>
+            <div className="flex items-center">
+              <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold transition-all ${
+                step === 'otp-verification' || step === 'success' 
+                  ? 'bg-blue-500 text-white' 
+                  : 'bg-gray-300 text-gray-600'
+              }`}>
+                {step === 'success' ? '✓' : '2'}
+              </div>
+              <span className="ml-2 text-sm text-gray-600">SMS認証</span>
+            </div>
+            <div className={`w-16 h-1 rounded transition-all ${
+              step === 'success' ? 'bg-green-500' : 'bg-gray-300'
+            }`}></div>
+            <div className="flex items-center">
+              <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold transition-all ${
+                step === 'success' 
+                  ? 'bg-green-500 text-white' 
+                  : 'bg-gray-300 text-gray-600'
+              }`}>
+                3
+              </div>
+              <span className="ml-2 text-sm text-gray-600">結果受取</span>
+            </div>
           </div>
-          <h1 className="text-2xl font-bold text-gray-800 mb-2">SMS認証</h1>
-          <p className="text-gray-600">診断結果をご覧いただくために、SMS認証を行います</p>
+        </div>
+
+        {/* メインヘッダー */}
+        <div className="text-center mb-8">
+          <div className="w-20 h-20 bg-gradient-to-r from-emerald-400 to-blue-500 rounded-full flex items-center justify-center mx-auto mb-6 shadow-lg">
+            <div className="text-white text-3xl">📱</div>
+          </div>
+          <h1 className="text-3xl font-bold text-gray-800 mb-3">
+            あなたの診断結果が
+            <span className="text-emerald-600">完成しました！</span>
+          </h1>
+          <p className="text-lg text-gray-600 mb-4">
+            SMS認証を完了して、パーソナライズされた<br />
+            <strong className="text-blue-600">資産運用プランを今すぐ受け取りましょう</strong>
+          </p>
+          
+          {/* 結果の魅力をアピール */}
+          <div className="bg-gradient-to-r from-emerald-50 to-blue-50 rounded-xl p-6 mb-6">
+            <h3 className="text-lg font-semibold text-gray-800 mb-3">🎯 あなた専用の診断結果をご用意</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm text-gray-700">
+              <div className="flex items-center">
+                <span className="text-emerald-500 mr-2">✨</span>
+                個別の投資戦略プラン
+              </div>
+              <div className="flex items-center">
+                <span className="text-blue-500 mr-2">📊</span>
+                資産成長シミュレーション
+              </div>
+              <div className="flex items-center">
+                <span className="text-purple-500 mr-2">🎯</span>
+                リスク分析と対策
+              </div>
+              <div className="flex items-center">
+                <span className="text-orange-500 mr-2">💡</span>
+                専門家おすすめ商品
+              </div>
+            </div>
+          </div>
+
           {hasPhoneFromSession && step === 'otp-verification' && (
-            <p className="text-green-600 text-sm mt-2">
-              <i className="fas fa-check-circle mr-1"></i>
-              認証コードを送信しました
-            </p>
+            <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-4">
+              <p className="text-green-700 text-sm">
+                <i className="fas fa-check-circle mr-2"></i>
+                {phoneNumber} に認証コードを送信しました
+              </p>
+            </div>
           )}
         </div>
 
         {/* 電話番号入力ステップ */}
         {step === 'phone-input' && (
-          <div className="bg-white rounded-xl shadow-lg p-6">
-            <form onSubmit={handleSendOTP} className="space-y-4">
+          <div className="bg-white rounded-2xl shadow-xl p-8 border border-gray-100">
+            <div className="text-center mb-6">
+              <h3 className="text-xl font-semibold text-gray-800 mb-2">携帯電話番号を入力</h3>
+              <p className="text-gray-600 text-sm">
+                SMS認証で本人確認を行い、セキュアに結果をお届けします
+              </p>
+            </div>
+
+            <form onSubmit={handleSendOTP} className="space-y-6">
               <div>
                 <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-2">
                   携帯電話番号
@@ -299,24 +433,24 @@ const PhoneVerificationPage: React.FC<PhoneVerificationPageProps> = ({
                   value={phoneNumber}
                   onChange={(e) => setPhoneNumber(e.target.value)}
                   placeholder="090-1234-5678"
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
+                  className="w-full px-4 py-4 text-lg border border-gray-300 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all duration-200 shadow-sm"
                   required
                 />
-                <p className="text-xs text-gray-500 mt-1">
+                <p className="text-xs text-gray-500 mt-2">
                   ハイフンありなしどちらでも入力可能です
                 </p>
               </div>
 
               {error && (
-                <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
-                  <p className="text-red-600 text-sm">{error}</p>
+                <div className="p-4 bg-red-50 border border-red-200 rounded-xl">
+                  <p className="text-red-600 text-sm">⚠️ {error}</p>
                 </div>
               )}
 
               <button
                 type="submit"
                 disabled={loading || !phoneNumber}
-                className="w-full bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white font-semibold py-3 px-4 rounded-lg transition-all duration-200 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+                className="w-full bg-gradient-to-r from-emerald-500 to-blue-500 hover:from-emerald-600 hover:to-blue-600 text-white font-semibold py-4 px-6 rounded-xl transition-all duration-200 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none shadow-lg"
               >
                 {loading ? (
                   <div className="flex items-center justify-center">
@@ -324,62 +458,103 @@ const PhoneVerificationPage: React.FC<PhoneVerificationPageProps> = ({
                     送信中...
                   </div>
                 ) : (
-                  '認証コードを送信'
+                  <>
+                    <span className="text-lg">🚀 認証コードを受け取る</span>
+                    <div className="text-sm opacity-90 mt-1">診断結果まであと1ステップ！</div>
+                  </>
                 )}
               </button>
             </form>
 
-            <button
-              onClick={onBack}
-              className="w-full mt-4 text-gray-600 hover:text-gray-800 py-2 transition-colors duration-200"
-            >
-              <i className="fas fa-arrow-left mr-2"></i>
-              診断画面に戻る
-            </button>
+            <div className="mt-6 text-center">
+              <button
+                onClick={onBack}
+                className="text-gray-600 hover:text-gray-800 py-2 transition-colors duration-200 text-sm"
+              >
+                <i className="fas fa-arrow-left mr-2"></i>
+                診断画面に戻る
+              </button>
+            </div>
           </div>
         )}
 
         {/* OTP検証ステップ */}
         {step === 'otp-verification' && (
-          <div className="bg-white rounded-xl shadow-lg p-6">
-            <div className="text-center mb-6">
-              <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-3">
-                <i className="fas fa-sms text-green-600 text-xl"></i>
+          <div className="bg-white rounded-2xl shadow-xl p-8 border border-gray-100">
+            <div className="text-center mb-8">
+              <div className="w-16 h-16 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <div className="text-emerald-600 text-2xl">💬</div>
               </div>
-              <h3 className="text-lg font-semibold text-gray-800 mb-2">認証コードを入力</h3>
-              <p className="text-gray-600 text-sm">
-                {phoneNumber} にSMSで6桁のコードを送信しました
+              <h3 className="text-xl font-semibold text-gray-800 mb-3">認証コードを入力してください</h3>
+              <p className="text-gray-600 text-sm mb-2">
+                <strong>{phoneNumber}</strong> にSMSで送信された<br />
+                6桁のコードを入力してください
               </p>
               {hasPhoneFromSession && (
-                <p className="text-blue-600 text-xs mt-2">
+                <p className="text-blue-600 text-xs">
                   ※ 診断フォームで入力された電話番号に自動送信しました
                 </p>
               )}
             </div>
 
-            <form onSubmit={handleVerifyOTP} className="space-y-4">
+            <form onSubmit={handleVerifyOTP} className="space-y-6">
               <div>
                 <input
                   type="text"
                   value={otpCode}
                   onChange={(e) => setOtpCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
                   placeholder="123456"
-                  className="w-full px-4 py-3 text-center text-2xl font-mono border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 tracking-widest"
+                  className="w-full px-4 py-4 text-center text-3xl font-mono border border-gray-300 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all duration-200 tracking-widest shadow-sm bg-gray-50"
                   maxLength={6}
                   required
+                  disabled={lockoutTime && lockoutTime > 0}
                 />
+                {otpCode.length > 0 && otpCode.length < 6 && (
+                  <p className="text-center text-sm text-gray-500 mt-2">
+                    あと{6 - otpCode.length}桁入力してください
+                  </p>
+                )}
               </div>
 
-              {error && (
-                <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
-                  <p className="text-red-600 text-sm">{error}</p>
+              {/* 試行回数とロックアウト情報 */}
+              {(failedAttempts > 0 || (lockoutTime && lockoutTime > 0)) && (
+                <div className="p-4 bg-orange-50 border border-orange-200 rounded-xl">
+                  {lockoutTime && lockoutTime > 0 ? (
+                    <p className="text-orange-700 text-sm text-center">
+                      🔒 認証がロックされています<br />
+                      残り時間: <strong className="text-lg font-mono">{formatLockoutTime(lockoutTime)}</strong><br />
+                      <span className="text-xs">セキュリティのため一時的にロックされています</span>
+                    </p>
+                  ) : (
+                    <p className="text-orange-700 text-sm text-center">
+                      ⚠️ 認証失敗: {failedAttempts}/{MAX_ATTEMPTS}回<br />
+                      <span className="text-xs">
+                        {MAX_ATTEMPTS - failedAttempts}回失敗すると{Math.floor(LOCKOUT_DURATION / 60000)}分間ロックされます
+                      </span>
+                    </p>
+                  )}
                 </div>
               )}
 
+              {error && (
+                <div className="p-4 bg-red-50 border border-red-200 rounded-xl">
+                  <p className="text-red-600 text-sm text-center">❌ {error}</p>
+                </div>
+              )}
+
+              {/* 重要な警告メッセージ */}
+              <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-xl">
+                <h4 className="text-yellow-800 font-semibold text-sm mb-2">⚠️ 重要なお知らせ</h4>
+                <p className="text-yellow-700 text-xs leading-relaxed">
+                  この認証を完了せずに画面を閉じると、<strong>診断結果を二度と受け取ることができません</strong>。<br />
+                  お一人様一回限りの診断のため、再診断はできませんのでご注意ください。
+                </p>
+              </div>
+
               <button
                 type="submit"
-                disabled={loading || otpCode.length !== 6}
-                className="w-full bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white font-semibold py-3 px-4 rounded-lg transition-all duration-200 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+                disabled={loading || otpCode.length !== 6 || (lockoutTime && lockoutTime > 0)}
+                className="w-full bg-gradient-to-r from-emerald-500 to-blue-500 hover:from-emerald-600 hover:to-blue-600 text-white font-semibold py-4 px-6 rounded-xl transition-all duration-200 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none shadow-lg"
               >
                 {loading ? (
                   <div className="flex items-center justify-center">
@@ -387,80 +562,111 @@ const PhoneVerificationPage: React.FC<PhoneVerificationPageProps> = ({
                     認証中...
                   </div>
                 ) : (
-                  '認証して結果を見る'
+                  <>
+                    <span className="text-lg">🎉 認証完了して結果を受け取る</span>
+                    <div className="text-sm opacity-90 mt-1">あなた専用の投資プランが待っています！</div>
+                  </>
                 )}
               </button>
             </form>
 
-            <div className="mt-4 text-center">
+            <div className="mt-6 text-center space-y-3">
               {countdown > 0 ? (
                 <p className="text-gray-500 text-sm">
-                  再送信まで {countdown}秒
+                  📱 再送信まで <strong className="font-mono">{countdown}秒</strong>
                 </p>
               ) : (
                 <button
                   onClick={handleResendOTP}
-                  disabled={loading}
-                  className="text-blue-600 hover:text-blue-800 text-sm transition-colors duration-200"
+                  disabled={loading || (lockoutTime && lockoutTime > 0)}
+                  className="text-emerald-600 hover:text-emerald-800 text-sm transition-colors duration-200 font-medium disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  認証コードを再送信
+                  🔄 認証コードを再送信
                 </button>
               )}
-            </div>
 
-            <button
-              onClick={() => {
-                setStep('phone-input');
-                setError(null);
-                setCountdown(0);
-              }}
-              className="w-full mt-4 text-gray-600 hover:text-gray-800 py-2 transition-colors duration-200"
-            >
-              <i className="fas fa-arrow-left mr-2"></i>
-              電話番号を変更
-            </button>
+              <button
+                onClick={() => {
+                  setStep('phone-input');
+                  setError(null);
+                  setCountdown(0);
+                  setFailedAttempts(0);
+                  setLockoutTime(null);
+                  setLockoutEndTime(null);
+                }}
+                disabled={lockoutTime && lockoutTime > 0}
+                className="w-full text-gray-600 hover:text-gray-800 py-2 transition-colors duration-200 text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <i className="fas fa-edit mr-2"></i>
+                電話番号を変更
+              </button>
+            </div>
           </div>
         )}
 
         {/* 成功ステップ */}
         {step === 'success' && (
-          <div className="bg-white rounded-xl shadow-lg p-6 text-center">
-            <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <i className="fas fa-check text-green-600 text-2xl"></i>
+          <div className="bg-white rounded-2xl shadow-xl p-8 text-center border border-gray-100">
+            <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
+              <div className="text-green-600 text-3xl">🎉</div>
             </div>
-            <h3 className="text-xl font-semibold text-gray-800 mb-2">認証完了！</h3>
-            <p className="text-gray-600 mb-4">
-              SMS認証が正常に完了しました。診断結果ページに移動します...
+            <h3 className="text-2xl font-bold text-gray-800 mb-4">認証完了！</h3>
+            <p className="text-gray-600 mb-6 text-lg">
+              SMS認証が正常に完了しました。<br />
+              <strong className="text-emerald-600">あなた専用の診断結果</strong>ページに移動します...
             </p>
-            <div className="flex items-center justify-center">
-              <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-green-600"></div>
+            <div className="flex items-center justify-center mb-4">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-600"></div>
             </div>
+            <p className="text-sm text-gray-500">
+              しばらくお待ちください...
+            </p>
           </div>
         )}
 
         {/* エラーステップ */}
         {step === 'error' && (
-          <div className="bg-white rounded-xl shadow-lg p-6 text-center">
-            <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <i className="fas fa-exclamation-triangle text-red-600 text-2xl"></i>
+          <div className="bg-white rounded-2xl shadow-xl p-8 text-center border border-gray-100">
+            <div className="w-20 h-20 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-6">
+              <div className="text-red-600 text-3xl">⚠️</div>
             </div>
-            <h3 className="text-xl font-semibold text-gray-800 mb-2">認証に失敗しました</h3>
-            <p className="text-gray-600 mb-4">
+            <h3 className="text-xl font-semibold text-gray-800 mb-4">認証に失敗しました</h3>
+            <p className="text-gray-600 mb-6">
               SMS認証に失敗しました。もう一度お試しください。
             </p>
             <button
-              onClick={() => setStep('phone-input')}
-              className="bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white font-semibold py-2 px-6 rounded-lg transition-all duration-200 transform hover:scale-105"
+              onClick={() => {
+                setStep('phone-input');
+                setError(null);
+                setFailedAttempts(0);
+                setLockoutTime(null);
+                setLockoutEndTime(null);
+              }}
+              className="w-full bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white font-semibold py-3 px-4 rounded-xl transition-all duration-200"
             >
-              もう一度試す
+              最初からやり直す
             </button>
           </div>
         )}
 
-        {/* フッター */}
-        <div className="mt-6 text-center">
-          <p className="text-xs text-gray-500">
-            SMS認証はお客様の個人情報保護のために実施しております
+        {/* 画面下部の信頼性表示 */}
+        <div className="mt-8 text-center">
+          <div className="flex items-center justify-center space-x-6 text-sm text-gray-500">
+            <div className="flex items-center">
+              <span className="text-green-500 mr-2">🔒</span>
+              セキュア認証
+            </div>
+            <div className="flex items-center">
+              <span className="text-blue-500 mr-2">📱</span>
+              SMS暗号化
+            </div>
+            <div className="flex items-center">
+              <span className="text-purple-500 mr-2">🛡️</span>
+              個人情報保護
+            </div>
+          </div>
+          <p className="text-xs text-gray-400 mt-2">
+            MoneyTicket - あなたの資産運用を安全にサポート
           </p>
         </div>
       </div>
