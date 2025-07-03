@@ -32,14 +32,13 @@ const PhoneVerificationPage: React.FC<PhoneVerificationPageProps> = ({
     }
   }, [countdown]);
 
-  // 開発環境では自動的に認証成功とする（SMS設定が未完了のため）
+  // 診断フォームから電話番号が渡された場合、自動的にSMS送信を行う
   useEffect(() => {
-    if (hasPhoneFromSession && step === 'otp-verification' && countdown === 0) {
-      const handleAutoVerification = async () => {
+    if (hasPhoneFromSession && step === 'phone-input') {
+      const handleAutoSendSMS = async () => {
         try {
           if (!validatePhoneNumber(phoneNumber)) {
             setError('有効な日本の電話番号を入力してください（例: 090-1234-5678）');
-            setStep('phone-input');
             return;
           }
 
@@ -49,56 +48,35 @@ const PhoneVerificationPage: React.FC<PhoneVerificationPageProps> = ({
           const isUsed = await checkPhoneNumberUsage(normalizedPhone);
           if (isUsed) {
             setError('この電話番号は既に診断を完了しています。お一人様一回限りとなっております。');
-            setStep('phone-input');
             return;
           }
 
-          // 開発環境では SMS認証をスキップして直接認証成功とする
-          console.log('開発環境: SMS認証をスキップしています');
-          
-          try {
-            // Supabaseに診断セッションを作成
-            const sessionId = await diagnosisManager.createDiagnosisSession(
-              normalizedPhone, 
-              userSession.diagnosisAnswers
-            );
-
-            if (!sessionId) {
-              throw new Error('診断セッションの作成に失敗しました');
+          // 実際のSMS認証を送信
+          setLoading(true);
+          const { error } = await supabase.auth.signInWithOtp({
+            phone: normalizedPhone,
+            options: {
+              channel: 'sms'
             }
+          });
 
-            // 認証成功 - ユーザーセッションにSMS認証済みフラグを追加
-            const updatedSession = {
-              ...userSession,
-              smsVerified: true,
-              verifiedPhoneNumber: normalizedPhone,
-              verificationTimestamp: new Date().toISOString(),
-              sessionId: sessionId
-            };
-
-            // 現在のセッションをローカルストレージに保存（一時的）
-            localStorage.setItem('currentUserSession', JSON.stringify(updatedSession));
-            
-            setStep('success');
-            
-            // 2秒後に結果ページへ
-            setTimeout(() => {
-              onVerificationSuccess();
-            }, 2000);
-
-          } catch (sessionError) {
-            throw new Error('システムエラーが発生しました。管理者にお問い合わせください。');
+          if (error) {
+            throw error;
           }
+
+          setStep('otp-verification');
+          setCountdown(60); // 60秒のカウントダウン
           
         } catch (error: any) {
-          setError(error.message || '認証処理でエラーが発生しました。');
-          setStep('phone-input');
+          setError(error.message || 'SMS送信に失敗しました。しばらく後にもう一度お試しください。');
+        } finally {
+          setLoading(false);
         }
       };
 
-      handleAutoVerification();
+      handleAutoSendSMS();
     }
-  }, [hasPhoneFromSession, step, phoneNumber, countdown]);
+  }, [hasPhoneFromSession, step, phoneNumber]);
 
   // 電話番号の形式を正規化
   const normalizePhoneNumber = (phone: string): string => {
@@ -140,6 +118,12 @@ const PhoneVerificationPage: React.FC<PhoneVerificationPageProps> = ({
 
       const normalizedPhone = normalizePhoneNumber(phoneNumber);
       
+      // 電話番号の重複チェック
+      const isUsed = await checkPhoneNumberUsage(normalizedPhone);
+      if (isUsed) {
+        throw new Error('この電話番号は既に診断を完了しています。お一人様一回限りとなっております。');
+      }
+      
       const { error } = await supabase.auth.signInWithOtp({
         phone: normalizedPhone,
         options: {
@@ -171,68 +155,7 @@ const PhoneVerificationPage: React.FC<PhoneVerificationPageProps> = ({
     }
   };
 
-  // 開発環境では直接認証成功とする
-  const handleSendOTPWithCheck = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError(null);
-    setLoading(true);
 
-    try {
-      if (!validatePhoneNumber(phoneNumber)) {
-        throw new Error('有効な日本の電話番号を入力してください（例: 090-1234-5678）');
-      }
-
-      const normalizedPhone = normalizePhoneNumber(phoneNumber);
-      
-      // 電話番号の重複チェック
-      const isUsed = await checkPhoneNumberUsage(normalizedPhone);
-      if (isUsed) {
-        throw new Error('この電話番号は既に診断を完了しています。お一人様一回限りとなっております。');
-      }
-
-      // 開発環境では SMS認証をスキップして直接認証成功とする
-      console.log('開発環境: SMS認証をスキップしています');
-      
-      try {
-        // Supabaseに診断セッションを作成
-        const sessionId = await diagnosisManager.createDiagnosisSession(
-          normalizedPhone, 
-          userSession.diagnosisAnswers
-        );
-
-        if (!sessionId) {
-          throw new Error('診断セッションの作成に失敗しました');
-        }
-
-        // 認証成功 - ユーザーセッションにSMS認証済みフラグを追加
-        const updatedSession = {
-          ...userSession,
-          smsVerified: true,
-          verifiedPhoneNumber: normalizedPhone,
-          verificationTimestamp: new Date().toISOString(),
-          sessionId: sessionId
-        };
-
-        // 現在のセッションをローカルストレージに保存（一時的）
-        localStorage.setItem('currentUserSession', JSON.stringify(updatedSession));
-        
-        setStep('success');
-        
-        // 2秒後に結果ページへ
-        setTimeout(() => {
-          onVerificationSuccess();
-        }, 2000);
-
-      } catch (sessionError) {
-        throw new Error('システムエラーが発生しました。管理者にお問い合わせください。');
-      }
-      
-    } catch (error: any) {
-      setError(error.message || 'SMS送信に失敗しました。しばらく後にもう一度お試しください。');
-    } finally {
-      setLoading(false);
-    }
-  };
 
   // OTP検証
   const handleVerifyOTP = async (e: React.FormEvent) => {
@@ -365,7 +288,7 @@ const PhoneVerificationPage: React.FC<PhoneVerificationPageProps> = ({
         {/* 電話番号入力ステップ */}
         {step === 'phone-input' && (
           <div className="bg-white rounded-xl shadow-lg p-6">
-            <form onSubmit={handleSendOTPWithCheck} className="space-y-4">
+            <form onSubmit={handleSendOTP} className="space-y-4">
               <div>
                 <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-2">
                   携帯電話番号

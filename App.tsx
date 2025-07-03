@@ -1,7 +1,10 @@
 import React, { useState, useEffect } from 'react';
 // import { GoogleGenAI } from "@google/genai"; // Removed: AI client should be in the backend
 import Header from './components/Header';
-import MainVisualAndDiagnosis from './components/MainVisualAndDiagnosis';
+// 要件定義書に基づく新しいコンポーネント
+import MoneyTicketHero from './components/MoneyTicketHero';
+import DiagnosisFlow, { DiagnosisAnswers } from './components/DiagnosisFlow';
+import SMSAuthFlow from './components/SMSAuthFlow';
 import ReliabilitySection from './components/ReliabilitySection';
 import SecurityTrustSection from './components/SecurityTrustSection';
 import CallToActionSection from './components/CallToActionSection';
@@ -23,6 +26,8 @@ import { DiagnosisFormState, PageView, UserSessionData } from './types';
 import { initializeSampleData } from './data/sampleData';
 import RegistrationRequestPage from './components/RegistrationRequestPage';
 import ProductionSecurityValidator from './components/ProductionSecurityValidator';
+import DebugSupabaseConnection from './components/DebugSupabaseConnection';
+import { measurePageLoad } from './components/PerformanceMonitor';
 
 // AI Client Initialization (GoogleGenAI) has been removed from the frontend.
 // API calls to Gemini API should be proxied through a secure backend server
@@ -79,11 +84,15 @@ const isValidHTML = (html: string): boolean => {
 };
 
 const App: React.FC = () => {
-  const [currentPage, setCurrentPage] = useState<PageView>('diagnosis');
+  // 要件定義書に基づくページ状態の更新
+  const [currentPage, setCurrentPage] = useState<PageView>('home'); // 'diagnosis' -> 'home'に変更
   const [phoneNumberToVerify, setPhoneNumberToVerify] = useState<string | null>(null);
   const [diagnosisData, setDiagnosisData] = useState<DiagnosisFormState | null>(null);
+  // 新しい診断答えの状態
+  const [diagnosisAnswers, setDiagnosisAnswers] = useState<DiagnosisAnswers | null>(null);
   const [isAdminLoggedIn, setIsAdminLoggedIn] = useState<boolean>(false);
   const [showUsageNotice, setShowUsageNotice] = useState<boolean>(false);
+  const [showDebugPanel, setShowDebugPanel] = useState<boolean>(false);
   
   // 新しいSupabase Auth関連の状態
   const [supabaseUser, setSupabaseUser] = useState<User | null>(null);
@@ -318,62 +327,65 @@ const App: React.FC = () => {
     initializeApp();
   }, []); // Empty dependency array means this runs once on mount
 
-  const handleProceedToVerification = async (phoneNumber: string, formData: DiagnosisFormState) => {
-    // 電話番号の重複チェック（最終確認）
-    try {
-      const normalizedPhone = phoneNumber.replace(/\D/g, '');
-      const isUsed = await diagnosisManager.checkPhoneNumberUsage(normalizedPhone);
-      
-      if (isUsed) {
-        return;
-      }
-    } catch (error) {
-      return;
-    }
-    
-    // 診断データを保存してSMS認証ページへ
-    const sessionData: UserSessionData = {
-      id: `session_${new Date().getTime()}_${Math.random().toString(36).substring(2,9)}`,
-      phoneNumber: phoneNumber,
-      diagnosisAnswers: formData,
-      timestamp: new Date().toISOString(),
-      smsVerified: false
-    };
-
-    // 一時的に診断データを保存（SMS認証前）
-    setDiagnosisData(formData);
-    setPhoneNumberToVerify(phoneNumber);
-    localStorage.setItem('pendingUserSession', JSON.stringify(sessionData));
-    
-    setCurrentPage('verification');
-    window.scrollTo(0, 0); 
+  // 要件定義書に基づく新しいナビゲーション関数
+  const handleStartDiagnosis = () => {
+    setCurrentPage('diagnosis');
   };
 
-  const handleVerificationComplete = () => {
-    // SMS認証完了後の処理
-    const currentSession = localStorage.getItem('currentUserSession');
-    
-    if (currentSession) {
-      // 一時データをクリア（Supabaseに既に保存済み）
-      localStorage.removeItem('pendingUserSession');
-      
-      setCurrentPage('results');
-      window.scrollTo(0, 0);
+  const handleDiagnosisComplete = (answers: DiagnosisAnswers) => {
+    setDiagnosisAnswers(answers);
+    setCurrentPage('smsAuth');
+  };
+
+  const handleDiagnosisCancel = () => {
+    setCurrentPage('home');
+    setDiagnosisAnswers(null);
+  };
+
+  const handleSMSAuthComplete = (phoneNumber: string) => {
+    setPhoneNumberToVerify(phoneNumber);
+    // 診断データを従来の形式に変換（既存のDiagnosisResultsPageとの互換性のため）
+    if (diagnosisAnswers) {
+      const legacyDiagnosisData: DiagnosisFormState = {
+        age: diagnosisAnswers.age || '',
+        investmentExperience: diagnosisAnswers.experience || '',
+        investmentGoal: diagnosisAnswers.purpose || '',
+        monthlyInvestment: diagnosisAnswers.amount || '',
+        investmentHorizon: diagnosisAnswers.timing || '',
+        // 既存のフィールドもデフォルト値で埋める
+        annualIncome: '',
+        riskTolerance: '',
+        investmentPreference: '',
+        financialKnowledge: ''
+      };
+      setDiagnosisData(legacyDiagnosisData);
     }
+    setCurrentPage('results');
+  };
+
+  const handleSMSAuthCancel = () => {
+    setCurrentPage('diagnosis');
+  };
+
+  // 既存のハンドラー（後方互換性のため保持）
+  const handleVerificationComplete = () => {
+    setCurrentPage('results');
+    window.scrollTo(0, 0);
   };
 
   const handleVerificationCancel = () => {
-    setCurrentPage('diagnosis'); 
+    setCurrentPage('home'); 
     window.scrollTo(0,0);
   }
 
   const handleReturnToStart = () => {
     setPhoneNumberToVerify(null);
     setDiagnosisData(null);
-    if (isAdminLoggedIn) { // Also log out admin if returning to start from an admin context
+    setDiagnosisAnswers(null);
+    if (isAdminLoggedIn) {
         setIsAdminLoggedIn(false);
     }
-    setCurrentPage('diagnosis');
+    setCurrentPage('home');
     window.scrollTo(0,0);
   }
 
@@ -418,7 +430,7 @@ const App: React.FC = () => {
   };
   
   const navigateToHome = () => {
-    setCurrentPage('diagnosis');
+    setCurrentPage('home');
     window.scrollTo(0,0);
   };
 
@@ -449,133 +461,125 @@ const App: React.FC = () => {
     window.scrollTo(0, 0);
   };
 
-  // ログイン選択ページのレンダリング
-  if (currentPage === 'loginSelection') {
-    return (
-      <ColorThemeProvider>
-        <LoginSelectionPage 
-          onSelectTraditionalAuth={navigateToTraditionalLogin}
-          onSelectSupabaseAuth={navigateToSupabaseLogin}
-          onNavigateHome={navigateToHome}
-          onNavigateToRegistration={navigateToRegistrationRequest}
-        />
-      </ColorThemeProvider>
-    );
-  }
-
-  // 従来認証ログインページのレンダリング
-  if (currentPage === 'traditionalLogin') {
-    return (
-      <ColorThemeProvider>
-        <AdminLoginPage onLogin={handleAdminLoginSuccess} onNavigateHome={navigateToHome} />
-      </ColorThemeProvider>
-    );
-  }
-
-  // Supabase認証ログインページのレンダリング
-  if (currentPage === 'supabaseLogin') {
-    return (
-      <ColorThemeProvider>
-        <SupabaseAuthLogin onLogin={handleAdminLoginSuccess} onNavigateHome={navigateToHome} />
-      </ColorThemeProvider>
-    );
-  }
-
-  // 管理画面のレンダリング
-  if (currentPage === 'adminDashboard') {
-    
-    if (isSupabaseAuth) {
-      // Supabase認証の場合
+  // ページ表示の分岐処理を更新
+  const renderCurrentPage = () => {
+    // 管理者ログイン状態の場合
+    if (isAdminLoggedIn && currentPage === 'adminDashboard') {
       return (
-        <ColorThemeProvider>
-          <AuthGuard>
-            <AuthenticatedHeader />
-            <AdminDashboardPage onLogout={handleAdminLogout} onNavigateHome={navigateToHome} />
-          </AuthGuard>
-        </ColorThemeProvider>
-      );
-    } else if (isAdminLoggedIn) {
-      // 従来認証の場合（後方互換性）
-      return (
-        <ColorThemeProvider>
-          <AdminDashboardPage onLogout={handleAdminLogout} onNavigateHome={navigateToHome} />
-        </ColorThemeProvider>
-      );
-    } else {
-      // 認証されていない場合はログイン選択ページへ
-      return (
-        <ColorThemeProvider>
-          <LoginSelectionPage 
-            onSelectTraditionalAuth={navigateToTraditionalLogin}
-            onSelectSupabaseAuth={navigateToSupabaseLogin}
+        <AuthGuard>
+          <AuthenticatedHeader />
+          <AdminDashboardPage 
+            onLogout={handleAdminLogout}
             onNavigateHome={navigateToHome}
           />
-        </ColorThemeProvider>
+        </AuthGuard>
       );
     }
-  }
 
-  if (currentPage === 'verification') {
-    const pendingSession = localStorage.getItem('pendingUserSession');
-    const userSession = pendingSession ? JSON.parse(pendingSession) : null;
-    
-    return userSession ? (
-      <ColorThemeProvider>
-        <PhoneVerificationPage 
-          userSession={userSession}
+    // 管理者関連ページ
+    if (currentPage === 'loginSelection') {
+      return <LoginSelectionPage 
+        onSelectTraditionalAuth={navigateToTraditionalLogin}
+        onSelectSupabaseAuth={navigateToSupabaseLogin}
+        onNavigateHome={navigateToHome}
+      />;
+    }
+
+    if (currentPage === 'traditionalLogin') {
+      return <AdminLoginPage 
+        onLogin={handleAdminLoginSuccess}
+        onNavigateHome={navigateToHome}
+      />;
+    }
+
+    if (currentPage === 'supabaseLogin') {
+      return <SupabaseAuthLogin 
+        onLogin={handleAdminLoginSuccess}
+        onNavigateHome={navigateToHome} 
+      />;
+    }
+
+    if (currentPage === 'registrationRequest') {
+      return <RegistrationRequestPage onNavigateHome={navigateToHome} />;
+    }
+
+    // 既存の電話認証ページ（後で削除予定）
+    if (currentPage === 'verification') {
+      return (
+        <PhoneVerificationPage
+          userSession={{
+            id: `verification-${Date.now()}`,
+            timestamp: new Date().toISOString(),
+            phoneNumber: phoneNumberToVerify || '',
+            diagnosisAnswers: diagnosisData || {}
+          }}
           onVerificationSuccess={handleVerificationComplete}
           onBack={handleVerificationCancel}
         />
-      </ColorThemeProvider>
-    ) : (
-      <ColorThemeProvider>
-        <MainVisualAndDiagnosis onProceedToVerification={handleProceedToVerification} />
-      </ColorThemeProvider>
-    );
-  }
+      );
+    }
 
-  if (currentPage === 'results') {
+    if (currentPage === 'results') {
+      return (
+        <DiagnosisResultsPage
+          diagnosisData={diagnosisData}
+          onReturnToStart={handleReturnToStart}
+        />
+      );
+    }
+
+    // 要件定義書に基づく新しいページフロー
+    if (currentPage === 'diagnosis') {
+      return (
+        <DiagnosisFlow
+          onComplete={handleDiagnosisComplete}
+          onCancel={handleDiagnosisCancel}
+        />
+      );
+    }
+
+    if (currentPage === 'smsAuth') {
+      return (
+        <SMSAuthFlow
+          diagnosisAnswers={diagnosisAnswers!}
+          onAuthComplete={handleSMSAuthComplete}
+          onCancel={handleSMSAuthCancel}
+        />
+      );
+    }
+
+    // デフォルト: ホームページ（要件定義書準拠）
     return (
-      <ColorThemeProvider>
-        <DiagnosisResultsPage diagnosisData={diagnosisData} onReturnToStart={handleReturnToStart}/>
-      </ColorThemeProvider>
+      <>
+        <Header />
+        <main>
+          <MoneyTicketHero onStartDiagnosis={handleStartDiagnosis} />
+          <ReliabilitySection />
+          <SecurityTrustSection />
+          <CallToActionSection />
+        </main>
+        <Footer onNavigateToAdminLogin={navigateToAdminLogin} />
+      </>
     );
+  };
+
+  // 一回限り診断の案内
+  const usageNotice = showUsageNotice && (
+    <OneTimeUsageNotice onDismiss={() => setShowUsageNotice(false)} />
+  );
+
+  if (process.env.NODE_ENV !== 'production') {
+    measurePageLoad('トップ画面', 2000);
   }
 
-  // 新規登録申請ページのレンダリング
-  if (currentPage === 'registrationRequest') {
-    return (
-      <ColorThemeProvider>
-        <RegistrationRequestPage onNavigateHome={navigateToHome} />
-      </ColorThemeProvider>
-    );
-  }
-
-  // パスワード変更ページのレンダリング
-  if (currentPage === 'changePassword') {
-    // パスワード変更機能は現在無効化されています
-    // 管理画面に直接リダイレクト
-    setCurrentPage('adminDashboard');
-    return null;
-  }
-
-  // Default page is 'diagnosis'
   return (
     <ColorThemeProvider>
       <div className="App min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
         <ProductionSecurityValidator />
         
-        <Header />
-        <MainVisualAndDiagnosis onProceedToVerification={handleProceedToVerification} />
-        <ReliabilitySection />
-        <SecurityTrustSection />
-        <CallToActionSection />
-        <Footer onNavigateToAdminLogin={navigateToAdminLogin} />
+        {renderCurrentPage()}
         
-        {/* 一回限り診断の案内 */}
-        {showUsageNotice && (
-          <OneTimeUsageNotice onDismiss={() => setShowUsageNotice(false)} />
-        )}
+        {usageNotice}
       </div>
     </ColorThemeProvider>
   );

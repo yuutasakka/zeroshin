@@ -20,11 +20,29 @@ const createSupabaseHelper = () => {
                   'Content-Type': 'application/json'
                 }
               });
+              
+              if (!response.ok) {
+                const errorData = await response.text();
+                secureLog(`Supabase request failed: ${response.status} ${response.statusText}`, errorData);
+                return { data: null, error: { message: `HTTP ${response.status}: ${response.statusText}`, status: response.status } };
+              }
+              
               const data = await response.json();
-              return { data: data.length > 0 ? data[0] : null, error: null };
+              
+              if (Array.isArray(data)) {
+                if (data.length === 0) {
+                  return { data: null, error: { message: 'No rows found', code: 'PGRST116' } };
+                } else if (data.length === 1) {
+                  return { data: data[0], error: null };
+                } else {
+                  return { data: null, error: { message: 'Multiple rows found', code: 'PGRST116' } };
+                }
+              } else {
+                return { data: data, error: null };
+              }
             } catch (error) {
               secureLog('Supabase fetch error:', error);
-              return { data: null, error };
+              return { data: null, error: { message: error instanceof Error ? error.message : 'Network error' } };
             }
           }
         })
@@ -110,13 +128,13 @@ const ReliabilitySection: React.FC = () => {
         const supabase = createSupabaseHelper();
         const { data, error } = await supabase
           .from('admin_settings')
-          .select('setting_data')
+          .select('setting_value')
           .eq('setting_key', 'testimonials')
           .single();
 
-        if (!error && data?.setting_data) {
+        if (!error && data?.setting_value) {
           secureLog('Supabaseからお客様の声を正常取得');
-          return data.setting_data;
+          return data.setting_value;
         } else if (error) {
           secureLog('Supabaseエラー（テーブル未作成の可能性）:', error);
         }

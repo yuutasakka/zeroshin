@@ -504,13 +504,11 @@ export class DiagnosisSessionManager {
       const sessionId = `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
       
       const sessionData = {
-        id: sessionId,
         phone_number: normalizedPhone,
         diagnosis_answers: diagnosisAnswers,
         session_id: sessionId,
         sms_verified: false,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
+        verification_status: 'pending'
       };
 
       // Supabaseを試行
@@ -538,13 +536,11 @@ export class DiagnosisSessionManager {
       // エラー時もローカルストレージにフォールバック
       const sessionId = `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
       const sessionData = {
-        id: sessionId,
         phone_number: phoneNumber.replace(/\D/g, ''),
         diagnosis_answers: diagnosisAnswers,
         session_id: sessionId,
         sms_verified: false,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
+        verification_status: 'pending'
       };
       
       this.saveToLocalStorage(sessionData);
@@ -558,8 +554,7 @@ export class DiagnosisSessionManager {
       const normalizedPhone = phoneNumber.replace(/\D/g, '');
       const updateData = {
         sms_verified: true,
-        verification_timestamp: new Date().toISOString(),
-        updated_at: new Date().toISOString()
+        verification_timestamp: new Date().toISOString()
       };
 
       // Supabaseを試行
@@ -604,7 +599,6 @@ export class DiagnosisSessionManager {
       if (sessionIndex >= 0) {
         sessions[sessionIndex].sms_verified = true;
         sessions[sessionIndex].verification_timestamp = new Date().toISOString();
-        sessions[sessionIndex].updated_at = new Date().toISOString();
         localStorage.setItem(this.STORAGE_KEY, JSON.stringify(sessions));
         return true;
       }

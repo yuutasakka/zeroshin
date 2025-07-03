@@ -1,5 +1,3 @@
-
-
 import React, { useState, useEffect, useRef } from 'react';
 import { DiagnosisFormState, FinancialProduct, Company, RecommendedProductWithReason } from '../types';
 import { assetProjectionData, AgeGroup, InvestmentAmountKey } from '../data/assetProjectionData';
@@ -8,6 +6,7 @@ import { DiagnosisSessionManager } from './supabaseClient';
 import { secureLog } from '../security.config';
 import { allFinancialProducts as defaultFinancialProducts } from '../data/financialProductsData';
 import { MCPFinancialAssistant } from './MCPFinancialAssistant';
+import { measureTransition, PERF_TARGETS } from './PerformanceMonitor';
 
 // セキュリティ関数: URLの安全性を確認
 const sanitizeUrl = (url: string): string => {
@@ -325,6 +324,12 @@ const DiagnosisResultsPage: React.FC<DiagnosisResultsPageProps> = ({ diagnosisDa
     }
   }, [diagnosisData, currentFinancialProducts, futureAge, targetAmount]);
 
+  useEffect(() => {
+    if (process.env.NODE_ENV !== 'production') {
+      const end = measureTransition('結果画面表示', PERF_TARGETS.result);
+      return end;
+    }
+  }, []);
 
   const qrCodeUrl = "https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=" + encodeURIComponent(window.location.href);
 
