@@ -359,13 +359,17 @@ const AdminLoginPage: React.FC<AdminLoginPageProps> = ({ onLogin, onNavigateHome
       setError('ログイン処理中にエラーが発生しました。しばらく待ってから再試行してください。');
       secureLog('管理者ログインエラー:', error);
       
-      // 監査ログに記録
+      // 監査ログに記録（技術的詳細は監査ログのみに記録）
       await SupabaseAdminAuth.recordAuditLog(
         'admin_login_error',
         `管理者ログインエラー: ${sanitizedUsername}`,
         sanitizedUsername,
         'error',
-        { error: error instanceof Error ? error.message : String(error), user_agent: navigator.userAgent }
+        { 
+          error_type: error instanceof Error ? error.constructor.name : 'UnknownError',
+          user_agent: navigator.userAgent,
+          timestamp: new Date().toISOString()
+        }
       );
     } finally {
       setLoading(false);
@@ -398,11 +402,20 @@ const AdminLoginPage: React.FC<AdminLoginPageProps> = ({ onLogin, onNavigateHome
           username: username,
           loginTime: new Date().toISOString(),
           sessionId: crypto.randomUUID(),
-          adminId: pendingAdminId
+          adminId: pendingAdminId,
+          expiresAt: new Date(Date.now() + 30 * 60 * 1000).toISOString(), // 30分で期限切れ
+          lastActivity: new Date().toISOString()
         };
         
         localStorage.setItem('admin_session', JSON.stringify(sessionData));
         sessionStorage.setItem('admin_authenticated', 'true');
+        
+        // セッション期限の監視を開始
+        const sessionExpiry = setTimeout(() => {
+          localStorage.removeItem('admin_session');
+          sessionStorage.removeItem('admin_authenticated');
+          window.location.reload(); // セッション期限切れ時の自動ログアウト
+        }, 30 * 60 * 1000); // 30分
 
         // 監査ログに記録
         await SupabaseAdminAuth.recordAuditLog(
@@ -457,6 +470,19 @@ const AdminLoginPage: React.FC<AdminLoginPageProps> = ({ onLogin, onNavigateHome
       return;
     }
 
+    // 再送信制限チェック（60秒間隔）
+    const lastResendTime = localStorage.getItem('last_sms_resend');
+    if (lastResendTime) {
+      const timeSinceLastResend = Date.now() - parseInt(lastResendTime);
+      const waitTime = 60000; // 60秒
+      
+      if (timeSinceLastResend < waitTime) {
+        const remainingTime = Math.ceil((waitTime - timeSinceLastResend) / 1000);
+        setError(`SMS認証コードの再送信は${remainingTime}秒後に可能です。`);
+        return;
+      }
+    }
+
     setLoading(true);
     setError('');
 
@@ -464,7 +490,18 @@ const AdminLoginPage: React.FC<AdminLoginPageProps> = ({ onLogin, onNavigateHome
       const result = await AdminSMSAuth.sendSMSCode(pendingAdminId, pendingPhoneNumber);
       
       if (result.success) {
+        // 再送信時刻を記録
+        localStorage.setItem('last_sms_resend', Date.now().toString());
         setSuccess('SMS認証コードを再送信しました。');
+        
+        // 監査ログに記録
+        await SupabaseAdminAuth.recordAuditLog(
+          'admin_sms_code_resent',
+          `管理者SMS認証コード再送信: ${username}`,
+          username,
+          'info',
+          { admin_id: pendingAdminId, phone_number: pendingPhoneNumber, user_agent: navigator.userAgent }
+        );
       } else {
         setError('SMS認証コードの再送信に失敗しました。');
       }
