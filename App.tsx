@@ -472,18 +472,52 @@ const App: React.FC = () => {
   const renderCurrentPage = () => {
     if (currentPage === 'home') {
       return (
-        <div style={{ minHeight: '100vh', background: '#eaf6fb', padding: '0', margin: 0 }}>
+        <div style={{ minHeight: '100vh', background: '#eaf6fb', padding: 0, margin: 0, width: '100vw', boxSizing: 'border-box', overflowX: 'hidden' }}>
           <Header />
-          <div style={{ display: 'flex', flexDirection: 'row', justifyContent: 'center', alignItems: 'flex-start', gap: 32, padding: '40px 0' }}>
+          <div
+            className="home-flex-container"
+            style={{
+              display: 'flex',
+              flexDirection: 'row',
+              justifyContent: 'center',
+              alignItems: 'flex-start',
+              gap: 32,
+              padding: '40px 0',
+              flexWrap: 'wrap',
+              width: '100%',
+              maxWidth: '1200px',
+              margin: '0 auto',
+            }}
+          >
             {/* 左側: イラストや説明 */}
-            <div style={{ flex: 1, maxWidth: 480, minWidth: 320 }}>
-              <MoneyTicketHero />
+            <div
+              className="home-left-col"
+              style={{
+                flex: 1,
+                maxWidth: 480,
+                minWidth: 280,
+                width: '100%',
+                marginBottom: 32,
+                boxSizing: 'border-box',
+              }}
+            >
+              <MoneyTicketHero onStartDiagnosis={handleStartDiagnosis} />
               <ReliabilitySection />
               <SecurityTrustSection />
               <CallToActionSection />
             </div>
             {/* 右側: 質問フォーム */}
-            <div style={{ flex: 1, minWidth: 340, maxWidth: 480 }}>
+            <div
+              className="home-right-col"
+              style={{
+                flex: 1,
+                minWidth: 280,
+                maxWidth: 480,
+                width: '100%',
+                marginBottom: 32,
+                boxSizing: 'border-box',
+              }}
+            >
               <DiagnosisFlow
                 onComplete={(answers) => {
                   setDiagnosisAnswers(answers);
@@ -494,7 +528,34 @@ const App: React.FC = () => {
               />
             </div>
           </div>
-          <Footer />
+          <Footer onNavigateToAdminLogin={navigateToAdminLogin} />
+          <style>{`
+            @media (max-width: 900px) {
+              .home-flex-container {
+                flex-direction: column !important;
+                gap: 16px !important;
+                padding: 16px 0 !important;
+                max-width: 100vw !important;
+              }
+              .home-left-col, .home-right-col {
+                max-width: 100vw !important;
+                min-width: 0 !important;
+                width: 100vw !important;
+                margin-bottom: 16px !important;
+                padding-left: 0 !important;
+                padding-right: 0 !important;
+              }
+            }
+            @media (max-width: 600px) {
+              .home-flex-container {
+                padding: 8px 0 !important;
+                gap: 8px !important;
+              }
+              .home-left-col, .home-right-col {
+                margin-bottom: 8px !important;
+              }
+            }
+          `}</style>
         </div>
       );
     }
