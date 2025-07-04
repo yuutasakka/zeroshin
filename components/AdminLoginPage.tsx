@@ -150,9 +150,11 @@ const AdminLoginPage: React.FC<AdminLoginPageProps> = ({ onLogin, onNavigateHome
     const hasLowerCase = /[a-z]/.test(password);
     const hasUpperCase = /[A-Z]/.test(password);
     const hasNumber = /\d/.test(password);
-    const hasSymbol = /[@$!%*?&]/.test(password);
+    // 許可する記号を拡張
+    const allowedSymbols = "!@#$%^&*()_+-=[]{};':\"|,.<>/?`~";
+    const hasSymbol = new RegExp(`[${allowedSymbols.replace(/[-/\\^$*+?.()|[\]{}]/g, '\\$&')}]`).test(password);
     const hasMinLength = password.length >= 8;
-    const hasOnlyAllowedChars = /^[A-Za-z\d@$!%*?&]+$/.test(password);
+    const hasOnlyAllowedChars = new RegExp(`^[A-Za-z\d${allowedSymbols.replace(/[-/\\^$*+?.()|[\]{}]/g, '\\$&')}] +$`).test(password);
 
     if (!hasMinLength) {
       setError('パスワードは8文字以上で入力してください。');
@@ -171,11 +173,11 @@ const AdminLoginPage: React.FC<AdminLoginPageProps> = ({ onLogin, onNavigateHome
       return;
     }
     if (!hasSymbol) {
-      setError('パスワードに記号（@$!%*?&）のいずれかを含めてください。');
+      setError('パスワードに記号（!@#$%^&*()_+-=[]{};\':\"|,.<>/?`~）のいずれかを含めてください。');
       return;
     }
     if (!hasOnlyAllowedChars) {
-      setError('パスワードに使用できない文字が含まれています。使用可能な記号: @$!%*?&');
+      setError('パスワードに使用できない文字が含まれています。使用可能な記号: !@#$%^&*()_+-=[]{};\':\"|,.<>/?`~');
       return;
     }
 
