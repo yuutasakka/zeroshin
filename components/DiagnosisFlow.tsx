@@ -65,12 +65,22 @@ const diagnosisQuestions = [
   }
 ];
 
+// 6問目: 電話番号入力
+const PHONE_QUESTION = {
+  id: 6,
+  questionId: 'phone',
+  title: '6️⃣ ご連絡可能な携帯電話番号を入力してください',
+  type: 'phone',
+  options: [],
+};
+
 export interface DiagnosisAnswers {
   age?: string;
   experience?: string;
   purpose?: string;
   amount?: string;
   timing?: string;
+  phone?: string;
 }
 
 interface DiagnosisFlowProps {
@@ -158,44 +168,55 @@ const DiagnosisFlow: React.FC<DiagnosisFlowProps> = ({ onComplete, onCancel }) =
   const [currentStep, setCurrentStep] = useState(1);
   const [answers, setAnswers] = useState<DiagnosisAnswers>({});
   const [selectedAnswer, setSelectedAnswer] = useState<string>('');
+  const [phoneInput, setPhoneInput] = useState('');
+  const [phoneError, setPhoneError] = useState('');
 
-  const currentQuestion = diagnosisQuestions.find(q => q.id === currentStep);
-  const totalSteps = diagnosisQuestions.length;
+  const totalSteps = diagnosisQuestions.length + 1; // 6問目まで
+  const isPhoneStep = currentStep === 6;
+  const currentQuestion = isPhoneStep ? PHONE_QUESTION : diagnosisQuestions.find(q => q.id === currentStep);
 
   const handleAnswerSelect = (value: string) => {
     setSelectedAnswer(value);
   };
 
   const handleNext = () => {
+    if (isPhoneStep) {
+      // 電話番号バリデーション
+      const sanitized = phoneInput.replace(/\D/g, '');
+      if (!/^0\d{9,10}$/.test(sanitized)) {
+        setPhoneError('正しい携帯電話番号を入力してください（例: 09012345678）');
+        return;
+      }
+      setPhoneError('');
+      const newAnswers = { ...answers, phone: sanitized };
+      setAnswers(newAnswers);
+      onComplete(newAnswers);
+      return;
+    }
     if (!selectedAnswer) {
       alert('選択肢を選んでください。');
       return;
     }
-
     // 現在の質問の答えを保存
     const newAnswers = { 
       ...answers, 
       [currentQuestion!.questionId]: selectedAnswer 
     };
     setAnswers(newAnswers);
-
-    if (currentStep < totalSteps) {
-      // 次の質問へ
-      setCurrentStep(currentStep + 1);
-      setSelectedAnswer('');
-    } else {
-      // 診断完了
-      onComplete(newAnswers);
-    }
+    setSelectedAnswer('');
+    setCurrentStep(currentStep + 1);
   };
 
   const handlePrevious = () => {
     if (currentStep > 1) {
       setCurrentStep(currentStep - 1);
-      // 前の質問の答えを復元
-      const prevQuestion = diagnosisQuestions.find(q => q.id === currentStep - 1);
-      if (prevQuestion) {
-        setSelectedAnswer(answers[prevQuestion.questionId as keyof DiagnosisAnswers] || '');
+      if (currentStep - 1 === 6) {
+        setPhoneInput(answers.phone || '');
+      } else {
+        const prevQuestion = diagnosisQuestions.find(q => q.id === currentStep - 1);
+        if (prevQuestion) {
+          setSelectedAnswer(answers[prevQuestion.questionId as keyof DiagnosisAnswers] || '');
+        }
       }
     }
   };
@@ -207,9 +228,7 @@ const DiagnosisFlow: React.FC<DiagnosisFlowProps> = ({ onComplete, onCancel }) =
     }
   }, []);
 
-  if (!currentQuestion) {
-    return null;
-  }
+  if (!currentQuestion) return null;
 
   return (
     <div style={CARD_STYLE}>
@@ -223,19 +242,44 @@ const DiagnosisFlow: React.FC<DiagnosisFlowProps> = ({ onComplete, onCancel }) =
       </div>
       <div style={QUESTION_STYLE}>{currentQuestion.title}</div>
       <div style={CHOICES_STYLE}>
-        {currentQuestion.options.map((option) => (
-          <button
-            key={option.value}
-            style={selectedAnswer === option.value ? CHOICE_BTN_SELECTED : CHOICE_BTN}
-            onClick={() => handleAnswerSelect(option.value)}
-          >
-            {option.label}
-          </button>
-        ))}
+        {isPhoneStep ? (
+          <>
+            <input
+              type="tel"
+              value={phoneInput}
+              onChange={e => setPhoneInput(e.target.value.replace(/[^0-9]/g, ''))}
+              placeholder="09012345678"
+              style={{
+                width: '100%',
+                fontSize: 18,
+                padding: '14px',
+                borderRadius: 12,
+                border: '1px solid #ccc',
+                marginBottom: 8,
+                textAlign: 'center',
+              }}
+              maxLength={11}
+            />
+            {phoneError && <div style={{ color: 'red', fontSize: 14 }}>{phoneError}</div>}
+            <div style={{ color: '#666', fontSize: 13, marginTop: 8 }}>
+              ※ご登録頂いた携帯番号宛に認証コードを送信します。
+            </div>
+          </>
+        ) : (
+          currentQuestion.options.map((option) => (
+            <button
+              key={option.value}
+              style={selectedAnswer === option.value ? CHOICE_BTN_SELECTED : CHOICE_BTN}
+              onClick={() => handleAnswerSelect(option.value)}
+            >
+              {option.label}
+            </button>
+          ))
+        )}
       </div>
       <div style={ACTIONS_STYLE}>
         <button style={ACTION_BTN} onClick={handlePrevious}>← 戻る</button>
-        <button style={NEXT_BTN} onClick={handleNext} disabled={!selectedAnswer}>次へ →</button>
+        <button style={NEXT_BTN} onClick={handleNext} disabled={isPhoneStep ? phoneInput.length < 10 : !selectedAnswer}>次へ →</button>
       </div>
     </div>
   );

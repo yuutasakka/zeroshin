@@ -468,8 +468,36 @@ const App: React.FC = () => {
     window.scrollTo(0, 0);
   };
 
-  // ページ表示の分岐処理を更新
+  // トップページのUIをDiagnosisFlow中心に変更
   const renderCurrentPage = () => {
+    if (currentPage === 'home') {
+      return (
+        <div style={{ minHeight: '100vh', background: '#eaf6fb', padding: '0', margin: 0 }}>
+          <Header />
+          <div style={{ display: 'flex', flexDirection: 'row', justifyContent: 'center', alignItems: 'flex-start', gap: 32, padding: '40px 0' }}>
+            {/* 左側: イラストや説明 */}
+            <div style={{ flex: 1, maxWidth: 480, minWidth: 320 }}>
+              <MoneyTicketHero />
+              <ReliabilitySection />
+              <SecurityTrustSection />
+              <CallToActionSection />
+            </div>
+            {/* 右側: 質問フォーム */}
+            <div style={{ flex: 1, minWidth: 340, maxWidth: 480 }}>
+              <DiagnosisFlow
+                onComplete={(answers) => {
+                  setDiagnosisAnswers(answers);
+                  setCurrentPage('verification');
+                  setPhoneNumberToVerify(answers.phone || null);
+                }}
+                onCancel={() => {}}
+              />
+            </div>
+          </div>
+          <Footer />
+        </div>
+      );
+    }
     // 管理者ログイン状態の場合
     if (isAdminLoggedIn && currentPage === 'adminDashboard') {
       return (
