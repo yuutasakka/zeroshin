@@ -613,8 +613,8 @@ const PhoneVerificationPage: React.FC<PhoneVerificationPageProps> = ({
                   </div>
                 ) : (
                   <>
-                    <span className="text-lg">🎉 認証完了して結果を受け取る</span>
-                    <div className="text-sm opacity-90 mt-1">あなた専用の投資プランが待っています！</div>
+                    <span className="text-lg text-gray-300">🎉 認証完了して結果を受け取る</span>
+                    <div className="text-sm text-gray-400 opacity-90 mt-1">あなた専用の投資プランが待っています！</div>
                   </>
                 )}
               </button>
