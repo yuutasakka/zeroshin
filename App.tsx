@@ -330,48 +330,36 @@ const App: React.FC = () => {
 
   // 要件定義書に基づく新しいナビゲーション関数
   const handleStartDiagnosis = () => {
-    // 診断フォームへのスムーズスクロール
-    const diagnosisElement = document.querySelector('.home-right-col');
-    if (diagnosisElement) {
-      // デバイス判定
-      const isMobile = window.innerWidth <= 900;
-      
-      if (isMobile) {
-        // スマホではヘッダー直下に表示
-        const yOffset = -100; // ヘッダー分のオフセット（スマホ用）
-        const elementPosition = diagnosisElement.getBoundingClientRect().top;
-        const offsetPosition = elementPosition + window.pageYOffset + yOffset;
+    // 診断フォームへのスムーズスクロール（新しいレイアウト対応）
+    const diagnosisSection = document.querySelector('.diagnosis-section');
+    if (diagnosisSection) {
+      // ヘッダー分のオフセット
+      const yOffset = -80;
+      const elementPosition = diagnosisSection.getBoundingClientRect().top;
+      const offsetPosition = elementPosition + window.pageYOffset + yOffset;
 
-        window.scrollTo({
-          top: Math.max(0, offsetPosition), // 0未満にならないよう調整
-          behavior: 'smooth'
-        });
-      } else {
-        // デスクトップでは通常のスクロール
-        const yOffset = -80; // ヘッダー分のオフセット
-        const elementPosition = diagnosisElement.getBoundingClientRect().top;
-        const offsetPosition = elementPosition + window.pageYOffset + yOffset;
-
-        window.scrollTo({
-          top: offsetPosition,
-          behavior: 'smooth'
-        });
-      }
+      window.scrollTo({
+        top: Math.max(0, offsetPosition),
+        behavior: 'smooth'
+      });
       
       // フォームにフォーカスを当てるアニメーション効果
-      setTimeout(() => {
-        diagnosisElement.classList.add('diagnosis-focus-animation');
-        
-        // 最初の質問の入力要素にフォーカス
-        const firstInput = diagnosisElement.querySelector('button, input, select');
-        if (firstInput) {
-          (firstInput as HTMLElement).focus();
-        }
-        
+      const diagnosisElement = diagnosisSection.querySelector('.home-right-col');
+      if (diagnosisElement) {
         setTimeout(() => {
-          diagnosisElement.classList.remove('diagnosis-focus-animation');
-        }, 1500);
-      }, isMobile ? 600 : 800); // スマホでは少し早めにアニメーション開始
+          diagnosisElement.classList.add('diagnosis-focus-animation');
+          
+          // 最初の質問の入力要素にフォーカス
+          const firstInput = diagnosisElement.querySelector('button, input, select');
+          if (firstInput) {
+            (firstInput as HTMLElement).focus();
+          }
+          
+          setTimeout(() => {
+            diagnosisElement.classList.remove('diagnosis-focus-animation');
+          }, 1500);
+        }, 700);
+      }
     }
   };
 
@@ -516,15 +504,14 @@ const App: React.FC = () => {
       return (
         <div style={{ minHeight: '100vh', background: '#eaf6fb', padding: 0, margin: 0, width: '100vw', boxSizing: 'border-box', overflowX: 'hidden' }}>
           <Header />
-          <div className="home-flex-container">
-            {/* 左側: イラストや説明 */}
-            <div className="home-left-col">
-              <MoneyTicketHero onStartDiagnosis={handleStartDiagnosis} />
-              <ReliabilitySection />
-              <SecurityTrustSection />
-              <CallToActionSection />
-            </div>
-            {/* 右側: 質問フォーム */}
+          
+          {/* 1番目: メインヒーロー（あなたの未来の資産を診断！） */}
+          <div className="hero-section">
+            <MoneyTicketHero onStartDiagnosis={handleStartDiagnosis} />
+          </div>
+          
+          {/* 2番目: 診断フォーム */}
+          <div className="diagnosis-section">
             <div className="home-right-col">
               <DiagnosisFlow
                 onComplete={(answers) => {
@@ -536,6 +523,14 @@ const App: React.FC = () => {
               />
             </div>
           </div>
+          
+          {/* 3番目以降: その他のセクション */}
+          <div className="additional-sections">
+            <ReliabilitySection />
+            <SecurityTrustSection />
+            <CallToActionSection />
+          </div>
+          
           <Footer onNavigateToAdminLogin={navigateToAdminLogin} />
           <style>{`
             /* 診断フォーカスアニメーション */
@@ -563,30 +558,31 @@ const App: React.FC = () => {
               }
             }
             
-            /* デスクトップレイアウト */
-            .home-flex-container {
-              display: flex;
-              flex-direction: row;
-              align-items: flex-start;
-              justify-content: center;
-              gap: 32px;
-              max-width: 1200px;
-              margin: 0 auto;
-              padding: 40px 20px;
+            /* 新しい縦型レイアウト */
+            .hero-section {
+              width: 100%;
+              padding: 20px 0;
             }
             
-            .home-left-col {
-              flex: 1;
-              max-width: 480px;
-              min-width: 280px;
-              order: 1; /* 左側：説明 */
+            .diagnosis-section {
+              width: 100%;
+              padding: 40px 20px;
+              display: flex;
+              justify-content: center;
+              background: rgba(255, 255, 255, 0.3);
+              backdrop-filter: blur(5px);
+            }
+            
+            .additional-sections {
+              width: 100%;
+              padding: 40px 20px;
+              max-width: 1200px;
+              margin: 0 auto;
             }
             
             .home-right-col {
-              flex: 1;
-              max-width: 480px;
-              min-width: 280px;
-              order: 2; /* 右側：診断フォーム */
+              width: 100%;
+              max-width: 500px;
               transition: all 0.3s ease;
               padding: 20px;
               border-radius: 20px;
@@ -600,39 +596,33 @@ const App: React.FC = () => {
               box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
             }
             
-            @media (max-width: 900px) {
-              .home-flex-container {
-                flex-direction: column !important;
-                gap: 16px !important;
-                padding: 16px 0 !important;
-                max-width: 100vw !important;
+            @media (max-width: 768px) {
+              .hero-section {
+                padding: 10px 0;
               }
-              .home-left-col, .home-right-col {
-                max-width: 100vw !important;
-                min-width: 0 !important;
-                width: 100vw !important;
-                margin-bottom: 16px !important;
-                padding-left: 0 !important;
-                padding-right: 0 !important;
+              
+              .diagnosis-section {
+                padding: 20px 10px;
               }
-              /* スマホでは診断フォームを上に表示 */
+              
+              .additional-sections {
+                padding: 20px 10px;
+              }
+              
               .home-right-col {
-                order: 1 !important; /* フォームを上に */
-                margin-bottom: 32px !important;
-                max-width: 100vw !important;
-              }
-              .home-left-col {
-                order: 2 !important; /* 説明を下に */
-                max-width: 100vw !important;
+                max-width: 100% !important;
+                margin: 0 auto;
+                padding: 15px;
               }
             }
-            @media (max-width: 600px) {
-              .home-flex-container {
-                padding: 8px 0 !important;
-                gap: 8px !important;
+            @media (max-width: 480px) {
+              .diagnosis-section {
+                padding: 15px 5px;
               }
-              .home-left-col, .home-right-col {
-                margin-bottom: 8px !important;
+              
+              .home-right-col {
+                padding: 10px;
+                border-radius: 15px;
               }
             }
           `}</style>
