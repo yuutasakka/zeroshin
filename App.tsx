@@ -330,7 +330,34 @@ const App: React.FC = () => {
 
   // 要件定義書に基づく新しいナビゲーション関数
   const handleStartDiagnosis = () => {
-    setCurrentPage('diagnosis');
+    // 診断フォームへのスムーズスクロール
+    const diagnosisElement = document.querySelector('.home-right-col');
+    if (diagnosisElement) {
+      // スクロール前に少し上にマージンを持たせる
+      const yOffset = -80; // ヘッダー分のオフセット
+      const elementPosition = diagnosisElement.getBoundingClientRect().top;
+      const offsetPosition = elementPosition + window.pageYOffset + yOffset;
+
+      window.scrollTo({
+        top: offsetPosition,
+        behavior: 'smooth'
+      });
+      
+      // フォームにフォーカスを当てるアニメーション効果
+      setTimeout(() => {
+        diagnosisElement.classList.add('diagnosis-focus-animation');
+        
+        // 最初の質問の入力要素にフォーカス
+        const firstInput = diagnosisElement.querySelector('button, input, select');
+        if (firstInput) {
+          (firstInput as HTMLElement).focus();
+        }
+        
+        setTimeout(() => {
+          diagnosisElement.classList.remove('diagnosis-focus-animation');
+        }, 1500);
+      }, 800); // スクロール完了を待つ
+    }
   };
 
   const handleDiagnosisComplete = (answers: DiagnosisAnswers) => {
@@ -530,6 +557,41 @@ const App: React.FC = () => {
           </div>
           <Footer onNavigateToAdminLogin={navigateToAdminLogin} />
           <style>{`
+            /* 診断フォーカスアニメーション */
+            .diagnosis-focus-animation {
+              animation: diagnosisFocus 1.5s ease-in-out;
+              transform-origin: center;
+            }
+            
+            @keyframes diagnosisFocus {
+              0% {
+                transform: scale(1);
+                box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+              }
+              25% {
+                transform: scale(1.05);
+                box-shadow: 0 20px 40px rgba(59, 130, 246, 0.3);
+              }
+              50% {
+                transform: scale(1.03);
+                box-shadow: 0 25px 50px rgba(59, 130, 246, 0.4);
+              }
+              100% {
+                transform: scale(1);
+                box-shadow: 0 10px 20px rgba(59, 130, 246, 0.2);
+              }
+            }
+            
+            /* ホバー効果強化 */
+            .home-right-col {
+              transition: all 0.3s ease;
+            }
+            
+            .home-right-col:hover {
+              transform: translateY(-2px);
+              box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
+            }
+            
             @media (max-width: 900px) {
               .home-flex-container {
                 flex-direction: column !important;
