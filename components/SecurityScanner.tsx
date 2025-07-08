@@ -293,7 +293,7 @@ const SecurityScanner: React.FC<SecurityScannerProps> = ({ onClose }) => {
       setStatus('🔍 全セキュリティスキャンを実行中...');
 
       const enabledScans = scanConfigs.filter(config => config.enabled);
-      let totalIssues = 0;
+      const totalIssues = 0;
 
       for (const config of enabledScans) {
         await runScan(config.scanType);

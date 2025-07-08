@@ -36,16 +36,28 @@ const PORT = process.env.PORT || 8080;
 const NODE_ENV = process.env.NODE_ENV || 'development';
 const JWT_SECRET = process.env.JWT_SECRET || 'moneyticket-super-secret-key-2024';
 
-// セキュリティヘッダーの設定
+// セキュリティヘッダーの設定（本番環境では厳格化）
+const isProduction = NODE_ENV === 'production';
+
 app.use(helmet({
   contentSecurityPolicy: {
     directives: {
       defaultSrc: ["'self'"],
-      scriptSrc: ["'self'", "'unsafe-inline'", "https://cdnjs.cloudflare.com"],
-      styleSrc: ["'self'", "'unsafe-inline'", "https://cdnjs.cloudflare.com"],
+      scriptSrc: isProduction 
+        ? ["'self'", "https://cdnjs.cloudflare.com"] 
+        : ["'self'", "'unsafe-inline'", "https://cdnjs.cloudflare.com"],
+      styleSrc: isProduction 
+        ? ["'self'", "https://cdnjs.cloudflare.com"]
+        : ["'self'", "'unsafe-inline'", "https://cdnjs.cloudflare.com"],
       imgSrc: ["'self'", "data:", "https:"],
-      connectSrc: ["'self'", "http://localhost:*"],
+      connectSrc: isProduction 
+        ? ["'self'", "https:"]
+        : ["'self'", "http://localhost:*", "https:"],
       fontSrc: ["'self'", "https://cdnjs.cloudflare.com"],
+      objectSrc: ["'none'"],
+      baseSrc: ["'self'"],
+      formAction: ["'self'"],
+      frameAncestors: ["'none'"],
     },
   },
   crossOriginEmbedderPolicy: false,
@@ -340,7 +352,7 @@ app.post('/api/sms/send', smsLimiter, phoneValidation, async (req: Request, res:
         ip: clientIP
       });
 
-      console.log(`SMS送信成功: ${normalizedPhoneNumber} (SID: ${smsResult.sid})`);
+      console.log(`SMS送信成功: [電話番号非表示] (SID: ${smsResult.sid})`);
 
       res.json({
         success: true,
@@ -360,14 +372,13 @@ app.post('/api/sms/send', smsLimiter, phoneValidation, async (req: Request, res:
           twilioError: errorMessage
         });
         
-        console.log(`🚧 開発環境デモモード: ${normalizedPhoneNumber} - 認証コード: ${verificationCode}`);
+        console.log(`🚧 開発環境デモモード: SMS送信をシミュレート中`);
         
         res.json({
           success: true,
           message: 'SMS認証コードを送信しました（開発環境モード）',
           phoneNumber: normalizedPhoneNumber,
-          devMode: true,
-          devCode: verificationCode
+          devMode: true
         });
         return;
       }

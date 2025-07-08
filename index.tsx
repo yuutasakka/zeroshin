@@ -30,10 +30,10 @@ if (typeof window !== 'undefined') {
   
   // さらなる安全対策: addEventListener の override
   const originalAddEventListener = EventTarget.prototype.addEventListener;
-  EventTarget.prototype.addEventListener = function(type: string, listener: any, options?: any) {
+  EventTarget.prototype.addEventListener = function(type: string, listener: ((this: EventTarget, ev: Event) => void) | null, options?: boolean | { capture?: boolean; once?: boolean; passive?: boolean }) {
     // WebSocket関連のイベントリスナーをフィルター
     if (this instanceof WebSocket && ['open', 'message', 'error', 'close'].includes(type)) {
-      const url = (this as any).url || '';
+      const url = (this as WebSocket & { url?: string }).url || '';
       const blockedPorts = ['1815', '24678', '35729'];
       const isBlocked = blockedPorts.some(port => url.includes(`localhost:${port}`));
       

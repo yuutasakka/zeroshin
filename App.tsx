@@ -72,7 +72,7 @@ const isValidHTML = (html: string): boolean => {
     
     // すべての要素が許可されたタグかチェック
     const elements = doc.body.querySelectorAll('*');
-    for (let element of elements) {
+    for (const element of elements) {
       if (!allowedTags.includes(element.tagName.toLowerCase())) {
         return false;
       }
@@ -96,7 +96,7 @@ const App: React.FC = () => {
   const [showDebugPanel, setShowDebugPanel] = useState<boolean>(false);
   
   // 新しいSupabase Auth関連の状態
-  const [supabaseUser, setSupabaseUser] = useState<User | null>(null);
+  const [_supabaseUser, setSupabaseUser] = useState<User | null>(null);
   const [isSupabaseAuth, setIsSupabaseAuth] = useState(false);
   
   // 状態変更を監視するuseEffect
@@ -130,7 +130,7 @@ const App: React.FC = () => {
           setIsAdminLoggedIn(true);
           
           // プロファイルからパスワード変更要求をチェック
-          const { data: profile, error: profileError } = await supabase
+          const { data: _profile, error: _profileError } = await supabase
             .from('profiles')
             .select('requires_password_change')
             .eq('id', session.user.id)
@@ -142,7 +142,7 @@ const App: React.FC = () => {
 
         // 認証状態の変更を監視
         const { data: { subscription } } = supabase.auth.onAuthStateChange(
-          async (event, session) => {
+          async (_event, session) => {
             
             if (session?.user) {
               setSupabaseUser(session.user);
@@ -150,7 +150,7 @@ const App: React.FC = () => {
               setIsAdminLoggedIn(true);
               
               // パスワード変更要求をチェック
-              const { data: profile, error: profileError } = await supabase
+              const { data: _profile, error: _profileError } = await supabase
                 .from('profiles')
                 .select('requires_password_change')
                 .eq('id', session.user.id)
@@ -463,7 +463,7 @@ const App: React.FC = () => {
   };
 
   // パスワード変更完了時の処理
-  const handlePasswordChanged = () => {
+  const _handlePasswordChanged = () => {
     setCurrentPage('adminDashboard');
     window.scrollTo(0, 0);
   };

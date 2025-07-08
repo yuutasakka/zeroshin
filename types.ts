@@ -36,18 +36,33 @@ export interface DiagnosisFormState {
 export interface Company {
   id: string;
   name: string;
-  websiteUrl: string;
-  actionText: string;
+  description: string;
+  website: string;
+  rating: number;
+  establishedYear: number;
+  isActive: boolean;
+  websiteUrl?: string; // 既存コードとの互換性
+  actionText?: string; // 既存コードとの互換性
   logoUrl?: string; // Optional: for company logos
 }
 
 export interface FinancialProduct {
   id: string;
   name: string;
-  shortDescription: string;
-  longDescription: string;
-  iconClass: string; // Font Awesome class, e.g., 'fas fa-chart-line'
-  tags: string[]; // For filtering logic, e.g., ['beginner', 'long-term', 'growth']
+  description: string;
+  category: 'stocks' | 'bonds' | 'funds' | 'insurance' | 'savings' | 'crypto' | 'real_estate' | 'commodities' | 'other';
+  riskLevel: number; // 1-5
+  expectedReturn: number;
+  minimumInvestment: number;
+  features: string[];
+  pros: string[];
+  cons: string[];
+  companyId: string;
+  isActive: boolean;
+  shortDescription?: string; // 既存コードとの互換性
+  longDescription?: string; // 既存コードとの互換性
+  iconClass?: string; // Font Awesome class, e.g., 'fas fa-chart-line'
+  tags?: string[]; // For filtering logic, e.g., ['beginner', 'long-term', 'growth']
   alwaysRecommend?: boolean;
   representativeCompanies?: Company[];
 }
@@ -62,7 +77,11 @@ export interface UserSessionData {
   id: string; // Unique ID for the session
   timestamp: string; // ISO string format
   phoneNumber: string;
+  userName?: string; // ユーザー名
+  email?: string; // メールアドレス
   diagnosisAnswers: DiagnosisFormState;
+  diagnosisResult?: any; // 診断結果
+  notes?: string; // 備考
   smsVerified?: boolean; // SMS認証済みフラグ
   verifiedPhoneNumber?: string; // 認証済み電話番号
   verificationTimestamp?: string; // 認証完了時刻

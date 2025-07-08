@@ -73,21 +73,48 @@ const PhoneVerificationPage: React.FC<PhoneVerificationPageProps> = ({
             return;
           }
 
-          // 実際のSMS認証を送信
+          // 本番環境でのみSMS認証をスキップを許可（開発環境での設定）
+          const isProduction = process.env.NODE_ENV === 'production' || 
+                               (typeof window !== 'undefined' && 
+                                !window.location.hostname.includes('localhost') && 
+                                !window.location.hostname.includes('127.0.0.1'));
+          
           setLoading(true);
-          const { error } = await supabase.auth.signInWithOtp({
-            phone: normalizedPhone,
-            options: {
-              channel: 'sms'
+          
+          if (!isProduction) {
+            console.log('開発環境: SMS認証をスキップしています');
+            // 開発環境では直接セッション作成
+            try {
+              const sessionId = await diagnosisManager.createDiagnosisSession(
+                normalizedPhone, 
+                userSession.diagnosisAnswers
+              );
+
+              if (!sessionId) {
+                throw new Error('診断セッションの作成に失敗しました');
+              }
+              
+              // 開発環境では直接認証完了
+              setStep('otp-verification');
+              setCountdown(60);
+            } catch (error: any) {
+              setError(error.message || '診断セッションの作成に失敗しました');
             }
-          });
-
-          if (error) {
-            throw error;
+          } else {
+            // 本番環境では実際のSMS認証を実行
+            console.log('本番環境: 実際のSMS認証を実行中...');
+            const { error } = await supabase.auth.signInWithOtp({
+              phone: normalizedPhone,
+              options: { channel: 'sms' }
+            });
+            
+            if (error) {
+              throw error;
+            }
+            
+            setStep('otp-verification');
+            setCountdown(60);
           }
-
-          setStep('otp-verification');
-          setCountdown(60); // 60秒のカウントダウン
           
         } catch (error: any) {
           setError(error.message || 'SMS送信に失敗しました。しばらく後にもう一度お試しください。');
@@ -127,7 +154,7 @@ const PhoneVerificationPage: React.FC<PhoneVerificationPageProps> = ({
     return phoneRegex.test(normalized);
   };
 
-  // OTP送信
+  // OTP送信（フォーム用）
   const handleSendOTP = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);

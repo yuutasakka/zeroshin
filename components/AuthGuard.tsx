@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { supabase } from './supabaseClient';
+import { SecureStorage } from '../security.config';
 import type { User, Session } from '@supabase/supabase-js';
 
 interface AuthGuardProps {
@@ -75,8 +76,10 @@ export const AuthenticatedHeader: React.FC = () => {
   const handleLogout = async () => {
     try {
       await supabase.auth.signOut();
+      SecureStorage.removeSecureItem('admin_session');
       window.location.href = '/';
     } catch (error) {
+      console.error('Logout error:', error);
     }
   };
 

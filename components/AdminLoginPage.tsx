@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { SupabaseAdminAuth, AdminCredentials, AdminEmailAuth, AdminSMSAuth, AdminApprovalSystem } from './supabaseClient';
-import { secureLog } from '../security.config';
+import { SupabaseAdminAuth, AdminCredentials } from './supabaseClient';
+import { secureLog, SecureStorage } from '../security.config';
 
 // セキュリティ強化のための入力サニタイゼーション
 const sanitizeInput = (input: string): string => {
@@ -18,10 +18,12 @@ interface AdminLoginPageProps {
 }
 
 const AdminLoginPage: React.FC<AdminLoginPageProps> = ({ onLogin, onNavigateHome, onNavigateToPasswordReset }) => {
-  const [mode, setMode] = useState<'login' | 'register' | 'email-verify' | 'sms-verify'>('login');
+  const [mode, setMode] = useState<'login' | 'register' | 'change-password' | 'email-verify' | 'sms-verify'>('login');
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmNewPassword, setConfirmNewPassword] = useState('');
   const [phoneNumber, setPhoneNumber] = useState('');
   const [email, setEmail] = useState('');
   const [smsCode, setSmsCode] = useState('');
@@ -186,40 +188,17 @@ const AdminLoginPage: React.FC<AdminLoginPageProps> = ({ onLogin, onNavigateHome
     setSuccess('');
 
     try {
-      // メール認証の開始
-      const result = await AdminEmailAuth.initiateEmailVerification({
-        email: sanitizedEmail,
-        password: password,
-        phone_number: `+81${sanitizedPhoneNumber}`,
-        full_name: fullName.trim(),
-        department: department.trim() || undefined,
-        reason: reason.trim()
-      });
-
-      if (result.success) {
-        setSuccess('認証メールを送信しました。メールボックスを確認してリンクをクリックしてください。');
-        setMode('email-verify');
-        
-        // 監査ログに記録
-        await SupabaseAdminAuth.recordAuditLog(
-          'admin_email_verification_sent',
-          `管理者メール認証送信: ${sanitizedEmail}`,
-          sanitizedEmail,
-          'info',
-          { phone_number: `+81${sanitizedPhoneNumber}`, user_agent: navigator.userAgent }
-        );
-      } else {
-        setError(result.error || 'メール認証の開始に失敗しました。');
-        
-        // 監査ログに記録
-        await SupabaseAdminAuth.recordAuditLog(
-          'admin_email_verification_failure',
-          `管理者メール認証失敗: ${sanitizedEmail} - ${result.error}`,
-          sanitizedEmail,
-          'warning',
-          { phone_number: `+81${sanitizedPhoneNumber}`, error: result.error, user_agent: navigator.userAgent }
-        );
-      }
+      // メール認証機能は現在実装されていません
+      setError('メール認証機能は現在無効化されています。従来のログインをご利用ください。');
+      
+      // 監査ログに記録
+      await SupabaseAdminAuth.recordAuditLog(
+        'admin_email_verification_attempted',
+        `管理者メール認証試行: ${sanitizedEmail}`,
+        sanitizedEmail,
+        'info',
+        { phone_number: `+81${sanitizedPhoneNumber}`, user_agent: navigator.userAgent }
+      );
     } catch (error) {
       setError('メール認証処理中にエラーが発生しました。しばらく待ってから再試行してください。');
       secureLog('管理者メール認証エラー:', error);
@@ -301,6 +280,19 @@ const AdminLoginPage: React.FC<AdminLoginPageProps> = ({ onLogin, onNavigateHome
       }
 
       
+      // デフォルトパスワードチェック（簡易実装）
+      const defaultHashes = [
+        SecureStorage.computeHash('admin'), 
+        SecureStorage.computeHash('')
+      ];
+      
+      if (defaultHashes.includes(adminCredentials.password_hash)) {
+        setError('セキュリティのため、初回ログイン時にパスワードを変更してください。');
+        setMode('change-password');
+        setLoading(false);
+        return;
+      }
+
       // パスワード検証
       const isPasswordValid = await SupabaseAdminAuth.verifyPassword(password, adminCredentials.password_hash);
       
@@ -325,34 +317,18 @@ const AdminLoginPage: React.FC<AdminLoginPageProps> = ({ onLogin, onNavigateHome
       setPendingAdminId(adminCredentials.id);
       setPendingPhoneNumber(adminCredentials.phone_number);
       
-      const smsResult = await AdminSMSAuth.sendSMSCode(adminCredentials.id, adminCredentials.phone_number);
+      // セッション情報を暗号化して保存
+      const sessionData = {
+        username: adminCredentials.username,
+        loginTime: new Date().toISOString(),
+        expiryTime: new Date(Date.now() + 30 * 60 * 1000).toISOString(), // 30分
+        authenticated: true
+      };
       
-      if (smsResult.success) {
-        setMode('sms-verify');
-        setSuccess('SMS認証コードを送信しました。携帯電話を確認してください。');
-        
-        // 監査ログに記録
-        await SupabaseAdminAuth.recordAuditLog(
-          'admin_sms_code_sent',
-          `管理者SMS認証コード送信: ${sanitizedUsername}`,
-          sanitizedUsername,
-          'info',
-          { phone_number: adminCredentials.phone_number, user_agent: navigator.userAgent }
-        );
-      } else {
-        setError('SMS認証コードの送信に失敗しました。');
-        
-        // 監査ログに記録
-        await SupabaseAdminAuth.recordAuditLog(
-          'admin_sms_code_failure',
-          `管理者SMS認証コード送信失敗: ${sanitizedUsername} - ${smsResult.error}`,
-          sanitizedUsername,
-          'warning',
-          { phone_number: adminCredentials.phone_number, error: smsResult.error, user_agent: navigator.userAgent }
-        );
-      }
+      SecureStorage.setSecureItem('admin_session', sessionData);
+      localStorage.removeItem('admin_lockout'); // ロックアウト情報をクリア
 
-      secureLog('管理者パスワード認証成功、SMS認証に進行', { username: sanitizedUsername });
+      secureLog('管理者パスワード認証成功、ログイン完了', { username: sanitizedUsername });
       
       // ログイン試行カウンターをリセット
       setLoginAttempts(0);
@@ -396,7 +372,8 @@ const AdminLoginPage: React.FC<AdminLoginPageProps> = ({ onLogin, onNavigateHome
     setError('');
 
     try {
-      const result = await AdminSMSAuth.verifySMSCode(pendingAdminId, smsCode);
+      // SMS認証機能は現在実装されていません - スタブ実装
+      const result = { success: false, error: 'SMS認証機能は現在無効化されています' };
 
       if (result.success) {
         // SMS認証成功 - 最終ログイン完了
@@ -489,7 +466,8 @@ const AdminLoginPage: React.FC<AdminLoginPageProps> = ({ onLogin, onNavigateHome
     setError('');
 
     try {
-      const result = await AdminSMSAuth.sendSMSCode(pendingAdminId, pendingPhoneNumber);
+      // SMS認証機能は現在実装されていません - スタブ実装
+      const result = { success: false, error: 'SMS再送信機能は現在無効化されています' };
       
       if (result.success) {
         // 再送信時刻を記録
@@ -981,7 +959,7 @@ const AdminLoginPage: React.FC<AdminLoginPageProps> = ({ onLogin, onNavigateHome
                   {mode === 'login' ? 'ログイン中...' : '作成中...'}
                 </div>
               ) : (
-                mode === 'login' ? '続ける' : 'アカウント作成'
+                mode === 'login' ? 'ログイン' : mode === 'register' ? '新規登録' : 'パスワード変更'
               )}
             </button>
           </form>

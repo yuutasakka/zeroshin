@@ -1,7 +1,7 @@
 // MoneyTicket サンプルデータ
 // 管理画面で変更可能な項目の初期データ
 
-import { Testimonial, LegalLink, FinancialProduct } from '../types';
+import { Testimonial, LegalLink } from '../types';
 import { ReasonsToChooseData, FirstConsultationOffer, HeaderData, MainVisualData, FooterData } from '../data/homepageContentData';
 import { allFinancialProducts } from './financialProductsData';
 

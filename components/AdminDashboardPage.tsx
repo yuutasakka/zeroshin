@@ -1,5 +1,4 @@
 import React, { useState, useEffect, ChangeEvent, FormEvent } from 'react';
-import CryptoJS from 'crypto-js';
 import { UserSessionData, FinancialProduct, Company, Testimonial, NotificationSettings, EmailNotificationConfig, SlackNotificationConfig, LineNotificationConfig, ChatWorkNotificationConfig, LegalLink } from '../types';
 import { diagnosisFormMapping } from '../data/diagnosisFormMapping';
 import { allFinancialProducts as defaultFinancialProducts } from '../data/financialProductsData';
@@ -16,7 +15,7 @@ import {
   defaultMainVisualData,
   defaultFooterData
 } from '../data/homepageContentData';
-import { SECURITY_CONFIG, SUPABASE_CONFIG, secureLog } from '../security.config';
+import { SECURITY_CONFIG, secureLog } from '../security.config';
 import { SupabaseAdminAPI, SecureStorage, createSupabaseClient } from './adminUtils';
 import { diagnosisManager } from './supabaseClient';
 import { resetToSampleData } from '../data/sampleData';
@@ -37,6 +36,21 @@ interface AdminDashboardPageProps {
 }
 
 type AdminViewMode = 'userHistory' | 'productSettings' | 'testimonialSettings' | 'analyticsSettings' | 'notificationSettings' | 'legalLinksSettings' | 'adminSettings' | 'homepageContentSettings' | 'headerAndVisualSettings' | 'colorThemeSettings' | 'securitySettings' | 'expertContactSettings' | 'financialPlannersSettings' | 'approvalRequests';
+
+interface FinancialPlanner {
+  id?: number;
+  name: string;
+  title: string;
+  experience_years: number;
+  specialties: string[];
+  profile_image_url: string;
+  bio: string;
+  phone_number: string;
+  email: string;
+  certifications: string[];
+  is_active: boolean;
+  display_order: number;
+}
 
 interface DashboardStats {
     totalDiagnoses: number;
@@ -97,14 +111,223 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
   // 共通エラー・成功メッセージ管理
   const [globalError, setGlobalError] = useState<string>('');
   const [globalSuccess, setGlobalSuccess] = useState<string>('');
-  const [globalLoading, setGlobalLoading] = useState<boolean>(false);
+  const [, _setGlobalLoading] = useState<boolean>(false);
+
+  // 専門家設定のstate
+  const [expertContact, setExpertContact] = useState({
+    expert_name: 'MoneyTicket専門アドバイザー',
+    phone_number: '0120-123-456',
+    email: 'advisor@moneyticket.co.jp',
+    business_hours: '平日 9:00-18:00',
+    description: 'MoneyTicketの認定ファイナンシャルプランナーが、お客様の資産運用に関するご相談を承ります。'
+  });
+  const [expertContactStatus, setExpertContactStatus] = useState<string>('');
+
+  // ファイナンシャルプランナー設定のstate
+  const [financialPlanners, setFinancialPlanners] = useState<FinancialPlanner[]>([]);
+  const [editingPlanner, setEditingPlanner] = useState<FinancialPlanner | null>(null);
+  const [showPlannerModal, setShowPlannerModal] = useState<boolean>(false);
+  const [plannerStatus, setPlannerStatus] = useState<string>('');
+
+  // Helper functions defined before use
+  const calculateDashboardStats = (sessions: UserSessionData[]) => {
+    const totalDiagnoses = sessions.length;
+    
+    // 過去7日間の診断数を計算
+    const sevenDaysAgo = Date.now() - (7 * 24 * 60 * 60 * 1000);
+    const diagnosesLast7Days = sessions.filter(session => 
+      new Date(session.timestamp).getTime() > sevenDaysAgo
+    ).length;
+    
+    setDashboardStats({
+      totalDiagnoses,
+      diagnosesLast7Days,
+      averageInvestmentAmount: 150, // Placeholder
+      mostCommonPurpose: 'retirement', // Placeholder
+      ageDistribution: {}
+    });
+  };
+
+  const loadHomepageContentFromSupabase = async (settingKey: string) => {
+    try {
+      const response = await fetch(`${supabaseConfig.url}/rest/v1/homepage_content_settings?setting_key.eq=${settingKey}`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${supabaseConfig.key}`,
+          'apikey': supabaseConfig.key,
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+
+      const data = await response.json();
+      return data.length > 0 ? data[0].setting_data : null;
+    } catch (error) {
+      secureLog(`ホームページコンテンツ(${settingKey})のSupabase読み込みエラー:`, error);
+      return null;
+    }
+  };
+
+  const loadExpertContactSettings = async () => {
+    try {
+      // まずローカルストレージからカスタム設定を確認
+      const localExpertContact = localStorage.getItem('customExpertContact');
+      if (localExpertContact) {
+        try {
+          const parsedLocal = JSON.parse(localExpertContact);
+          setExpertContact(parsedLocal);
+          secureLog('ローカルストレージから専門家連絡先を読み込み');
+          return;
+        } catch (parseError) {
+          secureLog('ローカルストレージの専門家連絡先解析エラー:', parseError);
+        }
+      }
+
+      // Supabaseから取得を試行
+      const response = await fetch(`${supabaseConfig.url}/rest/v1/expert_contact_settings?setting_key.eq=primary_financial_advisor&is_active.eq=true&select=*`, {
+        headers: {
+          'Authorization': `Bearer ${supabaseConfig.key}`,
+          'apikey': supabaseConfig.key,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        if (data && data.length > 0) {
+          const expertContactData = {
+            expert_name: data[0].expert_name,
+            phone_number: data[0].phone_number,
+            email: data[0].email || '',
+            business_hours: data[0].business_hours || '',
+            description: data[0].description || ''
+          };
+          setExpertContact(expertContactData);
+          // Supabaseデータをローカルストレージにもバックアップ
+          localStorage.setItem('customExpertContact', JSON.stringify(expertContactData));
+          secureLog('Supabaseから専門家連絡先を読み込み、ローカルにバックアップ');
+          return;
+        }
+      } else {
+        secureLog(`Supabase専門家連絡先取得エラー: ${response.status}`);
+      }
+      
+      // デフォルト値を使用
+      const defaultExpertContact = {
+        expert_name: 'MoneyTicket専門アドバイザー',
+        phone_number: '0120-123-456',
+        email: 'advisor@moneyticket.co.jp',
+        business_hours: '平日 9:00-18:00',
+        description: 'MoneyTicketの認定ファイナンシャルプランナーが、お客様の資産運用に関するご相談を承ります。'
+      };
+      setExpertContact(defaultExpertContact);
+      secureLog('デフォルト専門家連絡先を使用');
+    } catch (error) {
+      secureLog('専門家連絡先のSupabase読み込みエラー:', error);
+      
+      // エラー時でもローカルストレージを確認
+      try {
+        const fallbackExpertContact = localStorage.getItem('customExpertContact');
+        if (fallbackExpertContact) {
+          const parsedFallback = JSON.parse(fallbackExpertContact);
+          setExpertContact(parsedFallback);
+          secureLog('エラー時フォールバック: ローカルストレージから専門家連絡先を読み込み');
+          return;
+        }
+      } catch (fallbackError) {
+        secureLog('フォールバック専門家連絡先エラー:', fallbackError);
+      }
+
+      // 最終デフォルト値を使用
+      setExpertContact({
+        expert_name: 'MoneyTicket専門アドバイザー',
+        phone_number: '0120-123-456',
+        email: 'advisor@moneyticket.co.jp',
+        business_hours: '平日 9:00-18:00',
+        description: 'MoneyTicketの認定ファイナンシャルプランナーが、お客様の資産運用に関するご相談を承ります。'
+      });
+    }
+  };
+
+  const loadFinancialPlanners = async () => {
+    try {
+      if (supabaseConfig.url && supabaseConfig.key && !supabaseConfig.url.includes('your-project')) {
+        const response = await fetch(`${supabaseConfig.url}/rest/v1/financial_planners?order=display_order.asc`, {
+          headers: {
+            'Authorization': `Bearer ${supabaseConfig.key}`,
+            'apikey': supabaseConfig.key,
+            'Content-Type': 'application/json'
+          }
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          setFinancialPlanners(data);
+          secureLog('ファイナンシャルプランナーを読み込み:', data.length);
+        } else {
+          secureLog('ファイナンシャルプランナーの読み込みに失敗');
+          setFinancialPlanners([]);
+        }
+      } else {
+        setFinancialPlanners([]);
+      }
+    } catch (error) {
+      secureLog('ファイナンシャルプランナーの読み込みエラー:', error);
+      setFinancialPlanners([]);
+    }
+  };
+
+  const loadLegalLinksFromSupabase = async () => {
+    try {
+      const supabaseLegalLinks = await SupabaseAdminAPI.loadAdminSetting('legal_links');
+      if (supabaseLegalLinks) {
+        secureLog('Supabaseからリーガルリンクを読み込み');
+        setLegalLinks(supabaseLegalLinks);
+        // ローカルストレージにもバックアップ保存
+        localStorage.setItem('customLegalLinks', JSON.stringify(supabaseLegalLinks));
+      } else {
+        // ローカルストレージから読み込み
+        const storedLinks = localStorage.getItem('customLegalLinks');
+        if (storedLinks) {
+          setLegalLinks(JSON.parse(storedLinks));
+        } else {
+          // デフォルトのリーガルリンク
+          const defaultLinks: LegalLink[] = [
+            { id: 1, link_type: 'privacy_policy', title: 'プライバシーポリシー', url: '#privacy', is_active: true, created_at: '', updated_at: '' },
+            { id: 2, link_type: 'terms_of_service', title: '利用規約', url: '#terms', is_active: true, created_at: '', updated_at: '' },
+            { id: 3, link_type: 'specified_commercial_transactions', title: '特定商取引法', url: '#scta', is_active: true, created_at: '', updated_at: '' },
+            { id: 4, link_type: 'company_info', title: '会社概要', url: '#company', is_active: true, created_at: '', updated_at: '' }
+          ];
+          setLegalLinks(defaultLinks);
+        }
+      }
+    } catch (error) {
+      secureLog('リーガルリンクのSupabase読み込みエラー、ローカルストレージを使用:', error);
+      const storedLinks = localStorage.getItem('customLegalLinks');
+      if (storedLinks) {
+        setLegalLinks(JSON.parse(storedLinks));
+      } else {
+        // デフォルトのリーガルリンク
+        const defaultLinks: LegalLink[] = [
+          { id: 1, link_type: 'privacy_policy', title: 'プライバシーポリシー', url: '#privacy', is_active: true, created_at: '', updated_at: '' },
+          { id: 2, link_type: 'terms_of_service', title: '利用規約', url: '#terms', is_active: true, created_at: '', updated_at: '' },
+          { id: 3, link_type: 'specified_commercial_transactions', title: '特定商取引法', url: '#scta', is_active: true, created_at: '', updated_at: '' },
+          { id: 4, link_type: 'company_info', title: '会社概要', url: '#company', is_active: true, created_at: '', updated_at: '' }
+        ];
+        setLegalLinks(defaultLinks);
+      }
+    }
+  };
 
   // 共通エラー処理ヘルパー
-  const handleError = (error: any, userMessage: string, logContext?: string) => {
+  const handleError = (error: unknown, userMessage: string, logContext?: string) => {
     const errorMsg = error?.message || error?.toString() || 'Unknown error';
     secureLog(`${logContext || 'Error'}:`, errorMsg);
     setGlobalError(userMessage);
-    setGlobalLoading(false);
+    _setGlobalLoading(false);
     // 5秒後にエラーメッセージを自動で消す
     setTimeout(() => setGlobalError(''), 5000);
   };
@@ -143,25 +366,8 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
   const [twoFactorAuthMode, setTwoFactorAuthMode] = useState<'setup' | 'verify'>('setup');
   const [adminTotpSecret, setAdminTotpSecret] = useState<string>('');
 
-  // 専門家設定のstate
-  const [expertContact, setExpertContact] = useState({
-    expert_name: 'MoneyTicket専門アドバイザー',
-    phone_number: '0120-123-456',
-    email: 'advisor@moneyticket.co.jp',
-    business_hours: '平日 9:00-18:00',
-    description: 'MoneyTicketの認定ファイナンシャルプランナーが、お客様の資産運用に関するご相談を承ります。'
-  });
-  const [expertContactStatus, setExpertContactStatus] = useState<string>('');
-
-  // ファイナンシャルプランナー設定のstate
-  const [financialPlanners, setFinancialPlanners] = useState<any[]>([]);
-  const [editingPlanner, setEditingPlanner] = useState<any | null>(null);
-  const [showPlannerModal, setShowPlannerModal] = useState<boolean>(false);
-  const [plannerStatus, setPlannerStatus] = useState<string>('');
-
   // 承認システム用のstate
   const [currentAdminId, setCurrentAdminId] = useState<number>(1); // デフォルト値、実際はセッションから取得
-
 
   // セッション有効性チェック
   const checkSessionValidity = () => {
@@ -237,7 +443,7 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
             secureLog('認証済み診断セッションを取得:', verifiedSessions.length);
             
             // Supabaseの形式からUserSessionData形式に変換
-            const convertedSessions: UserSessionData[] = verifiedSessions.map((session: any) => ({
+            const convertedSessions: UserSessionData[] = verifiedSessions.map((session: { session_id?: string; id?: string; verification_timestamp?: string; created_at?: string; phone_number: string; diagnosis_answers?: Record<string, string>; sms_verified?: boolean }) => ({
               id: session.session_id || session.id,
               timestamp: session.verification_timestamp || session.created_at,
               phoneNumber: session.phone_number,
@@ -339,7 +545,7 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
           setAdminPhoneNumber('09012345678');
           setAdminBackupCode('MT-BACKUP-2024');
         }
-      } catch (error: any) {
+      } catch (error: unknown) {
         handleError(error, '管理者設定の読み込みに失敗しました。デフォルト値を使用します。', '管理者設定読み込み');
         
         // エラー時はデフォルト値を設定
@@ -588,24 +794,6 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
     loadAllSettings();
   }, []);
 
-  const calculateDashboardStats = (sessions: UserSessionData[]) => {
-    const totalDiagnoses = sessions.length;
-    
-    // 過去7日間の診断数を計算
-    const sevenDaysAgo = Date.now() - (7 * 24 * 60 * 60 * 1000);
-    const diagnosesLast7Days = sessions.filter(session => 
-      new Date(session.timestamp).getTime() > sevenDaysAgo
-    ).length;
-    
-    setDashboardStats({
-      totalDiagnoses,
-      diagnosesLast7Days,
-      averageInvestmentAmount: 150, // Placeholder
-      mostCommonPurpose: 'retirement', // Placeholder
-      ageDistribution: {}
-    });
-  };
-
   const getAnswerLabel = (questionId: keyof typeof diagnosisFormMapping, value: string): string => {
     const mapping = diagnosisFormMapping[questionId];
     if (mapping && typeof mapping === 'object' && value in mapping) {
@@ -766,7 +954,7 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
   };
 
   const handleDeleteTestimonial = (testimonialId: string) => {
-    if (true) { // 削除確認
+    if (confirm('この項目を削除してもよろしいですか？')) { // 削除確認
         setTestimonialsForEditing(testimonialsForEditing.filter(t => t.id !== testimonialId));
         setTestimonialStatus('お客様の声がリストから削除されました。「設定を保存」で確定してください。');
     }
@@ -938,70 +1126,6 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
   };
 
   // Legal Links Management Functions
-  const loadHomepageContentFromSupabase = async (settingKey: string) => {
-    try {
-      const response = await fetch(`${supabaseConfig.url}/rest/v1/homepage_content_settings?setting_key.eq=${settingKey}`, {
-        method: 'GET',
-        headers: {
-          'Authorization': `Bearer ${supabaseConfig.key}`,
-          'apikey': supabaseConfig.key,
-          'Content-Type': 'application/json',
-        },
-      });
-
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-      }
-
-      const data = await response.json();
-      return data.length > 0 ? data[0].setting_data : null;
-    } catch (error) {
-      secureLog(`ホームページコンテンツ(${settingKey})のSupabase読み込みエラー:`, error);
-      return null;
-    }
-  };
-
-  const loadLegalLinksFromSupabase = async () => {
-    try {
-      const supabaseLegalLinks = await SupabaseAdminAPI.loadAdminSetting('legal_links');
-      if (supabaseLegalLinks) {
-        secureLog('Supabaseからリーガルリンクを読み込み');
-        setLegalLinks(supabaseLegalLinks);
-        // ローカルストレージにもバックアップ保存
-        localStorage.setItem('customLegalLinks', JSON.stringify(supabaseLegalLinks));
-      } else {
-        // ローカルストレージから読み込み
-        const storedLinks = localStorage.getItem('customLegalLinks');
-        if (storedLinks) {
-          setLegalLinks(JSON.parse(storedLinks));
-        } else {
-          // デフォルトのリーガルリンク
-          const defaultLinks: LegalLink[] = [
-            { id: 1, link_type: 'privacy_policy', title: 'プライバシーポリシー', url: '#privacy', is_active: true, created_at: '', updated_at: '' },
-            { id: 2, link_type: 'terms_of_service', title: '利用規約', url: '#terms', is_active: true, created_at: '', updated_at: '' },
-            { id: 3, link_type: 'specified_commercial_transactions', title: '特定商取引法', url: '#scta', is_active: true, created_at: '', updated_at: '' },
-            { id: 4, link_type: 'company_info', title: '会社概要', url: '#company', is_active: true, created_at: '', updated_at: '' }
-          ];
-          setLegalLinks(defaultLinks);
-        }
-      }
-    } catch (error) {
-      secureLog('リーガルリンクのSupabase読み込みエラー、ローカルストレージを使用:', error);
-      const storedLinks = localStorage.getItem('customLegalLinks');
-      if (storedLinks) {
-        setLegalLinks(JSON.parse(storedLinks));
-      } else {
-        // デフォルトのリーガルリンク
-        const defaultLinks: LegalLink[] = [
-          { id: 1, link_type: 'privacy_policy', title: 'プライバシーポリシー', url: '#privacy', is_active: true, created_at: '', updated_at: '' },
-          { id: 2, link_type: 'terms_of_service', title: '利用規約', url: '#terms', is_active: true, created_at: '', updated_at: '' },
-          { id: 3, link_type: 'specified_commercial_transactions', title: '特定商取引法', url: '#scta', is_active: true, created_at: '', updated_at: '' },
-          { id: 4, link_type: 'company_info', title: '会社概要', url: '#company', is_active: true, created_at: '', updated_at: '' }
-        ];
-        setLegalLinks(defaultLinks);
-      }
-    }
-  };
 
   const handleEditLegalLink = (link: LegalLink) => {
     setEditingLegalLink({ ...link });
@@ -1059,87 +1183,6 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
 
   const handleCancelLegalLinkEdit = () => {
     setEditingLegalLink(null);
-  };
-
-  const loadExpertContactSettings = async () => {
-    try {
-      // まずローカルストレージからカスタム設定を確認
-      const localExpertContact = localStorage.getItem('customExpertContact');
-      if (localExpertContact) {
-        try {
-          const parsedLocal = JSON.parse(localExpertContact);
-          setExpertContact(parsedLocal);
-          secureLog('ローカルストレージから専門家連絡先を読み込み');
-          return;
-        } catch (parseError) {
-          secureLog('ローカルストレージの専門家連絡先解析エラー:', parseError);
-        }
-      }
-
-      // Supabaseから取得を試行
-      const response = await fetch(`${supabaseConfig.url}/rest/v1/expert_contact_settings?setting_key.eq=primary_financial_advisor&is_active.eq=true&select=*`, {
-        headers: {
-          'Authorization': `Bearer ${supabaseConfig.key}`,
-          'apikey': supabaseConfig.key,
-          'Content-Type': 'application/json'
-        }
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        if (data && data.length > 0) {
-          const expertContactData = {
-            expert_name: data[0].expert_name,
-            phone_number: data[0].phone_number,
-            email: data[0].email || '',
-            business_hours: data[0].business_hours || '',
-            description: data[0].description || ''
-          };
-          setExpertContact(expertContactData);
-          // Supabaseデータをローカルストレージにもバックアップ
-          localStorage.setItem('customExpertContact', JSON.stringify(expertContactData));
-          secureLog('Supabaseから専門家連絡先を読み込み、ローカルにバックアップ');
-          return;
-        }
-      } else {
-        secureLog(`Supabase専門家連絡先取得エラー: ${response.status}`);
-      }
-      
-      // デフォルト値を使用
-      const defaultExpertContact = {
-        expert_name: 'MoneyTicket専門アドバイザー',
-        phone_number: '0120-123-456',
-        email: 'advisor@moneyticket.co.jp',
-        business_hours: '平日 9:00-18:00',
-        description: 'MoneyTicketの認定ファイナンシャルプランナーが、お客様の資産運用に関するご相談を承ります。'
-      };
-      setExpertContact(defaultExpertContact);
-      secureLog('デフォルト専門家連絡先を使用');
-    } catch (error) {
-      secureLog('専門家連絡先のSupabase読み込みエラー:', error);
-      
-      // エラー時でもローカルストレージを確認
-      try {
-        const fallbackExpertContact = localStorage.getItem('customExpertContact');
-        if (fallbackExpertContact) {
-          const parsedFallback = JSON.parse(fallbackExpertContact);
-          setExpertContact(parsedFallback);
-          secureLog('エラー時フォールバック: ローカルストレージから専門家連絡先を読み込み');
-          return;
-        }
-      } catch (fallbackError) {
-        secureLog('フォールバック専門家連絡先エラー:', fallbackError);
-      }
-
-      // 最終デフォルト値を使用
-      setExpertContact({
-        expert_name: 'MoneyTicket専門アドバイザー',
-        phone_number: '0120-123-456',
-        email: 'advisor@moneyticket.co.jp',
-        business_hours: '平日 9:00-18:00',
-        description: 'MoneyTicketの認定ファイナンシャルプランナーが、お客様の資産運用に関するご相談を承ります。'
-      });
-    }
   };
 
   const handleExpertContactChange = (field: string, value: string) => {
@@ -1226,36 +1269,8 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
     }
   };
 
-  // ファイナンシャルプランナー管理関数
-  const loadFinancialPlanners = async () => {
-    try {
-      if (supabaseConfig.url && supabaseConfig.key && !supabaseConfig.url.includes('your-project')) {
-        const response = await fetch(`${supabaseConfig.url}/rest/v1/financial_planners?order=display_order.asc`, {
-          headers: {
-            'Authorization': `Bearer ${supabaseConfig.key}`,
-            'apikey': supabaseConfig.key,
-            'Content-Type': 'application/json'
-          }
-        });
 
-        if (response.ok) {
-          const data = await response.json();
-          setFinancialPlanners(data);
-          secureLog('ファイナンシャルプランナーを読み込み:', data.length);
-        } else {
-          secureLog('ファイナンシャルプランナーの読み込みに失敗');
-          setFinancialPlanners([]);
-        }
-      } else {
-        setFinancialPlanners([]);
-      }
-    } catch (error) {
-      secureLog('ファイナンシャルプランナーの読み込みエラー:', error);
-      setFinancialPlanners([]);
-    }
-  };
-
-  const handleOpenPlannerModal = (planner?: any) => {
+  const handleOpenPlannerModal = (planner?: FinancialPlanner) => {
     if (planner) {
       setEditingPlanner({ ...planner });
     } else {
@@ -1281,7 +1296,7 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
     setShowPlannerModal(false);
   };
 
-  const handlePlannerFormChange = (field: string, value: any) => {
+  const handlePlannerFormChange = (field: string, value: string | number | boolean | string[]) => {
     if (editingPlanner) {
       setEditingPlanner({ ...editingPlanner, [field]: value });
     }
@@ -1465,7 +1480,7 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
 
   // 通知テスト機能
   // Homepage Content Settings Handlers
-  const saveHomepageContentToSupabase = async (settingKey: string, settingData: any) => {
+  const saveHomepageContentToSupabase = async (settingKey: string, settingData: ReasonsToChooseData | FirstConsultationOffer | HeaderData | MainVisualData | FooterData) => {
     try {
       const response = await fetch(`${supabaseConfig.url}/rest/v1/homepage_content_settings`, {
         method: 'POST',
@@ -1493,7 +1508,7 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
     }
   };
 
-  const handleReasonsToChooseChange = (field: keyof ReasonsToChooseData, value: any) => {
+  const handleReasonsToChooseChange = (field: keyof ReasonsToChooseData, value: string | { iconClass: string; title: string; value: string; description: string; animationDelay: string }[]) => {
     setReasonsToChoose(prev => ({ ...prev, [field]: value }));
   };
 
@@ -1592,7 +1607,7 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
       const testMessage = 'MoneyTicket管理システムからのテスト通知です。';
       
       switch (channel) {
-        case 'email':
+        case 'email': {
           const emailConfig = config as EmailNotificationConfig;
           if (!emailConfig.recipientEmails) {
             setNotificationSettingsStatus('メールアドレスが設定されていません。');
@@ -1602,8 +1617,9 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
           secureLog(`Message: ${testMessage}`);
           setNotificationSettingsStatus('✅ メール通知テストを実行しました');
           break;
+        }
           
-        case 'slack':
+        case 'slack': {
           const slackConfig = config as SlackNotificationConfig;
           if (!slackConfig.webhookUrl) {
             setNotificationSettingsStatus('SlackのWebhook URLが設定されていません。');
@@ -1614,8 +1630,9 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
           secureLog(`Message: ${testMessage}`);
           setNotificationSettingsStatus('✅ Slack通知テストを実行しました');
           break;
+        }
           
-        case 'line':
+        case 'line': {
           const lineConfig = config as LineNotificationConfig;
           if (!lineConfig.accessToken) {
             setNotificationSettingsStatus('LINEのアクセストークンが設定されていません。');
@@ -1626,8 +1643,9 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
           secureLog(`Message: ${testMessage}`);
           setNotificationSettingsStatus('✅ LINE通知テストを実行しました');
           break;
+        }
           
-        case 'chatwork':
+        case 'chatwork': {
           const chatworkConfig = config as ChatWorkNotificationConfig;
           if (!chatworkConfig.apiToken || !chatworkConfig.roomId) {
             setNotificationSettingsStatus('ChatWorkのAPIトークンまたはルームIDが設定されていません。');
@@ -1638,6 +1656,7 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
           secureLog(`Message: ${testMessage}`);
           setNotificationSettingsStatus('✅ ChatWork通知テストを実行しました');
           break;
+        }
       }
       
       setTimeout(() => setNotificationSettingsStatus(''), 5000);

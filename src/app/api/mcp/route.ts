@@ -227,7 +227,7 @@ ${yearlyData.map(data =>
         
         // リスク許容度との適合性評価
         let riskAssessment = "";
-        let recommendations = [];
+        const recommendations = [];
         
         if (riskTolerance === 'conservative') {
           if (portfolioVolatility > 0.10) {
