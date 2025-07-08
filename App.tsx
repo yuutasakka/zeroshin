@@ -333,15 +333,30 @@ const App: React.FC = () => {
     // 診断フォームへのスムーズスクロール
     const diagnosisElement = document.querySelector('.home-right-col');
     if (diagnosisElement) {
-      // スクロール前に少し上にマージンを持たせる
-      const yOffset = -80; // ヘッダー分のオフセット
-      const elementPosition = diagnosisElement.getBoundingClientRect().top;
-      const offsetPosition = elementPosition + window.pageYOffset + yOffset;
+      // デバイス判定
+      const isMobile = window.innerWidth <= 900;
+      
+      if (isMobile) {
+        // スマホではヘッダー直下に表示
+        const yOffset = -100; // ヘッダー分のオフセット（スマホ用）
+        const elementPosition = diagnosisElement.getBoundingClientRect().top;
+        const offsetPosition = elementPosition + window.pageYOffset + yOffset;
 
-      window.scrollTo({
-        top: offsetPosition,
-        behavior: 'smooth'
-      });
+        window.scrollTo({
+          top: Math.max(0, offsetPosition), // 0未満にならないよう調整
+          behavior: 'smooth'
+        });
+      } else {
+        // デスクトップでは通常のスクロール
+        const yOffset = -80; // ヘッダー分のオフセット
+        const elementPosition = diagnosisElement.getBoundingClientRect().top;
+        const offsetPosition = elementPosition + window.pageYOffset + yOffset;
+
+        window.scrollTo({
+          top: offsetPosition,
+          behavior: 'smooth'
+        });
+      }
       
       // フォームにフォーカスを当てるアニメーション効果
       setTimeout(() => {
@@ -356,7 +371,7 @@ const App: React.FC = () => {
         setTimeout(() => {
           diagnosisElement.classList.remove('diagnosis-focus-animation');
         }, 1500);
-      }, 800); // スクロール完了を待つ
+      }, isMobile ? 600 : 800); // スマホでは少し早めにアニメーション開始
     }
   };
 
@@ -501,50 +516,16 @@ const App: React.FC = () => {
       return (
         <div style={{ minHeight: '100vh', background: '#eaf6fb', padding: 0, margin: 0, width: '100vw', boxSizing: 'border-box', overflowX: 'hidden' }}>
           <Header />
-          <div
-            className="home-flex-container"
-            style={{
-              display: 'flex',
-              flexDirection: 'row',
-              justifyContent: 'center',
-              alignItems: 'flex-start',
-              gap: 32,
-              padding: '40px 0',
-              flexWrap: 'wrap',
-              width: '100%',
-              maxWidth: '1200px',
-              margin: '0 auto',
-            }}
-          >
+          <div className="home-flex-container">
             {/* 左側: イラストや説明 */}
-            <div
-              className="home-left-col"
-              style={{
-                flex: 1,
-                maxWidth: 480,
-                minWidth: 280,
-                width: '100%',
-                marginBottom: 32,
-                boxSizing: 'border-box',
-              }}
-            >
+            <div className="home-left-col">
               <MoneyTicketHero onStartDiagnosis={handleStartDiagnosis} />
               <ReliabilitySection />
               <SecurityTrustSection />
               <CallToActionSection />
             </div>
             {/* 右側: 質問フォーム */}
-            <div
-              className="home-right-col"
-              style={{
-                flex: 1,
-                minWidth: 280,
-                maxWidth: 480,
-                width: '100%',
-                marginBottom: 32,
-                boxSizing: 'border-box',
-              }}
-            >
+            <div className="home-right-col">
               <DiagnosisFlow
                 onComplete={(answers) => {
                   setDiagnosisAnswers(answers);
@@ -582,8 +563,30 @@ const App: React.FC = () => {
               }
             }
             
-            /* ホバー効果強化 */
+            /* デスクトップレイアウト */
+            .home-flex-container {
+              display: flex;
+              flex-direction: row;
+              align-items: flex-start;
+              justify-content: center;
+              gap: 32px;
+              max-width: 1200px;
+              margin: 0 auto;
+              padding: 40px 20px;
+            }
+            
+            .home-left-col {
+              flex: 1;
+              max-width: 480px;
+              min-width: 280px;
+              order: 1; /* 左側：説明 */
+            }
+            
             .home-right-col {
+              flex: 1;
+              max-width: 480px;
+              min-width: 280px;
+              order: 2; /* 右側：診断フォーム */
               transition: all 0.3s ease;
             }
             
@@ -606,6 +609,16 @@ const App: React.FC = () => {
                 margin-bottom: 16px !important;
                 padding-left: 0 !important;
                 padding-right: 0 !important;
+              }
+              /* スマホでは診断フォームを上に表示 */
+              .home-right-col {
+                order: 1 !important; /* フォームを上に */
+                margin-bottom: 32px !important;
+                max-width: 100vw !important;
+              }
+              .home-left-col {
+                order: 2 !important; /* 説明を下に */
+                max-width: 100vw !important;
               }
             }
             @media (max-width: 600px) {
