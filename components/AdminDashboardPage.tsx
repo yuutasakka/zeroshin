@@ -93,6 +93,33 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
 
   // Admin Settings State
   const [adminPhoneNumber, setAdminPhoneNumber] = useState<string>('');
+
+  // 共通エラー・成功メッセージ管理
+  const [globalError, setGlobalError] = useState<string>('');
+  const [globalSuccess, setGlobalSuccess] = useState<string>('');
+  const [globalLoading, setGlobalLoading] = useState<boolean>(false);
+
+  // 共通エラー処理ヘルパー
+  const handleError = (error: any, userMessage: string, logContext?: string) => {
+    const errorMsg = error?.message || error?.toString() || 'Unknown error';
+    secureLog(`${logContext || 'Error'}:`, errorMsg);
+    setGlobalError(userMessage);
+    setGlobalLoading(false);
+    // 5秒後にエラーメッセージを自動で消す
+    setTimeout(() => setGlobalError(''), 5000);
+  };
+
+  const showSuccess = (message: string) => {
+    setGlobalSuccess(message);
+    setGlobalError('');
+    // 3秒後に成功メッセージを自動で消す
+    setTimeout(() => setGlobalSuccess(''), 3000);
+  };
+
+  const clearMessages = () => {
+    setGlobalError('');
+    setGlobalSuccess('');
+  };
   const [adminBackupCode, setAdminBackupCode] = useState<string>('');
   const [adminSettingsStatus, setAdminSettingsStatus] = useState<string>('');
 
@@ -248,7 +275,7 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
 
         secureLog('総ユーザーセッション数:', allSessions.length);
       } catch (error) {
-        secureLog('ユーザーセッションの読み込みエラー:', error);
+        handleError(error, 'ユーザーデータの読み込みに失敗しました。ローカルデータを使用します。', 'ユーザーセッション読み込み');
         
         // エラー時はローカルストレージのみ使用
         try {
@@ -257,9 +284,13 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
             const storedSessions: UserSessionData[] = JSON.parse(storedSessionsString);
             setUserSessions(storedSessions);
             calculateDashboardStats(storedSessions);
+            showSuccess('ローカルデータから正常に読み込みました');
+          } else {
+            setUserSessions([]);
+            setGlobalError('表示するユーザーデータがありません');
           }
         } catch (fallbackError) {
-          secureLog('フォールバック読み込みもエラー:', fallbackError);
+          handleError(fallbackError, 'データの読み込みに完全に失敗しました。ページを再読み込みしてください。', 'フォールバック読み込み');
           setUserSessions([]);
         }
       }
@@ -309,7 +340,7 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
           setAdminBackupCode('MT-BACKUP-2024');
         }
       } catch (error: any) {
-        secureLog('管理者設定の読み込みエラー:', error);
+        handleError(error, '管理者設定の読み込みに失敗しました。デフォルト値を使用します。', '管理者設定読み込み');
         
         // エラー時はデフォルト値を設定
         setAdminPhoneNumber('設定なし');
@@ -351,14 +382,15 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
           }
         }
       } catch (error) {
-        secureLog('商品設定のSupabase読み込みエラー、ローカルストレージを使用:', error);
+        handleError(error, '商品設定の読み込みに失敗しました。ローカルデータを使用します。', '商品設定Supabase読み込み');
         const customProductsString = localStorage.getItem('customFinancialProducts');
         if (customProductsString) {
           try {
             const customProducts = JSON.parse(customProductsString);
             setProductsForEditing(customProducts);
+            showSuccess('商品設定をローカルデータから読み込みました');
           } catch (e) {
-            secureLog("Error parsing custom financial products from localStorage:", e);
+            handleError(e, '商品設定データが破損しています。デフォルト設定を使用します。', 'ローカル商品設定解析');
             setProductsForEditing(JSON.parse(JSON.stringify(defaultFinancialProducts))); // Deep copy
           }
         } else {
@@ -599,7 +631,7 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
       getAnswerLabel('timing', session.diagnosisAnswers.timing),
     ]);
 
-    let csvContent = "data:text/csv;charset=utf-8," + headers.join(",") + "\n"
+    const csvContent = "data:text/csv;charset=utf-8," + headers.join(",") + "\n"
                      + rows.map(e => e.join(",")).join("\n");
     
     const encodedUri = encodeURI(csvContent);
@@ -1791,6 +1823,40 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
           )}
         </div>
       </header>
+
+      {/* グローバルメッセージ表示 */}
+      {(globalError || globalSuccess) && (
+        <div className="container mx-auto px-6 py-2">
+          {globalError && (
+            <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4 flex items-center justify-between">
+              <div className="flex items-center">
+                <i className="fas fa-exclamation-triangle mr-2"></i>
+                <span>{globalError}</span>
+              </div>
+              <button 
+                onClick={clearMessages}
+                className="text-red-700 hover:text-red-900"
+              >
+                <i className="fas fa-times"></i>
+              </button>
+            </div>
+          )}
+          {globalSuccess && (
+            <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-4 flex items-center justify-between">
+              <div className="flex items-center">
+                <i className="fas fa-check-circle mr-2"></i>
+                <span>{globalSuccess}</span>
+              </div>
+              <button 
+                onClick={clearMessages}
+                className="text-green-700 hover:text-green-900"
+              >
+                <i className="fas fa-times"></i>
+              </button>
+            </div>
+          )}
+        </div>
+      )}
 
       <main className="flex-grow container mx-auto px-6 py-8">
         {/* Navigation between admin sections */}
