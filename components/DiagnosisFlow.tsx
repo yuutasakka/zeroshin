@@ -89,16 +89,19 @@ interface DiagnosisFlowProps {
 }
 
 const CARD_STYLE: React.CSSProperties = {
-  maxWidth: 400,
-  margin: '40px auto',
-  padding: '32px 24px',
-  borderRadius: 24,
-  boxShadow: '0 8px 32px rgba(0,0,0,0.12)',
-  background: 'linear-gradient(135deg, #fff 60%, #ffe0e9 100%)',
+  maxWidth: 420,
+  margin: '20px auto',
+  padding: '28px 24px',
+  borderRadius: 16,
+  boxShadow: '0 4px 20px rgba(59, 130, 246, 0.1)',
+  background: 'rgba(255, 255, 255, 0.95)',
+  backdropFilter: 'blur(10px)',
+  border: '1px solid rgba(59, 130, 246, 0.15)',
   display: 'flex',
   flexDirection: 'column',
   alignItems: 'center',
   minHeight: 340,
+  transition: 'all 0.3s ease',
 };
 const PROGRESS_STYLE: React.CSSProperties = {
   width: '100%',
@@ -121,23 +124,26 @@ const CHOICES_STYLE: React.CSSProperties = {
   marginBottom: 32,
 };
 const CHOICE_BTN: React.CSSProperties = {
-  fontSize: 18,
-  padding: '18px 0',
-  borderRadius: 16,
-  border: 'none',
-  background: 'linear-gradient(90deg, #fcb69f 0%, #ffdde1 100%)',
-  color: '#333',
+  fontSize: 16,
+  padding: '16px 20px',
+  borderRadius: 12,
+  border: '1px solid rgba(59, 130, 246, 0.2)',
+  background: 'rgba(255, 255, 255, 0.8)',
+  color: '#374151',
   fontWeight: 500,
-  boxShadow: '0 2px 8px rgba(0,0,0,0.06)',
+  boxShadow: '0 2px 8px rgba(59, 130, 246, 0.05)',
   cursor: 'pointer',
-  transition: 'all 0.2s',
+  transition: 'all 0.3s ease',
+  backdropFilter: 'blur(5px)',
 };
 const CHOICE_BTN_SELECTED: React.CSSProperties = {
   ...CHOICE_BTN,
-  background: 'linear-gradient(90deg, #a1c4fd 0%, #c2e9fb 100%)',
-  color: '#222',
-  fontWeight: 700,
-  boxShadow: '0 4px 16px rgba(33,150,243,0.10)',
+  background: 'rgba(59, 130, 246, 0.1)',
+  border: '2px solid #3b82f6',
+  color: '#1e40af',
+  fontWeight: 600,
+  boxShadow: '0 4px 16px rgba(59, 130, 246, 0.15)',
+  transform: 'scale(1.02)',
 };
 const ACTIONS_STYLE: React.CSSProperties = {
   width: '100%',
@@ -148,20 +154,23 @@ const ACTIONS_STYLE: React.CSSProperties = {
 const ACTION_BTN: React.CSSProperties = {
   flex: 1,
   fontSize: 16,
-  padding: '14px 0',
+  padding: '14px 20px',
   borderRadius: 12,
-  border: 'none',
-  background: 'linear-gradient(90deg, #fcb69f 0%, #ffdde1 100%)',
-  color: '#333',
+  border: '1px solid rgba(107, 114, 128, 0.3)',
+  background: 'rgba(255, 255, 255, 0.8)',
+  color: '#374151',
   fontWeight: 600,
   cursor: 'pointer',
   marginTop: 8,
-  transition: 'all 0.2s',
+  transition: 'all 0.3s ease',
+  backdropFilter: 'blur(5px)',
 };
 const NEXT_BTN: React.CSSProperties = {
   ...ACTION_BTN,
-  background: 'linear-gradient(90deg, #a1c4fd 0%, #c2e9fb 100%)',
-  color: '#222',
+  background: 'linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)',
+  color: '#ffffff',
+  border: 'none',
+  boxShadow: '0 4px 12px rgba(59, 130, 246, 0.3)',
 };
 
 const DiagnosisFlow: React.FC<DiagnosisFlowProps> = ({ onComplete, onCancel }) => {
