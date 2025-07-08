@@ -82,24 +82,11 @@ const PhoneVerificationPage: React.FC<PhoneVerificationPageProps> = ({
           setLoading(true);
           
           if (!isProduction) {
-            console.log('開発環境: SMS認証をスキップしています');
-            // 開発環境では直接セッション作成
-            try {
-              const sessionId = await diagnosisManager.createDiagnosisSession(
-                normalizedPhone, 
-                userSession.diagnosisAnswers
-              );
-
-              if (!sessionId) {
-                throw new Error('診断セッションの作成に失敗しました');
-              }
-              
-              // 開発環境では直接認証完了
-              setStep('otp-verification');
-              setCountdown(60);
-            } catch (error: any) {
-              setError(error.message || '診断セッションの作成に失敗しました');
-            }
+            console.log('開発環境: SMS認証シミュレーション開始');
+            // 開発環境では固定コード "123456" を使用
+            setStep('otp-verification');
+            setCountdown(60);
+            console.log('🔐 開発環境用認証コード: 123456');
           } else {
             // 本番環境では実際のSMS認証を実行
             console.log('本番環境: 実際のSMS認証を実行中...');
@@ -250,18 +237,40 @@ const PhoneVerificationPage: React.FC<PhoneVerificationPageProps> = ({
         throw new Error('この電話番号は既に診断を完了しています。お一人様一回限りとなっております。');
       }
       
-      const { data, error } = await supabase.auth.verifyOtp({
-        phone: normalizedPhone,
-        token: otpCode,
-        type: 'sms'
-      });
+      // 環境判定
+      const isProduction = process.env.NODE_ENV === 'production' || 
+                           (typeof window !== 'undefined' && 
+                            !window.location.hostname.includes('localhost') && 
+                            !window.location.hostname.includes('127.0.0.1'));
+      
+      let authSuccess = false;
+      
+      if (!isProduction) {
+        // 開発環境: 固定コード "123456" で認証
+        if (otpCode === '123456') {
+          authSuccess = true;
+          console.log('🎉 開発環境: 認証成功 (固定コード使用)');
+        } else {
+          handleFailedAttempt();
+          throw new Error('開発環境では認証コード "123456" を入力してください');
+        }
+      } else {
+        // 本番環境: Supabase SMS認証
+        const { data, error } = await supabase.auth.verifyOtp({
+          phone: normalizedPhone,
+          token: otpCode,
+          type: 'sms'
+        });
 
-      if (error) {
-        handleFailedAttempt();
-        throw error;
+        if (error) {
+          handleFailedAttempt();
+          throw error;
+        }
+        
+        authSuccess = !!data.user;
       }
 
-      if (data.user) {
+      if (authSuccess) {
         try {
           // 認証成功時は失敗回数をリセット
           setFailedAttempts(0);
@@ -521,6 +530,20 @@ const PhoneVerificationPage: React.FC<PhoneVerificationPageProps> = ({
                 <p className="text-blue-600 text-xs">
                   ※ 診断フォームで入力された電話番号に自動送信しました
                 </p>
+              )}
+              {/* 開発環境での認証コード表示 */}
+              {(process.env.NODE_ENV !== 'production' && 
+                (typeof window === 'undefined' || 
+                 window.location.hostname.includes('localhost') || 
+                 window.location.hostname.includes('127.0.0.1'))) && (
+                <div className="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+                  <p className="text-yellow-800 text-sm font-medium">
+                    🔧 開発環境用認証コード: <strong>123456</strong>
+                  </p>
+                  <p className="text-yellow-700 text-xs mt-1">
+                    本番環境では実際のSMSが送信されます
+                  </p>
+                </div>
               )}
             </div>
 
