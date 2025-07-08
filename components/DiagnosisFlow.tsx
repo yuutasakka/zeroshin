@@ -262,7 +262,7 @@ const DiagnosisFlow: React.FC<DiagnosisFlowProps> = ({ onComplete, onCancel }) =
             />
             {phoneError && <div style={{ color: 'red', fontSize: 14 }}>{phoneError}</div>}
             <div style={{ color: '#666', fontSize: 13, marginTop: 8 }}>
-              ※ご登録頂いた携帯番号宛に認証コードを送信します。
+              ※診断結果を送信する電話番号を認証するためのコードを送信します。
             </div>
           </>
         ) : (
