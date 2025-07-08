@@ -261,8 +261,17 @@ const DiagnosisFlow: React.FC<DiagnosisFlowProps> = ({ onComplete, onCancel }) =
               maxLength={11}
             />
             {phoneError && <div style={{ color: 'red', fontSize: 14 }}>{phoneError}</div>}
-            <div style={{ color: '#666', fontSize: 13, marginTop: 8 }}>
-              ※診断結果を送信する電話番号を認証するためのコードを送信します。
+            <div style={{ 
+              color: '#2563eb', 
+              fontSize: 14, 
+              marginTop: 10,
+              fontWeight: 500,
+              backgroundColor: '#eff6ff',
+              padding: '8px 12px',
+              borderRadius: '6px',
+              border: '1px solid #bfdbfe'
+            }}>
+              💬 診断結果を送信する電話番号を認証するためのコードを送信します
             </div>
           </>
         ) : (
