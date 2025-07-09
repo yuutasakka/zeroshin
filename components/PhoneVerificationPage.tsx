@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { supabase, diagnosisManager } from './supabaseClient';
 import { UserSessionData } from '../types';
+import { OneTimeUsageNotice } from './OneTimeUsageNotice';
 
 interface PhoneVerificationPageProps {
   userSession: UserSessionData;
@@ -23,6 +24,7 @@ const PhoneVerificationPage: React.FC<PhoneVerificationPageProps> = ({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [countdown, setCountdown] = useState(0);
+  const [showUsageNotice, setShowUsageNotice] = useState(false);
   
   // 試行回数制限の状態
   const [failedAttempts, setFailedAttempts] = useState(0);
@@ -69,7 +71,7 @@ const PhoneVerificationPage: React.FC<PhoneVerificationPageProps> = ({
           // 電話番号の重複チェック
           const isUsed = await checkPhoneNumberUsage(normalizedPhone);
           if (isUsed) {
-            setError('この電話番号は既に診断を完了しています。お一人様一回限りとなっております。');
+            setShowUsageNotice(true);
             return;
           }
 
@@ -157,7 +159,8 @@ const PhoneVerificationPage: React.FC<PhoneVerificationPageProps> = ({
       // 電話番号の重複チェック
       const isUsed = await checkPhoneNumberUsage(normalizedPhone);
       if (isUsed) {
-        throw new Error('この電話番号は既に診断を完了しています。お一人様一回限りとなっております。');
+        setShowUsageNotice(true);
+        return;
       }
       
       const { error } = await supabase.auth.signInWithOtp({
@@ -234,7 +237,8 @@ const PhoneVerificationPage: React.FC<PhoneVerificationPageProps> = ({
       // 認証前に再度重複チェック
       const isUsed = await checkPhoneNumberUsage(normalizedPhone);
       if (isUsed) {
-        throw new Error('この電話番号は既に診断を完了しています。お一人様一回限りとなっております。');
+        setShowUsageNotice(true);
+        return;
       }
       
       // 環境判定
@@ -363,6 +367,14 @@ const PhoneVerificationPage: React.FC<PhoneVerificationPageProps> = ({
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-blue-50 to-indigo-50 flex items-center justify-center p-4">
+      {showUsageNotice && (
+        <OneTimeUsageNotice 
+          onDismiss={() => {
+            setShowUsageNotice(false);
+            onBack();
+          }} 
+        />
+      )}
       <div className="max-w-lg w-full">
         
         {/* プログレス表示 */}
