@@ -283,18 +283,18 @@ const App: React.FC = () => {
         // サンプルデータの初期化
         initializeSampleData();
 
-        // 診断完了履歴チェック（Supabaseベース）
-        diagnosisManager.getVerifiedSessions().then(verifiedSessions => {
-          // 現在のページ状態をその場で確認
-          const currentUrl = window.location.href;
-          const isOnDiagnosisPage = !currentUrl.includes('/admin') && !currentUrl.includes('/login');
-          
-          if (verifiedSessions.length > 0 && isOnDiagnosisPage) {
-            setTimeout(() => setShowUsageNotice(true), 1000); // 1秒後に表示
-          }
-        }).catch(() => {
-          // Supabase接続エラーは無視（ローカルストレージフォールバックが動作）
-        });
+        // 診断完了履歴チェック機能を無効化
+        // 電話番号認証時のみポップアップを表示するように変更済み
+        // diagnosisManager.getVerifiedSessions().then(verifiedSessions => {
+        //   const currentUrl = window.location.href;
+        //   const isOnDiagnosisPage = !currentUrl.includes('/admin') && !currentUrl.includes('/login');
+        //   
+        //   if (verifiedSessions.length > 0 && isOnDiagnosisPage) {
+        //     setTimeout(() => setShowUsageNotice(true), 1000);
+        //   }
+        // }).catch(() => {
+        //   // Supabase接続エラーは無視
+        // });
 
         // トラッキングスクリプトの読み込み
         const scriptsString = localStorage.getItem('customTrackingScripts');
