@@ -76,6 +76,7 @@ const DiagnosisResultsPage: React.FC<DiagnosisResultsPageProps> = ({ diagnosisDa
   const [financialPlanners, setFinancialPlanners] = useState<FinancialPlanner[]>([]);
   const [isAuthorized, setIsAuthorized] = useState<boolean>(false);
   const [authError, setAuthError] = useState<string | null>(null);
+  const [debugInfo, setDebugInfo] = useState<string>('');
 
   // SMS認証チェック（Supabaseベース）
   useEffect(() => {
@@ -88,7 +89,14 @@ const DiagnosisResultsPage: React.FC<DiagnosisResultsPageProps> = ({ diagnosisDa
           return;
         }
 
-        const sessionData = JSON.parse(currentSession);
+        let sessionData;
+        try {
+          sessionData = JSON.parse(currentSession);
+        } catch (parseError) {
+          console.error('セッションデータの解析エラー:', parseError);
+          setAuthError('認証情報が破損しています。診断を最初からやり直してください。');
+          return;
+        }
         
         // SMS認証済みかチェック
         if (!sessionData.smsVerified || !sessionData.sessionId) {
@@ -122,7 +130,9 @@ const DiagnosisResultsPage: React.FC<DiagnosisResultsPageProps> = ({ diagnosisDa
           setAuthError('認証情報の確認中にエラーが発生しました。');
         }
       } catch (error) {
+        console.error('認証エラー:', error);
         setAuthError('認証情報の確認中にエラーが発生しました。');
+        setDebugInfo(`認証エラー: ${error instanceof Error ? error.message : String(error)}`);
       }
     };
 
@@ -141,6 +151,11 @@ const DiagnosisResultsPage: React.FC<DiagnosisResultsPageProps> = ({ diagnosisDa
           <p className="text-gray-600 mb-6">
             {authError || '診断結果を表示するにはSMS認証が必要です。'}
           </p>
+          {debugInfo && (
+            <div className="bg-gray-100 p-3 rounded text-xs text-gray-700 mb-4">
+              <strong>デバッグ情報:</strong> {debugInfo}
+            </div>
+          )}
           <button
             onClick={onReturnToStart}
             className="bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white font-semibold py-3 px-6 rounded-lg transition-all duration-200 transform hover:scale-105"
