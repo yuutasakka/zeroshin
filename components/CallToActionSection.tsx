@@ -70,22 +70,27 @@ const CallToActionSection: React.FC = () => {
 
         const supabase = createSupabaseHelper();
         
-        // Supabaseから取得を試行
-        const { data: offerResponse, error: offerError } = await supabase
-          .from('homepage_content_settings')
-          .select('setting_data')
-          .eq('setting_key', 'first_consultation_offer')
-          .single();
+        // Supabaseから取得を試行（エラーハンドリング強化）
+        try {
+          const { data: offerResponse, error: offerError } = await supabase
+            .from('homepage_content_settings')
+            .select('setting_data')
+            .eq('setting_key', 'first_consultation_offer')
+            .single();
 
-        if (!offerError && offerResponse?.setting_data) {
-          const consultationOfferFromSupabase = offerResponse.setting_data;
-          setConsultationOffer(consultationOfferFromSupabase);
-          // Supabaseデータをローカルストレージにバックアップ
-          localStorage.setItem('customFirstConsultationOffer', JSON.stringify(consultationOfferFromSupabase));
-          secureLog('Supabaseから初回相談限定特典データを読み込み、ローカルにバックアップ');
-          return;
-        } else {
-          secureLog('初回相談限定特典のデータが見つからないため、サンプルデータを確認中');
+          if (!offerError && offerResponse?.setting_data) {
+            const consultationOfferFromSupabase = offerResponse.setting_data;
+            setConsultationOffer(consultationOfferFromSupabase);
+            // Supabaseデータをローカルストレージにバックアップ
+            localStorage.setItem('customFirstConsultationOffer', JSON.stringify(consultationOfferFromSupabase));
+            secureLog('Supabaseから初回相談限定特典データを読み込み、ローカルにバックアップ');
+            return;
+          } else {
+            secureLog('初回相談限定特典のデータが見つからないため、デフォルトデータを使用:', offerError);
+          }
+        } catch (supabaseError) {
+          secureLog('Supabase接続エラー（homepage_content_settings）:', supabaseError);
+          // エラー時はデフォルトデータを使用
         }
 
         // サンプルデータフォールバック
