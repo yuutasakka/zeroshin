@@ -1,4 +1,5 @@
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
+import CryptoJS from 'crypto-js';
 
 // Supabase設定 - import.meta.envを使用
 const getEnvVar = (viteVar: string, fallback: string) => {
@@ -741,6 +742,7 @@ export class DiagnosisSessionManager {
     }
   }
 }
+
 
 // 新規登録申請の型定義
 export interface RegistrationRequest {

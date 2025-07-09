@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { SupabaseAdminAuth, AdminCredentials } from './supabaseClient';
+import { SupabaseAdminAuth } from './supabaseClient';
 import { secureLog, SecureStorage } from '../security.config';
 
 // セキュリティ強化のための入力サニタイゼーション
 const sanitizeInput = (input: string): string => {
   if (!input) return '';
   return input
-    .replace(/[<>\"'&]/g, '') // 危険な文字を除去
+    .replace(/[<>"'&]/g, '') // 危険な文字を除去
     .trim()
     .substring(0, 100); // 長さ制限
 };
@@ -22,7 +22,6 @@ const AdminLoginPage: React.FC<AdminLoginPageProps> = ({ onLogin, onNavigateHome
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  const [newPassword, setNewPassword] = useState('');
   const [confirmNewPassword, setConfirmNewPassword] = useState('');
   const [phoneNumber, setPhoneNumber] = useState('');
   const [email, setEmail] = useState('');

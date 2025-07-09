@@ -22,12 +22,11 @@ import { supabase, diagnosisManager } from './components/supabaseClient';
 import type { User } from '@supabase/supabase-js';
 
 import { ColorThemeProvider } from './components/ColorThemeContext';
-import { DiagnosisFormState, PageView, UserSessionData } from './types';
+import { DiagnosisFormState, PageView } from './types';
 import { initializeSampleData } from './data/sampleData';
 import RegistrationRequestPage from './components/RegistrationRequestPage';
 import AdminPasswordResetPage from './components/AdminPasswordResetPage';
 import ProductionSecurityValidator from './components/ProductionSecurityValidator';
-import DebugSupabaseConnection from './components/DebugSupabaseConnection';
 import { measurePageLoad } from './components/PerformanceMonitor';
 
 // AI Client Initialization (GoogleGenAI) has been removed from the frontend.
@@ -93,7 +92,6 @@ const App: React.FC = () => {
   const [diagnosisAnswers, setDiagnosisAnswers] = useState<DiagnosisAnswers | null>(null);
   const [isAdminLoggedIn, setIsAdminLoggedIn] = useState<boolean>(false);
   const [showUsageNotice, setShowUsageNotice] = useState<boolean>(false);
-  const [showDebugPanel, setShowDebugPanel] = useState<boolean>(false);
   
   // 新しいSupabase Auth関連の状態
   const [_supabaseUser, setSupabaseUser] = useState<User | null>(null);
@@ -150,7 +148,7 @@ const App: React.FC = () => {
               setIsAdminLoggedIn(true);
               
               // パスワード変更要求をチェック
-              const { data: _profile, error: _profileError } = await supabase
+              const { data: _profile2, error: _profileError2 } = await supabase
                 .from('profiles')
                 .select('requires_password_change')
                 .eq('id', session.user.id)
@@ -177,7 +175,7 @@ const App: React.FC = () => {
     };
 
     initSupabaseAuth();
-  }, []);
+  }, [isSupabaseAuth]);
 
 
 
@@ -227,7 +225,7 @@ const App: React.FC = () => {
     };
 
     // ページを閉じる時の処理
-    const handleBeforeUnload = (event: BeforeUnloadEvent) => {
+    const handleBeforeUnload = () => {
       // セッションストレージの一時情報をクリア（ローカルストレージの認証情報は保持）
       sessionStorage.removeItem('admin_authenticated');
     };
@@ -276,7 +274,7 @@ const App: React.FC = () => {
       window.removeEventListener('beforeunload', handleBeforeUnload);
       document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
-  }, []); // isAdminLoggedInやcurrentPageに依存するとuseEffectが頻繁に再実行される
+  }, [currentPage]); // currentPageに依存して実行
 
   useEffect(() => {
     // アプリケーション初期化：サンプルデータとスクリプト読み込み
@@ -480,21 +478,9 @@ const App: React.FC = () => {
     window.scrollTo(0,0);
   };
 
-  // 新規登録申請ページへのナビゲーション
-  const navigateToRegistrationRequest = () => {
-    setCurrentPage('registrationRequest');
-    window.scrollTo(0, 0);
-  };
-
   // パスワードリセットページへのナビゲーション
   const navigateToPasswordReset = () => {
     setCurrentPage('passwordReset');
-    window.scrollTo(0, 0);
-  };
-
-  // パスワード変更完了時の処理
-  const _handlePasswordChanged = () => {
-    setCurrentPage('adminDashboard');
     window.scrollTo(0, 0);
   };
 

@@ -15,7 +15,7 @@ export const verifyCode = (inputCode: string, expectedCode: string): boolean => 
 
 // 電話番号の正規化（ハイフンを除去）
 export const normalizePhoneNumber = (phoneNumber: string): string => {
-  return phoneNumber.replace(/[-\s\(\)]/g, '')
+  return phoneNumber.replace(/[-\s()]/g, '')
 }
 
 // 電話番号の検証
@@ -34,7 +34,7 @@ interface OTPAttempt {
   isBlocked: boolean
 }
 
-let otpAttempts: Map<string, OTPAttempt> = new Map()
+const otpAttempts: Map<string, OTPAttempt> = new Map()
 
 // OTP送信試行
 export const attemptOTPSend = (phoneNumber: string): { success: boolean; message: string } => {
@@ -109,7 +109,7 @@ interface IPAttempt {
   isBlocked: boolean
 }
 
-let ipAttempts: Map<string, IPAttempt> = new Map()
+const ipAttempts: Map<string, IPAttempt> = new Map()
 
 // IP制限チェック
 export const checkIPRestriction = (ip: string, isSuccess: boolean): { allowed: boolean; message: string } => {
