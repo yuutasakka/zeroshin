@@ -526,7 +526,7 @@ const AdminLoginPage: React.FC<AdminLoginPageProps> = ({ onLogin, onNavigateHome
             </h1>
             {mode === 'login' && (
               <p className="text-gray-600 text-sm">
-                MoneyTicket管理画面にアクセスするため、認証情報を入力してください。
+                AI ConectX管理画面にアクセスするため、認証情報を入力してください。
               </p>
             )}
             {mode === 'register' && (

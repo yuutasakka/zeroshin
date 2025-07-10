@@ -113,11 +113,11 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
 
   // 専門家設定のstate
   const [expertContact, setExpertContact] = useState({
-    expert_name: 'MoneyTicket専門アドバイザー',
+    expert_name: 'AI ConectX専門アドバイザー',
     phone_number: '0120-123-456',
-    email: 'advisor@moneyticket.co.jp',
+    email: 'advisor@aiconectx.co.jp',
     business_hours: '平日 9:00-18:00',
-    description: 'MoneyTicketの認定ファイナンシャルプランナーが、お客様の資産運用に関するご相談を承ります。'
+    description: 'AI ConectXの認定ファイナンシャルプランナーが、お客様の資産運用に関するご相談を承ります。'
   });
   const [expertContactStatus, setExpertContactStatus] = useState<string>('');
 
@@ -215,11 +215,11 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
       
       // デフォルト値を使用
       const defaultExpertContact = {
-        expert_name: 'MoneyTicket専門アドバイザー',
+        expert_name: 'AI ConectX専門アドバイザー',
         phone_number: '0120-123-456',
-        email: 'advisor@moneyticket.co.jp',
+        email: 'advisor@aiconectx.co.jp',
         business_hours: '平日 9:00-18:00',
-        description: 'MoneyTicketの認定ファイナンシャルプランナーが、お客様の資産運用に関するご相談を承ります。'
+        description: 'AI ConectXの認定ファイナンシャルプランナーが、お客様の資産運用に関するご相談を承ります。'
       };
       setExpertContact(defaultExpertContact);
       secureLog('デフォルト専門家連絡先を使用');
@@ -241,11 +241,11 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
 
       // 最終デフォルト値を使用
       setExpertContact({
-        expert_name: 'MoneyTicket専門アドバイザー',
+        expert_name: 'AI ConectX専門アドバイザー',
         phone_number: '0120-123-456',
-        email: 'advisor@moneyticket.co.jp',
+        email: 'advisor@aiconectx.co.jp',
         business_hours: '平日 9:00-18:00',
-        description: 'MoneyTicketの認定ファイナンシャルプランナーが、お客様の資産運用に関するご相談を承ります。'
+        description: 'AI ConectXの認定ファイナンシャルプランナーが、お客様の資産運用に関するご相談を承ります。'
       });
     }
   };
@@ -1600,7 +1600,7 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
       
       // Basic validation for the channel
       const config = notificationSettings[channel];
-      const testMessage = 'MoneyTicket管理システムからのテスト通知です。';
+      const testMessage = 'AI ConectX管理システムからのテスト通知です。';
       
       switch (channel) {
         case 'email': {
@@ -2860,7 +2860,7 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
                                     value={headerData.title}
                                     onChange={(e) => handleHeaderDataChange('title', e.target.value)}
                                     className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                                    placeholder="例: マネーチケット"
+                                    placeholder="例: AI ConectX"
                                 />
                             </div>
                             
@@ -2958,7 +2958,7 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
                                         value={footerData.siteName}
                                         onChange={(e) => handleFooterDataChange('siteName', e.target.value)}
                                         className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
-                                        placeholder="例: マネーチケット"
+                                        placeholder="例: AI ConectX"
                                     />
                                 </div>
                                 
@@ -3011,7 +3011,7 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
                                     value={footerData.copyright}
                                     onChange={(e) => handleFooterDataChange('copyright', e.target.value)}
                                     className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
-                                    placeholder="例: MoneyTicket. All rights reserved."
+                                    placeholder="例: AI ConectX. All rights reserved."
                                 />
                                 <p className="text-xs text-gray-500 mt-1">
                                     年号は自動で挿入されます（© 2024 の部分）
@@ -3831,7 +3831,7 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
                             type="text"
                             value={expertContact.expert_name}
                             onChange={(e) => handleExpertContactChange('expert_name', e.target.value)}
-                            placeholder="MoneyTicket専門アドバイザー"
+                            placeholder="AI ConectX専門アドバイザー"
                             className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
                         />
                     </div>
@@ -3883,7 +3883,7 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
                     <textarea
                         value={expertContact.description}
                         onChange={(e) => handleExpertContactChange('description', e.target.value)}
-                        placeholder="MoneyTicketの認定ファイナンシャルプランナーが、お客様の資産運用に関するご相談を承ります。"
+                        placeholder="AI ConectXの認定ファイナンシャルプランナーが、お客様の資産運用に関するご相談を承ります。"
                         rows={3}
                         className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
                     />
@@ -3896,13 +3896,13 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
                     <div className="bg-white border border-gray-200 rounded-lg p-4">
                         <h4 className="font-semibold text-gray-800 mb-2">📞 専門家による個別相談をご利用ください</h4>
                         <div className="text-sm text-gray-600 space-y-1">
-                            <p><strong>担当者:</strong> {expertContact.expert_name || 'MoneyTicket専門アドバイザー'}</p>
+                            <p><strong>担当者:</strong> {expertContact.expert_name || 'AI ConectX専門アドバイザー'}</p>
                             <p><strong>電話番号:</strong> {expertContact.phone_number || '0120-123-456'}</p>
                             <p><strong>受付時間:</strong> {expertContact.business_hours || '平日 9:00-18:00'}</p>
                             {expertContact.email && <p><strong>メール:</strong> {expertContact.email}</p>}
                         </div>
                         <p className="text-sm text-gray-600 mt-2">
-                            {expertContact.description || 'MoneyTicketの認定ファイナンシャルプランナーが、お客様の資産運用に関するご相談を承ります。'}
+                            {expertContact.description || 'AI ConectXの認定ファイナンシャルプランナーが、お客様の資産運用に関するご相談を承ります。'}
                         </p>
                     </div>
                 </div>
@@ -3965,7 +3965,7 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
 
       <footer className="bg-gray-200 text-center py-4 mt-auto">
         <p className="text-xs text-gray-600">
-          &copy; {new Date().getFullYear()} MoneyTicket Admin Dashboard.
+          &copy; {new Date().getFullYear()} AI ConectX Admin Dashboard.
         </p>
       </footer>
     </div>
