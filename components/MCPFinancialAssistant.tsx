@@ -155,33 +155,39 @@ export const MCPFinancialAssistant: React.FC<MCPFinancialAssistantProps> = ({ cl
         }
       }
 
-      // Supabaseから取得を試行
-      const response = await fetch(`${supabaseConfig.url}/rest/v1/expert_contact_settings?setting_key.eq=primary_financial_advisor&is_active.eq=true&select=*`, {
-        headers: {
-          'Authorization': `Bearer ${supabaseConfig.key}`,
-          'apikey': supabaseConfig.key,
-          'Content-Type': 'application/json'
-        }
-      });
+      // Supabaseから取得を試行（エラーハンドリング強化）
+      try {
+        const response = await fetch(`${supabaseConfig.url}/rest/v1/expert_contact_settings?setting_key.eq=${encodeURIComponent('primary_financial_advisor')}&is_active.eq=true&select=*`, {
+          headers: {
+            'Authorization': `Bearer ${supabaseConfig.key}`,
+            'apikey': supabaseConfig.key,
+            'Content-Type': 'application/json'
+          }
+        });
 
-      if (response.ok) {
-        const data = await response.json();
-        if (data && data.length > 0) {
-          const expertContactData = {
-            expert_name: data[0].expert_name,
-            phone_number: data[0].phone_number,
-            email: data[0].email,
-            business_hours: data[0].business_hours,
-            description: data[0].description
-          };
-          setExpertContact(expertContactData);
-          // Supabaseデータをローカルストレージにバックアップ
-          localStorage.setItem('customExpertContact', JSON.stringify(expertContactData));
-          secureLog('Supabaseから専門家連絡先を読み込み、ローカルにバックアップ');
-          return;
+        if (response.ok) {
+          const data = await response.json();
+          if (data && data.length > 0) {
+            const expertContactData = {
+              expert_name: data[0].expert_name,
+              phone_number: data[0].phone_number,
+              email: data[0].email,
+              business_hours: data[0].business_hours,
+              description: data[0].description
+            };
+            setExpertContact(expertContactData);
+            // Supabaseデータをローカルストレージにバックアップ
+            localStorage.setItem('customExpertContact', JSON.stringify(expertContactData));
+            secureLog('Supabaseから専門家連絡先を読み込み、ローカルにバックアップ');
+            return;
+          }
+        } else if (response.status === 400) {
+          secureLog(`Supabase専門家連絡先テーブルが存在しません (400エラー) - デフォルト値を使用`);
+        } else {
+          secureLog(`Supabase専門家連絡先取得エラー: ${response.status} ${response.statusText}`);
         }
-      } else {
-        secureLog(`Supabase専門家連絡先取得エラー: ${response.status}`);
+      } catch (fetchError) {
+        secureLog('Supabase専門家連絡先フェッチエラー:', fetchError);
       }
 
       // デフォルト値を設定

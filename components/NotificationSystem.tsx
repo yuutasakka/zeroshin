@@ -162,7 +162,6 @@ const NotificationSystem: React.FC<NotificationSystemProps> = ({ onNotificationS
 
       // 実際の実装では、バックエンドAPIまたはSMTPサービスを使用
       if (testMode) {
-        console.log('Email送信テスト: 設定確認完了');
         return { success: true };
       }
 
@@ -197,7 +196,6 @@ const NotificationSystem: React.FC<NotificationSystemProps> = ({ onNotificationS
       const message = formatSlackMessage(notification);
 
       if (testMode) {
-        console.log('Slack送信テスト: 設定確認完了');
         return { success: true };
       }
 
@@ -231,7 +229,6 @@ const NotificationSystem: React.FC<NotificationSystemProps> = ({ onNotificationS
       const message = formatNotificationMessage(notification);
 
       if (testMode) {
-        console.log('LINE送信テスト: 設定確認完了');
         return { success: true };
       }
 
@@ -269,7 +266,6 @@ const NotificationSystem: React.FC<NotificationSystemProps> = ({ onNotificationS
       const message = formatNotificationMessage(notification);
 
       if (testMode) {
-        console.log('ChatWork送信テスト: 設定確認完了');
         return { success: true };
       }
 

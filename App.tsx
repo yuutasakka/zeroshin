@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-// import { GoogleGenAI } from "@google/genai"; // Removed: AI client should be in the backend
 import Header from './components/Header';
 // 要件定義書に基づく新しいコンポーネント
 import MoneyTicketHero from './components/MoneyTicketHero';
@@ -18,7 +17,7 @@ import { SupabaseAuthLogin } from './components/SupabaseAuthLogin';
 import LoginSelectionPage from './components/LoginSelectionPage';
 import { AuthGuard, AuthenticatedHeader } from './components/AuthGuard';
 import { OneTimeUsageNotice } from './components/OneTimeUsageNotice';
-import { supabase, diagnosisManager } from './components/supabaseClient';
+import { supabase } from './components/supabaseClient';
 import type { User } from '@supabase/supabase-js';
 
 import { ColorThemeProvider } from './components/ColorThemeContext';
@@ -29,10 +28,6 @@ import AdminPasswordResetPage from './components/AdminPasswordResetPage';
 import ProductionSecurityValidator from './components/ProductionSecurityValidator';
 import { measurePageLoad } from './components/PerformanceMonitor';
 
-// AI Client Initialization (GoogleGenAI) has been removed from the frontend.
-// API calls to Gemini API should be proxied through a secure backend server
-// to protect the API key and manage requests efficiently.
-// The backend will be responsible for interacting with the GoogleGenAI SDK.
 
 // セキュリティ関数: HTMLサニタイゼーション
 const sanitizeHTML = (html: string): string => {
@@ -94,7 +89,7 @@ const App: React.FC = () => {
   const [showUsageNotice, setShowUsageNotice] = useState<boolean>(false);
   
   // 新しいSupabase Auth関連の状態
-  const [_supabaseUser, setSupabaseUser] = useState<User | null>(null);
+  const [, setSupabaseUser] = useState<User | null>(null);
   const [isSupabaseAuth, setIsSupabaseAuth] = useState(false);
   
   // 状態変更を監視するuseEffect
@@ -128,7 +123,7 @@ const App: React.FC = () => {
           setIsAdminLoggedIn(true);
           
           // プロファイルからパスワード変更要求をチェック
-          const { data: _profile, error: _profileError } = await supabase
+          const { data: _, error: __ } = await supabase
             .from('profiles')
             .select('requires_password_change')
             .eq('id', session.user.id)
@@ -148,7 +143,7 @@ const App: React.FC = () => {
               setIsAdminLoggedIn(true);
               
               // パスワード変更要求をチェック
-              const { data: _profile2, error: _profileError2 } = await supabase
+              const { data: ___, error: ____ } = await supabase
                 .from('profiles')
                 .select('requires_password_change')
                 .eq('id', session.user.id)
@@ -175,7 +170,7 @@ const App: React.FC = () => {
     };
 
     initSupabaseAuth();
-  }, [isSupabaseAuth]);
+  }, []);
 
 
 
@@ -274,7 +269,7 @@ const App: React.FC = () => {
       window.removeEventListener('beforeunload', handleBeforeUnload);
       document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
-  }, [currentPage]); // currentPageに依存して実行
+  }, []); // 初回のみ実行
 
   useEffect(() => {
     // アプリケーション初期化：サンプルデータとスクリプト読み込み
@@ -501,7 +496,25 @@ const App: React.FC = () => {
             <div className="home-right-col">
               <DiagnosisFlow
                 onComplete={(answers) => {
+                  console.log('🔍 App.tsx: 診断完了 - 回答データ:', answers);
                   setDiagnosisAnswers(answers);
+                  
+                  // 診断データを従来の形式に変換
+                  const legacyDiagnosisData: DiagnosisFormState = {
+                    age: answers.age || '',
+                    investmentExperience: answers.experience || '',
+                    investmentGoal: answers.purpose || '',
+                    monthlyInvestment: answers.amount || '',
+                    investmentHorizon: answers.timing || '',
+                    // 既存のフィールドもデフォルト値で埋める
+                    annualIncome: '',
+                    riskTolerance: '',
+                    investmentPreference: '',
+                    financialKnowledge: ''
+                  };
+                  console.log('🔍 App.tsx: 変換後の診断データ:', legacyDiagnosisData);
+                  setDiagnosisData(legacyDiagnosisData);
+                  
                   setCurrentPage('verification');
                   setPhoneNumberToVerify(answers.phone || null);
                 }}

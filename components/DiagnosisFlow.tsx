@@ -13,7 +13,7 @@ const diagnosisQuestions = [
       { value: '30s', label: '30代（資産形成期）' },
       { value: '40s', label: '40代（資産充実期）' },
       { value: '50s', label: '50代（資産保全期）' },
-      { value: '60s_plus', label: '60代以上（運用期）' }
+      { value: '60plus', label: '60代以上（運用期）' }
     ]
   },
   {
@@ -45,11 +45,11 @@ const diagnosisQuestions = [
     title: '4️⃣ 月の投資予算はいくらですか？',
     type: 'radio',
     options: [
-      { value: 'under_10k', label: '1万円未満' },
+      { value: 'less_10k', label: '1万円未満' },
       { value: '10k_30k', label: '1万円〜3万円' },
       { value: '30k_50k', label: '3万円〜5万円' },
       { value: '50k_100k', label: '5万円〜10万円' },
-      { value: 'over_100k', label: '10万円以上' }
+      { value: 'more_100k', label: '10万円以上' }
     ]
   },
   {
@@ -89,52 +89,55 @@ interface DiagnosisFlowProps {
 }
 
 const CARD_STYLE: React.CSSProperties = {
-  maxWidth: 420,
-  margin: '20px auto',
-  padding: '28px 24px',
-  borderRadius: 16,
-  boxShadow: '0 4px 20px rgba(59, 130, 246, 0.1)',
+  maxWidth: 380, // iPhone対応: 幅を縮小
+  margin: '10px auto', // iPhone対応: マージンを縮小
+  padding: '20px 16px', // iPhone対応: パディングを縮小
+  borderRadius: 12, // iPhone対応: 角丸を縮小
+  boxShadow: '0 2px 12px rgba(59, 130, 246, 0.1)',
   background: 'rgba(255, 255, 255, 0.95)',
   backdropFilter: 'blur(10px)',
   border: '1px solid rgba(59, 130, 246, 0.15)',
   display: 'flex',
   flexDirection: 'column',
   alignItems: 'center',
-  minHeight: 340,
+  minHeight: 280, // iPhone対応: 高さを縮小
   transition: 'all 0.3s ease',
 };
 const PROGRESS_STYLE: React.CSSProperties = {
   width: '100%',
-  height: 8,
-  borderRadius: 4,
+  height: 6, // iPhone対応: 高さを縮小
+  borderRadius: 3,
   background: 'linear-gradient(90deg, #ffb6b9, #fae3d9)',
-  marginBottom: 24,
+  marginBottom: 16, // iPhone対応: マージンを縮小
 };
 const QUESTION_STYLE: React.CSSProperties = {
-  fontSize: 20,
+  fontSize: 16, // iPhone対応: フォントサイズを縮小
   fontWeight: 600,
-  marginBottom: 24,
+  marginBottom: 16, // iPhone対応: マージンを縮小
   textAlign: 'center',
+  lineHeight: 1.4, // iPhone対応: 行間調整
 };
 const CHOICES_STYLE: React.CSSProperties = {
   width: '100%',
   display: 'flex',
   flexDirection: 'column',
-  gap: 16,
-  marginBottom: 32,
+  gap: 12, // iPhone対応: ギャップを縮小
+  marginBottom: 20, // iPhone対応: マージンを縮小
 };
 const CHOICE_BTN: React.CSSProperties = {
-  fontSize: 16,
-  padding: '16px 20px',
-  borderRadius: 12,
+  fontSize: 14, // iPhone対応: フォントサイズを縮小
+  padding: '12px 16px', // iPhone対応: パディングを縮小
+  borderRadius: 8, // iPhone対応: 角丸を縮小
   border: '1px solid rgba(59, 130, 246, 0.2)',
   background: 'rgba(255, 255, 255, 0.8)',
   color: '#374151',
   fontWeight: 500,
-  boxShadow: '0 2px 8px rgba(59, 130, 246, 0.05)',
+  boxShadow: '0 1px 6px rgba(59, 130, 246, 0.05)',
   cursor: 'pointer',
   transition: 'all 0.3s ease',
   backdropFilter: 'blur(5px)',
+  textAlign: 'center' as const, // iPhone対応: テキスト中央揃え
+  lineHeight: 1.3, // iPhone対応: 行間調整
 };
 const CHOICE_BTN_SELECTED: React.CSSProperties = {
   ...CHOICE_BTN,
@@ -231,16 +234,60 @@ const DiagnosisFlow: React.FC<DiagnosisFlowProps> = ({ onComplete, onCancel }) =
   };
 
   useEffect(() => {
-    if (process.env.NODE_ENV !== 'production') {
-      const end = measureTransition('診断画面遷移', PERF_TARGETS.diagnosis);
-      return end;
-    }
+    const end = measureTransition('診断画面遷移', PERF_TARGETS.diagnosis);
+    return end;
   }, []);
 
   if (!currentQuestion) return null;
 
   return (
-    <div style={CARD_STYLE}>
+    <>
+      {/* iPhone専用CSS */}
+      <style>{`
+        /* iPhone対応レスポンシブスタイル */
+        @media (max-width: 430px) {
+          .diagnosis-card {
+            max-width: 95% !important;
+            margin: 5px auto !important;
+            padding: 16px 12px !important;
+            min-height: 250px !important;
+          }
+          .diagnosis-question {
+            font-size: 14px !important;
+            margin-bottom: 12px !important;
+            line-height: 1.3 !important;
+          }
+          .diagnosis-choice {
+            font-size: 13px !important;
+            padding: 10px 12px !important;
+            margin-bottom: 8px !important;
+          }
+          .diagnosis-phone-input {
+            font-size: 16px !important;
+            padding: 12px !important;
+          }
+          .diagnosis-button {
+            font-size: 14px !important;
+            padding: 10px 20px !important;
+          }
+        }
+        
+        @media (max-width: 375px) {
+          .diagnosis-card {
+            max-width: 98% !important;
+            padding: 14px 10px !important;
+          }
+          .diagnosis-question {
+            font-size: 13px !important;
+          }
+          .diagnosis-choice {
+            font-size: 12px !important;
+            padding: 8px 10px !important;
+          }
+        }
+      `}</style>
+      
+      <div style={CARD_STYLE} className="diagnosis-card">
       <div style={PROGRESS_STYLE}>
         <div style={{
           width: `${((currentStep) / totalSteps) * 100}%`,
@@ -249,7 +296,7 @@ const DiagnosisFlow: React.FC<DiagnosisFlowProps> = ({ onComplete, onCancel }) =
           background: 'linear-gradient(90deg, #ffb6b9, #fae3d9)',
         }} />
       </div>
-      <div style={QUESTION_STYLE}>{currentQuestion.title}</div>
+      <div style={QUESTION_STYLE} className="diagnosis-question">{currentQuestion.title}</div>
       <div style={CHOICES_STYLE}>
         {isPhoneStep ? (
           <>
@@ -267,6 +314,7 @@ const DiagnosisFlow: React.FC<DiagnosisFlowProps> = ({ onComplete, onCancel }) =
                 marginBottom: 8,
                 textAlign: 'center',
               }}
+              className="diagnosis-phone-input"
               maxLength={11}
             />
             {phoneError && <div style={{ color: 'red', fontSize: 14 }}>{phoneError}</div>}
@@ -288,6 +336,7 @@ const DiagnosisFlow: React.FC<DiagnosisFlowProps> = ({ onComplete, onCancel }) =
             <button
               key={option.value}
               style={selectedAnswer === option.value ? CHOICE_BTN_SELECTED : CHOICE_BTN}
+              className="diagnosis-choice"
               onClick={() => handleAnswerSelect(option.value)}
             >
               {option.label}
@@ -296,10 +345,11 @@ const DiagnosisFlow: React.FC<DiagnosisFlowProps> = ({ onComplete, onCancel }) =
         )}
       </div>
       <div style={ACTIONS_STYLE}>
-        <button style={ACTION_BTN} onClick={handlePrevious}>← 戻る</button>
-        <button style={NEXT_BTN} onClick={handleNext} disabled={isPhoneStep ? phoneInput.length < 10 : !selectedAnswer}>次へ →</button>
+        <button style={ACTION_BTN} className="diagnosis-button" onClick={handlePrevious}>← 戻る</button>
+        <button style={NEXT_BTN} className="diagnosis-button" onClick={handleNext} disabled={isPhoneStep ? phoneInput.length < 10 : !selectedAnswer}>次へ →</button>
       </div>
     </div>
+    </>
   );
 };
 

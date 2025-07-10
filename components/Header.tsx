@@ -35,7 +35,7 @@ const Header: React.FC = () => {
       }
 
       // Supabaseから取得を試行
-      const response = await fetch(`${supabaseConfig.url}/rest/v1/homepage_content_settings?setting_key.eq=header_data&select=*`, {
+      const response = await fetch(`${supabaseConfig.url}/rest/v1/homepage_content_settings?setting_key.eq=${encodeURIComponent('header_data')}&select=*`, {
         headers: {
           'Authorization': `Bearer ${supabaseConfig.key}`,
           'apikey': supabaseConfig.key,

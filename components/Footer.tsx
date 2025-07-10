@@ -50,6 +50,18 @@ const Footer: React.FC<FooterProps> = ({ onNavigateToAdminLogin }) => {
     loadLegalLinks();
   }, []);
 
+  useEffect(() => {
+    // ローカルストレージの変更を監視
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === 'customLegalLinks') {
+        loadLegalLinks();
+      }
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+    return () => window.removeEventListener('storage', handleStorageChange);
+  }, []);
+
   const loadFooterFromSupabase = async () => {
     try {
       // まずローカルストレージからカスタムデータを確認
@@ -178,17 +190,6 @@ const Footer: React.FC<FooterProps> = ({ onNavigateToAdminLogin }) => {
     }
   };
 
-  useEffect(() => {
-    // ローカルストレージの変更を監視
-    const handleStorageChange = (e: StorageEvent) => {
-      if (e.key === 'customLegalLinks') {
-        loadLegalLinks();
-      }
-    };
-
-    window.addEventListener('storage', handleStorageChange);
-    return () => window.removeEventListener('storage', handleStorageChange);
-  }, []);
   return (
     <footer className="premium-footer py-12 px-4">
       <div className="container mx-auto px-4 max-w-7xl">

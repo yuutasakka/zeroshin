@@ -243,7 +243,7 @@ export class SupabaseAdminAPI {
 
       // 2. 直接テーブルアクセスを試行
       try {
-        const response = await fetch(`${this.supabaseConfig.url}/rest/v1/admin_settings?setting_key.eq=${encodeURIComponent(key)}&select=setting_data`, {
+        const response = await fetch(`${this.supabaseConfig.url}/rest/v1/admin_settings?setting_key.eq=${encodeURIComponent(key)}&select=setting_value`, {
           method: 'GET',
           headers: {
             'Authorization': `Bearer ${this.supabaseConfig.key}`,

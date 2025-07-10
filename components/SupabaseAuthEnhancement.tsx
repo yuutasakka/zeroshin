@@ -29,7 +29,6 @@ export class EnhancedSupabaseAuth {
   // 認証設定の更新
   static updateConfig(newConfig: Partial<AuthConfig>): void {
     this.config = { ...this.config, ...newConfig };
-    console.log('🔧 認証設定更新:', this.config);
   }
 
   // セキュアなサインアップ（参考記事準拠）
@@ -44,7 +43,6 @@ export class EnhancedSupabaseAuth {
     requiresConfirmation?: boolean;
   }> {
     try {
-      console.log('📝 セキュアサインアップ開始', { email });
 
       // パスワード強度チェック
       const passwordValidation = this.validatePasswordStrength(password);
@@ -82,7 +80,6 @@ export class EnhancedSupabaseAuth {
       const requiresConfirmation = !data.user?.email_confirmed_at;
 
       if (requiresConfirmation) {
-        console.log('📧 メール確認が必要です');
         return {
           success: true,
           user: data.user,
@@ -90,7 +87,6 @@ export class EnhancedSupabaseAuth {
         };
       }
 
-      console.log('✅ サインアップ完了', { userId: data.user?.id });
       return {
         success: true,
         user: data.user
@@ -117,7 +113,6 @@ export class EnhancedSupabaseAuth {
     remainingAttempts?: number;
   }> {
     try {
-      console.log('🔑 セキュアログイン開始', { email });
 
       // ログイン試行履歴をチェック
       const attemptCheck = await this.checkLoginAttempts(email);
@@ -154,7 +149,6 @@ export class EnhancedSupabaseAuth {
       await this.recordSuccessfulLogin(email);
       await this.updateUserLastActivity(data.user!.id);
 
-      console.log('✅ ログイン成功', { userId: data.user?.id });
       return {
         success: true,
         user: data.user
@@ -175,7 +169,6 @@ export class EnhancedSupabaseAuth {
     error?: string;
   }> {
     try {
-      console.log('🔄 パスワードリセット開始', { email });
 
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
         redirectTo: `${window.location.origin}/admin/reset-password`
@@ -189,7 +182,6 @@ export class EnhancedSupabaseAuth {
         };
       }
 
-      console.log('✅ パスワードリセットメール送信完了');
       return { success: true };
 
     } catch (error) {
@@ -207,7 +199,6 @@ export class EnhancedSupabaseAuth {
     error?: string;
   }> {
     try {
-      console.log('🔑 パスワード更新開始');
 
       // パスワード強度チェック
       const passwordValidation = this.validatePasswordStrength(newPassword);
@@ -236,7 +227,6 @@ export class EnhancedSupabaseAuth {
         await this.recordPasswordChange(user.id);
       }
 
-      console.log('✅ パスワード更新完了');
       return { success: true };
 
     } catch (error) {
@@ -435,7 +425,6 @@ export class EnhancedSupabaseAuth {
 
   // セッション監視の開始
   static startSessionMonitoring(): void {
-    console.log('🔍 セッション監視開始');
     
     // セッション期限の監視
     const checkSession = async () => {

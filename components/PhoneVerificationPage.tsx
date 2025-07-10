@@ -58,9 +58,10 @@ const PhoneVerificationPage: React.FC<PhoneVerificationPageProps> = ({
 
   // 診断フォームから電話番号が渡された場合、自動的にSMS送信を行う
   useEffect(() => {
-    if (hasPhoneFromSession && step === 'phone-input') {
-      const handleAutoSendSMS = async () => {
-        try {
+    const handleAutoSendSMS = async () => {
+      if (!hasPhoneFromSession || step !== 'phone-input') return;
+      
+      try {
           if (!validatePhoneNumber(phoneNumber)) {
             setError('有効な日本の電話番号を入力してください（例: 090-1234-5678）');
             return;
@@ -81,15 +82,12 @@ const PhoneVerificationPage: React.FC<PhoneVerificationPageProps> = ({
           setLoading(true);
           
           if (!isProduction) {
-            console.log('開発環境: SMS認証シミュレーション開始');
             // 開発環境では固定コード "123456" を使用
             setStep('otp-verification');
             setCountdown(60);
-            console.log('🔐 開発環境用認証コード: 123456');
           } else {
             // 本番環境では実際のSMS認証を実行（現在無効）
             try {
-              console.log('本番環境: 実際のSMS認証を実行中...');
               const { error } = await supabase.auth.signInWithOtp({
                 phone: normalizedPhone,
                 options: { channel: 'sms' }
@@ -106,7 +104,6 @@ const PhoneVerificationPage: React.FC<PhoneVerificationPageProps> = ({
               // フォールバック: 開発モードで続行
               setStep('otp-verification');
               setCountdown(60);
-              console.log('🔄 フォールバック: 開発モードで認証コード 123456 を使用');
             }
           }
           
@@ -117,8 +114,7 @@ const PhoneVerificationPage: React.FC<PhoneVerificationPageProps> = ({
         }
       };
 
-      handleAutoSendSMS();
-    }
+    handleAutoSendSMS();
   }, [hasPhoneFromSession, step, phoneNumber]);
 
   // 電話番号の形式を正規化
@@ -255,7 +251,6 @@ const PhoneVerificationPage: React.FC<PhoneVerificationPageProps> = ({
         // 開発環境: 固定コード "123456" で認証
         if (otpCode === '123456') {
           authSuccess = true;
-          console.log('🎉 開発環境: 認証成功 (固定コード使用)');
         } else {
           handleFailedAttempt();
           throw new Error('認証コード "123456" を入力してください');
@@ -281,7 +276,6 @@ const PhoneVerificationPage: React.FC<PhoneVerificationPageProps> = ({
           // フォールバック: 固定コードでの認証を許可
           if (otpCode === '123456') {
             authSuccess = true;
-            console.log('🔄 フォールバック認証成功');
           } else {
             throw new Error('認証に失敗しました。コード "123456" をお試しください。');
           }
@@ -290,23 +284,44 @@ const PhoneVerificationPage: React.FC<PhoneVerificationPageProps> = ({
 
       if (authSuccess) {
         try {
+          
           // 認証成功時は失敗回数をリセット
           setFailedAttempts(0);
           setLockoutTime(null);
           setLockoutEndTime(null);
 
+
+          // 診断回答データの確認と修正
+          let diagnosisAnswers = userSession.diagnosisAnswers || {};
+          
+          // 空の診断回答の場合、localStorageから取得を試行
+          if (Object.keys(diagnosisAnswers).length === 0) {
+            const storedDiagnosisData = localStorage.getItem('diagnosisData');
+            if (storedDiagnosisData) {
+              try {
+                const parsedData = JSON.parse(storedDiagnosisData);
+                diagnosisAnswers = parsedData;
+              } catch (e) {
+                console.error('🔍 localStorageからの診断データ取得に失敗:', e);
+              }
+            }
+          }
+
           // Supabaseに診断セッションを作成
           const sessionId = await diagnosisManager.createDiagnosisSession(
             normalizedPhone, 
-            userSession.diagnosisAnswers
+            diagnosisAnswers
           );
+
 
           if (!sessionId) {
             throw new Error('診断セッションの作成に失敗しました');
           }
 
+
           // SMS認証完了をSupabaseに記録
           const updateSuccess = await diagnosisManager.updateSessionVerification(sessionId, normalizedPhone);
+          
           
           if (!updateSuccess) {
             throw new Error('認証状態の更新に失敗しました');
@@ -315,23 +330,47 @@ const PhoneVerificationPage: React.FC<PhoneVerificationPageProps> = ({
           // 認証成功 - ユーザーセッションにSMS認証済みフラグを追加
           const updatedSession = {
             ...userSession,
+            diagnosisAnswers: diagnosisAnswers, // 確実に診断回答を含める
             smsVerified: true,
             verifiedPhoneNumber: normalizedPhone,
             verificationTimestamp: new Date().toISOString(),
             sessionId: sessionId
           };
 
+
           // 現在のセッションをローカルストレージに保存（一時的）
           localStorage.setItem('currentUserSession', JSON.stringify(updatedSession));
           
+          // 保存確認
+          const savedSession = localStorage.getItem('currentUserSession');
+          
           setStep('success');
           
-          // 2秒後に結果ページへ
-          setTimeout(() => {
-            onVerificationSuccess();
-          }, 2000);
+          
+          // 認証状態が確実に保存されるまで少し待機
+          await new Promise(resolve => setTimeout(resolve, 500));
+          
+          // 最終確認: 保存された認証状態を再度チェック
+          const finalCheck = localStorage.getItem('currentUserSession');
+          if (finalCheck) {
+            const parsedCheck = JSON.parse(finalCheck);
+            
+            if (parsedCheck.smsVerified && parsedCheck.sessionId) {
+              setStep('success');
+              
+              // 2秒後に結果ページへ
+              setTimeout(() => {
+                onVerificationSuccess();
+              }, 2000);
+            } else {
+              throw new Error('認証状態の最終確認に失敗しました');
+            }
+          } else {
+            throw new Error('認証状態の保存に失敗しました');
+          }
 
         } catch (sessionError) {
+          console.error('❌ 認証後のシステムエラー:', sessionError);
           throw new Error('認証は成功しましたが、システムエラーが発生しました。管理者にお問い合わせください。');
         }
       }

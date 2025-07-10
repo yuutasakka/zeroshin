@@ -741,6 +741,67 @@ export class DiagnosisSessionManager {
       console.error('データ同期エラー:', error);
     }
   }
+
+  // デバッグ用: 全セッション取得（開発環境のみ）
+  async getAllSessions(): Promise<any[] | null> {
+    try {
+      console.log('🔍 全セッション取得開始');
+      
+      // Supabaseを試行
+      if (await this.isSupabaseAvailable()) {
+        const { data, error } = await this.supabase
+          .from('diagnosis_sessions')
+          .select('*')
+          .order('created_at', { ascending: false })
+          .limit(50);
+
+        if (!error && data) {
+          console.log('🔍 Supabaseから全セッション取得:', data.length);
+          return data;
+        }
+      }
+      
+      // フォールバック: ローカルストレージから取得
+      console.warn('Supabase利用不可、ローカルストレージから取得');
+      const localSessions = this.getLocalSessions();
+      console.log('🔍 ローカルストレージから全セッション取得:', localSessions.length);
+      return localSessions;
+    } catch (error) {
+      console.error('全セッション取得例外:', error);
+      
+      // エラー時もローカルストレージから試行
+      const localSessions = this.getLocalSessions();
+      return localSessions;
+    }
+  }
+
+  // デバッグ用: セッション詳細情報の取得
+  async getSessionDetails(sessionId: string): Promise<any> {
+    try {
+      const session = await this.getDiagnosisSession(sessionId);
+      const localSessions = this.getLocalSessions();
+      const localSession = localSessions.find(s => s.session_id === sessionId);
+      
+      return {
+        database: session,
+        localStorage: localSession,
+        isSupabaseAvailable: await this.isSupabaseAvailable(),
+        comparison: {
+          bothExist: !!session && !!localSession,
+          smsVerifiedMatch: session?.sms_verified === localSession?.sms_verified,
+          phoneNumberMatch: session?.phone_number === localSession?.phone_number
+        }
+      };
+    } catch (error) {
+      console.error('セッション詳細取得エラー:', error);
+      return {
+        error: error instanceof Error ? error.message : 'Unknown error',
+        database: null,
+        localStorage: null,
+        isSupabaseAvailable: false
+      };
+    }
+  }
 }
 
 

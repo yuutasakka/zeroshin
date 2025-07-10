@@ -150,7 +150,7 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
 
   const loadHomepageContentFromSupabase = async (settingKey: string) => {
     try {
-      const response = await fetch(`${supabaseConfig.url}/rest/v1/homepage_content_settings?setting_key.eq=${settingKey}`, {
+      const response = await fetch(`${supabaseConfig.url}/rest/v1/homepage_content_settings?setting_key.eq=${encodeURIComponent(settingKey)}`, {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${supabaseConfig.key}`,

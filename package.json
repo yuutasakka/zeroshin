@@ -38,7 +38,11 @@
     "test:all": "npm run test && npm run test:e2e",
     "production:env": "node scripts/check-production-env.js",
     "production:setup": "node scripts/generate-production-credentials.js",
-    "vulnerability:scan": "node scripts/vulnerability-scan.js"
+    "vulnerability:scan": "node scripts/vulnerability-scan.js",
+    "git-history": "./scripts/git-history-viewer.sh",
+    "git-diff": "./scripts/git-diff-viewer.sh",
+    "file-monitor": "node scripts/file-change-monitor.js",
+    "dev-tools": "docker-compose up -d"
   },
   "dependencies": {
     "@ai-sdk/google": "^1.2.19",
