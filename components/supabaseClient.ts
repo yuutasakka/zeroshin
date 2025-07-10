@@ -1788,7 +1788,7 @@ export class AdminSMSAuth {
       console.log('📱 SMS認証コード送信', {
         to: phoneNumber,
         code: smsCode,
-        message: `MoneyTicket管理者認証コード: ${smsCode} (10分間有効)`
+        message: `AI ConectX管理者認証コード: ${smsCode} (10分間有効)`
       });
 
       return { success: true };

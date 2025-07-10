@@ -569,7 +569,7 @@ export const secureLog = (message: string, data?: any) => {
     maskedMessage = maskedMessage.replace(regex, '$1[PROTECTED]');
   });
 
-  console.log(`[MoneyTicket Security] ${maskedMessage}`, maskedData);
+  console.log(`[AI ConectX Security] ${maskedMessage}`, maskedData);
 };
 
 // CSRFトークン生成
