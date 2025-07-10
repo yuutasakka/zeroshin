@@ -106,28 +106,28 @@ const Header: React.FC = () => {
   };
 
   return (
-    <header className="py-6 px-4 relative z-50"> {/* Removed overflow-hidden to ensure shadows from other elements might show */}
+    <header className="py-2 px-4 relative z-50"> {/* 上部空白削除: パディングを縮小 */}
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between">
           <a href="#top" onClick={scrollToTop} className="flex items-center space-x-3 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-var(--accent-gold) rounded-md">
             <div 
               className="w-12 h-12 rounded-full flex items-center justify-center" 
-              style={{ background: 'var(--gradient-gold)' }}
+              style={{ background: 'linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%)' }}
               aria-hidden="true"
             >
               <i className="fas fa-coins text-white text-xl"></i>
             </div>
-            <h1 className="text-2xl font-bold heading-primary" style={{color: 'var(--primary-navy)'}}>{headerData.title}</h1>
+            <h1 className="text-xl md:text-2xl font-bold" style={{color: '#1e40af'}}>{headerData.title}</h1>
           </a>
           <nav className="hidden md:flex items-center space-x-6">
-            <a href="#main-visual-section" onClick={(e) => scrollToSection(e, 'main-visual-section')} className="text-luxury hover:text-var(--primary-navy) transition-colors">サービス概要</a>
-            <a href="#reliability-section" onClick={(e) => scrollToSection(e, 'reliability-section')} className="text-luxury hover:text-var(--primary-navy) transition-colors">選ばれる理由</a>
-            <a href="#cta-section" onClick={(e) => scrollToSection(e, 'cta-section')} className="text-luxury hover:text-var(--primary-navy) transition-colors">お問い合わせ</a>
+            <a href="#main-visual-section" onClick={(e) => scrollToSection(e, 'main-visual-section')} className="text-sm md:text-base text-gray-600 hover:text-blue-600 transition-colors font-medium">サービス概要</a>
+            <a href="#reliability-section" onClick={(e) => scrollToSection(e, 'reliability-section')} className="text-sm md:text-base text-gray-600 hover:text-blue-600 transition-colors font-medium">選ばれる理由</a>
+            <a href="#cta-section" onClick={(e) => scrollToSection(e, 'cta-section')} className="text-sm md:text-base text-gray-600 hover:text-blue-600 transition-colors font-medium">お問い合わせ</a>
           </nav>
         </div>
-         <div className="sm:hidden mt-3 px-3 py-2 rounded-full shadow-lg text-center flex justify-center items-center" style={{background: 'rgba(255,255,255,0.8)'}}>
-            <span className="text-xs" style={{color: 'var(--neutral-700)'}}>
-              <i className="fas fa-star mr-1" style={{color: 'var(--accent-gold)'}}></i>
+         <div className="sm:hidden mt-3 px-3 py-2 rounded-full shadow-lg text-center flex justify-center items-center" style={{background: 'rgba(255,255,255,0.9)'}}>
+            <span className="text-xs" style={{color: '#374151'}}>
+              <i className="fas fa-star mr-1" style={{color: '#3b82f6'}}></i>
               {headerData.subtitle}
             </span>
         </div>

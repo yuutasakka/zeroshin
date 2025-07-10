@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import Header from './components/Header';
 // 要件定義書に基づく新しいコンポーネント
-import MoneyTicketHero from './components/MoneyTicketHero';
+import AIConectXHero from './components/AIConectXHero';
 import DiagnosisFlow, { DiagnosisAnswers } from './components/DiagnosisFlow';
 import SMSAuthFlow from './components/SMSAuthFlow';
 import ReliabilitySection from './components/ReliabilitySection';
@@ -488,7 +488,7 @@ const App: React.FC = () => {
           
           {/* 1番目: メインヒーロー（あなたの未来の資産を診断！） */}
           <div className="hero-section">
-            <MoneyTicketHero onStartDiagnosis={handleStartDiagnosis} />
+            <AIConectXHero onStartDiagnosis={handleStartDiagnosis} />
           </div>
           
           {/* 2番目: 診断フォーム */}
@@ -723,7 +723,7 @@ const App: React.FC = () => {
       <>
         <Header />
         <main>
-          <MoneyTicketHero onStartDiagnosis={handleStartDiagnosis} />
+          <AIConectXHero onStartDiagnosis={handleStartDiagnosis} />
           <ReliabilitySection />
           <SecurityTrustSection />
           <CallToActionSection />

@@ -139,26 +139,24 @@ const CallToActionSection: React.FC = () => {
   };
 
   return (
-    <section id="cta-section" className="py-20 px-4 text-center hero-section-premium">
-      <div className="hero-content max-w-4xl mx-auto">
+    <section id="cta-section" className="py-16 px-4 text-center bg-white">
+      <div className="max-w-4xl mx-auto">
         <h3 
-          className="heading-display text-5xl md:text-6xl mb-8 font-bold leading-tight"
+          className="text-2xl md:text-4xl lg:text-5xl mb-6 font-bold leading-tight"
           style={{
-            color: '#f8fafc',
-            textShadow: '0 4px 12px rgba(0, 0, 0, 0.8), 0 2px 6px rgba(0, 0, 0, 0.6)',
+            color: '#1e40af',
             letterSpacing: '0.02em'
           }}
         >
             あなたの理想的な未来を<br />
             <span style={{ 
-              color: '#fbbf24', 
-              fontWeight: '800',
-              textShadow: '0 4px 12px rgba(0, 0, 0, 0.9), 0 2px 6px rgba(0, 0, 0, 0.7)'
+              color: '#3b82f6', 
+              fontWeight: '800'
             }}>
               今日から始めませんか？
             </span>
         </h3>
-        <p className="text-xl mb-12 text-gray-200 leading-relaxed">
+        <p className="text-lg md:text-xl mb-8 text-gray-600 leading-relaxed">
             経験豊富なプロフェッショナルが、あなたの人生設計に合わせた<br />
             最適な資産運用プランを無料でご提案いたします。
         </p>
@@ -167,30 +165,29 @@ const CallToActionSection: React.FC = () => {
           <button
             type="button"
             onClick={scrollToDiagnosis}
-            className="gold-accent-button premium-button text-xl px-12 py-4"
+            className="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white font-bold py-4 px-8 md:px-12 rounded-full text-lg md:text-xl transition-all duration-300 transform hover:scale-105 shadow-lg"
           >
             <i className="fas fa-comments mr-3"></i>
             今すぐ無料相談を始める
           </button>
           
-          <p className="text-sm text-gray-300">
+          <p className="text-sm text-gray-500">
             <i className="fas fa-phone mr-2"></i>
             お電話でのご相談：0120-999-888（平日9:00-18:00）
           </p>
         </div>
         
         <div 
-          className="mt-12 p-8 rounded-2xl" 
+          className="mt-10 p-6 md:p-8 rounded-2xl border-2 border-blue-200"
           style={{ 
-            background: consultationOffer.backgroundColor, 
-            border: `2px solid ${consultationOffer.borderColor}` 
+            background: 'linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%)'
           }}
         >
-            <h4 className="font-bold text-white mb-3 text-xl">
+            <h4 className="font-bold text-blue-800 mb-3 text-lg md:text-xl">
                 <i className={`${consultationOffer.icon} mr-2`}></i>
                 {consultationOffer.title}
             </h4>
-            <p className="text-gray-200">
+            <p className="text-blue-700">
                 {consultationOffer.description}
             </p>
         </div>

@@ -22,8 +22,6 @@ import { resetToSampleData } from '../data/sampleData';
 import { useColorTheme } from './ColorThemeContext';
 import TwoFactorAuth from './TwoFactorAuth';
 import KeyRotationManager from './KeyRotationManager';
-import SecurityScanner from './SecurityScanner';
-import PenetrationTester from './PenetrationTester';
 import SecurityIntegration from './SecurityIntegration';
 import AdminApprovalDashboard from './AdminApprovalDashboard';
 
@@ -360,8 +358,6 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
   // セキュリティ機能のstate
   const [showTwoFactorAuth, setShowTwoFactorAuth] = useState(false);
   const [showKeyRotationManager, setShowKeyRotationManager] = useState(false);
-  const [showSecurityScanner, setShowSecurityScanner] = useState(false);
-  const [showPenetrationTester, setShowPenetrationTester] = useState(false);
   const [showSecurityIntegration, setShowSecurityIntegration] = useState(false);
   const [twoFactorAuthMode, setTwoFactorAuthMode] = useState<'setup' | 'verify'>('setup');
   const [adminTotpSecret, setAdminTotpSecret] = useState<string>('');
@@ -3412,39 +3408,7 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
                         </button>
                     </div>
 
-                    {/* セキュリティスキャン */}
-                    <div className="bg-gradient-to-br from-orange-50 to-red-100 p-6 rounded-xl shadow-md border border-orange-200">
-                        <div className="flex items-center justify-center w-12 h-12 bg-orange-500 rounded-lg mb-4 mx-auto">
-                            <i className="fas fa-search text-white text-xl"></i>
-                        </div>
-                        <h3 className="text-lg font-semibold text-gray-800 text-center mb-2">セキュリティスキャン</h3>
-                        <p className="text-sm text-gray-600 text-center mb-4">
-                            脆弱性スキャン・依存関係チェック・設定監査の定期実行
-                        </p>
-                        <button
-                            onClick={() => setShowSecurityScanner(true)}
-                            className="w-full bg-orange-600 hover:bg-orange-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
-                        >
-                            🔍 スキャン実行
-                        </button>
-                    </div>
 
-                    {/* ペネトレーションテスト */}
-                    <div className="bg-gradient-to-br from-red-50 to-pink-100 p-6 rounded-xl shadow-md border border-red-200">
-                        <div className="flex items-center justify-center w-12 h-12 bg-red-500 rounded-lg mb-4 mx-auto">
-                            <i className="fas fa-bug text-white text-xl"></i>
-                        </div>
-                        <h3 className="text-lg font-semibold text-gray-800 text-center mb-2">ペネトレーションテスト</h3>
-                        <p className="text-sm text-gray-600 text-center mb-4">
-                            自動侵入テスト・脆弱性評価・セキュリティ検証
-                        </p>
-                        <button
-                            onClick={() => setShowPenetrationTester(true)}
-                            className="w-full bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
-                        >
-                            🧪 ペンテスト実行
-                        </button>
-                    </div>
                 </div>
 
                 {/* セキュリティAPI統合（新機能） */}
@@ -3989,17 +3953,7 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
             />
         )}
 
-        {showSecurityScanner && (
-            <SecurityScanner
-                onClose={() => setShowSecurityScanner(false)}
-            />
-        )}
 
-        {showPenetrationTester && (
-            <PenetrationTester
-                onClose={() => setShowPenetrationTester(false)}
-            />
-        )}
 
         {showSecurityIntegration && (
             <SecurityIntegration

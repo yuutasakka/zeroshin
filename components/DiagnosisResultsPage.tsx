@@ -139,13 +139,6 @@ const DiagnosisResultsPage: React.FC<DiagnosisResultsPageProps> = ({ diagnosisDa
   const authCheckCountRef = useRef(0);
   const authSuccessRef = useRef(false); // 認証成功フラグ
 
-  // 診断データのデバッグ
-    diagnosisData,
-    hasAge: !!diagnosisData?.age,
-    hasAmount: !!(diagnosisData?.monthlyInvestment || diagnosisData?.amount),
-    age: diagnosisData?.age,
-    amount: diagnosisData?.monthlyInvestment || diagnosisData?.amount
-  });
 
   // localStorageの内容も確認
 
@@ -291,12 +284,6 @@ const DiagnosisResultsPage: React.FC<DiagnosisResultsPageProps> = ({ diagnosisDa
         const verificationTimestamp = sessionData.verificationTimestamp;
         const verifiedPhoneNumber = sessionData.verifiedPhoneNumber;
         
-          smsVerified,
-          sessionId,
-          verificationTimestamp,
-          verifiedPhoneNumber
-        });
-        
         if (!smsVerified || !sessionId) {
           const errorMsg = 'SMS認証が完了していません。診断を最初からやり直してください。';
           dispatch({ type: 'SET_AUTH_ERROR', payload: errorMsg });
@@ -359,11 +346,6 @@ const DiagnosisResultsPage: React.FC<DiagnosisResultsPageProps> = ({ diagnosisDa
           const now = new Date();
           const hoursSinceVerification = (now.getTime() - verificationTime.getTime()) / (1000 * 60 * 60);
           
-            verificationTime: verificationTime.toISOString(),
-            now: now.toISOString(),
-            hoursSinceVerification
-          });
-          
           if (hoursSinceVerification > 24) {
             const errorMsg = '認証の有効期限が切れています。診断を最初からやり直してください。';
             dispatch({ type: 'SET_AUTH_ERROR', payload: errorMsg });
@@ -386,14 +368,10 @@ const DiagnosisResultsPage: React.FC<DiagnosisResultsPageProps> = ({ diagnosisDa
           
           // 状態更新後の確認（少し遅延させて）
           setTimeout(() => {
-              isAuthorized: state.isAuthorized,
-              authError: state.authError
-            });
           }, 100);
         } else {
         }
       } catch (error) {
-        console.error('❌ 認証チェック例外:', error);
         if (isMountedRef.current) {
           dispatch({ type: 'SET_AUTH_ERROR', payload: '認証情報の確認中にエラーが発生しました。' });
           dispatch({ type: 'SET_DEBUG_INFO', payload: `認証エラー: ${error instanceof Error ? error.message : String(error)}` });
@@ -406,11 +384,6 @@ const DiagnosisResultsPage: React.FC<DiagnosisResultsPageProps> = ({ diagnosisDa
 
   // デバッグ用: 認証状態の変化を監視
   useEffect(() => {
-      isAuthorized: state.isAuthorized, 
-      authError: state.authError,
-      debugInfo: state.debugInfo,
-      timestamp: new Date().toLocaleTimeString()
-    });
   }, [state.isAuthorized, state.authError, state.debugInfo]);
 
   // 4. ファイナンシャルプランナーの読み込み（オプション）
@@ -619,10 +592,6 @@ const DiagnosisResultsPage: React.FC<DiagnosisResultsPageProps> = ({ diagnosisDa
   }, []);
 
   // 認証されていない場合の表示
-    isAuthorized: state.isAuthorized, 
-    authError: state.authError, 
-    debugInfo: state.debugInfo 
-  });
   
   if (!state.isAuthorized) {
     return (

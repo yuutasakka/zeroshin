@@ -2,21 +2,21 @@ import React from 'react';
 import FloatingHeartsBackground from './FloatingHeartsBackground';
 import SparkleBackground from './SparkleBackground';
 
-interface MoneyTicketHeroProps {
+interface AIConectXHeroProps {
   onStartDiagnosis: () => void;
 }
 
-const MoneyTicketHero: React.FC<MoneyTicketHeroProps> = ({ onStartDiagnosis }) => {
+const AIConectXHero: React.FC<AIConectXHeroProps> = ({ onStartDiagnosis }) => {
   const heroStyles = {
     hero: {
       position: 'relative' as const,
-      minHeight: '85vh', // iPhone対応: 高さを少し低くしてコンテンツが収まるように
+      minHeight: '75vh', // 上部空白削除: さらに高さを低く
       width: '100%',
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
       overflow: 'hidden',
-      paddingTop: '60px' // ヘッダー分のパディング
+      paddingTop: '10px' // 上部の空白を最小化
     },
     background: {
       position: 'absolute' as const,
@@ -243,4 +243,4 @@ const MoneyTicketHero: React.FC<MoneyTicketHeroProps> = ({ onStartDiagnosis }) =
   );
 };
 
-export default MoneyTicketHero; 
+export default AIConectXHero; 
