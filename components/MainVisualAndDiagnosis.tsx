@@ -92,19 +92,6 @@ const MainVisualAndDiagnosis: React.FC<MainVisualAndDiagnosisProps> = ({ onProce
 
   const loadMainVisualFromSupabase = async () => {
     try {
-      // まずローカルストレージを確認
-      const localMainVisualData = localStorage.getItem('customMainVisualData');
-      if (localMainVisualData) {
-        try {
-          const parsedLocal = JSON.parse(localMainVisualData);
-          setMainVisualData(parsedLocal);
-          secureLog('ローカルストレージからメインビジュアルデータを読み込み');
-          return;
-        } catch (parseError) {
-          secureLog('ローカルストレージのメインビジュアルデータ解析エラー:', parseError);
-        }
-      }
-
       const supabaseConfig = createSupabaseClient();
       
       // 本番環境でSupabase設定がない場合はデフォルトデータを使用
@@ -127,45 +114,16 @@ const MainVisualAndDiagnosis: React.FC<MainVisualAndDiagnosisProps> = ({ onProce
         if (data && data.length > 0 && data[0].setting_data) {
           const mainVisualDataFromSupabase = data[0].setting_data;
           setMainVisualData(mainVisualDataFromSupabase);
-          // Supabaseデータをローカルストレージにバックアップ
-          localStorage.setItem('customMainVisualData', JSON.stringify(mainVisualDataFromSupabase));
-          secureLog('✅ メインビジュアルデータをSupabaseから読み込み、ローカルにバックアップ:', mainVisualDataFromSupabase);
+          secureLog('✅ メインビジュアルデータをSupabaseから読み込み:', mainVisualDataFromSupabase);
           return;
         }
       } else {
         secureLog(`メインビジュアルデータの読み込みに失敗 ${response.status}、デフォルトデータを使用`);
       }
 
-      // サンプルデータフォールバック
-      const sampleMainVisualData = localStorage.getItem('main_visual_data');
-      if (sampleMainVisualData) {
-        try {
-          const parsedSample = JSON.parse(sampleMainVisualData);
-          setMainVisualData(parsedSample);
-          secureLog('サンプルメインビジュアルデータを使用');
-          return;
-        } catch (parseError) {
-          secureLog('サンプルメインビジュアルデータ解析エラー:', parseError);
-        }
-      }
-
       secureLog('デフォルトメインビジュアルデータを使用');
     } catch (error) {
-      secureLog('メインビジュアルデータ読み込みエラー、フォールバック処理中:', error);
-      
-      // エラー時でもローカルストレージを確認
-      try {
-        const fallbackMainVisualData = localStorage.getItem('customMainVisualData');
-        if (fallbackMainVisualData) {
-          const parsedFallback = JSON.parse(fallbackMainVisualData);
-          setMainVisualData(parsedFallback);
-          secureLog('エラー時フォールバック: ローカルストレージからメインビジュアルデータを読み込み');
-          return;
-        }
-      } catch (fallbackError) {
-        secureLog('フォールバックメインビジュアルデータエラー:', fallbackError);
-      }
-
+      secureLog('メインビジュアルデータ読み込みエラー、デフォルトデータを使用:', error);
       // 最終的にはデフォルトデータを使用（エラーを表示しない）
       secureLog('最終フォールバック: デフォルトメインビジュアルデータを使用');
     }
@@ -258,13 +216,8 @@ const MainVisualAndDiagnosis: React.FC<MainVisualAndDiagnosisProps> = ({ onProce
   return (
     <section id="main-visual-section" className="hero-section-premium py-20 px-4">
       <div className="hero-content max-w-7xl mx-auto text-center">
-        <h2 className="heading-display text-4xl md:text-6xl lg:text-7xl mb-8 font-bold leading-tight" 
-            style={{ 
-              color: '#ffffff',
-              textShadow: '0 4px 15px rgba(0, 0, 0, 0.9), 0 2px 8px rgba(0, 0, 0, 0.8), 0 1px 3px rgba(0, 0, 0, 0.7)',
-              letterSpacing: '0.01em',
-              fontWeight: '800'
-            }}>
+        <h2 className="heading-display text-4xl md:text-6xl lg:text-7xl mb-8 font-extrabold leading-tight text-white tracking-wide">
+          <div className="drop-shadow-[0_4px_15px_rgba(0,0,0,0.9)] [text-shadow:0_2px_8px_rgba(0,0,0,0.8),0_1px_3px_rgba(0,0,0,0.7)]">
             {mainVisualData.title.split('\n').map((line, index) => (
               <React.Fragment key={index}>
                 {line.includes(mainVisualData.highlightWord) ? (
@@ -272,12 +225,7 @@ const MainVisualAndDiagnosis: React.FC<MainVisualAndDiagnosisProps> = ({ onProce
                     <React.Fragment key={partIndex}>
                       {part}
                       {partIndex < line.split(mainVisualData.highlightWord).length - 1 && (
-                        <span style={{ 
-                          color: '#fbbf24',
-                          textShadow: '0 6px 20px rgba(0, 0, 0, 0.98), 0 3px 10px rgba(0, 0, 0, 0.95), 0 1px 3px rgba(0, 0, 0, 0.9)',
-                          fontWeight: '900',
-                          filter: 'brightness(1.2)'
-                        }}>
+                        <span className="text-amber-400 font-black brightness-110 drop-shadow-[0_6px_20px_rgba(0,0,0,0.98)] [text-shadow:0_3px_10px_rgba(0,0,0,0.95),0_1px_3px_rgba(0,0,0,0.9)]">
                           {mainVisualData.highlightWord}
                         </span>
                       )}
@@ -289,37 +237,24 @@ const MainVisualAndDiagnosis: React.FC<MainVisualAndDiagnosisProps> = ({ onProce
                 {index < mainVisualData.title.split('\n').length - 1 && <br />}
               </React.Fragment>
             ))}
+          </div>
         </h2>
-        <p className="text-lg md:text-xl lg:text-2xl mb-12 max-w-4xl mx-auto leading-relaxed" 
-           style={{
-             color: '#ffffff',
-             textShadow: '0 2px 8px rgba(0, 0, 0, 0.8), 0 1px 3px rgba(0, 0, 0, 0.7)',
-             fontWeight: '400'
-           }}>
+        <p className="text-lg md:text-xl lg:text-2xl mb-12 max-w-4xl mx-auto leading-relaxed text-white font-normal drop-shadow-[0_2px_8px_rgba(0,0,0,0.8)] [text-shadow:0_1px_3px_rgba(0,0,0,0.7)]">
             {mainVisualData.subtitle}
         </p>
           
-        <div id="diagnosis-form-section" className="max-w-2xl mx-auto mb-16 text-left" 
-             style={{
-               background: 'rgba(255, 255, 255, 0.98)',
-               backdropFilter: 'blur(20px)',
-               border: '2px solid rgba(212, 175, 55, 0.3)',
-               borderRadius: '24px',
-               padding: '2.5rem',
-               boxShadow: '0 20px 40px rgba(0, 0, 0, 0.15), 0 0 0 1px rgba(255, 255, 255, 0.1)',
-               transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)'
-             }}> {/* text-left for card content */}
-            <h3 className="heading-primary text-3xl mb-3 text-center" style={{color: 'var(--primary-navy)', fontWeight: '700'}}>
-                <i className="fas fa-chart-line mr-3" style={{color: 'var(--accent-gold)', fontSize: '1.2em'}}></i>
+        <div id="diagnosis-form-section" className="max-w-2xl mx-auto mb-16 text-left bg-white/98 backdrop-blur-xl border-2 border-amber-400/30 rounded-3xl p-10 shadow-[0_20px_40px_rgba(0,0,0,0.15),0_0_0_1px_rgba(255,255,255,0.1)] transition-all duration-700 ease-out">
+            <h3 className="heading-primary text-3xl mb-3 text-center text-blue-900 font-bold">
+                <i className="fas fa-chart-line mr-3 text-amber-500 text-xl"></i>
                 あなた専用の投資プラン診断
             </h3>
-            <p className="text-xl mb-8 text-center" style={{color: 'var(--neutral-600)', fontWeight: '500'}}>3分で完了する簡単診断</p>
+            <p className="text-xl mb-8 text-center text-gray-600 font-medium">3分で完了する簡単診断</p>
             
             <form onSubmit={(e) => e.preventDefault()} className="space-y-6">
               <div className="mb-8">
                 <div className="flex items-center justify-between mb-3">
-                    <span className="text-base font-semibold" style={{color: 'var(--primary-navy)'}}>進捗状況</span>
-                    <span className="text-base font-semibold" style={{color: 'var(--primary-navy)'}}>
+                    <span className="text-base font-semibold text-blue-900">進捗状況</span>
+                    <span className="text-base font-semibold text-blue-900">
                         <span id="currentStepDisplay">{showAIConsent ? AI_CONSENT_STEP : currentStep}</span>/{totalSteps}
                     </span>
                 </div>
@@ -329,9 +264,9 @@ const MainVisualAndDiagnosis: React.FC<MainVisualAndDiagnosisProps> = ({ onProce
               </div>
               
               {showAIConsent ? (
-                 <div className="question-step p-6 rounded-lg shadow-inner my-4 text-left" style={{background: 'var(--neutral-50)'}}>
+                 <div className="question-step p-6 rounded-lg shadow-inner my-4 text-left bg-gray-50">
                     <h4 className="heading-primary text-xl mb-3 flex items-center">
-                        <i className="fas fa-microchip mr-2 text-xl" style={{color: 'var(--accent-gold)'}}></i>
+                        <i className="fas fa-microchip mr-2 text-xl text-amber-500"></i>
                          AIによる結果生成について
                     </h4>
                     <p className="text-luxury mb-3 text-sm">
@@ -353,7 +288,7 @@ const MainVisualAndDiagnosis: React.FC<MainVisualAndDiagnosisProps> = ({ onProce
                         type="button"
                         onClick={handleReturnFromConsent}
                         className="premium-button w-full"
-                        style={{background: 'var(--neutral-200)', color: 'var(--neutral-700)'}}
+                        className="bg-gray-200 text-gray-700"
                     >
                         <i className="fas fa-arrow-left mr-2"></i>
                         診断に戻る
@@ -362,7 +297,7 @@ const MainVisualAndDiagnosis: React.FC<MainVisualAndDiagnosisProps> = ({ onProce
                 </div>
               ) : currentQuestionData && (
                 <div className="question-step" data-step={currentStep}>
-                  <label htmlFor={currentQuestionData.id} className="block text-left text-lg font-bold mb-4" style={{color: 'var(--primary-navy)'}}>
+                  <label htmlFor={currentQuestionData.id} className="block text-left text-lg font-bold mb-4 text-blue-900">
                     <span className="font-bold mr-2 text-xl">{currentQuestionData.emojiPrefix}</span> {currentQuestionData.label}
                   </label>
                   {currentQuestionData.type === 'select' && currentQuestionData.options && (
@@ -457,11 +392,11 @@ const MainVisualAndDiagnosis: React.FC<MainVisualAndDiagnosisProps> = ({ onProce
               )}
             </form>
             
-             <p className="text-sm mt-8 text-center" style={{color: 'var(--neutral-500)'}}>
-                <i className="fas fa-shield-alt mr-2" style={{color: 'var(--accent-emerald)'}}></i>
+             <p className="text-sm mt-8 text-center text-gray-500">
+                <i className="fas fa-shield-alt mr-2 text-emerald-500"></i>
                 お客様の情報は厳重に保護され、営業電話は一切ございません。
             </p>
-             <p className="text-xs text-center mt-2" style={{color: 'var(--neutral-600)'}}>
+             <p className="text-xs text-center mt-2 text-gray-600">
                 ※ご入力いただいた情報は、診断結果の送付および関連サービスのご案内にのみ利用いたします。利用規約・プライバシーポリシーにご同意の上、ご利用ください。
             </p>
           </div>
