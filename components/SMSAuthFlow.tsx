@@ -8,93 +8,6 @@ interface SMSAuthFlowProps {
   onCancel: () => void;
 }
 
-const CARD_STYLE: React.CSSProperties = {
-  maxWidth: 400,
-  margin: '40px auto',
-  padding: '32px 24px',
-  borderRadius: 24,
-  boxShadow: '0 8px 32px rgba(0,0,0,0.12)',
-  background: 'linear-gradient(135deg, #fff 60%, #e0f7fa 100%)',
-  display: 'flex',
-  flexDirection: 'column',
-  alignItems: 'center',
-  minHeight: 340,
-};
-const TITLE_STYLE: React.CSSProperties = {
-  fontSize: 20,
-  fontWeight: 600,
-  marginBottom: 18,
-  textAlign: 'center',
-};
-const DESC_STYLE: React.CSSProperties = {
-  fontSize: 15,
-  color: '#555',
-  marginBottom: 18,
-  textAlign: 'center',
-};
-const INPUT_STYLE: React.CSSProperties = {
-  width: '100%',
-  fontSize: 18,
-  padding: '14px 12px',
-  borderRadius: 12,
-  border: '1.5px solid #b2ebf2',
-  marginBottom: 18,
-  outline: 'none',
-  boxSizing: 'border-box',
-};
-const OTP_INPUTS_STYLE: React.CSSProperties = {
-  display: 'flex',
-  gap: 10,
-  justifyContent: 'center',
-  marginBottom: 18,
-};
-const OTP_INPUT_STYLE: React.CSSProperties = {
-  width: '100%',
-  fontSize: 24,
-  borderRadius: 10,
-  border: '1.5px solid #b2ebf2',
-  textAlign: 'center',
-  outline: 'none',
-  background: '#fff',
-  padding: '14px 0',
-  letterSpacing: '0.5em',
-  marginBottom: 18,
-};
-const BTN_STYLE: React.CSSProperties = {
-  width: '100%',
-  fontSize: 18,
-  padding: '16px 0',
-  borderRadius: 16,
-  border: 'none',
-  background: 'linear-gradient(90deg, #a1c4fd 0%, #c2e9fb 100%)',
-  color: '#222',
-  fontWeight: 700,
-  boxShadow: '0 2px 8px rgba(33,150,243,0.10)',
-  cursor: 'pointer',
-  marginBottom: 12,
-  transition: 'all 0.2s',
-};
-const BTN_DISABLED: React.CSSProperties = {
-  ...BTN_STYLE,
-  background: '#e0e0e0',
-  color: '#aaa',
-  cursor: 'not-allowed',
-};
-const ERROR_STYLE: React.CSSProperties = {
-  color: '#e53935',
-  background: '#ffebee',
-  borderRadius: 8,
-  padding: '8px 12px',
-  marginBottom: 12,
-  fontWeight: 600,
-  textAlign: 'center',
-};
-const TIMER_STYLE: React.CSSProperties = {
-  fontSize: 15,
-  color: '#039be5',
-  marginBottom: 10,
-  textAlign: 'center',
-};
 
 const SMSAuthFlow: React.FC<SMSAuthFlowProps> = ({ 
   diagnosisAnswers, 
@@ -328,128 +241,143 @@ const SMSAuthFlow: React.FC<SMSAuthFlowProps> = ({
     return phone;
   };
 
-  if (step === 'phone') {
-    return (
-      <div style={CARD_STYLE}>
-        <div style={TITLE_STYLE}>電話番号認証</div>
-        <div style={DESC_STYLE}>
-          {step === 'phone' ? 'ご本人確認のため、電話番号を入力してください。' : 'SMSで届いた6桁の認証コードを入力してください。'}
-        </div>
-        {error && <div style={ERROR_STYLE}>{error}</div>}
-        {step === 'phone' && (
-          <>
-            <input
-              style={INPUT_STYLE}
-              type="tel"
-              placeholder="例: 09012345678"
-              value={phoneNumber}
-              onChange={e => handlePhoneNumberChange(e.target.value)}
-              maxLength={11}
-              disabled={isLoading}
-            />
-            <button
-              style={phoneNumber.length === 11 && !isLoading ? BTN_STYLE : BTN_DISABLED}
-              onClick={handleSendSMS}
-              disabled={phoneNumber.length !== 11 || isLoading}
-            >
-              SMS認証コードを送信
-            </button>
-          </>
-        )}
-        {step === 'otp' && (
-          <>
-            <input
-              style={OTP_INPUT_STYLE}
-              type="text"
-              inputMode="numeric"
-              maxLength={6}
-              value={otpInput}
-              onChange={e => setOtpInput(e.target.value.replace(/[^0-9]/g, ''))}
-              placeholder="6桁の認証コード"
-              disabled={isLoading}
-            />
-            <div style={TIMER_STYLE}>
-              {remainingTime > 0 ? `有効期限: ${Math.floor(remainingTime / 60)}:${('0' + (remainingTime % 60)).slice(-2)}` : '認証コードの有効期限が切れました'}
-            </div>
-            <button
-              style={otpInput.length === 6 && !isLoading ? BTN_STYLE : BTN_DISABLED}
-              onClick={() => handleVerify(otpInput)}
-              disabled={otpInput.length !== 6 || isLoading}
-            >
-              認証する
-            </button>
-            <button
-              style={canResend && resendCount < 3 ? BTN_STYLE : BTN_DISABLED}
-              onClick={handleResendOTP}
-              disabled={!canResend || resendCount >= 3 || isLoading}
-            >
-              認証コードを再送信
-            </button>
-          </>
-        )}
-      </div>
-    );
-  }
-
-  // OTP認証画面
   return (
-    <div style={CARD_STYLE}>
-      <div style={TITLE_STYLE}>電話番号認証</div>
-      <div style={DESC_STYLE}>
-        {step === 'phone' ? 'ご本人確認のため、電話番号を入力してください。' : 'SMSで届いた6桁の認証コードを入力してください。'}
+    <div className="py-10 md:py-16">
+      <div className="max-w-md mx-auto px-4">
+        <div className="bg-gradient-to-br from-white via-white to-cyan-50 rounded-3xl shadow-2xl p-8 flex flex-col items-center min-h-[420px] border border-cyan-100">
+          
+          {/* Title */}
+          <h2 className="text-2xl md:text-3xl font-bold text-gray-800 mb-6 text-center">
+            📱 電話番号認証
+          </h2>
+          
+          {/* Description */}
+          <p className="text-base md:text-lg text-gray-600 mb-6 text-center leading-relaxed">
+            {step === 'phone' 
+              ? 'ご本人確認のため、電話番号を入力してください。' 
+              : `${formatPhoneForDisplay(phoneNumber)} に送信された6桁の認証コードを入力してください。`}
+          </p>
+          
+          {/* Error Message */}
+          {error && (
+            <div className="w-full bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-6 text-center font-medium">
+              ⚠️ {error}
+            </div>
+          )}
+          
+          {/* Phone Input Step */}
+          {step === 'phone' && (
+            <div className="w-full space-y-6">
+              <div className="relative">
+                <input
+                  type="tel"
+                  placeholder="例: 09012345678"
+                  value={phoneNumber}
+                  onChange={e => handlePhoneNumberChange(e.target.value)}
+                  maxLength={11}
+                  disabled={isLoading}
+                  className="w-full text-lg md:text-xl px-4 py-4 border-2 border-cyan-200 rounded-xl text-center font-mono tracking-wider focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
+                />
+                <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
+                  <span className="text-gray-400 text-sm">🇯🇵</span>
+                </div>
+              </div>
+              
+              <button
+                onClick={handleSendSMS}
+                disabled={phoneNumber.length !== 11 || isLoading}
+                className={`w-full py-4 px-6 rounded-xl font-bold text-lg transition-all duration-200 focus:ring-2 focus:ring-offset-2 focus:outline-none min-h-[56px] ${
+                  phoneNumber.length === 11 && !isLoading
+                    ? 'bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600 text-white shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 focus:ring-cyan-500'
+                    : 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                }`}
+              >
+                {isLoading ? (
+                  <div className="flex items-center justify-center space-x-2">
+                    <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                    <span>送信中...</span>
+                  </div>
+                ) : (
+                  '📨 SMS認証コードを送信'
+                )}
+              </button>
+            </div>
+          )}
+          
+          {/* OTP Input Step */}
+          {step === 'otp' && (
+            <div className="w-full space-y-6">
+              <div className="relative">
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  maxLength={6}
+                  value={otpInput}
+                  onChange={e => setOtpInput(e.target.value.replace(/[^0-9]/g, ''))}
+                  placeholder="6桁の認証コード"
+                  disabled={isLoading}
+                  className="w-full text-2xl md:text-3xl px-4 py-4 border-2 border-cyan-200 rounded-xl text-center font-mono tracking-[0.5em] bg-white focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
+                />
+              </div>
+              
+              {/* Timer */}
+              <div className="text-center">
+                <div className={`text-base font-medium px-4 py-2 rounded-lg ${
+                  remainingTime > 0 
+                    ? 'text-cyan-600 bg-cyan-50' 
+                    : 'text-red-600 bg-red-50'
+                }`}>
+                  {remainingTime > 0 
+                    ? `⏰ 有効期限: ${formatTime(remainingTime)}` 
+                    : '⏰ 認証コードの有効期限が切れました'
+                  }
+                </div>
+              </div>
+              
+              {/* Verify Button */}
+              <button
+                onClick={() => handleVerify(otpInput)}
+                disabled={otpInput.length !== 6 || isLoading}
+                className={`w-full py-4 px-6 rounded-xl font-bold text-lg transition-all duration-200 focus:ring-2 focus:ring-offset-2 focus:outline-none min-h-[56px] ${
+                  otpInput.length === 6 && !isLoading
+                    ? 'bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 focus:ring-green-500'
+                    : 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                }`}
+              >
+                {isLoading ? (
+                  <div className="flex items-center justify-center space-x-2">
+                    <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                    <span>認証中...</span>
+                  </div>
+                ) : (
+                  '✅ 認証する'
+                )}
+              </button>
+              
+              {/* Resend Button */}
+              <button
+                onClick={handleResendOTP}
+                disabled={!canResend || resendCount >= 3 || isLoading}
+                className={`w-full py-3 px-6 rounded-xl font-medium text-base transition-all duration-200 focus:ring-2 focus:ring-offset-2 focus:outline-none ${
+                  canResend && resendCount < 3 && !isLoading
+                    ? 'bg-white border-2 border-gray-300 text-gray-700 hover:bg-gray-50 hover:border-gray-400 focus:ring-gray-500'
+                    : 'bg-gray-100 border-2 border-gray-200 text-gray-400 cursor-not-allowed'
+                }`}
+              >
+                🔄 認証コードを再送信 {resendCount > 0 && `(${resendCount}/3)`}
+              </button>
+            </div>
+          )}
+          
+          {/* Cancel Button */}
+          <button
+            onClick={onCancel}
+            className="mt-4 text-gray-500 hover:text-gray-700 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 rounded px-2 py-1"
+          >
+            ← 戻る
+          </button>
+        </div>
       </div>
-      {error && <div style={ERROR_STYLE}>{error}</div>}
-      {step === 'phone' && (
-        <>
-          <input
-            style={INPUT_STYLE}
-            type="tel"
-            placeholder="例: 09012345678"
-            value={phoneNumber}
-            onChange={e => handlePhoneNumberChange(e.target.value)}
-            maxLength={11}
-            disabled={isLoading}
-          />
-          <button
-            style={phoneNumber.length === 11 && !isLoading ? BTN_STYLE : BTN_DISABLED}
-            onClick={handleSendSMS}
-            disabled={phoneNumber.length !== 11 || isLoading}
-          >
-            SMS認証コードを送信
-          </button>
-        </>
-      )}
-      {step === 'otp' && (
-        <>
-          <input
-            style={OTP_INPUT_STYLE}
-            type="text"
-            inputMode="numeric"
-            maxLength={6}
-            value={otpInput}
-            onChange={e => setOtpInput(e.target.value.replace(/[^0-9]/g, ''))}
-            placeholder="6桁の認証コード"
-            disabled={isLoading}
-          />
-          <div style={TIMER_STYLE}>
-            {remainingTime > 0 ? `有効期限: ${Math.floor(remainingTime / 60)}:${('0' + (remainingTime % 60)).slice(-2)}` : '認証コードの有効期限が切れました'}
-          </div>
-          <button
-            style={otpInput.length === 6 && !isLoading ? BTN_STYLE : BTN_DISABLED}
-            onClick={() => handleVerify(otpInput)}
-            disabled={otpInput.length !== 6 || isLoading}
-          >
-            認証する
-          </button>
-          <button
-            style={canResend && resendCount < 3 ? BTN_STYLE : BTN_DISABLED}
-            onClick={handleResendOTP}
-            disabled={!canResend || resendCount >= 3 || isLoading}
-          >
-            認証コードを再送信
-          </button>
-        </>
-      )}
     </div>
   );
 };
