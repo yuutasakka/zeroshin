@@ -148,6 +148,12 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
 
   const loadHomepageContentFromSupabase = async (settingKey: string) => {
     try {
+      // Supabaseが正しく設定されているかチェック
+      if (!supabaseConfig.url || !supabaseConfig.key || supabaseConfig.url.includes('your-project')) {
+        secureLog(`Supabase設定が不完全です。ローカルデータを使用: ${settingKey}`);
+        return null;
+      }
+
       const response = await fetch(`${supabaseConfig.url}/rest/v1/homepage_content_settings?setting_key.eq=${encodeURIComponent(settingKey)}`, {
         method: 'GET',
         headers: {
@@ -158,7 +164,12 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
       });
 
       if (!response.ok) {
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        if (response.status === 400) {
+          secureLog(`テーブルが存在しない可能性があります: ${settingKey} (400エラー)`);
+        } else {
+          secureLog(`HTTP ${response.status}: ${response.statusText}`);
+        }
+        return null;
       }
 
       const data = await response.json();
@@ -184,16 +195,17 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
         }
       }
 
-      // Supabaseから取得を試行
-      const response = await fetch(`${supabaseConfig.url}/rest/v1/expert_contact_settings?setting_key.eq=primary_financial_advisor&is_active.eq=true&select=*`, {
-        headers: {
-          'Authorization': `Bearer ${supabaseConfig.key}`,
-          'apikey': supabaseConfig.key,
-          'Content-Type': 'application/json'
-        }
-      });
+      // Supabaseから取得を試行（テーブル存在チェック付き）
+      if (supabaseConfig.url && supabaseConfig.key && !supabaseConfig.url.includes('your-project')) {
+        const response = await fetch(`${supabaseConfig.url}/rest/v1/expert_contact_settings?setting_key.eq=primary_financial_advisor&is_active.eq=true&select=*`, {
+          headers: {
+            'Authorization': `Bearer ${supabaseConfig.key}`,
+            'apikey': supabaseConfig.key,
+            'Content-Type': 'application/json'
+          }
+        });
 
-      if (response.ok) {
+        if (response.ok) {
         const data = await response.json();
         if (data && data.length > 0) {
           const expertContactData = {
@@ -210,7 +222,14 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
           return;
         }
       } else {
-        secureLog(`Supabase専門家連絡先取得エラー: ${response.status}`);
+        if (response.status === 400) {
+          secureLog('expert_contact_settingsテーブルが存在しません (400エラー)');
+        } else {
+          secureLog(`Supabase専門家連絡先取得エラー: ${response.status}`);
+        }
+      }
+      } else {
+        secureLog('Supabase設定が不完全のため、ローカルデータを使用');
       }
       
       // デフォルト値を使用
@@ -368,33 +387,49 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
   // セッション有効性チェック
   const checkSessionValidity = () => {
     try {
+      // 複数の認証状態を確認
       const session = SecureStorage.getSecureItem('admin_session');
-      if (!session) {
+      const sessionAuth = sessionStorage.getItem('admin_authenticated');
+      const forceAuth = localStorage.getItem('force_admin_logged_in');
+      
+      // セッション情報が全くない場合
+      if (!session && sessionAuth !== 'true' && forceAuth !== 'true') {
+        secureLog('認証情報が見つかりません');
         setSessionValid(false);
         return false;
       }
 
-      const now = Date.now();
-      
-      if (now > session.expires) {
-        setSessionValid(false);
-        localStorage.removeItem('admin_session');
-        sessionStorage.removeItem('admin_authenticated');
-        return false;
+      // セッション情報がある場合の有効期限チェック
+      if (session) {
+        const now = Date.now();
+        
+        if (session.expires && now > session.expires) {
+          secureLog('セッションの有効期限が切れています');
+          setSessionValid(false);
+          localStorage.removeItem('admin_session');
+          sessionStorage.removeItem('admin_authenticated');
+          localStorage.removeItem('force_admin_logged_in');
+          return false;
+        }
+
+        const timeRemaining = session.expires ? session.expires - now : 30 * 60 * 1000;
+        setSessionTimeRemaining(timeRemaining);
+        
+        // セッション期限が5分以内の場合は警告
+        if (timeRemaining < 5 * 60 * 1000) {
+          secureLog('セッションの有効期限が近づいています');
+        }
       }
 
-      const timeRemaining = session.expires - now;
-      setSessionTimeRemaining(timeRemaining);
-      
-      // セッション期限が5分以内の場合は警告
-      if (timeRemaining < 5 * 60 * 1000) {
-        secureLog('セッションの有効期限が近づいています');
-      }
-
+      setSessionValid(true);
       return true;
     } catch (error) {
       secureLog('セッションデータの解析エラー:', error);
       setSessionValid(false);
+      // エラー時は全認証情報をクリア
+      localStorage.removeItem('admin_session');
+      sessionStorage.removeItem('admin_authenticated');
+      localStorage.removeItem('force_admin_logged_in');
       return false;
     }
   };
@@ -511,7 +546,7 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
         if (supabaseCredentials) {
           secureLog('Supabaseから管理者設定を取得');
           setAdminPhoneNumber(supabaseCredentials.phone_number || '09012345678');
-          setAdminBackupCode(supabaseCredentials.backup_code || 'MT-BACKUP-2024');
+          setAdminBackupCode(supabaseCredentials.backup_code || 'AI-BACKUP-2024');
           
           // 管理者IDを設定
           if (supabaseCredentials.id) {
@@ -535,11 +570,11 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
         if (storedCredentials) {
           secureLog('ローカルストレージから管理者設定を取得');
           setAdminPhoneNumber(storedCredentials.phone_number || '09012345678');
-          setAdminBackupCode(storedCredentials.backup_code || 'MT-BACKUP-2024');
+          setAdminBackupCode(storedCredentials.backup_code || 'AI-BACKUP-2024');
         } else {
           secureLog('デフォルト管理者設定を使用');
           setAdminPhoneNumber('09012345678');
-          setAdminBackupCode('MT-BACKUP-2024');
+          setAdminBackupCode('AI-BACKUP-2024');
         }
       } catch (error: unknown) {
         handleError(error, '管理者設定の読み込みに失敗しました。デフォルト値を使用します。', '管理者設定読み込み');
@@ -565,6 +600,7 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
         const supabaseProducts = await SupabaseAdminAPI.loadAdminSetting('financial_products');
         if (supabaseProducts) {
           secureLog('Supabaseから商品設定を読み込み');
+          console.log('商品設定データ (Supabase):', supabaseProducts);
           setProductsForEditing(supabaseProducts);
           // ローカルストレージにもバックアップ保存
           localStorage.setItem('customFinancialProducts', JSON.stringify(supabaseProducts));
@@ -574,12 +610,15 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
           if (customProductsString) {
             try {
               const customProducts = JSON.parse(customProductsString);
+              console.log('商品設定データ (ローカルストレージ):', customProducts);
               setProductsForEditing(customProducts);
             } catch (e) {
               secureLog("Error parsing custom financial products from localStorage:", e);
+              console.log('商品設定データ (デフォルト - パースエラー):', defaultFinancialProducts);
               setProductsForEditing(JSON.parse(JSON.stringify(defaultFinancialProducts))); // Deep copy
             }
           } else {
+            console.log('商品設定データ (デフォルト - ローカルなし):', defaultFinancialProducts);
             setProductsForEditing(JSON.parse(JSON.stringify(defaultFinancialProducts))); // Deep copy
           }
         }
@@ -799,32 +838,86 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
   };
 
   const handleExportCSV = () => {
+    console.log('handleExportCSV called', { userSessions: userSessions.length, userSessionsData: userSessions });
     if (userSessions.length === 0) {
-      // エクスポートするデータがありません
+      console.log('No user sessions to export');
+      alert('エクスポートするデータがありません。テスト用ダミーデータを作成しますか？');
+      
+      // テスト用ダミーデータを作成
+      const dummySession = {
+        id: `test-${Date.now()}`,
+        timestamp: new Date().toISOString(),
+        phoneNumber: '090-1234-5678',
+        diagnosisAnswers: {
+          age: '30s',
+          experience: 'beginner',
+          purpose: 'retirement',
+          amount: '50000',
+          timing: 'within_month'
+        },
+        smsVerified: true,
+        verifiedPhoneNumber: '090-1234-5678'
+      };
+      
+      setUserSessions([dummySession]);
+      console.log('Dummy data created:', dummySession);
       return;
     }
-    const headers = ["ID", "回答日時", "電話番号", "年齢", "投資経験", "目的", "投資可能額/月", "開始時期"];
-    const rows = userSessions.map(session => [
-      session.id,
-      new Date(session.timestamp).toLocaleString('ja-JP'),
-      session.phoneNumber,
-      getAnswerLabel('age', session.diagnosisAnswers.age),
-      getAnswerLabel('experience', session.diagnosisAnswers.experience),
-      getAnswerLabel('purpose', session.diagnosisAnswers.purpose),
-      getAnswerLabel('amount', session.diagnosisAnswers.amount),
-      getAnswerLabel('timing', session.diagnosisAnswers.timing),
-    ]);
 
-    const csvContent = "data:text/csv;charset=utf-8," + headers.join(",") + "\n"
-                     + rows.map(e => e.join(",")).join("\n");
-    
-    const encodedUri = encodeURI(csvContent);
-    const link = document.createElement("a");
-    link.setAttribute("href", encodedUri);
-    link.setAttribute("download", `moneyticket_diagnoses_${new Date().toISOString().split('T')[0]}.csv`);
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    try {
+      const headers = ["ID", "回答日時", "電話番号", "年齢", "投資経験", "目的", "投資可能額/月", "開始時期"];
+      
+      // CSV形式で安全にデータを処理（カンマやクォートをエスケープ）
+      const escapeCSVField = (field: string | null | undefined): string => {
+        if (field === null || field === undefined || field === '') {
+          return '""';
+        }
+        const stringField = String(field);
+        if (stringField.includes(',') || stringField.includes('"') || stringField.includes('\n')) {
+          return `"${stringField.replace(/"/g, '""')}"`;
+        }
+        return stringField;
+      };
+
+      const rows = userSessions.map(session => [
+        escapeCSVField(session.id),
+        escapeCSVField(new Date(session.timestamp).toLocaleString('ja-JP')),
+        escapeCSVField(session.phoneNumber),
+        escapeCSVField(getAnswerLabel('age', session.diagnosisAnswers?.age)),
+        escapeCSVField(getAnswerLabel('experience', session.diagnosisAnswers?.experience)),
+        escapeCSVField(getAnswerLabel('purpose', session.diagnosisAnswers?.purpose)),
+        escapeCSVField(getAnswerLabel('amount', session.diagnosisAnswers?.amount)),
+        escapeCSVField(getAnswerLabel('timing', session.diagnosisAnswers?.timing)),
+      ]);
+
+      // BOM付きUTF-8でCSVコンテンツを作成
+      const csvContent = '\uFEFF' + headers.join(',') + '\n' + rows.map(row => row.join(',')).join('\n');
+      
+      // Blobを使用してCSVファイルを作成
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      
+      // ダウンロードリンクを作成
+      const link = document.createElement('a');
+      const url = URL.createObjectURL(blob);
+      link.setAttribute('href', url);
+      link.setAttribute('download', `aiconectx_diagnoses_${new Date().toISOString().split('T')[0]}.csv`);
+      link.style.visibility = 'hidden';
+      
+      // リンクをDOMに追加してクリックし、その後削除
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      
+      // URLオブジェクトをクリーンアップ
+      URL.revokeObjectURL(url);
+      
+      console.log('CSV export completed successfully');
+      alert(`CSVファイルをダウンロードしました（${userSessions.length}件のデータ）`);
+      
+    } catch (error) {
+      console.error('CSV export error:', error);
+      alert('CSVエクスポート中にエラーが発生しました。');
+    }
   };
 
   // Product Settings Handlers
@@ -902,6 +995,7 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
 
   // Testimonial Settings Handlers
   const handleOpenTestimonialModal = (testimonial?: Testimonial) => {
+    console.log('handleOpenTestimonialModal called', { testimonial });
     if (testimonial) {
         setEditingTestimonial({ ...testimonial });
     } else {
@@ -950,6 +1044,7 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
   };
 
   const handleDeleteTestimonial = (testimonialId: string) => {
+    console.log('handleDeleteTestimonial called', { testimonialId });
     if (confirm('この項目を削除してもよろしいですか？')) { // 削除確認
         setTestimonialsForEditing(testimonialsForEditing.filter(t => t.id !== testimonialId));
         setTestimonialStatus('お客様の声がリストから削除されました。「設定を保存」で確定してください。');
@@ -957,6 +1052,7 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
   };
   
   const handleSaveTestimonialSettings = async () => {
+    console.log('handleSaveTestimonialSettings called');
     setTestimonialStatus('📝 お客様の声を保存中...');
     
     try {
@@ -1708,6 +1804,9 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
           secureLog('メインビジュアルデータをSupabaseに保存完了');
           successCount++;
         }
+        // ローカルストレージにもバックアップ保存
+        localStorage.setItem('customMainVisualData', JSON.stringify(mainVisualData));
+        secureLog('メインビジュアルデータをローカルストレージにバックアップ');
       } catch (error) {
         secureLog('メインビジュアルデータの保存エラー:', error);
       }
@@ -1953,21 +2052,21 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
                      className={`admin-nav-button px-4 py-2 rounded-md text-sm font-medium transition-colors ${viewMode === 'securitySettings' ? 'bg-red-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}`}
                  >
                      <i className="fas fa-shield-alt mr-2"></i>
-                     <span>🔐 セキュリティ設定</span>
+                     <span>セキュリティ設定</span>
                  </button>
                  <button 
                      onClick={() => setViewMode('financialPlannersSettings')}
                      className={`admin-nav-button px-4 py-2 rounded-md text-sm font-medium transition-colors ${viewMode === 'financialPlannersSettings' ? 'bg-purple-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}`}
                  >
                      <i className="fas fa-user-tie mr-2"></i>
-                     <span>👔 FP管理</span>
+                     <span>FP管理</span>
                  </button>
                  <button 
                      onClick={() => setViewMode('expertContactSettings')}
                      className={`admin-nav-button px-4 py-2 rounded-md text-sm font-medium transition-colors ${viewMode === 'expertContactSettings' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}`}
                  >
                      <i className="fas fa-phone mr-2"></i>
-                     <span>📞 専門家設定</span>
+                     <span>専門家設定</span>
                  </button>
                  <button 
                      onClick={() => setViewMode('approvalRequests')}
@@ -2090,6 +2189,11 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
                     </div>
                 )}
                 <div className="space-y-6">
+                <div className="mb-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                    <h4 className="text-sm font-semibold text-blue-700 mb-2">デバッグ情報</h4>
+                    <p className="text-xs text-blue-600">商品数: {productsForEditing.length}</p>
+                    <p className="text-xs text-blue-600">商品ID: {productsForEditing.map(p => p.id).join(', ')}</p>
+                </div>
                 {productsForEditing.map((product, pIdx) => (
                     <div key={product.id} className="p-4 border border-gray-200 rounded-lg bg-gray-50">
                     <h3 className="text-lg font-semibold text-gray-700 mb-3">{product.name}</h3>

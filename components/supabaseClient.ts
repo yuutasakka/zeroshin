@@ -1305,7 +1305,7 @@ export class AdminPasswordReset {
       const { data: { user } } = await supabase.auth.getUser();
       if (user) {
         // admin_credentialsテーブルのパスワードハッシュも更新
-        const passwordHash = CryptoJS.PBKDF2(newPassword, 'moneyticket-salt-2024', {
+        const passwordHash = CryptoJS.PBKDF2(newPassword, 'ai-conectx-salt-2024', {
           keySize: 256/32,
           iterations: 10000
         }).toString();

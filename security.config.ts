@@ -619,7 +619,7 @@ export const validateInput = {
       /123/,
       /qwerty/i,
       /abc/i,
-      /moneyticket/i // アプリ名を含むパスワードを禁止
+      /ai.conectx/i // アプリ名を含むパスワードを禁止
     ];
     
     const hasWeakPattern = weakPatterns.some(pattern => pattern.test(password));

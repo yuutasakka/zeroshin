@@ -104,7 +104,7 @@ export async function GET(request: NextRequest) {
     
     return NextResponse.json({
       success: true,
-      message: 'MoneyTicket 認証デバッグAPI',
+      message: 'AI ConectX 認証デバッグAPI',
       availableActions: [
         'POST /api/debug-auth - { action: "check_session", sessionId: "..." }',
         'POST /api/debug-auth - { action: "check_phone", phoneNumber: "..." }',

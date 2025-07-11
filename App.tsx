@@ -183,7 +183,9 @@ const App: React.FC = () => {
         const sessionAuth = sessionStorage.getItem('admin_authenticated');
         const adminSession = localStorage.getItem('admin_session');
         
-        if (sessionAuth === 'true' && adminSession) {
+        const forceLoggedIn = localStorage.getItem('force_admin_logged_in');
+        
+        if (sessionAuth === 'true' && adminSession && forceLoggedIn === 'true') {
           // セッションの有効期限をチェック
           const session = JSON.parse(adminSession);
           const now = Date.now();
@@ -193,12 +195,13 @@ const App: React.FC = () => {
             // 期限切れセッションをクリア
             sessionStorage.removeItem('admin_authenticated');
             localStorage.removeItem('admin_session');
+            localStorage.removeItem('force_admin_logged_in');
             setIsAdminLoggedIn(false);
             if (currentPage === 'adminDashboard') {
-              setCurrentPage('diagnosis');
+              setCurrentPage('home');
             }
           } else if (session.username === 'admin' || session.authenticated === true) {
-            // 有効なセッションが存在する場合
+            // 有効なセッションが存在する場合のみ
             setIsAdminLoggedIn(true);
             if (currentPage !== 'adminDashboard') {
               setCurrentPage('adminDashboard');
@@ -208,14 +211,16 @@ const App: React.FC = () => {
           // 不完全なセッション情報をクリア
           sessionStorage.removeItem('admin_authenticated');
           localStorage.removeItem('admin_session');
+          localStorage.removeItem('force_admin_logged_in');
           setIsAdminLoggedIn(false);
         }
       } catch (error) {
         // エラー時は全セッション情報をクリア
         sessionStorage.clear();
         localStorage.removeItem('admin_session');
+        localStorage.removeItem('force_admin_logged_in');
         setIsAdminLoggedIn(false);
-        setCurrentPage('diagnosis');
+        setCurrentPage('home');
       }
     };
 
@@ -414,42 +419,59 @@ const App: React.FC = () => {
   }
 
   const handleAdminLoginSuccess = () => {
+    console.log('handleAdminLoginSuccess called', { isSupabaseAuth, currentPage });
     
-    if (isSupabaseAuth) {
-      // Supabase認証の場合
-      setCurrentPage('adminDashboard');
-    } else {
-      // 従来認証の場合（後方互換性）
+    // セッション情報を設定
+    const adminSession = localStorage.getItem('admin_session');
+    if (adminSession) {
+      sessionStorage.setItem('admin_authenticated', 'true');
+      
+      // 管理者ログイン状態を強制的に維持
+      localStorage.setItem('force_admin_logged_in', 'true');
+      
+      // 状態を同期的に更新
       setIsAdminLoggedIn(true);
-      setIsSupabaseAuth(false); // 従来認証であることを明示
       setCurrentPage('adminDashboard');
       
-      // セッション情報が適切に保存されているかチェック
-      const adminSession = localStorage.getItem('admin_session');
-      if (adminSession) {
-        sessionStorage.setItem('admin_authenticated', 'true');
-      }
+      console.log('Admin login state set synchronously - all session data configured');
+    } else {
+      console.error('Admin session not found in localStorage');
+      // セッションがない場合はログイン失敗として扱う
+      setIsAdminLoggedIn(false);
+      setCurrentPage('traditionalLogin');
     }
     
     window.scrollTo(0,0);
   };
 
   const handleAdminLogout = async () => {
+    console.log('handleAdminLogout called');
+    
+    // 全ての認証状態をクリア
+    setIsAdminLoggedIn(false);
+    setIsSupabaseAuth(false);
+    setSupabaseUser(null);
+    
     if (isSupabaseAuth) {
       // Supabase認証の場合
       try {
         await supabase.auth.signOut();
+        console.log('Supabase sign out completed');
       } catch (error) {
-        // ログアウトエラーは無視（状態はクリアされる）
+        console.error('Supabase logout error:', error);
       }
-    } else {
-      // 従来認証の場合
-      setIsAdminLoggedIn(false);
-      sessionStorage.clear();
-      localStorage.removeItem('admin_session');
     }
     
-    setCurrentPage('diagnosis');
+    // 全てのセッション関連データを強制クリア
+    sessionStorage.clear();
+    localStorage.removeItem('admin_session');
+    localStorage.removeItem('force_admin_logged_in');
+    localStorage.removeItem('admin_session_state');
+    
+    // 確実にログアウト状態を保証
+    console.log('All admin session data cleared');
+    
+    setCurrentPage('home');
     window.scrollTo(0,0);
   };
   
@@ -628,17 +650,88 @@ const App: React.FC = () => {
         </div>
       );
     }
-    // 管理者ログイン状態の場合
-    if (isAdminLoggedIn && currentPage === 'adminDashboard') {
-      return (
-        <AuthGuard>
-          <AuthenticatedHeader />
-          <AdminDashboardPage 
-            onLogout={handleAdminLogout}
-            onNavigateHome={navigateToHome}
-          />
-        </AuthGuard>
-      );
+    // 管理者ログイン状態の場合（セキュリティ強化）
+    const forceAdminLoggedIn = localStorage.getItem('force_admin_logged_in') === 'true';
+    const sessionAuth = sessionStorage.getItem('admin_authenticated') === 'true';
+    const adminSession = localStorage.getItem('admin_session');
+    
+    // セッション有効性の詳細チェック
+    let isValidSession = false;
+    if (adminSession && forceAdminLoggedIn) {
+      try {
+        const session = JSON.parse(adminSession);
+        const now = Date.now();
+        
+        // セッションの有効期限をチェック
+        if (session.expires && now <= session.expires) {
+          isValidSession = true;
+        } else if (!session.expires && session.authenticated === true) {
+          // 有効期限がない場合は認証済みかどうかで判断
+          isValidSession = true;
+        } else {
+          // 期限切れまたは無効なセッションをクリア
+          localStorage.removeItem('admin_session');
+          localStorage.removeItem('force_admin_logged_in');
+          sessionStorage.removeItem('admin_authenticated');
+        }
+      } catch (error) {
+        console.error('セッション解析エラー:', error);
+        // 不正なセッションデータをクリア
+        localStorage.removeItem('admin_session');
+        localStorage.removeItem('force_admin_logged_in');
+        sessionStorage.removeItem('admin_authenticated');
+      }
+    }
+    
+    // より厳密な認証チェック: 全ての条件が揃っている場合のみアクセス許可
+    const actualAdminLoggedIn = isAdminLoggedIn && forceAdminLoggedIn && sessionAuth && isValidSession;
+    const actualCurrentPage = actualAdminLoggedIn ? 'adminDashboard' : currentPage;
+    
+    console.log('Checking admin dashboard condition:', { 
+      isAdminLoggedIn, 
+      forceAdminLoggedIn, 
+      sessionAuth,
+      isValidSession,
+      actualAdminLoggedIn, 
+      currentPage, 
+      actualCurrentPage,
+      condition: actualAdminLoggedIn && actualCurrentPage === 'adminDashboard' 
+    });
+    
+    if (actualAdminLoggedIn && actualCurrentPage === 'adminDashboard') {
+      console.log('Rendering AdminDashboardPage');
+      try {
+        return (
+          <div style={{ minHeight: '100vh', backgroundColor: '#f5f5f5' }}>
+            <AdminDashboardPage 
+              onLogout={handleAdminLogout}
+              onNavigateHome={navigateToHome}
+            />
+          </div>
+        );
+      } catch (error) {
+        console.error('AdminDashboardPage render error:', error);
+        return (
+          <div style={{ padding: '20px', backgroundColor: 'white', minHeight: '100vh' }}>
+            <h1 style={{ color: 'red' }}>エラーが発生しました</h1>
+            <p style={{ color: 'black' }}>管理者ダッシュボードの読み込み中にエラーが発生しました。</p>
+            <pre style={{ color: 'red', fontSize: '12px' }}>{error?.toString()}</pre>
+            <button 
+              onClick={handleAdminLogout}
+              style={{ 
+                padding: '10px 20px', 
+                backgroundColor: '#dc3545', 
+                color: 'white', 
+                border: 'none', 
+                borderRadius: '4px',
+                cursor: 'pointer'
+              }}
+            >
+              ログアウト
+            </button>
+          </div>
+        );
+      }
     }
 
     // 管理者関連ページ

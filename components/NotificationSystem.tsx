@@ -61,7 +61,7 @@ const NotificationSystem: React.FC<NotificationSystemProps> = ({ onNotificationS
       enabled: false,
       webhookUrl: '',
       channel: '#general',
-      username: 'MoneyTicket'
+      username: 'AI ConectX'
     },
     lineNotifications: {
       enabled: false,
@@ -157,7 +157,7 @@ const NotificationSystem: React.FC<NotificationSystemProps> = ({ onNotificationS
   const sendEmailNotification = async (notification: DiagnosisNotification): Promise<{ success: boolean; message?: string }> => {
     try {
       const emailConfig = settings.emailNotifications;
-      const subject = `[MoneyTicket] ${getNotificationTitle(notification.type)}`;
+      const subject = `[AI ConectX] ${getNotificationTitle(notification.type)}`;
       const body = formatNotificationMessage(notification);
 
       // 実際の実装では、バックエンドAPIまたはSMTPサービスを使用

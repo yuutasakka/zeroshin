@@ -41,7 +41,7 @@ const SupabaseMigrationWarning: React.FC<SupabaseMigrationWarningProps> = ({ onC
           </h3>
           
           <div className="text-sm text-gray-600 space-y-2 mb-6 text-left">
-            <p>MoneyTicketアプリケーションが正常に動作するために、以下のマイグレーションを実行してください：</p>
+            <p>AI ConectXアプリケーションが正常に動作するために、以下のマイグレーションを実行してください：</p>
             
             <div className="bg-gray-50 p-3 rounded border-l-4 border-blue-500">
               <h4 className="font-medium text-gray-900 mb-2">📝 実行手順:</h4>

@@ -1,12 +1,33 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import FloatingHeartsBackground from './FloatingHeartsBackground';
 import SparkleBackground from './SparkleBackground';
+import { defaultMainVisualData } from '../data/homepageContentData';
 
 interface AIConectXHeroProps {
   onStartDiagnosis: () => void;
 }
 
 const AIConectXHero: React.FC<AIConectXHeroProps> = ({ onStartDiagnosis }) => {
+  const [mainVisualData, setMainVisualData] = useState(defaultMainVisualData);
+
+  useEffect(() => {
+    // ローカルストレージから設定を読み込み
+    const loadMainVisualSettings = () => {
+      try {
+        const storedSettings = localStorage.getItem('customMainVisualData');
+        if (storedSettings) {
+          const parsedSettings = JSON.parse(storedSettings);
+          setMainVisualData(parsedSettings);
+          console.log('メインビジュアル設定をローカルストレージから読み込み:', parsedSettings);
+        }
+      } catch (error) {
+        console.error('メインビジュアル設定の読み込みエラー:', error);
+      }
+    };
+
+    loadMainVisualSettings();
+  }, []);
+
   const heroStyles = {
     hero: {
       position: 'relative' as const,
@@ -186,13 +207,13 @@ const AIConectXHero: React.FC<AIConectXHeroProps> = ({ onStartDiagnosis }) => {
           {/* メインタイトル */}
           <div style={heroStyles.title}>
             <span style={heroStyles.titleEmoji}>💰</span>
-            <h1 style={heroStyles.titleText} className="hero-title-text">あなたの未来の資産を診断！</h1>
+            <h1 style={heroStyles.titleText} className="hero-title-text">{mainVisualData.title}</h1>
           </div>
           
           {/* サブタイトル */}
           <div style={heroStyles.subtitle}>
             <span style={heroStyles.subtitleEmoji}>✨</span>
-            <h2 style={heroStyles.subtitleText} className="hero-subtitle-text">5分で分かる！無料診断スタート</h2>
+            <h2 style={heroStyles.subtitleText} className="hero-subtitle-text">{mainVisualData.subtitle}</h2>
             <span style={heroStyles.subtitleEmoji}>✨</span>
           </div>
           

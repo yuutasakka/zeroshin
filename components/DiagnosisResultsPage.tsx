@@ -409,7 +409,7 @@ const DiagnosisResultsPage: React.FC<DiagnosisResultsPageProps> = ({ diagnosisDa
             rating: 4.8,
             languages: ['日本語', '英語'],
             is_active: true,
-            contact_info: { phone: '03-1234-5678', email: 'tanaka@moneyticket.com' },
+            contact_info: { phone: '03-1234-5678', email: 'tanaka@aiconectx.co.jp' },
             display_order: 1
           },
           {
@@ -421,7 +421,7 @@ const DiagnosisResultsPage: React.FC<DiagnosisResultsPageProps> = ({ diagnosisDa
             rating: 4.9,
             languages: ['日本語'],
             is_active: true,
-            contact_info: { phone: '03-2345-6789', email: 'sato@moneyticket.com' },
+            contact_info: { phone: '03-2345-6789', email: 'sato@aiconectx.co.jp' },
             display_order: 2
           },
           {
@@ -433,7 +433,7 @@ const DiagnosisResultsPage: React.FC<DiagnosisResultsPageProps> = ({ diagnosisDa
             rating: 4.7,
             languages: ['日本語', '中国語'],
             is_active: true,
-            contact_info: { phone: '03-3456-7890', email: 'yamada@moneyticket.com' },
+            contact_info: { phone: '03-3456-7890', email: 'yamada@aiconectx.co.jp' },
             display_order: 3
           }
         ];

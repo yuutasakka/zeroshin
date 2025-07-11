@@ -60,7 +60,7 @@ export class EnhancedSupabaseAuth {
         options: {
           data: {
             ...metadata,
-            signup_source: 'moneyticket_admin',
+            signup_source: 'aiconectx_admin',
             registration_timestamp: new Date().toISOString(),
             password_strength_score: passwordValidation.score
           },

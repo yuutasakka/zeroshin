@@ -64,7 +64,7 @@ async function sendNotificationEmail(
     return;
   }
 
-  const fromEmail = Deno.env.get("FROM_EMAIL") || "noreply@moneyticket.co.jp";
+  const fromEmail = Deno.env.get("FROM_EMAIL") || "noreply@aiconectx.co.jp";
   
   let subject: string;
   let content: string;
@@ -90,7 +90,7 @@ ${fullName} 様
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-ログインURL: ${Deno.env.get("SITE_URL") || "https://moneyticket.co.jp"}/login
+ログインURL: ${Deno.env.get("SITE_URL") || "https://aiconectx.co.jp"}/login
 
 ${adminNotes ? `
 【管理者からのメッセージ】
@@ -101,7 +101,7 @@ ${adminNotes}
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 AI ConectX サポートチーム
-Email: support@moneyticket.co.jp
+Email: support@aiconectx.co.jp
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
     `;
   } else {
@@ -122,7 +122,7 @@ ${adminNotes}
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 AI ConectX サポートチーム
-Email: support@moneyticket.co.jp
+Email: support@aiconectx.co.jp
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
     `;
   }

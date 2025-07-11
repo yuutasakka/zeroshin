@@ -18,7 +18,7 @@ async function initializeMCPClient() {
       : 'http://localhost:3000';
     
     const mcpClient = await createMcpClient({
-      name: 'moneyticket-financial-advisor',
+      name: 'ai-conectx-financial-advisor',
       transport: {
         type: 'sse',
         url: `${baseUrl}/src/app/api/mcp`
@@ -54,7 +54,7 @@ export async function POST(request: Request) {
     const messages = [
       {
         role: 'system' as const,
-        content: `あなたはMoneyTicketの専属財務アドバイザーです。以下の役割を担ってください：
+        content: `あなたはAI ConectXの専属財務アドバイザーです。以下の役割を担ってください：
 
 1. 財務診断: ユーザーの収入、支出、貯蓄、負債を分析し健康度スコアを算出
 2. 投資アドバイス: リスク許容度に応じた投資戦略を提案
@@ -142,7 +142,7 @@ export async function GET() {
     return new Response(
       JSON.stringify({
         status: 'ok',
-        service: 'MoneyTicket MCP Chat API',
+        service: 'AI ConectX MCP Chat API',
         apiKeyConfigured: hasApiKey,
         timestamp: new Date().toISOString()
       }),

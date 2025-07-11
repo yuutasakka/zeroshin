@@ -24,7 +24,7 @@ const logger = winston.createLogger({
     winston.format.errors({ stack: true }),
     winston.format.json()
   ),
-  defaultMeta: { service: 'moneyticket-auth' },
+  defaultMeta: { service: 'ai-conectx-auth' },
   transports: [
     new winston.transports.File({ filename: 'logs/error.log', level: 'error' }),
     new winston.transports.File({ filename: 'logs/combined.log' }),
@@ -34,7 +34,7 @@ const logger = winston.createLogger({
 const app = express();
 const PORT = process.env.PORT || 8080;
 const NODE_ENV = process.env.NODE_ENV || 'development';
-const JWT_SECRET = process.env.JWT_SECRET || 'moneyticket-super-secret-key-2024';
+const JWT_SECRET = process.env.JWT_SECRET || 'ai-conectx-super-secret-key-2024';
 
 // セキュリティヘッダーの設定（本番環境では厳格化）
 const isProduction = NODE_ENV === 'production';

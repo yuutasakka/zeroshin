@@ -1,4 +1,4 @@
--- MoneyTicket ホームページコンテンツ設定テーブル作成 - マイグレーション 009 (修正版)
+-- AI ConectX ホームページコンテンツ設定テーブル作成 - マイグレーション 009 (修正版)
 -- エラーで出ている homepage_content_settings テーブルを作成
 
 -- 1. 依存する関数を先に作成
@@ -51,7 +51,7 @@ INSERT INTO homepage_content_settings (
     '{
         "title": "あなたの未来を一緒に描こう♪",
         "subtitle": "無料相談で理想の資産運用プランを見つけませんか？",
-        "description": "MoneyTicketで、あなたの夢や目標に合わせた最適な資産運用戦略を専門家と一緒に作りましょう。",
+        "description": "AI ConectXで、あなたの夢や目標に合わせた最適な資産運用戦略を専門家と一緒に作りましょう。",
         "buttonText": "無料診断を始める",
         "image_url": "/images/main-visual.jpg"
     }'::jsonb,
@@ -82,7 +82,7 @@ INSERT INTO homepage_content_settings (
     'header_data',
     '{
         "logo": {
-            "text": "MoneyTicket",
+            "text": "AI ConectX",
             "image_url": "/images/logo.png"
         },
         "navigation": [
@@ -107,7 +107,7 @@ INSERT INTO homepage_content_settings (
 (
     'features_section',
     '{
-        "title": "MoneyTicketが選ばれる理由",
+        "title": "AI ConectXが選ばれる理由",
         "subtitle": "安心・安全・確実な資産運用サポート",
         "features": [
             {
