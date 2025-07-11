@@ -50,51 +50,17 @@ const Footer: React.FC<FooterProps> = ({ onNavigateToAdminLogin }) => {
     loadLegalLinks();
   }, []);
 
-  useEffect(() => {
-    // ローカルストレージの変更を監視
-    const handleStorageChange = (e: StorageEvent) => {
-      if (e.key === 'customLegalLinks') {
-        loadLegalLinks();
-      }
-    };
-
-    window.addEventListener('storage', handleStorageChange);
-    return () => window.removeEventListener('storage', handleStorageChange);
-  }, []);
+  // ローカルストレージ監視を削除（Supabaseのみ使用）
 
   const loadFooterFromSupabase = async () => {
     try {
-      // まずローカルストレージからカスタムデータを確認
-      const localFooterData = localStorage.getItem('customFooterData');
-      if (localFooterData) {
-        try {
-          const parsedLocal = JSON.parse(localFooterData);
-          setFooterData(parsedLocal);
-          secureLog('ローカルストレージからフッターデータを読み込み');
-          return;
-        } catch (parseError) {
-          secureLog('ローカルストレージのフッターデータ解析エラー:', parseError);
-        }
-      }
-
-      // 次にサンプルデータを確認
-      const sampleFooterData = localStorage.getItem('homepage_content_footer_data');
-      if (sampleFooterData) {
-        try {
-          const parsedFooterData = JSON.parse(sampleFooterData);
-          setFooterData(parsedFooterData);
-          secureLog('✅ フッターデータをサンプルデータから読み込み');
-          return;
-        } catch (parseError) {
-          secureLog('サンプルフッターデータ解析エラー:', parseError);
-        }
-      }
-
       const supabaseConfig = createSupabaseClient();
       
-      // 本番環境でSupabase設定がない場合はデフォルトデータを使用
-      if (!supabaseConfig.url || !supabaseConfig.key) {
-        secureLog('⚠️ Footer: Supabase設定なし：デフォルトデータを使用');
+      // Supabase設定を確認
+      if (!supabaseConfig.url || !supabaseConfig.key || 
+          supabaseConfig.url.includes('your-project') || 
+          supabaseConfig.key.includes('your-anon-key')) {
+        secureLog('⚠️ Footer: Supabase設定が無効：デフォルトフッターデータを使用');
         return;
       }
 
@@ -123,71 +89,63 @@ const Footer: React.FC<FooterProps> = ({ onNavigateToAdminLogin }) => {
 
       secureLog('デフォルトフッターデータを使用');
     } catch (error) {
-      secureLog('フッターデータ読み込みエラー、フォールバック処理中:', error);
-      
-      // エラー時でもローカルストレージを確認
-      try {
-        const fallbackFooterData = localStorage.getItem('customFooterData');
-        if (fallbackFooterData) {
-          const parsedFallback = JSON.parse(fallbackFooterData);
-          setFooterData(parsedFallback);
-          secureLog('エラー時フォールバック: ローカルストレージからフッターデータを読み込み');
-          return;
-        }
-      } catch (fallbackError) {
-        secureLog('フォールバックフッターデータエラー:', fallbackError);
-      }
-
-      // 最終的にはデフォルトデータを使用（エラーを表示しない）
-      secureLog('最終フォールバック: デフォルトフッターデータを使用');
+      secureLog('フッターデータ読み込みエラー:', error);
+      // エラー時はデフォルトデータを使用
+      secureLog('エラー時フォールバック: デフォルトフッターデータを使用');
     }
   };
 
-  const loadLegalLinks = () => {
+  const loadLegalLinks = async () => {
     try {
-      // まずサンプルデータを確認
-      const sampleLegalLinks = localStorage.getItem('legal_links');
-      if (sampleLegalLinks) {
-        const parsedSampleLinks = JSON.parse(sampleLegalLinks);
-        // サンプルデータを既存の形式に変換
-        const convertedLinks = parsedSampleLinks.map((link: any, index: number) => ({
-          id: index + 1,
-          link_type: link.category || 'other',
-          title: link.title,
-          url: link.url,
-          is_active: true,
-          created_at: '',
-          updated_at: ''
-        }));
-        setLegalLinks(convertedLinks);
-        secureLog('✅ リーガルリンクをサンプルデータから読み込み');
+      const supabaseConfig = createSupabaseClient();
+      
+      // Supabase設定を確認
+      if (!supabaseConfig.url || !supabaseConfig.key || 
+          supabaseConfig.url.includes('your-project') || 
+          supabaseConfig.key.includes('your-anon-key')) {
+        secureLog('⚠️ Footer: Supabase設定が無効：デフォルトリーガルリンクを使用');
+        setDefaultLegalLinks();
         return;
       }
 
-      const storedLinks = localStorage.getItem('customLegalLinks');
-      if (storedLinks) {
-        setLegalLinks(JSON.parse(storedLinks));
+      // Supabaseからリーガルリンクデータを取得
+      const response = await fetch(`${supabaseConfig.url}/rest/v1/legal_links?select=*&is_active.eq=true&order=id`, {
+        headers: {
+          'Authorization': `Bearer ${supabaseConfig.key}`,
+          'apikey': supabaseConfig.key,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (response.ok) {
+        const links = await response.json();
+        if (links && links.length > 0) {
+          setLegalLinks(links);
+          secureLog(`Supabaseから${links.length}件のリーガルリンクを読み込み`);
+          return;
+        }
+      } else if (response.status === 400) {
+        secureLog('Supabaseリーガルリンクテーブルが存在しません (400エラー) - デフォルトリンクを使用');
       } else {
-        // デフォルトのリーガルリンク
-        const defaultLinks: LegalLink[] = [
-          { id: 1, link_type: 'privacy_policy', title: 'プライバシーポリシー', url: '#privacy', is_active: true, created_at: '', updated_at: '' },
-          { id: 2, link_type: 'terms_of_service', title: '利用規約', url: '#terms', is_active: true, created_at: '', updated_at: '' },
-          { id: 3, link_type: 'specified_commercial_transactions', title: '特定商取引法', url: '#scta', is_active: true, created_at: '', updated_at: '' },
-          { id: 4, link_type: 'company_info', title: '会社概要', url: '#company', is_active: true, created_at: '', updated_at: '' }
-        ];
-        setLegalLinks(defaultLinks);
+        secureLog(`Supabaseリーガルリンク取得エラー: ${response.status} ${response.statusText}`);
       }
+      
+      // エラーまたはデータなしの場合はデフォルトリンクを使用
+      setDefaultLegalLinks();
     } catch (error) {
-      secureLog('Error loading legal links:', error);
-      // エラー時はデフォルトリンク使用
-      const defaultLinks: LegalLink[] = [
-        { id: 1, link_type: 'privacy_policy', title: 'プライバシーポリシー', url: '#privacy', is_active: true, created_at: '', updated_at: '' },
-        { id: 2, link_type: 'terms_of_service', title: '利用規約', url: '#terms', is_active: true, created_at: '', updated_at: '' },
-        { id: 3, link_type: 'specified_commercial_transactions', title: '特定商取引法', url: '#scta', is_active: true, created_at: '', updated_at: '' },
-        { id: 4, link_type: 'company_info', title: '会社概要', url: '#company', is_active: true, created_at: '', updated_at: '' }
-      ];
-      setLegalLinks(defaultLinks);
+      secureLog('リーガルリンクフェッチエラー:', error);
+      setDefaultLegalLinks();
     }
+  };
+
+  const setDefaultLegalLinks = () => {
+    const defaultLinks: LegalLink[] = [
+      { id: 1, link_type: 'privacy_policy', title: 'プライバシーポリシー', url: '#privacy', is_active: true, created_at: '', updated_at: '' },
+      { id: 2, link_type: 'terms_of_service', title: '利用規約', url: '#terms', is_active: true, created_at: '', updated_at: '' },
+      { id: 3, link_type: 'specified_commercial_transactions', title: '特定商取引法', url: '#scta', is_active: true, created_at: '', updated_at: '' },
+      { id: 4, link_type: 'company_info', title: '会社概要', url: '#company', is_active: true, created_at: '', updated_at: '' }
+    ];
+    setLegalLinks(defaultLinks);
   };
 
   return (

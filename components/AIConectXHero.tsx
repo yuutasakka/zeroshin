@@ -11,18 +11,50 @@ const AIConectXHero: React.FC<AIConectXHeroProps> = ({ onStartDiagnosis }) => {
   const [mainVisualData, setMainVisualData] = useState(defaultMainVisualData);
 
   useEffect(() => {
-    // ローカルストレージから設定を読み込み
-    const loadMainVisualSettings = () => {
+    // Supabaseから設定を読み込み
+    const loadMainVisualSettings = async () => {
       try {
-        const storedSettings = localStorage.getItem('customMainVisualData');
-        if (storedSettings) {
-          const parsedSettings = JSON.parse(storedSettings);
-          setMainVisualData(parsedSettings);
-          console.log('メインビジュアル設定をローカルストレージから読み込み:', parsedSettings);
+        const supabaseConfig = { 
+          url: process.env.REACT_APP_SUPABASE_URL || '', 
+          key: process.env.REACT_APP_SUPABASE_ANON_KEY || '' 
+        };
+        
+        // Supabase設定を確認
+        if (!supabaseConfig.url || !supabaseConfig.key || 
+            supabaseConfig.url.includes('your-project') || 
+            supabaseConfig.key.includes('your-anon-key')) {
+          console.log('Supabase設定が無効、デフォルトメインビジュアルデータを使用');
+          return;
+        }
+
+        // Supabaseからメインビジュアルデータを取得
+        const response = await fetch(`${supabaseConfig.url}/rest/v1/homepage_content_settings?select=*&setting_key.eq.main_visual_data&is_active.eq.true&order=updated_at.desc&limit=1`, {
+          headers: {
+            'Authorization': `Bearer ${supabaseConfig.key}`,
+            'apikey': supabaseConfig.key,
+            'Content-Type': 'application/json'
+          }
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          if (data && data.length > 0 && data[0].content_data) {
+            const mainVisualSettings = data[0].content_data;
+            setMainVisualData(mainVisualSettings);
+            console.log('メインビジュアル設定をSupabaseから読み込み:', mainVisualSettings);
+            return;
+          }
+        } else if (response.status === 400) {
+          console.log('Supabaseメインビジュアルテーブルが存在しません (400エラー) - デフォルトデータを使用');
+        } else {
+          console.log(`Supabaseメインビジュアル取得エラー: ${response.status} ${response.statusText}`);
         }
       } catch (error) {
-        console.error('メインビジュアル設定の読み込みエラー:', error);
+        console.error('Supabaseメインビジュアルフェッチエラー:', error);
       }
+      
+      // エラー時またはデータが空の場合はデフォルトデータを使用
+      console.log('デフォルトメインビジュアルデータを使用');
     };
 
     loadMainVisualSettings();

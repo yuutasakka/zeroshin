@@ -229,19 +229,55 @@ const DiagnosisResultsPage: React.FC<DiagnosisResultsPageProps> = ({ diagnosisDa
     };
   }, []);
 
-  // 2. 金融商品の読み込み
+  // 2. 金融商品の読み込み (Supabaseから)
   useEffect(() => {
-    const customProductsString = localStorage.getItem('customFinancialProducts');
-    if (customProductsString) {
+    const loadFinancialProductsFromSupabase = async () => {
+      if (!isMountedRef.current) return;
+      
       try {
-        const customProducts = JSON.parse(customProductsString);
-        if (Array.isArray(customProducts) && customProducts.length > 0) {
-          dispatch({ type: 'SET_FINANCIAL_PRODUCTS', payload: customProducts });
+        const supabaseConfig = createSupabaseClient();
+        
+        // Supabase設定を確認
+        if (!supabaseConfig.url || !supabaseConfig.key || 
+            supabaseConfig.url.includes('your-project') || 
+            supabaseConfig.key.includes('your-anon-key')) {
+          secureLog('Supabase設定が無効、デフォルト金融商品を使用');
+          dispatch({ type: 'SET_FINANCIAL_PRODUCTS', payload: defaultFinancialProducts });
+          return;
         }
-      } catch (e) {
-        secureLog('金融商品データの読み込みに失敗:', e);
+
+        // Supabaseから金融商品データを取得
+        const response = await fetch(`${supabaseConfig.url}/rest/v1/financial_products?select=*&is_active.eq=true&order=display_order`, {
+          headers: {
+            'Authorization': `Bearer ${supabaseConfig.key}`,
+            'apikey': supabaseConfig.key,
+            'Content-Type': 'application/json'
+          }
+        });
+
+        if (response.ok) {
+          const products = await response.json();
+          if (products && products.length > 0) {
+            secureLog(`Supabaseから${products.length}件の金融商品を読み込み`);
+            dispatch({ type: 'SET_FINANCIAL_PRODUCTS', payload: products });
+            return;
+          }
+        } else if (response.status === 400) {
+          secureLog('Supabase金融商品テーブルが存在しません (400エラー) - デフォルト商品を使用');
+        } else {
+          secureLog(`Supabase金融商品取得エラー: ${response.status} ${response.statusText}`);
+        }
+      } catch (error) {
+        secureLog('Supabase金融商品フェッチエラー:', error);
       }
-    }
+      
+      // エラー時またはデータが空の場合はデフォルト商品を使用
+      if (isMountedRef.current) {
+        dispatch({ type: 'SET_FINANCIAL_PRODUCTS', payload: defaultFinancialProducts });
+      }
+    };
+
+    loadFinancialProductsFromSupabase();
   }, []);
 
   // 3. SMS認証チェック

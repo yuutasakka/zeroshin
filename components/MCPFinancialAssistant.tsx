@@ -117,21 +117,8 @@ export const MCPFinancialAssistant: React.FC<MCPFinancialAssistantProps> = ({ cl
       if (!supabaseConfig.url || !supabaseConfig.key || 
           supabaseConfig.url.includes('your-project') || 
           supabaseConfig.key.includes('your-anon-key')) {
-        secureLog('Supabase設定が無効、ローカルストレージを確認中...');
+        secureLog('Supabase設定が無効、デフォルト専門家連絡先を使用');
         
-        // ローカルストレージから取得
-        const localExpertContact = localStorage.getItem('customExpertContact');
-        if (localExpertContact) {
-          try {
-            const parsedLocal = JSON.parse(localExpertContact);
-            setExpertContact(parsedLocal);
-            secureLog('ローカルストレージから専門家連絡先を読み込み');
-            return;
-          } catch (parseError) {
-            secureLog('ローカルストレージ解析エラー:', parseError);
-          }
-        }
-
         // デフォルト値を設定
         setExpertContact({
           expert_name: 'AI ConectX専門アドバイザー',
@@ -140,19 +127,6 @@ export const MCPFinancialAssistant: React.FC<MCPFinancialAssistantProps> = ({ cl
           description: 'AI ConectXの認定ファイナンシャルプランナーが、お客様の資産運用に関するご相談を承ります。'
         });
         return;
-      }
-
-      // まずローカルストレージを確認
-      const localExpertContact = localStorage.getItem('customExpertContact');
-      if (localExpertContact) {
-        try {
-          const parsedLocal = JSON.parse(localExpertContact);
-          setExpertContact(parsedLocal);
-          secureLog('ローカルストレージから専門家連絡先を読み込み');
-          return;
-        } catch (parseError) {
-          secureLog('ローカルストレージ解析エラー:', parseError);
-        }
       }
 
       // Supabaseから取得を試行（エラーハンドリング強化）
@@ -176,9 +150,7 @@ export const MCPFinancialAssistant: React.FC<MCPFinancialAssistantProps> = ({ cl
               description: data[0].description
             };
             setExpertContact(expertContactData);
-            // Supabaseデータをローカルストレージにバックアップ
-            localStorage.setItem('customExpertContact', JSON.stringify(expertContactData));
-            secureLog('Supabaseから専門家連絡先を読み込み、ローカルにバックアップ');
+            secureLog('Supabaseから専門家連絡先を読み込み');
             return;
           }
         } else if (response.status === 400) {
@@ -200,20 +172,7 @@ export const MCPFinancialAssistant: React.FC<MCPFinancialAssistantProps> = ({ cl
     } catch (error) {
       secureLog('専門家連絡先の読み込みエラー:', error);
       
-      // エラー時でもローカルストレージを確認
-      try {
-        const fallbackExpertContact = localStorage.getItem('customExpertContact');
-        if (fallbackExpertContact) {
-          const parsedFallback = JSON.parse(fallbackExpertContact);
-          setExpertContact(parsedFallback);
-          secureLog('エラー時フォールバック: ローカルストレージから専門家連絡先を読み込み');
-          return;
-        }
-      } catch (fallbackError) {
-        secureLog('フォールバック専門家連絡先エラー:', fallbackError);
-      }
-
-      // エラー時もデフォルト値を設定
+      // エラー時はデフォルト値を設定
       setExpertContact({
         expert_name: 'AI ConectX専門アドバイザー',
         phone_number: '0120-123-456',
