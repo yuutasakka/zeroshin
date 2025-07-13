@@ -46,6 +46,7 @@
   },
   "dependencies": {
     "@ai-sdk/google": "^1.2.19",
+    "@vercel/node": "^3.2.22",
     "@google/generative-ai": "^0.21.0",
     "@modelcontextprotocol/sdk": "^1.13.2",
     "@supabase/auth-ui-react": "^0.4.7",

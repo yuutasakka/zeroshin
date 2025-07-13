@@ -18,12 +18,16 @@ export class SecureStorage {
   private static encryptionKey: string | null = null;
 
   private static getEncryptionKey(): string {
-    if (!this.encryptionKey) {
-      this.encryptionKey = (typeof import.meta !== 'undefined' && (import.meta as any).env?.VITE_ENCRYPTION_KEY) || 
-                          process.env.VITE_ENCRYPTION_KEY || 
-                          'default-dev-key-change-in-production';
+    // クライアントサイドでは簡易暗号化のみ使用
+    if (typeof window !== 'undefined') {
+      return 'client-side-simple-key';
     }
-    return this.encryptionKey || 'default-dev-key-change-in-production';
+    
+    // サーバーサイドでは環境変数から取得
+    if (!this.encryptionKey) {
+      this.encryptionKey = process.env.ENCRYPTION_KEY || 'default-server-key';
+    }
+    return this.encryptionKey || 'default-server-key';
   }
 
   static setSecureItem(key: string, value: any): void {
@@ -67,24 +71,27 @@ export class SecureStorage {
   }
 
   private static simpleEncrypt(text: string, key: string): string {
-    let result = '';
-    for (let i = 0; i < text.length; i++) {
-      const char = text.charCodeAt(i);
-      const keyChar = key.charCodeAt(i % key.length);
-      result += String.fromCharCode(char ^ keyChar);
+    // クライアントサイドでは基本的な難読化のみ（機密データには使用しない）
+    if (typeof window !== 'undefined') {
+      return btoa(encodeURIComponent(text));
     }
-    return btoa(result);
+    
+    // サーバーサイドでは実際の暗号化が必要
+    throw new Error('Use proper encryption for server-side operations');
   }
 
   private static simpleDecrypt(encryptedText: string, key: string): string {
-    const text = atob(encryptedText);
-    let result = '';
-    for (let i = 0; i < text.length; i++) {
-      const char = text.charCodeAt(i);
-      const keyChar = key.charCodeAt(i % key.length);
-      result += String.fromCharCode(char ^ keyChar);
+    // クライアントサイドでは基本的な復号化のみ
+    if (typeof window !== 'undefined') {
+      try {
+        return decodeURIComponent(atob(encryptedText));
+      } catch {
+        return '';
+      }
     }
-    return result;
+    
+    // サーバーサイドでは実際の復号化が必要
+    throw new Error('Use proper decryption for server-side operations');
   }
 }
 
@@ -99,9 +106,6 @@ const validateProductionEnvironment = () => {
 
   if (isProduction) {
     const requiredEnvVars = [
-      'VITE_JWT_SECRET',
-      'VITE_SESSION_SECRET', 
-      'VITE_ENCRYPTION_KEY',
       'VITE_SUPABASE_URL',
       'VITE_SUPABASE_ANON_KEY'
     ];
@@ -134,14 +138,14 @@ const validateProductionEnvironment = () => {
 validateProductionEnvironment();
 
 export const SECURITY_CONFIG = {
-  // 暗号化設定（本番では必須）
+  // 暗号化設定（クライアントサイドでは使用不可）
   ENCRYPTION_KEY: (() => {
-    // Vite環境変数を最優先
-    if (typeof import.meta !== 'undefined' && (import.meta as any).env?.VITE_ENCRYPTION_KEY) {
-      return (import.meta as any).env.VITE_ENCRYPTION_KEY;
+    // クライアントサイドでは使用しない
+    if (typeof window !== 'undefined') {
+      throw new Error('Encryption keys cannot be used on client-side');
     }
     
-    // 従来のNode.js環境変数
+    // サーバーサイドのみ
     if (process.env.ENCRYPTION_KEY) {
       return process.env.ENCRYPTION_KEY;
     }
@@ -170,60 +174,34 @@ export const SECURITY_CONFIG = {
     return devKey;
   })(),
   
-  // JWT設定（本番では必須）
+  // JWT設定（サーバーサイドのみ）
   JWT_SECRET: (() => {
-    // Vite環境変数を最優先
-    if (typeof import.meta !== 'undefined' && (import.meta as any).env?.VITE_JWT_SECRET) {
-      return (import.meta as any).env.VITE_JWT_SECRET;
+    // クライアントサイドでは使用しない
+    if (typeof window !== 'undefined') {
+      throw new Error('JWT secrets cannot be used on client-side');
     }
     
-    // 従来のNode.js環境変数
+    // サーバーサイドのみ
     if (process.env.JWT_SECRET) {
       return process.env.JWT_SECRET;
     }
     
-    // 本番環境チェック
-    const isProduction = process.env.NODE_ENV === 'production' || 
-                        (typeof import.meta !== 'undefined' && (import.meta as any).env?.MODE === 'production') ||
-                        (typeof window !== 'undefined' && window.location.hostname !== 'localhost');
-    
-    if (isProduction) {
-      console.error('🚨 CRITICAL: VITE_JWT_SECRET environment variable is missing in production!');
-      throw new Error('VITE_JWT_SECRET is required in production environment');
-    }
-    
-    // 開発環境でのみフォールバック
-    const devKey = process.env.DEV_JWT_SECRET || `dev-jwt-${Date.now()}-${Math.random().toString(36).substring(2)}`;
-    console.warn('⚠️ Using development JWT secret. Set VITE_JWT_SECRET for production.');
-    return devKey;
+    throw new Error('JWT_SECRET environment variable is required');
   })(),
   
-  // セッション設定（本番では必須）
+  // セッション設定（サーバーサイドのみ）
   SESSION_SECRET: (() => {
-    // Vite環境変数を最優先
-    if (typeof import.meta !== 'undefined' && (import.meta as any).env?.VITE_SESSION_SECRET) {
-      return (import.meta as any).env.VITE_SESSION_SECRET;
+    // クライアントサイドでは使用しない
+    if (typeof window !== 'undefined') {
+      throw new Error('Session secrets cannot be used on client-side');
     }
     
-    // 従来のNode.js環境変数
+    // サーバーサイドのみ
     if (process.env.SESSION_SECRET) {
       return process.env.SESSION_SECRET;
     }
     
-    // 本番環境チェック
-    const isProduction = process.env.NODE_ENV === 'production' || 
-                        (typeof import.meta !== 'undefined' && (import.meta as any).env?.MODE === 'production') ||
-                        (typeof window !== 'undefined' && window.location.hostname !== 'localhost');
-    
-    if (isProduction) {
-      console.error('🚨 CRITICAL: VITE_SESSION_SECRET environment variable is missing in production!');
-      throw new Error('VITE_SESSION_SECRET is required in production environment');
-    }
-    
-    // 開発環境でのみフォールバック
-    const devKey = process.env.DEV_SESSION_SECRET || `dev-session-${Date.now()}-${Math.random().toString(36).substring(2)}`;
-    console.warn('⚠️ Using development session secret. Set VITE_SESSION_SECRET for production.');
-    return devKey;
+    throw new Error('SESSION_SECRET environment variable is required');
   })(),
   SESSION_TIMEOUT: 30 * 60 * 1000, // 30分
   
@@ -371,12 +349,18 @@ export const SUPABASE_CONFIG = {
     console.warn('⚠️ Using empty Supabase anon key in development. Set VITE_SUPABASE_ANON_KEY environment variable.');
     return '';
   })(),
-  serviceRoleKey: process.env.SUPABASE_SERVICE_ROLE_KEY || (typeof import.meta !== 'undefined' && (import.meta as any).env?.VITE_SUPABASE_SERVICE_ROLE_KEY) || (() => {
-    if (process.env.NODE_ENV === 'production') {
-      throw new Error('SUPABASE_SERVICE_ROLE_KEY must be set in production environment');
+  serviceRoleKey: (() => {
+    // クライアントサイドでは使用しない
+    if (typeof window !== 'undefined') {
+      throw new Error('Service role keys cannot be used on client-side');
     }
-    console.warn('⚠️ Using empty Supabase service role key in development. Set VITE_SUPABASE_SERVICE_ROLE_KEY environment variable.');
-    return '';
+    
+    // サーバーサイドのみ
+    if (process.env.SUPABASE_SERVICE_ROLE_KEY) {
+      return process.env.SUPABASE_SERVICE_ROLE_KEY;
+    }
+    
+    throw new Error('SUPABASE_SERVICE_ROLE_KEY environment variable is required');
   })()
 };
 

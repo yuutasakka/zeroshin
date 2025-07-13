@@ -58,10 +58,25 @@ const SMSAuthFlow: React.FC<SMSAuthFlowProps> = ({
     setError('');
   };
 
-  // 既存認証済みチェック（模擬）
+  // 既存認証済みチェック（Supabase経由）
   const checkExistingAuth = async (phone: string): Promise<boolean> => {
-    // TODO: 実際のSupabaseでsms_verification.is_verified = trueをチェック
-    return false; // 仮実装
+    try {
+      // API経由でサーバーサイドで確認
+      const response = await fetch('/api/auth-check', {
+        method: 'GET',
+        headers: { 'Content-Type': 'application/json' }
+      });
+      
+      if (response.ok) {
+        const { verified } = await response.json();
+        return verified;
+      }
+      
+      return false;
+    } catch (error) {
+      console.error('認証確認エラー:', error);
+      return false;
+    }
   };
 
   // SMS送信処理
@@ -92,8 +107,17 @@ const SMSAuthFlow: React.FC<SMSAuthFlowProps> = ({
             return;
           }
 
-          // TODO: 実際のOTP送信API
-          // await sendSMSOTP(phoneNumber);
+          // API経由でサーバーサイドでSMS送信
+          const response = await fetch('/api/send-otp', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ phoneNumber })
+          });
+          
+          if (!response.ok) {
+            const { error } = await response.json();
+            throw new Error(error || 'SMS送信に失敗しました');
+          }
           
           // 成功時の処理
           setStep('otp');
@@ -107,7 +131,11 @@ const SMSAuthFlow: React.FC<SMSAuthFlowProps> = ({
           }, 60000);
 
         } catch (error) {
-          setError('SMS送信に失敗しました。後ほどお試しください。');
+          if (error instanceof Error) {
+            setError(error.message);
+          } else {
+            setError('SMS送信に失敗しました。後ほどお試しください。');
+          }
         } finally {
           setIsLoading(false);
         }
@@ -130,15 +158,17 @@ const SMSAuthFlow: React.FC<SMSAuthFlowProps> = ({
           return;
         }
 
-        // 1時間あたり3回制限チェック（実装は後で）
-        if (resendCount >= 3) {
-          setError('送信回数の上限に達しました。1時間後にお試しください。');
-          setIsLoading(false);
-          return;
+        // API経由でサーバーサイドでSMS送信（レート制限もサーバーサイドで処理）
+        const response = await fetch('/api/send-otp', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ phoneNumber })
+        });
+        
+        if (!response.ok) {
+          const { error } = await response.json();
+          throw new Error(error || 'SMS送信に失敗しました');
         }
-
-        // TODO: 実際のOTP送信API
-        // await sendSMSOTP(phoneNumber);
         
         // 成功時の処理
         setStep('otp');
@@ -152,7 +182,11 @@ const SMSAuthFlow: React.FC<SMSAuthFlowProps> = ({
         }, 60000);
 
       } catch (error) {
-        setError('SMS送信に失敗しました。後ほどお試しください。');
+        if (error instanceof Error) {
+          setError(error.message);
+        } else {
+          setError('SMS送信に失敗しました。後ほどお試しください。');
+        }
       } finally {
         setIsLoading(false);
       }
@@ -172,11 +206,22 @@ const SMSAuthFlow: React.FC<SMSAuthFlowProps> = ({
         setError('');
 
         try {
-          // TODO: 実際のOTP検証API
-          // const result = await verifySMSOTP(phoneNumber, otp);
+          // API経由でサーバーサイドでOTP検証
+          const response = await fetch('/api/verify-otp', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ phoneNumber, otp })
+          });
           
-          // 仮の成功処理（実際はAPI結果に基づく）
-          const isValid = true; // 仮
+          if (!response.ok) {
+            const { error } = await response.json();
+            throw new Error(error || '認証に失敗しました');
+          }
+          
+          const result = await response.json();
+          
+          // API結果に基づく処理
+          const isValid = result.success;
           
           if (isValid) {
             // 認証成功
@@ -187,7 +232,11 @@ const SMSAuthFlow: React.FC<SMSAuthFlowProps> = ({
           }
 
         } catch (error) {
-          setError('認証に失敗しました。もう一度お試しください。');
+          if (error instanceof Error) {
+            setError(error.message);
+          } else {
+            setError('認証に失敗しました。もう一度お試しください。');
+          }
         } finally {
           setIsLoading(false);
         }
@@ -202,11 +251,20 @@ const SMSAuthFlow: React.FC<SMSAuthFlowProps> = ({
       setError('');
 
       try {
-        // TODO: 実際のOTP検証API
-        // const result = await verifySMSOTP(phoneNumber, otp);
+        // API経由でサーバーサイドでOTP検証
+        const response = await fetch('/api/verify-otp', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ phoneNumber, otp })
+        });
         
-        // 仮の成功処理（実際はAPI結果に基づく）
-        const isValid = true; // 仮
+        if (!response.ok) {
+          const { error } = await response.json();
+          throw new Error(error || '認証に失敗しました');
+        }
+        
+        const result = await response.json();
+        const isValid = result.success;
         
         if (isValid) {
           // 認証成功
@@ -217,7 +275,11 @@ const SMSAuthFlow: React.FC<SMSAuthFlowProps> = ({
         }
 
       } catch (error) {
-        setError('認証に失敗しました。もう一度お試しください。');
+        if (error instanceof Error) {
+          setError(error.message);
+        } else {
+          setError('認証に失敗しました。もう一度お試しください。');
+        }
       } finally {
         setIsLoading(false);
       }
@@ -229,6 +291,16 @@ const SMSAuthFlow: React.FC<SMSAuthFlowProps> = ({
     if (canResend && resendCount < 3) {
       handleSendSMS();
     }
+  };
+
+  // 電話番号変更処理
+  const handleChangePhoneNumber = () => {
+    setStep('phone');
+    setOtpInput('');
+    setError('');
+    setRemainingTime(0);
+    setCanResend(true);
+    setResendCount(0);
   };
 
   // 時間フォーマット
@@ -370,6 +442,15 @@ const SMSAuthFlow: React.FC<SMSAuthFlowProps> = ({
                 }`}
               >
                 🔄 認証コードを再送信 {resendCount > 0 && `(${resendCount}/3)`}
+              </button>
+              
+              {/* Phone Number Change Button */}
+              <button
+                onClick={handleChangePhoneNumber}
+                disabled={isLoading}
+                className="w-full py-3 px-6 rounded-xl font-medium text-base transition-all duration-200 focus:ring-2 focus:ring-offset-2 focus:outline-none bg-white border-2 border-blue-300 text-blue-700 hover:bg-blue-50 hover:border-blue-400 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                📱 電話番号を変更
               </button>
             </div>
           )}

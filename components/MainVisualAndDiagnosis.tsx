@@ -4,6 +4,7 @@ import { MainVisualData, defaultMainVisualData } from '../data/homepageContentDa
 import { secureLog } from '../security.config';
 import { createSupabaseClient } from './adminUtils';
 import { diagnosisManager } from './supabaseClient';
+import { InputValidator } from '../src/utils/inputValidation';
 
 const diagnosisStepsData: DiagnosisStep[] = [
   {
@@ -133,17 +134,24 @@ const MainVisualAndDiagnosis: React.FC<MainVisualAndDiagnosisProps> = ({ onProce
   const currentQuestionData = diagnosisStepsData.find(s => s.step === currentStep)?.question;
 
   const handleInputChange = (questionId: string, value: string) => {
-    // 電話番号の場合は全角数字を半角に変換してから数字のみに制限
     if (questionId === 'phoneNumber') {
-      // 全角数字を半角数字に変換
-      const halfWidthValue = value.replace(/[０-９]/g, (match) => {
-        return String.fromCharCode(match.charCodeAt(0) - 0xFEE0);
-      });
-      // 数字のみに制限
-      const numbersOnly = halfWidthValue.replace(/\D/g, '');
-      setFormData(prev => ({ ...prev, [questionId]: numbersOnly }));
+      const phoneValidation = InputValidator.validatePhoneNumber(value);
+      setFormData(prev => ({ ...prev, [questionId]: phoneValidation.normalized }));
+      
+      // バリデーションエラーがあれば表示
+      if (value && !phoneValidation.isValid) {
+        secureLog('電話番号バリデーションエラー:', phoneValidation.error);
+      }
     } else {
-      setFormData(prev => ({ ...prev, [questionId]: value }));
+      // その他の入力は一般的なバリデーション
+      const validation = InputValidator.validateInput(value, 'text');
+      if (validation.isValid) {
+        setFormData(prev => ({ ...prev, [questionId]: validation.sanitized }));
+      } else {
+        secureLog('入力バリデーションエラー:', validation.error);
+        // エラーの場合でも入力は受け付ける（ユーザビリティ考慮）
+        setFormData(prev => ({ ...prev, [questionId]: value }));
+      }
     }
   };
 

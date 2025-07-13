@@ -8,41 +8,11 @@ import { allFinancialProducts as defaultFinancialProducts } from '../data/financ
 import { MCPFinancialAssistant } from './MCPFinancialAssistant';
 import { measureTransition, PERF_TARGETS } from './PerformanceMonitor';
 
-// セキュリティ関数: URLの安全性を確認
-const sanitizeUrl = (url: string): string => {
-  if (typeof url !== 'string') return '#';
-  
-  // 危険なプロトコルを除去
-  const dangerousProtocols = ['javascript:', 'data:', 'vbscript:', 'file:', 'ftp:'];
-  const urlLower = url.toLowerCase().trim();
-  
-  for (const protocol of dangerousProtocols) {
-    if (urlLower.startsWith(protocol)) {
-      return '#';
-    }
-  }
-  
-  // HTTPまたはHTTPSで始まるか、相対URLであることを確認
-  if (url.startsWith('http://') || url.startsWith('https://') || url.startsWith('/') || url.startsWith('#')) {
-    return url;
-  }
-  
-  return '#';
-};
+import { InputValidator } from '../src/utils/inputValidation';
 
-// セキュリティ関数: テキストのサニタイゼーション
-const sanitizeText = (text: string): string => {
-  if (typeof text !== 'string') return '';
-  
-  // HTMLエンティティをエスケープ
-  return text
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#39;')
-    .trim();
-}; 
+// セキュリティ関数をInputValidatorから使用
+const sanitizeUrl = InputValidator.sanitizeURL;
+const sanitizeText = InputValidator.sanitizeHTML; 
 
 // ファイナンシャルプランナーの型定義
 interface FinancialPlanner {

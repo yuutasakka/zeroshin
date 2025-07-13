@@ -9,6 +9,11 @@
     "GENERATE_SOURCEMAP": "false",
     "VITE_DEBUG": "false"
   },
+  "functions": {
+    "api/*.ts": {
+      "runtime": "nodejs18.x"
+    }
+  },
   "rewrites": [
     {
       "source": "/(.*)",
