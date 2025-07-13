@@ -56,7 +56,7 @@ export class SMSAuthService {
         // Twilio SDK使用
         await (client as any).messages.create({
           body: `【AI ConectX】認証コード: ${otp}\n\n※5分間有効です。第三者には絶対に教えないでください。`,
-          from: client.phoneNumber,
+          from: (client as any).phoneNumber,
           to: normalizedPhone
         });
       }
@@ -120,7 +120,7 @@ export class SMSAuthService {
       // Node.js環境でのフォールバック
       const crypto = require('crypto');
       const bytes = crypto.randomBytes(6);
-      return Array.from(bytes, byte => (byte % 10).toString()).join('');
+      return Array.from(bytes, (byte: number) => (byte % 10).toString()).join('');
     }
   }
 

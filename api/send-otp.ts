@@ -1,6 +1,6 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { SMSAuthService } from '../src/api/smsAuth';
-import { SecurityMiddleware } from '../src/middleware/security';
+import { SecurityMiddleware } from '../src/middleware/securityVercel';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   // CORS設定

@@ -15,31 +15,28 @@ export class SecureConfigManager {
   private static encrypt(text: string): string {
     if (!this.encryptionKey) throw new Error('Encryption key not found');
     
-    const algorithm = 'aes-256-gcm';
+    const algorithm = 'aes-256-cbc';
     const iv = crypto.randomBytes(16);
-    const cipher = crypto.createCipherGCM(algorithm, Buffer.from(this.encryptionKey));
+    const cipher = crypto.createCipher(algorithm, this.encryptionKey);
     
     let encrypted = cipher.update(text, 'utf8', 'hex');
     encrypted += cipher.final('hex');
     
-    const authTag = cipher.getAuthTag();
-    return iv.toString('hex') + ':' + authTag.toString('hex') + ':' + encrypted;
+    return iv.toString('hex') + ':' + encrypted;
   }
 
   // 復号化
   private static decrypt(encryptedText: string): string {
     if (!this.encryptionKey) throw new Error('Encryption key not found');
     
-    const algorithm = 'aes-256-gcm';
+    const algorithm = 'aes-256-cbc';
     const parts = encryptedText.split(':');
-    if (parts.length !== 3) throw new Error('Invalid encrypted data format');
+    if (parts.length !== 2) throw new Error('Invalid encrypted data format');
     
     const iv = Buffer.from(parts[0], 'hex');
-    const authTag = Buffer.from(parts[1], 'hex');
-    const encrypted = parts[2];
+    const encrypted = parts[1];
     
-    const decipher = crypto.createDecipherGCM(algorithm, Buffer.from(this.encryptionKey));
-    decipher.setAuthTag(authTag);
+    const decipher = crypto.createDecipher(algorithm, this.encryptionKey);
     
     let decrypted = decipher.update(encrypted, 'hex', 'utf8');
     decrypted += decipher.final('utf8');
