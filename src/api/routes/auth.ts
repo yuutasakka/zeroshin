@@ -1,0 +1,96 @@
+// 認証API エンドポイント
+import { SMSAuthService } from '../smsAuth';
+import { supabaseAdmin } from '../../lib/supabaseAuth';
+
+export async function POST_sendOTP(request: Request) {
+  try {
+    const { phoneNumber } = await request.json();
+    
+    if (!phoneNumber) {
+      return new Response(JSON.stringify({ error: 'Phone number is required' }), {
+        status: 400,
+        headers: { 'Content-Type': 'application/json' }
+      });
+    }
+
+    const result = await SMSAuthService.sendOTP(phoneNumber);
+    
+    if (!result.success) {
+      return new Response(JSON.stringify({ error: result.error }), {
+        status: 400,
+        headers: { 'Content-Type': 'application/json' }
+      });
+    }
+
+    return new Response(JSON.stringify({ success: true }), {
+      status: 200,
+      headers: { 'Content-Type': 'application/json' }
+    });
+  } catch (error) {
+    console.error('Send OTP error:', error);
+    return new Response(JSON.stringify({ error: 'Internal server error' }), {
+      status: 500,
+      headers: { 'Content-Type': 'application/json' }
+    });
+  }
+}
+
+export async function POST_verifyOTP(request: Request) {
+  try {
+    const { phoneNumber, otp } = await request.json();
+    
+    if (!phoneNumber || !otp) {
+      return new Response(JSON.stringify({ error: 'Phone number and OTP are required' }), {
+        status: 400,
+        headers: { 'Content-Type': 'application/json' }
+      });
+    }
+
+    const result = await SMSAuthService.verifyOTP(phoneNumber, otp);
+    
+    return new Response(JSON.stringify({ success: result.success, error: result.error }), {
+      status: result.success ? 200 : 400,
+      headers: { 'Content-Type': 'application/json' }
+    });
+  } catch (error) {
+    console.error('Verify OTP error:', error);
+    return new Response(JSON.stringify({ error: 'Internal server error' }), {
+      status: 500,
+      headers: { 'Content-Type': 'application/json' }
+    });
+  }
+}
+
+export async function POST_checkAuth(request: Request) {
+  try {
+    const { phoneNumber } = await request.json();
+    
+    if (!phoneNumber) {
+      return new Response(JSON.stringify({ error: 'Phone number is required' }), {
+        status: 400,
+        headers: { 'Content-Type': 'application/json' }
+      });
+    }
+
+    // Supabaseで認証状態をチェック
+    const { data, error } = await supabaseAdmin
+      .from('sms_verifications')
+      .select('is_verified')
+      .eq('phone_number', phoneNumber)
+      .eq('is_verified', true)
+      .single();
+
+    const verified = !error && data?.is_verified === true;
+    
+    return new Response(JSON.stringify({ verified }), {
+      status: 200,
+      headers: { 'Content-Type': 'application/json' }
+    });
+  } catch (error) {
+    console.error('Check auth error:', error);
+    return new Response(JSON.stringify({ verified: false }), {
+      status: 200,
+      headers: { 'Content-Type': 'application/json' }
+    });
+  }
+}
