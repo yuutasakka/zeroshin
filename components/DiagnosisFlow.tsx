@@ -178,7 +178,14 @@ const DiagnosisFlow: React.FC<DiagnosisFlowProps> = ({ onComplete, onCancel }) =
                 <input
                   type="tel"
                   value={phoneInput}
-                  onChange={e => setPhoneInput(e.target.value.replace(/[^0-9]/g, ''))}
+                  onChange={e => {
+                    // 全角数字を半角数字に変換
+                    const halfWidthValue = e.target.value.replace(/[０-９]/g, (match) => {
+                      return String.fromCharCode(match.charCodeAt(0) - 0xFEE0);
+                    });
+                    // 数字のみに制限
+                    setPhoneInput(halfWidthValue.replace(/[^0-9]/g, ''));
+                  }}
                   placeholder="09012345678"
                   className="w-full text-lg px-4 py-4 rounded-lg border border-gray-300 text-center focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   maxLength={11}

@@ -29,7 +29,7 @@ function generateBackupCode() {
 }
 
 async function generateCredentials() {
-  console.log('🔐 MoneyTicket 本番環境認証情報生成');
+  console.log('🔐 AI ConectX 本番環境認証情報生成');
   console.log('='.repeat(60));
   
   // 認証情報生成

@@ -273,7 +273,7 @@ function checkPackageJson() {
 // メイン実行
 function main() {
   console.clear();
-  log(colors.bright + colors.blue, '🔍 MoneyTicket 本番環境確認');
+  log(colors.bright + colors.blue, '🔍 AI ConectX 本番環境確認');
   console.log('='.repeat(60));
   
   const { criticalMissing, warningCount } = checkEnvironmentVariables();

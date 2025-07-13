@@ -103,4 +103,4 @@ import GlobalMessageDisplay from './admin/GlobalMessageDisplay';
 - **テスト**: 容易
 - **保守性**: 高い
 
-この分割により、MoneyTicketの管理画面は現代的で保守性の高いアーキテクチャに生まれ変わります。
+この分割により、AI ConectXの管理画面は現代的で保守性の高いアーキテクチャに生まれ変わります。

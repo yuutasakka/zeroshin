@@ -33,9 +33,14 @@ const SMSAuthFlow: React.FC<SMSAuthFlowProps> = ({
     }
   }, [step, remainingTime]);
 
-  // 電話番号の正規化（ハイフン自動削除）
+  // 電話番号の正規化（全角数字を半角に変換 + ハイフン自動削除）
   const normalizePhoneNumber = (phone: string): string => {
-    return phone.replace(/\D/g, '');
+    // 全角数字を半角数字に変換
+    const halfWidthPhone = phone.replace(/[０-９]/g, (match) => {
+      return String.fromCharCode(match.charCodeAt(0) - 0xFEE0);
+    });
+    // 数字以外を削除
+    return halfWidthPhone.replace(/\D/g, '');
   };
 
   // 電話番号のバリデーション

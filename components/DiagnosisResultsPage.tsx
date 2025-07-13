@@ -54,7 +54,11 @@ interface FinancialPlanner {
   rating: number;
   languages: string[];
   is_active: boolean;
-  contact_info: object;
+  contact_info: {
+    phone_number?: string;
+    line_url?: string;
+    consultation_hours?: string;
+  };
   display_order: number;
 }
 
@@ -70,6 +74,8 @@ interface AppState {
   isAuthorized: boolean;
   authError: string | null;
   debugInfo: string;
+  showExpertModal: boolean;
+  selectedExpert: FinancialPlanner | null;
 }
 
 type AppAction =
@@ -82,7 +88,9 @@ type AppAction =
   | { type: 'SET_FINANCIAL_PLANNERS'; payload: FinancialPlanner[] }
   | { type: 'SET_AUTHORIZED'; payload: boolean }
   | { type: 'SET_AUTH_ERROR'; payload: string | null }
-  | { type: 'SET_DEBUG_INFO'; payload: string };
+  | { type: 'SET_DEBUG_INFO'; payload: string }
+  | { type: 'SET_EXPERT_MODAL'; payload: boolean }
+  | { type: 'SET_SELECTED_EXPERT'; payload: FinancialPlanner | null };
 
 const initialState: AppState = {
   displayAmount: 0,
@@ -94,7 +102,9 @@ const initialState: AppState = {
   financialPlanners: [],
   isAuthorized: false,
   authError: null,
-  debugInfo: ''
+  debugInfo: '',
+  showExpertModal: false,
+  selectedExpert: null
 };
 
 const appReducer = (state: AppState, action: AppAction): AppState => {
@@ -121,6 +131,10 @@ const appReducer = (state: AppState, action: AppAction): AppState => {
       return { ...state, authError: action.payload };
     case 'SET_DEBUG_INFO':
       return { ...state, debugInfo: action.payload };
+    case 'SET_EXPERT_MODAL':
+      return { ...state, showExpertModal: action.payload };
+    case 'SET_SELECTED_EXPERT':
+      return { ...state, selectedExpert: action.payload };
     default:
       return state;
   }
@@ -278,6 +292,172 @@ const DiagnosisResultsPage: React.FC<DiagnosisResultsPageProps> = ({ diagnosisDa
     };
 
     loadFinancialProductsFromSupabase();
+  }, []);
+
+  // ファイナンシャルプランナーをSupabaseから読み込み
+  useEffect(() => {
+    const loadFinancialPlanners = async () => {
+      if (!isMountedRef.current) return;
+      
+      try {
+        const supabaseConfig = createSupabaseClient();
+        
+        // Supabase設定を確認
+        if (!supabaseConfig.url || !supabaseConfig.key || 
+            supabaseConfig.url.includes('your-project') || 
+            supabaseConfig.key.includes('your-anon-key')) {
+          secureLog('Supabase設定が無効、expert_contact_settingsを使用');
+          
+          // expert_contact_settingsからデータを読み込み
+          const expertResponse = await fetch(`${supabaseConfig.url}/rest/v1/expert_contact_settings?setting_key.eq=primary_financial_advisor&is_active.eq=true&select=*`, {
+            headers: {
+              'Authorization': `Bearer ${supabaseConfig.key}`,
+              'apikey': supabaseConfig.key,
+              'Content-Type': 'application/json'
+            }
+          });
+          
+          if (expertResponse.ok) {
+            const expertData = await expertResponse.json();
+            if (expertData && expertData.length > 0) {
+              const expert = expertData[0];
+              const mockPlanner: FinancialPlanner = {
+                id: 1,
+                name: expert.expert_name || 'AI ConectX専門アドバイザー',
+                image_url: 'https://via.placeholder.com/150x150?text=Expert',
+                title: 'AI ConectX認定ファイナンシャルプランナー',
+                description: expert.description || '',
+                rating: 4.8,
+                languages: ['日本語'],
+                is_active: true,
+                contact_info: {
+                  phone_number: expert.phone_number || '',
+                  line_url: expert.line_url || '',
+                  consultation_hours: expert.business_hours || ''
+                },
+                display_order: 1
+              };
+              dispatch({ type: 'SET_FINANCIAL_PLANNERS', payload: [mockPlanner] });
+              return;
+            }
+          }
+          return;
+        }
+
+        // ファイナンシャルプランナーテーブルから取得を試行
+        const response = await fetch(`${supabaseConfig.url}/rest/v1/financial_planners?is_active.eq=true&order=display_order`, {
+          headers: {
+            'Authorization': `Bearer ${supabaseConfig.key}`,
+            'apikey': supabaseConfig.key,
+            'Content-Type': 'application/json'
+          }
+        });
+
+        if (response.ok) {
+          const planners = await response.json();
+          if (planners && planners.length > 0) {
+            dispatch({ type: 'SET_FINANCIAL_PLANNERS', payload: planners });
+            secureLog(`${planners.length}件のファイナンシャルプランナーを読み込み`);
+            return;
+          }
+        }
+        
+        // フォールバック: expert_contact_settingsを使用
+        const expertResponse = await fetch(`${supabaseConfig.url}/rest/v1/expert_contact_settings?setting_key.eq=primary_financial_advisor&is_active.eq=true&select=*`, {
+          headers: {
+            'Authorization': `Bearer ${supabaseConfig.key}`,
+            'apikey': supabaseConfig.key,
+            'Content-Type': 'application/json'
+          }
+        });
+        
+        if (expertResponse.ok) {
+          const expertData = await expertResponse.json();
+          if (expertData && expertData.length > 0) {
+            const expert = expertData[0];
+            const mockPlanner: FinancialPlanner = {
+              id: 1,
+              name: expert.expert_name || 'AI ConectX専門アドバイザー',
+              image_url: 'https://via.placeholder.com/150x150?text=Expert',
+              title: 'AI ConectX認定ファイナンシャルプランナー',
+              description: expert.description || '',
+              rating: 4.8,
+              languages: ['日本語'],
+              is_active: true,
+              contact_info: {
+                phone_number: expert.phone_number || '',
+                line_url: expert.line_url || '',
+                consultation_hours: expert.business_hours || ''
+              },
+              display_order: 1
+            };
+            dispatch({ type: 'SET_FINANCIAL_PLANNERS', payload: [mockPlanner] });
+          }
+        }
+      } catch (error) {
+        secureLog('ファイナンシャルプランナー読み込みエラー:', error);
+      }
+    };
+
+    const loadFinancialProducts = async () => {
+      if (!isMountedRef.current) return;
+      
+      try {
+        const supabaseConfig = createSupabaseClient();
+        
+        if (!supabaseConfig.url || !supabaseConfig.key) {
+          secureLog('⚠️ Supabase設定なし：デフォルト金融商品データを使用');
+          return;
+        }
+
+        // Supabaseから金融商品データを取得
+        const response = await fetch(`${supabaseConfig.url}/rest/v1/financial_products?select=*&is_active.eq.true&order=display_order`, {
+          headers: {
+            'Authorization': `Bearer ${supabaseConfig.key}`,
+            'apikey': supabaseConfig.key,
+            'Content-Type': 'application/json'
+          }
+        });
+
+        if (response.ok) {
+          const products = await response.json();
+          if (products && products.length > 0) {
+            // Supabaseから取得したデータを適切な形式に変換
+            const formattedProducts = products.map((product: any) => ({
+              id: product.id,
+              name: product.name || product.product_name,
+              description: product.description,
+              company: product.company || 'AI ConectX',
+              type: product.type || product.product_type || 'investment',
+              riskLevel: product.risk_level || 'medium',
+              expectedReturn: product.expected_return || '3-5%',
+              minimumInvestment: product.minimum_investment || 10000,
+              tags: product.tags || [],
+              url: product.url || product.detail_url,
+              application_url: product.application_url || product.apply_url,
+              recommendationReasons: product.recommendation_reasons || []
+            }));
+
+            dispatch({ type: 'SET_FINANCIAL_PRODUCTS', payload: formattedProducts });
+            secureLog(`✅ Supabaseから${formattedProducts.length}件の金融商品データを読み込み`);
+            return;
+          }
+        } else if (response.status === 400) {
+          secureLog('Supabase金融商品テーブルが存在しません (400エラー) - デフォルトデータを使用');
+        } else {
+          secureLog(`Supabase金融商品取得エラー: ${response.status} ${response.statusText}`);
+        }
+        
+        // エラーまたはデータなしの場合はデフォルトデータを使用
+        secureLog('デフォルト金融商品データを使用');
+      } catch (error) {
+        secureLog('金融商品データフェッチエラー:', error);
+        // エラー時もデフォルトデータを使用（既に初期値として設定済み）
+      }
+    };
+
+    loadFinancialPlanners();
+    loadFinancialProducts();
   }, []);
 
   // 3. SMS認証チェック
@@ -659,7 +839,93 @@ const DiagnosisResultsPage: React.FC<DiagnosisResultsPageProps> = ({ diagnosisDa
 
 
   return (
-    <div className="min-h-screen pt-12 pb-20" style={{ fontFamily: 'var(--font-primary)' }}>
+    <>
+      {/* 専門家相談ポップアップ */}
+      {state.showExpertModal && state.selectedExpert && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl p-6 max-w-md w-full mx-4 shadow-2xl">
+            <div className="text-center mb-6">
+              <img 
+                src={sanitizeUrl(state.selectedExpert.image_url)} 
+                alt={sanitizeText(state.selectedExpert.name)}
+                className="w-20 h-20 rounded-full object-cover mx-auto mb-4"
+              />
+              <h3 className="text-xl font-bold text-gray-800 mb-2">
+                {sanitizeText(state.selectedExpert.name)}
+              </h3>
+              <p className="text-gray-600">{sanitizeText(state.selectedExpert.title)}</p>
+              <div className="flex items-center justify-center mt-2">
+                <div className="text-yellow-400 text-sm mr-2">
+                  {'★'.repeat(Math.floor(state.selectedExpert.rating))}
+                </div>
+                <span className="text-sm text-gray-500">({state.selectedExpert.rating})</span>
+              </div>
+            </div>
+            
+            <div className="space-y-4">
+              <div className="text-center text-gray-700 mb-6">
+                <p className="text-sm">どの方法で相談しますか？</p>
+              </div>
+              
+              {/* 電話相談ボタン */}
+              {state.selectedExpert.contact_info.phone_number && (
+                <button
+                  onClick={() => {
+                    window.location.href = `tel:${state.selectedExpert?.contact_info.phone_number}`;
+                  }}
+                  className="w-full bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white font-bold py-4 px-6 rounded-lg transition-all duration-200 transform hover:scale-105 hover:shadow-lg cursor-pointer flex items-center justify-center"
+                >
+                  <i className="fas fa-phone mr-3 text-lg"></i>
+                  <div className="text-left">
+                    <div className="text-lg">電話で相談</div>
+                    <div className="text-sm opacity-90">{state.selectedExpert.contact_info.phone_number}</div>
+                  </div>
+                </button>
+              )}
+              
+              {/* LINE相談ボタン */}
+              {state.selectedExpert.contact_info.line_url && (
+                <button
+                  onClick={() => {
+                    window.open(sanitizeUrl(state.selectedExpert?.contact_info.line_url || ''), '_blank');
+                  }}
+                  className="w-full bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white font-bold py-4 px-6 rounded-lg transition-all duration-200 transform hover:scale-105 hover:shadow-lg cursor-pointer flex items-center justify-center"
+                >
+                  <i className="fab fa-line mr-3 text-lg"></i>
+                  <div className="text-left">
+                    <div className="text-lg">LINEで相談</div>
+                    <div className="text-sm opacity-90">チャットでお気軽に相談</div>
+                  </div>
+                </button>
+              )}
+              
+              {/* 相談時間の表示 */}
+              {state.selectedExpert.contact_info.consultation_hours && (
+                <div className="bg-blue-50 p-3 rounded-lg">
+                  <div className="text-sm text-blue-800 font-medium mb-1">
+                    <i className="fas fa-clock mr-2"></i>相談可能時間
+                  </div>
+                  <div className="text-sm text-blue-700">
+                    {state.selectedExpert.contact_info.consultation_hours}
+                  </div>
+                </div>
+              )}
+            </div>
+            
+            <button
+              onClick={() => {
+                dispatch({ type: 'SET_EXPERT_MODAL', payload: false });
+                dispatch({ type: 'SET_SELECTED_EXPERT', payload: null });
+              }}
+              className="w-full mt-6 bg-gray-300 hover:bg-gray-400 text-gray-700 font-medium py-3 px-6 rounded-lg transition-all duration-200 hover:shadow-md cursor-pointer"
+            >
+              閉じる
+            </button>
+          </div>
+        </div>
+      )}
+      
+      <div className="min-h-screen pt-12 pb-20" style={{ fontFamily: 'var(--font-primary)' }}>
       <div className="container mx-auto px-4 max-w-3xl relative z-10">
         <div className="luxury-card p-6 md:p-10 text-center shadow-2xl">
           <div className="mb-8">
@@ -724,14 +990,15 @@ const DiagnosisResultsPage: React.FC<DiagnosisResultsPageProps> = ({ diagnosisDa
           </div>
 
           {/* おすすめ商品セクション */}
-          <div className="bg-white p-6 rounded-xl shadow-md mb-8">
-            <h2 className="text-2xl font-bold text-gray-800 mb-6 flex items-center justify-center">
-              <i className="fas fa-star text-yellow-500 mr-2"></i>
-              あなたにおすすめの金融商品
-            </h2>
-            
-            <div className="grid gap-4">
-              {state.recommendedProducts.map((product, index) => (
+          {state.recommendedProducts.length > 0 && (
+            <div className="bg-white p-6 rounded-xl shadow-md mb-8">
+              <h2 className="text-2xl font-bold text-gray-800 mb-6 flex items-center justify-center">
+                <i className="fas fa-star text-yellow-500 mr-2"></i>
+                あなたにおすすめの金融商品
+              </h2>
+              
+              <div className="grid gap-4">
+                {state.recommendedProducts.map((product, index) => (
                 <div key={product.id} className="bg-gray-50 p-4 rounded-lg text-left">
                   <div className="flex items-center mb-2">
                     <span className="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full mr-2">
@@ -751,17 +1018,50 @@ const DiagnosisResultsPage: React.FC<DiagnosisResultsPageProps> = ({ diagnosisDa
                       ))}
                     </ul>
                   </div>
-                  <div className="flex flex-wrap gap-2">
+                  <div className="flex flex-wrap gap-2 mb-4">
                     {product.tags.map(tag => (
                       <span key={tag} className="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded">
                         {tag}
                       </span>
                     ))}
                   </div>
+                  
+                  {/* ボタンセクション */}
+                  <div className="flex flex-col sm:flex-row gap-2 mt-4">
+                    {product.url && (
+                      <a 
+                        href={sanitizeUrl(product.url)}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex-1 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white font-medium py-2 px-4 rounded-lg transition-all duration-200 transform hover:scale-105 hover:shadow-lg cursor-pointer text-center"
+                      >
+                        <i className="fas fa-info-circle mr-2"></i>
+                        詳細を見る
+                      </a>
+                    )}
+                    {product.application_url && (
+                      <a 
+                        href={sanitizeUrl(product.application_url)}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex-1 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white font-medium py-2 px-4 rounded-lg transition-all duration-200 transform hover:scale-105 hover:shadow-lg cursor-pointer text-center"
+                      >
+                        <i className="fas fa-edit mr-2"></i>
+                        お申し込み
+                      </a>
+                    )}
+                    {!product.url && !product.application_url && (
+                      <div className="text-center text-gray-500 text-sm py-2">
+                        <i className="fas fa-info-circle mr-2"></i>
+                        詳細情報は準備中です
+                      </div>
+                    )}
+                  </div>
                 </div>
               ))}
+              </div>
             </div>
-          </div>
+          )}
 
           {/* 専門家相談セクション */}
           <div className="bg-white p-6 rounded-xl shadow-md mb-8">
@@ -792,6 +1092,16 @@ const DiagnosisResultsPage: React.FC<DiagnosisResultsPageProps> = ({ diagnosisDa
                         <span className="text-sm text-gray-500">({planner.rating})</span>
                       </div>
                     </div>
+                    <button
+                      onClick={() => {
+                        dispatch({ type: 'SET_SELECTED_EXPERT', payload: planner });
+                        dispatch({ type: 'SET_EXPERT_MODAL', payload: true });
+                      }}
+                      className="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white font-medium py-2 px-4 rounded-lg transition-all duration-200 transform hover:scale-105 hover:shadow-lg cursor-pointer ml-4"
+                    >
+                      <i className="fas fa-comments mr-2"></i>
+                      相談する
+                    </button>
                   </div>
                 ))}
               </div>
@@ -824,21 +1134,21 @@ const DiagnosisResultsPage: React.FC<DiagnosisResultsPageProps> = ({ diagnosisDa
                   document.body.appendChild(modal);
                 });
               }}
-              className="bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white font-semibold py-3 px-6 rounded-lg transition-all duration-200 transform hover:scale-105"
+              className="bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white font-semibold py-3 px-6 rounded-lg transition-all duration-200 transform hover:scale-105 hover:shadow-lg cursor-pointer"
             >
               <i className="fas fa-share mr-2"></i>
               この結果をシェア
             </button>
             <button
               onClick={() => window.print()}
-              className="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white font-semibold py-3 px-6 rounded-lg transition-all duration-200 transform hover:scale-105"
+              className="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white font-semibold py-3 px-6 rounded-lg transition-all duration-200 transform hover:scale-105 hover:shadow-lg cursor-pointer"
             >
               <i className="fas fa-print mr-2"></i>
               結果を印刷
             </button>
             <button
               onClick={() => window.location.href = '/'}
-              className="bg-gradient-to-r from-gray-500 to-gray-600 hover:from-gray-600 hover:to-gray-700 text-white font-semibold py-3 px-6 rounded-lg transition-all duration-200 transform hover:scale-105"
+              className="bg-gradient-to-r from-gray-500 to-gray-600 hover:from-gray-600 hover:to-gray-700 text-white font-semibold py-3 px-6 rounded-lg transition-all duration-200 transform hover:scale-105 hover:shadow-lg cursor-pointer"
             >
               <i className="fas fa-home mr-2"></i>
               ホームに戻る
@@ -846,7 +1156,8 @@ const DiagnosisResultsPage: React.FC<DiagnosisResultsPageProps> = ({ diagnosisDa
           </div>
         </div>
       </div>
-    </div>
+      </div>
+    </>
   );
 };
 

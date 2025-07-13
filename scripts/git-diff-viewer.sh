@@ -3,7 +3,7 @@
 # Git差分可視化スクリプト
 # 使用方法: ./scripts/git-diff-viewer.sh
 
-echo "🔍 MoneyTicket Git差分可視化ツール"
+echo "🔍 AI ConectX Git差分可視化ツール"
 echo "=================================="
 
 # カラー設定

@@ -116,6 +116,7 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
     expert_name: 'AI ConectX専門アドバイザー',
     phone_number: '0120-123-456',
     email: 'advisor@aiconectx.co.jp',
+    line_url: '',
     business_hours: '平日 9:00-18:00',
     description: 'AI ConectXの認定ファイナンシャルプランナーが、お客様の資産運用に関するご相談を承ります。'
   });
@@ -128,6 +129,15 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
   const [plannerStatus, setPlannerStatus] = useState<string>('');
 
   // Helper functions defined before use
+  const normalizePhoneNumber = (phone: string): string => {
+    // 全角数字を半角数字に変換
+    const halfWidthPhone = phone.replace(/[０-９]/g, (match) => {
+      return String.fromCharCode(match.charCodeAt(0) - 0xFEE0);
+    });
+    // 数字以外を削除
+    return halfWidthPhone.replace(/\D/g, '');
+  };
+
   const calculateDashboardStats = (sessions: UserSessionData[]) => {
     const totalDiagnoses = sessions.length;
     
@@ -182,19 +192,6 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
 
   const loadExpertContactSettings = async () => {
     try {
-      // まずローカルストレージからカスタム設定を確認
-      const localExpertContact = localStorage.getItem('customExpertContact');
-      if (localExpertContact) {
-        try {
-          const parsedLocal = JSON.parse(localExpertContact);
-          setExpertContact(parsedLocal);
-          secureLog('ローカルストレージから専門家連絡先を読み込み');
-          return;
-        } catch (parseError) {
-          secureLog('ローカルストレージの専門家連絡先解析エラー:', parseError);
-        }
-      }
-
       // Supabaseから取得を試行（テーブル存在チェック付き）
       if (supabaseConfig.url && supabaseConfig.key && !supabaseConfig.url.includes('your-project')) {
         const response = await fetch(`${supabaseConfig.url}/rest/v1/expert_contact_settings?setting_key.eq=primary_financial_advisor&is_active.eq=true&select=*`, {
@@ -212,13 +209,12 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
             expert_name: data[0].expert_name,
             phone_number: data[0].phone_number,
             email: data[0].email || '',
+            line_url: data[0].line_url || '',
             business_hours: data[0].business_hours || '',
             description: data[0].description || ''
           };
           setExpertContact(expertContactData);
-          // Supabaseデータをローカルストレージにもバックアップ
-          localStorage.setItem('customExpertContact', JSON.stringify(expertContactData));
-          secureLog('Supabaseから専門家連絡先を読み込み、ローカルにバックアップ');
+          secureLog('Supabaseから専門家連絡先を読み込み');
           return;
         }
       } else {
@@ -237,6 +233,7 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
         expert_name: 'AI ConectX専門アドバイザー',
         phone_number: '0120-123-456',
         email: 'advisor@aiconectx.co.jp',
+        line_url: '',
         business_hours: '平日 9:00-18:00',
         description: 'AI ConectXの認定ファイナンシャルプランナーが、お客様の資産運用に関するご相談を承ります。'
       };
@@ -245,24 +242,12 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
     } catch (error) {
       secureLog('専門家連絡先のSupabase読み込みエラー:', error);
       
-      // エラー時でもローカルストレージを確認
-      try {
-        const fallbackExpertContact = localStorage.getItem('customExpertContact');
-        if (fallbackExpertContact) {
-          const parsedFallback = JSON.parse(fallbackExpertContact);
-          setExpertContact(parsedFallback);
-          secureLog('エラー時フォールバック: ローカルストレージから専門家連絡先を読み込み');
-          return;
-        }
-      } catch (fallbackError) {
-        secureLog('フォールバック専門家連絡先エラー:', fallbackError);
-      }
-
-      // 最終デフォルト値を使用
+      // エラー時はデフォルト値を使用
       setExpertContact({
         expert_name: 'AI ConectX専門アドバイザー',
         phone_number: '0120-123-456',
         email: 'advisor@aiconectx.co.jp',
+        line_url: '',
         business_hours: '平日 9:00-18:00',
         description: 'AI ConectXの認定ファイナンシャルプランナーが、お客様の資産運用に関するご相談を承ります。'
       });
@@ -303,40 +288,25 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
       if (supabaseLegalLinks) {
         secureLog('Supabaseからリーガルリンクを読み込み');
         setLegalLinks(supabaseLegalLinks);
-        // ローカルストレージにもバックアップ保存
-        localStorage.setItem('customLegalLinks', JSON.stringify(supabaseLegalLinks));
       } else {
-        // ローカルストレージから読み込み
-        const storedLinks = localStorage.getItem('customLegalLinks');
-        if (storedLinks) {
-          setLegalLinks(JSON.parse(storedLinks));
-        } else {
-          // デフォルトのリーガルリンク
-          const defaultLinks: LegalLink[] = [
-            { id: 1, link_type: 'privacy_policy', title: 'プライバシーポリシー', url: '#privacy', is_active: true, created_at: '', updated_at: '' },
-            { id: 2, link_type: 'terms_of_service', title: '利用規約', url: '#terms', is_active: true, created_at: '', updated_at: '' },
-            { id: 3, link_type: 'specified_commercial_transactions', title: '特定商取引法', url: '#scta', is_active: true, created_at: '', updated_at: '' },
-            { id: 4, link_type: 'company_info', title: '会社概要', url: '#company', is_active: true, created_at: '', updated_at: '' }
-          ];
-          setLegalLinks(defaultLinks);
-        }
+        // Supabaseにデータがない場合はデフォルトリンクを使用
+        setDefaultLegalLinks();
       }
     } catch (error) {
-      secureLog('リーガルリンクのSupabase読み込みエラー、ローカルストレージを使用:', error);
-      const storedLinks = localStorage.getItem('customLegalLinks');
-      if (storedLinks) {
-        setLegalLinks(JSON.parse(storedLinks));
-      } else {
-        // デフォルトのリーガルリンク
-        const defaultLinks: LegalLink[] = [
-          { id: 1, link_type: 'privacy_policy', title: 'プライバシーポリシー', url: '#privacy', is_active: true, created_at: '', updated_at: '' },
-          { id: 2, link_type: 'terms_of_service', title: '利用規約', url: '#terms', is_active: true, created_at: '', updated_at: '' },
-          { id: 3, link_type: 'specified_commercial_transactions', title: '特定商取引法', url: '#scta', is_active: true, created_at: '', updated_at: '' },
-          { id: 4, link_type: 'company_info', title: '会社概要', url: '#company', is_active: true, created_at: '', updated_at: '' }
-        ];
-        setLegalLinks(defaultLinks);
-      }
+      secureLog('リーガルリンクのSupabase読み込みエラー:', error);
+      // エラー時はデフォルトリンクを使用
+      setDefaultLegalLinks();
     }
+  };
+
+  const setDefaultLegalLinks = () => {
+    const defaultLinks: LegalLink[] = [
+      { id: 1, link_type: 'privacy_policy', title: 'プライバシーポリシー', url: '#privacy', is_active: true, created_at: '', updated_at: '' },
+      { id: 2, link_type: 'terms_of_service', title: '利用規約', url: '#terms', is_active: true, created_at: '', updated_at: '' },
+      { id: 3, link_type: 'specified_commercial_transactions', title: '特定商取引法', url: '#scta', is_active: true, created_at: '', updated_at: '' },
+      { id: 4, link_type: 'company_info', title: '会社概要', url: '#company', is_active: true, created_at: '', updated_at: '' }
+    ];
+    setLegalLinks(defaultLinks);
   };
 
   // 共通エラー処理ヘルパー
@@ -474,15 +444,27 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
             secureLog('認証済み診断セッションを取得:', verifiedSessions.length);
             
             // Supabaseの形式からUserSessionData形式に変換
-            const convertedSessions: UserSessionData[] = verifiedSessions.map((session: { session_id?: string; id?: string; verification_timestamp?: string; created_at?: string; phone_number: string; diagnosis_answers?: Record<string, string>; sms_verified?: boolean }) => ({
-              id: session.session_id || session.id,
-              timestamp: session.verification_timestamp || session.created_at,
-              phoneNumber: session.phone_number,
-              diagnosisAnswers: session.diagnosis_answers || {},
-              smsVerified: session.sms_verified || false,
-              verifiedPhoneNumber: session.sms_verified ? session.phone_number : undefined,
-              verificationTimestamp: session.verification_timestamp
-            }));
+            const convertedSessions: UserSessionData[] = verifiedSessions.map((session: { session_id?: string; id?: string; verification_timestamp?: string; created_at?: string; phone_number: string; diagnosis_answers?: Record<string, string>; sms_verified?: boolean }) => {
+              // 診断回答データの正規化（データベースのフィールド名を標準形式にマッピング）
+              const normalizedAnswers = session.diagnosis_answers || {};
+              const diagnosisAnswers = {
+                age: normalizedAnswers.age || normalizedAnswers.ageGroup || '',
+                experience: normalizedAnswers.experience || normalizedAnswers.investmentExperience || '',
+                purpose: normalizedAnswers.purpose || normalizedAnswers.investmentGoal || normalizedAnswers.investmentPurpose || '',
+                amount: normalizedAnswers.amount || normalizedAnswers.monthlyInvestment || normalizedAnswers.investmentAmount || '',
+                timing: normalizedAnswers.timing || normalizedAnswers.investmentHorizon || normalizedAnswers.startTiming || ''
+              };
+              
+              return {
+                id: session.session_id || session.id,
+                timestamp: session.verification_timestamp || session.created_at,
+                phoneNumber: session.phone_number,
+                diagnosisAnswers: diagnosisAnswers,
+                smsVerified: session.sms_verified || false,
+                verifiedPhoneNumber: session.sms_verified ? session.phone_number : undefined,
+                verificationTimestamp: session.verification_timestamp
+              };
+            });
             
             allSessions = [...allSessions, ...convertedSessions];
           }
@@ -602,41 +584,14 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
           secureLog('Supabaseから商品設定を読み込み');
           console.log('商品設定データ (Supabase):', supabaseProducts);
           setProductsForEditing(supabaseProducts);
-          // ローカルストレージにもバックアップ保存
-          localStorage.setItem('customFinancialProducts', JSON.stringify(supabaseProducts));
         } else {
-          // ローカルストレージから読み込み
-          const customProductsString = localStorage.getItem('customFinancialProducts');
-          if (customProductsString) {
-            try {
-              const customProducts = JSON.parse(customProductsString);
-              console.log('商品設定データ (ローカルストレージ):', customProducts);
-              setProductsForEditing(customProducts);
-            } catch (e) {
-              secureLog("Error parsing custom financial products from localStorage:", e);
-              console.log('商品設定データ (デフォルト - パースエラー):', defaultFinancialProducts);
-              setProductsForEditing(JSON.parse(JSON.stringify(defaultFinancialProducts))); // Deep copy
-            }
-          } else {
-            console.log('商品設定データ (デフォルト - ローカルなし):', defaultFinancialProducts);
-            setProductsForEditing(JSON.parse(JSON.stringify(defaultFinancialProducts))); // Deep copy
-          }
-        }
-      } catch (error) {
-        handleError(error, '商品設定の読み込みに失敗しました。ローカルデータを使用します。', '商品設定Supabase読み込み');
-        const customProductsString = localStorage.getItem('customFinancialProducts');
-        if (customProductsString) {
-          try {
-            const customProducts = JSON.parse(customProductsString);
-            setProductsForEditing(customProducts);
-            showSuccess('商品設定をローカルデータから読み込みました');
-          } catch (e) {
-            handleError(e, '商品設定データが破損しています。デフォルト設定を使用します。', 'ローカル商品設定解析');
-            setProductsForEditing(JSON.parse(JSON.stringify(defaultFinancialProducts))); // Deep copy
-          }
-        } else {
+          secureLog('Supabase商品設定データなし、デフォルト商品を使用');
+          console.log('商品設定データ (デフォルト):', defaultFinancialProducts);
           setProductsForEditing(JSON.parse(JSON.stringify(defaultFinancialProducts))); // Deep copy
         }
+      } catch (error) {
+        handleError(error, '商品設定の読み込みに失敗しました。デフォルト設定を使用します。', '商品設定Supabase読み込み');
+        setProductsForEditing(JSON.parse(JSON.stringify(defaultFinancialProducts))); // Deep copy
       }
 
       // Load testimonials for editing
@@ -645,37 +600,13 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
         if (supabaseTestimonials) {
           secureLog('Supabaseからお客様の声を読み込み');
           setTestimonialsForEditing(supabaseTestimonials);
-          // ローカルストレージにもバックアップ保存
-          localStorage.setItem('customTestimonials', JSON.stringify(supabaseTestimonials));
         } else {
-          // ローカルストレージから読み込み
-          const customTestimonialsString = localStorage.getItem('customTestimonials');
-          if (customTestimonialsString) {
-            try {
-              const customTestimonials = JSON.parse(customTestimonialsString);
-              setTestimonialsForEditing(customTestimonials);
-            } catch (e) {
-              secureLog("Error parsing custom testimonials from localStorage:", e);
-              setTestimonialsForEditing(JSON.parse(JSON.stringify(defaultTestimonialsData))); // Deep copy
-            }
-          } else {
-            setTestimonialsForEditing(JSON.parse(JSON.stringify(defaultTestimonialsData))); // Deep copy
-          }
-        }
-      } catch (error) {
-        secureLog('お客様の声のSupabase読み込みエラー、ローカルストレージを使用:', error);
-        const customTestimonialsString = localStorage.getItem('customTestimonials');
-        if (customTestimonialsString) {
-          try {
-            const customTestimonials = JSON.parse(customTestimonialsString);
-            setTestimonialsForEditing(customTestimonials);
-          } catch (e) {
-            secureLog("Error parsing custom testimonials from localStorage:", e);
-            setTestimonialsForEditing(JSON.parse(JSON.stringify(defaultTestimonialsData))); // Deep copy
-          }
-        } else {
+          secureLog('Supabaseお客様の声データなし、デフォルトを使用');
           setTestimonialsForEditing(JSON.parse(JSON.stringify(defaultTestimonialsData))); // Deep copy
         }
+      } catch (error) {
+        secureLog('お客様の声のSupabase読み込みエラー、デフォルトを使用:', error);
+        setTestimonialsForEditing(JSON.parse(JSON.stringify(defaultTestimonialsData))); // Deep copy
       }
 
       // Load tracking scripts
@@ -684,37 +615,13 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
         if (supabaseTrackingScripts) {
           secureLog('Supabaseからアナリティクス設定を読み込み');
           setTrackingScripts(supabaseTrackingScripts);
-          // ローカルストレージにもバックアップ保存
-          localStorage.setItem('customTrackingScripts', JSON.stringify(supabaseTrackingScripts));
         } else {
-          // ローカルストレージから読み込み
-          const storedTrackingScripts = localStorage.getItem('customTrackingScripts');
-          if (storedTrackingScripts) {
-            try {
-              const parsedScripts = JSON.parse(storedTrackingScripts);
-              setTrackingScripts(parsedScripts);
-            } catch (e) {
-              secureLog("Error parsing tracking scripts from localStorage:", e);
-              setTrackingScripts({ head: '', bodyEnd: '' });
-            }
-          } else {
-            setTrackingScripts({ head: '', bodyEnd: '' });
-          }
-        }
-      } catch (error) {
-        secureLog('アナリティクス設定のSupabase読み込みエラー、ローカルストレージを使用:', error);
-        const storedTrackingScripts = localStorage.getItem('customTrackingScripts');
-        if (storedTrackingScripts) {
-          try {
-            const parsedScripts = JSON.parse(storedTrackingScripts);
-            setTrackingScripts(parsedScripts);
-          } catch (e) {
-            secureLog("Error parsing tracking scripts from localStorage:", e);
-            setTrackingScripts({ head: '', bodyEnd: '' });
-          }
-        } else {
+          secureLog('Supabaseアナリティクス設定データなし、空の設定を使用');
           setTrackingScripts({ head: '', bodyEnd: '' });
         }
+      } catch (error) {
+        secureLog('アナリティクス設定のSupabase読み込みエラー、空の設定を使用:', error);
+        setTrackingScripts({ head: '', bodyEnd: '' });
       }
 
       // Load notification settings
@@ -723,37 +630,13 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
         if (supabaseNotificationSettings) {
           secureLog('Supabaseから通知設定を読み込み');
           setNotificationSettings({ ...initialNotificationSettings, ...supabaseNotificationSettings });
-          // ローカルストレージにもバックアップ保存
-          localStorage.setItem('notificationConfigurations', JSON.stringify(supabaseNotificationSettings));
         } else {
-          // ローカルストレージから読み込み
-          const storedNotificationSettings = localStorage.getItem('notificationConfigurations');
-          if (storedNotificationSettings) {
-            try {
-              const parsedSettings = JSON.parse(storedNotificationSettings);
-              setNotificationSettings({ ...initialNotificationSettings, ...parsedSettings });
-            } catch (e) {
-              secureLog("Error parsing notification settings from localStorage:", e);
-              setNotificationSettings(initialNotificationSettings);
-            }
-          } else {
-            setNotificationSettings(initialNotificationSettings);
-          }
-        }
-      } catch (error) {
-        secureLog('通知設定のSupabase読み込みエラー、ローカルストレージを使用:', error);
-        const storedNotificationSettings = localStorage.getItem('notificationConfigurations');
-        if (storedNotificationSettings) {
-          try {
-            const parsedSettings = JSON.parse(storedNotificationSettings);
-            setNotificationSettings({ ...initialNotificationSettings, ...parsedSettings });
-          } catch (e) {
-            secureLog("Error parsing notification settings from localStorage:", e);
-            setNotificationSettings(initialNotificationSettings);
-          }
-        } else {
+          secureLog('Supabase通知設定データなし、初期設定を使用');
           setNotificationSettings(initialNotificationSettings);
         }
+      } catch (error) {
+        secureLog('通知設定のSupabase読み込みエラー、初期設定を使用:', error);
+        setNotificationSettings(initialNotificationSettings);
       }
 
       // Load legal links
@@ -830,10 +713,17 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
   }, []);
 
   const getAnswerLabel = (questionId: keyof typeof diagnosisFormMapping, value: string): string => {
+    // 値が空または未定義の場合は「未回答」を表示
+    if (!value || value.trim() === '') {
+      return '未回答';
+    }
+    
     const mapping = diagnosisFormMapping[questionId];
     if (mapping && typeof mapping === 'object' && value in mapping) {
       return (mapping as Record<string, string>)[value];
     }
+    
+    // マッピングにない値の場合は元の値を表示
     return value;
   };
 
@@ -951,38 +841,31 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
         return;
       }
 
-      // 既存データとの比較（変更がない場合のチェック）
-      const existingProductsString = localStorage.getItem('customFinancialProducts');
-      if (existingProductsString) {
-        try {
-          const existingProducts = JSON.parse(existingProductsString);
-          if (JSON.stringify(existingProducts) === JSON.stringify(productsForEditing)) {
-            setProductSettingsStatus('❌ 商品設定に変更がありません。');
-            setTimeout(() => setProductSettingsStatus(''), 5000);
-            return;
-          }
-        } catch (parseError) {
-          secureLog('既存商品データの解析でエラー（新規保存として処理）:', parseError);
+      // Supabaseから既存データを取得して変更チェック
+      try {
+        const existingProducts = await SupabaseAdminAPI.loadAdminSetting('financial_products');
+        if (existingProducts && JSON.stringify(existingProducts) === JSON.stringify(productsForEditing)) {
+          setProductSettingsStatus('❌ 商品設定に変更がありません。');
+          setTimeout(() => setProductSettingsStatus(''), 5000);
+          return;
         }
+      } catch (parseError) {
+        secureLog('既存商品データの取得でエラー（新規保存として処理）:', parseError);
       }
 
-      // まずローカルストレージに確実に保存
-      localStorage.setItem('customFinancialProducts', JSON.stringify(productsForEditing));
-      secureLog('商品設定をローカルストレージに保存完了');
-      
-      // Supabaseにも保存を試行
+      // Supabaseに保存を試行
       try {
         const supabaseSuccess = await SupabaseAdminAPI.saveAdminSetting('financial_products', productsForEditing);
         if (supabaseSuccess) {
-          secureLog('Supabaseにも商品設定を保存完了');
+          secureLog('Supabaseに商品設定を保存完了');
           setProductSettingsStatus('✅ 商品設定が正常に保存され、データベースに反映されました');
         } else {
-          secureLog('Supabase保存に失敗しましたが、ローカル保存は成功');
-          setProductSettingsStatus('✅ 商品設定が正常に保存されました（ローカル保存）');
+          secureLog('Supabase保存に失敗');
+          setProductSettingsStatus('❌ 商品設定の保存に失敗しました。');
         }
       } catch (supabaseError) {
-        secureLog('Supabase保存でエラーが発生しましたが、ローカル保存は成功:', supabaseError);
-        setProductSettingsStatus('✅ 商品設定が正常に保存されました（ローカル保存）');
+        secureLog('Supabase保存でエラーが発生:', supabaseError);
+        setProductSettingsStatus('❌ 商品設定の保存中にエラーが発生しました。');
       }
       
       setTimeout(() => setProductSettingsStatus(''), 3000);
@@ -1245,23 +1128,19 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
       
       setLegalLinks(updatedLinks);
       
-      // まずローカルストレージに保存
-      localStorage.setItem('customLegalLinks', JSON.stringify(updatedLinks));
-      secureLog('リーガルリンクをローカルストレージに保存完了');
-      
-      // Supabaseにも保存を試行
+      // Supabaseに保存
       try {
         const supabaseSuccess = await SupabaseAdminAPI.saveAdminSetting('legal_links', updatedLinks);
         if (supabaseSuccess) {
-          secureLog('Supabaseにもリーガルリンクを保存完了');
+          secureLog('リーガルリンクをSupabaseに保存完了');
           setLegalLinksStatus('✅ リーガルリンクが正常に保存され、データベースに反映されました');
         } else {
-          secureLog('Supabase保存に失敗しましたが、ローカル保存は成功');
-          setLegalLinksStatus('✅ リーガルリンクが正常に保存されました（ローカル保存）');
+          secureLog('Supabase保存に失敗');
+          setLegalLinksStatus('❌ 保存に失敗しました');
         }
       } catch (supabaseError) {
-        secureLog('Supabase保存でエラーが発生しましたが、ローカル保存は成功:', supabaseError);
-        setLegalLinksStatus('✅ リーガルリンクが正常に保存されました（ローカル保存）');
+        secureLog('Supabase保存でエラーが発生:', supabaseError);
+        setLegalLinksStatus('❌ 保存中にエラーが発生しました');
       }
       
       setEditingLegalLink(null);
@@ -1278,10 +1157,19 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
   };
 
   const handleExpertContactChange = (field: string, value: string) => {
-    setExpertContact(prev => ({
-      ...prev,
-      [field]: value
-    }));
+    // 電話番号フィールドの場合は全角数字を半角に変換
+    if (field === 'phone_number') {
+      const normalizedPhone = normalizePhoneNumber(value);
+      setExpertContact(prev => ({
+        ...prev,
+        [field]: normalizedPhone
+      }));
+    } else {
+      setExpertContact(prev => ({
+        ...prev,
+        [field]: value
+      }));
+    }
   };
 
   const handleSaveExpertContactSettings = async () => {
@@ -1302,6 +1190,7 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
           expert_name: expertContact.expert_name,
           phone_number: expertContact.phone_number,
           email: expertContact.email,
+          line_url: expertContact.line_url,
           business_hours: expertContact.business_hours,
           description: expertContact.description,
           is_active: true
@@ -1310,9 +1199,7 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
 
       if (response.ok) {
         setExpertContactStatus('✅ 専門家設定が正常に保存されました');
-        // ローカルストレージにもバックアップ
-        localStorage.setItem('customExpertContact', JSON.stringify(expertContact));
-        secureLog('専門家設定をSupabaseに保存完了、ローカルにバックアップ');
+        secureLog('専門家設定をSupabaseに保存完了');
       } else {
         // UPSERTを試行
         const updateResponse = await fetch(`${supabaseConfig.url}/rest/v1/expert_contact_settings?setting_key.eq=primary_financial_advisor`, {
@@ -1326,6 +1213,7 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
             expert_name: expertContact.expert_name,
             phone_number: expertContact.phone_number,
             email: expertContact.email,
+            line_url: expertContact.line_url,
             business_hours: expertContact.business_hours,
             description: expertContact.description,
             is_active: true,
@@ -1335,9 +1223,7 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
 
         if (updateResponse.ok) {
           setExpertContactStatus('✅ 専門家設定が正常に更新されました');
-          // ローカルストレージにもバックアップ
-          localStorage.setItem('customExpertContact', JSON.stringify(expertContact));
-          secureLog('専門家設定をSupabaseで更新完了、ローカルにバックアップ');
+          secureLog('専門家設定をSupabaseで更新完了');
         } else {
           throw new Error('Supabase保存に失敗');
         }
@@ -1347,15 +1233,8 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
     } catch (error) {
       secureLog('専門家設定保存エラー:', error);
       
-      // エラー時でもローカルストレージに保存
-      try {
-        localStorage.setItem('customExpertContact', JSON.stringify(expertContact));
-        setExpertContactStatus('⚠️ Supabaseエラーですが、ローカルに保存しました');
-        secureLog('エラー時フォールバック: 専門家設定をローカルストレージに保存');
-      } catch (fallbackError) {
-        secureLog('ローカルストレージ保存も失敗:', fallbackError);
-        setExpertContactStatus('❌ 保存中にエラーが発生しました。');
-      }
+      // エラー時の処理
+      setExpertContactStatus('❌ 保存中にエラーが発生しました。');
       
       setTimeout(() => setExpertContactStatus(''), 5000);
     }
@@ -1390,7 +1269,13 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
 
   const handlePlannerFormChange = (field: string, value: string | number | boolean | string[]) => {
     if (editingPlanner) {
-      setEditingPlanner({ ...editingPlanner, [field]: value });
+      // 電話番号フィールドの場合は全角数字を半角に変換
+      if (field === 'phone_number' && typeof value === 'string') {
+        const normalizedPhone = normalizePhoneNumber(value);
+        setEditingPlanner({ ...editingPlanner, [field]: normalizedPhone });
+      } else {
+        setEditingPlanner({ ...editingPlanner, [field]: value });
+      }
     }
   };
 
@@ -1804,9 +1689,6 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
           secureLog('メインビジュアルデータをSupabaseに保存完了');
           successCount++;
         }
-        // ローカルストレージにもバックアップ保存
-        localStorage.setItem('customMainVisualData', JSON.stringify(mainVisualData));
-        secureLog('メインビジュアルデータをローカルストレージにバックアップ');
       } catch (error) {
         secureLog('メインビジュアルデータの保存エラー:', error);
       }
@@ -1870,12 +1752,7 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
             <div className="flex items-center space-x-4">
               {/* セッション情報表示 */}
               <div className="hidden md:flex items-center space-x-3 text-sm">
-                <div className="flex items-center">
-                  <i className={`fas fa-shield-alt mr-1 ${sessionValid ? 'text-green-400' : 'text-red-400'}`}></i>
-                  <span className={sessionValid ? 'text-green-400' : 'text-red-400'}>
-                    {sessionValid ? 'セキュア' : '期限切れ'}
-                  </span>
-                </div>
+                {/* セキュア文字を非表示 */}
                 {sessionValid && sessionTimeRemaining > 0 && (
                   <div className="flex items-center">
                     <i className="fas fa-clock mr-1 text-yellow-400"></i>
@@ -2159,11 +2036,11 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
                             {new Date(session.timestamp).toLocaleString('ja-JP', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' })}
                             </td>
                             <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-700">{session.phoneNumber}</td>
-                            <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-700">{getAnswerLabel('age', session.diagnosisAnswers.age)}</td>
-                            <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-700">{getAnswerLabel('experience', session.diagnosisAnswers.experience)}</td>
-                            <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-700">{getAnswerLabel('purpose', session.diagnosisAnswers.purpose)}</td>
-                            <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-700">{getAnswerLabel('amount', session.diagnosisAnswers.amount)}</td>
-                            <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-700">{getAnswerLabel('timing', session.diagnosisAnswers.timing)}</td>
+                            <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-700">{getAnswerLabel('age', session.diagnosisAnswers?.age || '')}</td>
+                            <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-700">{getAnswerLabel('experience', session.diagnosisAnswers?.experience || '')}</td>
+                            <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-700">{getAnswerLabel('purpose', session.diagnosisAnswers?.purpose || '')}</td>
+                            <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-700">{getAnswerLabel('amount', session.diagnosisAnswers?.amount || '')}</td>
+                            <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-700">{getAnswerLabel('timing', session.diagnosisAnswers?.timing || '')}</td>
                         </tr>
                         ))}
                     </tbody>
@@ -3361,8 +3238,8 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
                                     type="tel"
                                     value={adminPhoneNumber}
                                     onChange={(e) => {
-                                      const numbersOnly = e.target.value.replace(/\D/g, '');
-                                      setAdminPhoneNumber(numbersOnly);
+                                      const normalizedPhone = normalizePhoneNumber(e.target.value);
+                                      setAdminPhoneNumber(normalizedPhone);
                                     }}
                                     className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-150 ease-in-out"
                                     placeholder="例: 09012345678"
@@ -3955,6 +3832,22 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
 
                     <div>
                         <label className="block text-sm font-medium text-gray-700 mb-2">
+                            <i className="fab fa-line mr-2"></i>LINE公式アカウントURL
+                        </label>
+                        <input
+                            type="url"
+                            value={expertContact.line_url}
+                            onChange={(e) => handleExpertContactChange('line_url', e.target.value)}
+                            placeholder="https://line.me/R/ti/p/@your-line-id"
+                            className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                        />
+                        <p className="text-xs text-gray-500 mt-1">
+                            LINE公式アカウントのURLを入力してください。空白の場合はLINEボタンは表示されません。
+                        </p>
+                    </div>
+
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
                             <i className="fas fa-envelope mr-2"></i>メールアドレス
                         </label>
                         <input
@@ -4002,6 +3895,7 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
                         <div className="text-sm text-gray-600 space-y-1">
                             <p><strong>担当者:</strong> {expertContact.expert_name || 'AI ConectX専門アドバイザー'}</p>
                             <p><strong>電話番号:</strong> {expertContact.phone_number || '0120-123-456'}</p>
+                            {expertContact.line_url && <p><strong>LINE:</strong> 公式アカウントで相談可能</p>}
                             <p><strong>受付時間:</strong> {expertContact.business_hours || '平日 9:00-18:00'}</p>
                             {expertContact.email && <p><strong>メール:</strong> {expertContact.email}</p>}
                         </div>

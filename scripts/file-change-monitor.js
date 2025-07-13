@@ -8,7 +8,7 @@ const path = require('path');
 const chokidar = require('chokidar');
 const { exec } = require('child_process');
 
-console.log('🔍 MoneyTicket ファイル変更監視開始');
+console.log('🔍 AI ConectX ファイル変更監視開始');
 console.log('===================================');
 
 // 監視設定

@@ -133,9 +133,14 @@ const MainVisualAndDiagnosis: React.FC<MainVisualAndDiagnosisProps> = ({ onProce
   const currentQuestionData = diagnosisStepsData.find(s => s.step === currentStep)?.question;
 
   const handleInputChange = (questionId: string, value: string) => {
-    // 電話番号の場合は数字のみに制限
+    // 電話番号の場合は全角数字を半角に変換してから数字のみに制限
     if (questionId === 'phoneNumber') {
-      const numbersOnly = value.replace(/\D/g, '');
+      // 全角数字を半角数字に変換
+      const halfWidthValue = value.replace(/[０-９]/g, (match) => {
+        return String.fromCharCode(match.charCodeAt(0) - 0xFEE0);
+      });
+      // 数字のみに制限
+      const numbersOnly = halfWidthValue.replace(/\D/g, '');
       setFormData(prev => ({ ...prev, [questionId]: numbersOnly }));
     } else {
       setFormData(prev => ({ ...prev, [questionId]: value }));
@@ -217,7 +222,7 @@ const MainVisualAndDiagnosis: React.FC<MainVisualAndDiagnosisProps> = ({ onProce
     <section id="main-visual-section" className="hero-section-premium py-20 px-4">
       <div className="hero-content max-w-7xl mx-auto text-center">
         <h2 className="heading-display text-4xl md:text-6xl lg:text-7xl mb-8 font-extrabold leading-tight text-white tracking-wide">
-          <div className="drop-shadow-[0_4px_15px_rgba(0,0,0,0.9)] [text-shadow:0_2px_8px_rgba(0,0,0,0.8),0_1px_3px_rgba(0,0,0,0.7)]">
+          <div className="drop-shadow-[0_6px_20px_rgba(0,0,0,0.95)] [text-shadow:0_4px_12px_rgba(0,0,0,0.9),0_2px_6px_rgba(0,0,0,0.8),0_1px_3px_rgba(0,0,0,0.7)] bg-gradient-to-b from-white via-gray-50 to-gray-100 bg-clip-text text-transparent">
             {mainVisualData.title.split('\n').map((line, index) => (
               <React.Fragment key={index}>
                 {line.includes(mainVisualData.highlightWord) ? (
@@ -225,7 +230,7 @@ const MainVisualAndDiagnosis: React.FC<MainVisualAndDiagnosisProps> = ({ onProce
                     <React.Fragment key={partIndex}>
                       {part}
                       {partIndex < line.split(mainVisualData.highlightWord).length - 1 && (
-                        <span className="text-amber-400 font-black brightness-110 drop-shadow-[0_6px_20px_rgba(0,0,0,0.98)] [text-shadow:0_3px_10px_rgba(0,0,0,0.95),0_1px_3px_rgba(0,0,0,0.9)]">
+                        <span className="text-amber-300 font-black brightness-125 drop-shadow-[0_8px_24px_rgba(0,0,0,0.98)] [text-shadow:0_4px_12px_rgba(0,0,0,0.95),0_2px_6px_rgba(0,0,0,0.9),0_1px_3px_rgba(0,0,0,0.8)] bg-gradient-to-b from-amber-200 via-amber-300 to-amber-400 bg-clip-text text-transparent">
                           {mainVisualData.highlightWord}
                         </span>
                       )}
@@ -239,22 +244,22 @@ const MainVisualAndDiagnosis: React.FC<MainVisualAndDiagnosisProps> = ({ onProce
             ))}
           </div>
         </h2>
-        <p className="text-lg md:text-xl lg:text-2xl mb-12 max-w-4xl mx-auto leading-relaxed text-white font-normal drop-shadow-[0_2px_8px_rgba(0,0,0,0.8)] [text-shadow:0_1px_3px_rgba(0,0,0,0.7)]">
+        <p className="text-lg md:text-xl lg:text-2xl mb-12 max-w-4xl mx-auto leading-relaxed text-gray-100 font-medium drop-shadow-[0_4px_12px_rgba(0,0,0,0.9)] [text-shadow:0_2px_6px_rgba(0,0,0,0.8),0_1px_3px_rgba(0,0,0,0.7)] bg-gradient-to-b from-gray-50 via-gray-100 to-gray-200 bg-clip-text text-transparent">
             {mainVisualData.subtitle}
         </p>
           
-        <div id="diagnosis-form-section" className="max-w-2xl mx-auto mb-16 text-left bg-white/98 backdrop-blur-xl border-2 border-amber-400/30 rounded-3xl p-10 shadow-[0_20px_40px_rgba(0,0,0,0.15),0_0_0_1px_rgba(255,255,255,0.1)] transition-all duration-700 ease-out">
-            <h3 className="heading-primary text-3xl mb-3 text-center text-blue-900 font-bold">
-                <i className="fas fa-chart-line mr-3 text-amber-500 text-xl"></i>
+        <div id="diagnosis-form-section" className="max-w-2xl mx-auto mb-16 text-left bg-white backdrop-blur-xl border-2 border-amber-400/40 rounded-3xl p-10 shadow-[0_24px_48px_rgba(0,0,0,0.2),0_8px_16px_rgba(0,0,0,0.1),0_0_0_1px_rgba(255,255,255,0.2)] transition-all duration-700 ease-out">
+            <h3 className="heading-primary text-3xl mb-3 text-center text-slate-800 font-bold">
+                <i className="fas fa-chart-line mr-3 text-amber-600 text-xl"></i>
                 あなた専用の投資プラン診断
             </h3>
-            <p className="text-xl mb-8 text-center text-gray-600 font-medium">3分で完了する簡単診断</p>
+            <p className="text-xl mb-8 text-center text-slate-700 font-semibold">3分で完了する簡単診断</p>
             
             <form onSubmit={(e) => e.preventDefault()} className="space-y-6">
               <div className="mb-8">
                 <div className="flex items-center justify-between mb-3">
-                    <span className="text-base font-semibold text-blue-900">進捗状況</span>
-                    <span className="text-base font-semibold text-blue-900">
+                    <span className="text-base font-bold text-slate-800">進捗状況</span>
+                    <span className="text-base font-bold text-slate-800">
                         <span id="currentStepDisplay">{showAIConsent ? AI_CONSENT_STEP : currentStep}</span>/{totalSteps}
                     </span>
                 </div>

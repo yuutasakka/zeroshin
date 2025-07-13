@@ -92,7 +92,7 @@ INSERT INTO homepage_content_settings (
 (
     'footer_data',
     '{
-        "companyName": "MoneyTicket",
+        "companyName": "AI ConectX",
         "description": "あなたの資産運用を全力でサポートします。",
         "contact": {
             "phone": "0120-123-456",
@@ -116,7 +116,7 @@ INSERT INTO homepage_content_settings (
 (
     'reasons_to_choose',
     '{
-        "title": "MoneyTicketが選ばれる理由",
+        "title": "AI ConectXが選ばれる理由",
         "subtitle": "安心・安全・確実な資産運用サポート",
         "reasons": [
             {

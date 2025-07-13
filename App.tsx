@@ -296,28 +296,8 @@ const App: React.FC = () => {
         //   // Supabase接続エラーは無視
         // });
 
-        // トラッキングスクリプトの読み込み
-        const scriptsString = localStorage.getItem('customTrackingScripts');
-        if (scriptsString) {
-          const scripts: { head: string; bodyEnd: string } = JSON.parse(scriptsString);
-
-          // セキュリティ強化: HTMLの安全性を検証してからDOM操作
-          if (scripts.head && typeof scripts.head === 'string' && scripts.head.trim() !== '') {
-            const sanitizedHead = sanitizeHTML(scripts.head);
-            if (sanitizedHead && isValidHTML(sanitizedHead)) {
-              const headFragment = document.createRange().createContextualFragment(sanitizedHead);
-              document.head.appendChild(headFragment);
-            }
-          }
-
-          if (scripts.bodyEnd && typeof scripts.bodyEnd === 'string' && scripts.bodyEnd.trim() !== '') {
-            const sanitizedBodyEnd = sanitizeHTML(scripts.bodyEnd);
-            if (sanitizedBodyEnd && isValidHTML(sanitizedBodyEnd)) {
-              const bodyEndFragment = document.createRange().createContextualFragment(sanitizedBodyEnd);
-              document.body.appendChild(bodyEndFragment);
-            }
-          }
-        }
+        // トラッキングスクリプトはSupabaseから直接読み込み（管理画面設定から）
+        // ここではlocalStorageに依存しない実装
       } catch (e) {
         // アプリケーション初期化エラーは無視（基本機能は動作する）
       }

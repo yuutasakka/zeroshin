@@ -74,7 +74,7 @@ function generateBackupCode() {
 // メイン処理
 async function main() {
   console.clear();
-  log(colors.bright + colors.blue, '🔐 MoneyTicket 本番環境管理者認証情報生成');
+  log(colors.bright + colors.blue, '🔐 AI ConectX 本番環境管理者認証情報生成');
   console.log('='.repeat(60));
   
   try {

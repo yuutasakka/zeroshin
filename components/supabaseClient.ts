@@ -617,7 +617,8 @@ export class DiagnosisSessionManager {
           .from('diagnosis_sessions')
           .select('*')
           .eq('sms_verified', true)
-          .order('verification_timestamp', { ascending: false });
+          .order('verification_timestamp', { ascending: false })
+          .limit(50);
 
         if (!error && data) {
           return data;

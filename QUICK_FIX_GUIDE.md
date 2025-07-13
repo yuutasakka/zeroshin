@@ -38,7 +38,7 @@ CREATE POLICY "admin_settings_read_policy" ON admin_settings FOR SELECT USING (t
 -- データ挿入
 INSERT INTO homepage_content_settings (setting_key, setting_data) VALUES 
 ('first_consultation_offer', '{"title": "初回相談無料"}'),
-('footer_data', '{"companyName": "MoneyTicket"}'),
+('footer_data', '{"companyName": "AI ConectX"}'),
 ('reasons_to_choose', '{"title": "選ばれる理由"}');
 
 INSERT INTO admin_settings (setting_key, setting_value) VALUES 

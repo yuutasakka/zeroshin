@@ -1,6 +1,6 @@
 # 📱 Twilio SMS認証セットアップガイド
 
-MoneyTicketアプリケーションでTwilio SMS認証を完全に機能させるための詳細ガイドです。
+AI ConectXアプリケーションでTwilio SMS認証を完全に機能させるための詳細ガイドです。
 
 ## 🚀 1. Twilioアカウントの準備
 
@@ -306,4 +306,4 @@ Twilio Consoleで以下を監視：
 2. **Supabaseサポート**: [Supabase Docs](https://supabase.com/docs)
 3. **アプリケーションログ**: `logs/combined.log`を確認
 
-このガイドに従って設定すれば、MoneyTicketで完全なSMS認証機能が利用できるようになります。
+このガイドに従って設定すれば、AI ConectXで完全なSMS認証機能が利用できるようになります。
