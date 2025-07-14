@@ -77,7 +77,7 @@ CREATE POLICY "audit_logs_access_policy" ON audit_logs
 
 -- デフォルト管理者アカウント作成
 -- ユーザー名: admin
--- パスワード: G3MIZAu74IvkH7NK (ハッシュ化済み)
+-- SECURITY: Default password removed - set via environment variable
 INSERT INTO admin_credentials (
     username, 
     password_hash, 
@@ -87,7 +87,7 @@ INSERT INTO admin_credentials (
     updated_at
 ) VALUES (
     'admin',
-    '8cb3b12639ecacf3fe86a6cd67b1e1b2a277fc26b4ecd42e381a1327bb68390e', -- SHA-256 hash of 'G3MIZAu74IvkH7NK'
+    'CHANGE_PASSWORD_IMMEDIATELY', -- SECURITY: Default password removed - set via environment variable
     '+819012345678',
     'MT-BACKUP-' || extract(epoch from now())::text,
     NOW(),

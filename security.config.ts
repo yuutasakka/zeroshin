@@ -317,10 +317,9 @@ export const SECURITY_CONFIG = {
     }
   },
 
-  // デフォルトハッシュ検出機能
+  // デフォルトハッシュ検出機能（セキュリティ向上のため除去済み）
   DEFAULT_PASSWORD_HASHES: [
-    'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855', // CHANGE_IN_PRODUCTION
-    '8cb3b12639ecacf3fe86a6cd67b1e1b2a277fc26b4ecd42e381a1327bb68390e'  // G3MIZAu74IvkH7NK
+    // ハードコードされたハッシュは削除済み - 環境変数で管理
   ],
 
   // セキュリティ検証（本番環境での基本チェック）

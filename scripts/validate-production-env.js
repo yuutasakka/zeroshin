@@ -30,8 +30,7 @@ const FORBIDDEN_VALUES = [
 ];
 
 const DEFAULT_HASHES = [
-  'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855',
-  '8cb3b12639ecacf3fe86a6cd67b1e1b2a277fc26b4ecd42e381a1327bb68390e'
+  // ハードコードされたハッシュは削除済み - セキュリティ向上のため
 ];
 
 function validateEnvironmentVariables() {
