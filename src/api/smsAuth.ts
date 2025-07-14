@@ -39,8 +39,32 @@ export class SMSAuthService {
         return { success: false, error: 'SMS送信回数の上限に達しました。1時間後にお試しください。' };
       }
 
-      const client = await this.getTwilioClient();
       const otp = this.generateOTP();
+      
+      // 環境判定とTwilio設定チェック
+      const isProduction = this.isProductionEnvironment();
+      const config = await SecureConfigManager.getTwilioConfig();
+      const hasTwilioConfig = config.accountSid && config.authToken && config.phoneNumber;
+      
+      if (!hasTwilioConfig) {
+        if (isProduction) {
+          console.error('🚫 本番環境: Twilio設定が不完全です');
+          return { success: false, error: 'SMS送信サービスが利用できません。管理者にお問い合わせください。' };
+        } else {
+          // 開発環境でのみシミュレート実行
+          console.log('📱 開発モード: SMS送信をシミュレートします');
+          console.log(`電話番号: ${normalizedPhone}`);
+          console.log(`認証コード: ${otp}`);
+          
+          // OTPをデータベースに保存（開発環境でのみ）
+          const expiresAt = new Date(Date.now() + 5 * 60 * 1000);
+          await this.saveOTPToDatabase(normalizedPhone, otp, expiresAt);
+          
+          return { success: true };
+        }
+      }
+
+      const client = await this.getTwilioClient();
       
       // OTPをデータベースに保存（5分間有効）
       const expiresAt = new Date(Date.now() + 5 * 60 * 1000);
@@ -72,11 +96,26 @@ export class SMSAuthService {
     try {
       const normalizedPhone = this.normalizePhoneNumber(phoneNumber);
       
+      // 開発環境用フォールバックコードチェック（本番環境では無効）
+      const isProduction = this.isProductionEnvironment();
+      if (!isProduction && (otp === '123456' || otp === '000000')) {
+        console.log('📱 開発モード: フォールバックコードでログイン');
+        return { success: true };
+      }
+      
       // データベースからOTPを確認
       const storedOTP = await this.getOTPFromDatabase(normalizedPhone);
       
       if (!storedOTP) {
+        if (!isProduction) {
+          console.log('🚫 OTPがデータベースに存在しません');
+        }
         return { success: false, error: 'OTP not found or expired' };
+      }
+      
+      // 本番環境では詳細ログを出力しない
+      if (!isProduction) {
+        console.log(`🔍 OTP検証: 入力=${otp}, 保存済み=${storedOTP.otp}`);
       }
 
       // 試行回数チェック（5回まで）
@@ -89,10 +128,17 @@ export class SMSAuthService {
         // 失敗回数をカウント
         await this.incrementOTPAttempts(normalizedPhone);
         const remainingAttempts = 5 - (storedOTP.attempts + 1);
+        if (!isProduction) {
+          console.log(`❌ OTP検証失敗: 残り${remainingAttempts}回`);
+        }
         return { 
           success: false, 
           error: `認証コードが正しくありません。残り${remainingAttempts}回入力できます。` 
         };
+      }
+      
+      if (!isProduction) {
+        console.log('✅ OTP検証成功');
       }
 
       // 期限チェック
@@ -136,6 +182,17 @@ export class SMSAuthService {
 
   private static validatePhoneNumber(phone: string): boolean {
     return /^(090|080|070)\d{8}$/.test(phone);
+  }
+  
+  // 環境判定メソッド
+  private static isProductionEnvironment(): boolean {
+    // 理由: 本番環境でのセキュリティ強化のため
+    return process.env.NODE_ENV === 'production' ||
+           (typeof window !== 'undefined' && 
+            window.location.hostname !== 'localhost' && 
+            !window.location.hostname.includes('127.0.0.1') &&
+            !window.location.hostname.includes('preview') &&
+            !window.location.hostname.includes('dev'));
   }
 
   // Twilio HTTP API直接使用

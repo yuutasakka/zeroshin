@@ -5,8 +5,12 @@
  * 本番デプロイ前に実行してセキュリティ設定を確認
  */
 
-const fs = require('fs');
-const path = require('path');
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const REQUIRED_VARS = [
   'VITE_JWT_SECRET',
@@ -114,8 +118,6 @@ function validateEnvironmentVariables() {
 }
 
 // スクリプト実行部分
-if (require.main === module) {
-  validateEnvironmentVariables();
-}
+validateEnvironmentVariables();
 
 module.exports = { validateEnvironmentVariables }; 

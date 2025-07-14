@@ -595,7 +595,13 @@ const DiagnosisResultsPage: React.FC<DiagnosisResultsPageProps> = ({ diagnosisDa
             rating: 4.8,
             languages: ['日本語', '英語'],
             is_active: true,
-            contact_info: { phone: '03-1234-5678', email: 'tanaka@aiconectx.co.jp' },
+            contact_info: { 
+              phone: '03-1234-5678', 
+              phone_number: '03-1234-5678',
+              email: 'tanaka@aiconectx.co.jp',
+              line_url: 'https://line.me/R/ti/p/@aiconectx-tanaka',
+              consultation_hours: '平日 9:00-18:00 / 土日 10:00-16:00'
+            },
             display_order: 1
           },
           {
@@ -607,7 +613,13 @@ const DiagnosisResultsPage: React.FC<DiagnosisResultsPageProps> = ({ diagnosisDa
             rating: 4.9,
             languages: ['日本語'],
             is_active: true,
-            contact_info: { phone: '03-2345-6789', email: 'sato@aiconectx.co.jp' },
+            contact_info: { 
+              phone: '03-2345-6789', 
+              phone_number: '03-2345-6789',
+              email: 'sato@aiconectx.co.jp',
+              line_url: 'https://line.me/R/ti/p/@aiconectx-sato',
+              consultation_hours: '平日 10:00-19:00 / 土日祭日 休み'
+            },
             display_order: 2
           },
           {
@@ -619,7 +631,13 @@ const DiagnosisResultsPage: React.FC<DiagnosisResultsPageProps> = ({ diagnosisDa
             rating: 4.7,
             languages: ['日本語', '中国語'],
             is_active: true,
-            contact_info: { phone: '03-3456-7890', email: 'yamada@aiconectx.co.jp' },
+            contact_info: { 
+              phone: '03-3456-7890', 
+              phone_number: '03-3456-7890',
+              email: 'yamada@aiconectx.co.jp',
+              line_url: 'https://line.me/R/ti/p/@aiconectx-yamada',
+              consultation_hours: '平日 13:00-20:00 / 土日 10:00-17:00'
+            },
             display_order: 3
           }
         ];
@@ -865,6 +883,22 @@ const DiagnosisResultsPage: React.FC<DiagnosisResultsPageProps> = ({ diagnosisDa
                   <div className="text-left">
                     <div className="text-lg">LINEで相談</div>
                     <div className="text-sm opacity-90">チャットでお気軽に相談</div>
+                  </div>
+                </button>
+              )}
+              
+              {/* メール相談ボタン */}
+              {state.selectedExpert.contact_info.email && (
+                <button
+                  onClick={() => {
+                    window.location.href = `mailto:${state.selectedExpert?.contact_info.email}?subject=資産運用相談の件&body=お名前:%0D%0A電話番号:%0D%0A相談内容:%0D%0A`;
+                  }}
+                  className="w-full bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 text-white font-bold py-4 px-6 rounded-lg transition-all duration-200 transform hover:scale-105 hover:shadow-lg cursor-pointer flex items-center justify-center"
+                >
+                  <i className="fas fa-envelope mr-3 text-lg"></i>
+                  <div className="text-left">
+                    <div className="text-lg">メールで相談</div>
+                    <div className="text-sm opacity-90">詳細なご相談も可能</div>
                   </div>
                 </button>
               )}

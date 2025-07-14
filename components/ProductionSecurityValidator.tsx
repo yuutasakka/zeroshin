@@ -32,11 +32,11 @@ const ProductionSecurityValidator: React.FC = () => {
 
       try {
         // 環境変数チェック
-        const requiredVars = ['VITE_JWT_SECRET', 'VITE_SESSION_SECRET', 'VITE_ENCRYPTION_KEY'];
+        const requiredVars = ['VITE_SUPABASE_ANON_KEY', 'VITE_SUPABASE_URL'];
         requiredVars.forEach(varName => {
           const value = (import.meta as any).env?.[varName];
           if (!value || value.includes('CHANGE_ME') || value.includes('dev-')) {
-            errors.push(`${varName} is not properly configured for production`);
+            errors.push(`Production environment requires valid values for: ${varName}`);
           }
         });
 

@@ -51,9 +51,25 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return;
     }
 
+    // 環境判定
+    const isProduction = process.env.NODE_ENV === 'production' ||
+                        (typeof process !== 'undefined' && 
+                         !process.env.NODE_ENV?.includes('dev'));
+    
+    if (!isProduction) {
+      console.log(`🔍 OTP検証リクエスト: ${phoneNumber}, OTP: ${otp}`);
+    }
+    
     const result = await SMSAuthService.verifyOTP(phoneNumber, otp);
     
+    if (!isProduction) {
+      console.log(`🔍 OTP検証結果:`, result);
+    }
+    
     if (result.success) {
+      if (!isProduction) {
+        console.log('✅ OTP検証成功 - セッション作成');
+      }
       // セッション管理は簡化（Vercel Functions環境）
       res.setHeader('Set-Cookie', [
         `session_verified=true; HttpOnly; Secure; SameSite=Strict; Max-Age=1800; Path=/`,
@@ -65,6 +81,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         message: '認証が完了しました'
       });
     } else {
+      if (!isProduction) {
+        console.error(`❌ OTP検証失敗: ${result.error}`);
+      }
       res.status(400).json({ 
         success: false, 
         error: result.error 

@@ -22,7 +22,7 @@ const AdminLoginPage: React.FC<AdminLoginPageProps> = ({ onLogin, onNavigateHome
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  const [confirmNewPassword, setConfirmNewPassword] = useState('');
+  // const [confirmNewPassword, setConfirmNewPassword] = useState('');
   const [phoneNumber, setPhoneNumber] = useState('');
   const [email, setEmail] = useState('');
   const [smsCode, setSmsCode] = useState('');
@@ -150,12 +150,12 @@ const AdminLoginPage: React.FC<AdminLoginPageProps> = ({ onLogin, onNavigateHome
     // パスワード強度チェック
     const hasLowerCase = /[a-z]/.test(password);
     const hasUpperCase = /[A-Z]/.test(password);
-    const hasNumber = /\d/.test(password);
+    const hasNumber = /[0-9]/.test(password);
     // 許可する記号を拡張
     const allowedSymbols = "!@#$%^&*()_+-=[]{};':\"|,.<>/?`~";
     const hasSymbol = new RegExp(`[${allowedSymbols.replace(/[-/\\^$*+?.()|[\]{}]/g, '\\$&')}]`).test(password);
     const hasMinLength = password.length >= 8;
-    const hasOnlyAllowedChars = new RegExp(`^[A-Za-z\d${allowedSymbols.replace(/[-/\\^$*+?.()|[\]{}]/g, '\\$&')}] +$`).test(password);
+    const hasOnlyAllowedChars = new RegExp(`^[A-Za-z\d${allowedSymbols.replace(/[-/\\^$*+?.()|[\]{}]/g, '\\$&')}]+$`).test(password);
 
     if (!hasMinLength) {
       setError('パスワードは8文字以上で入力してください。');
@@ -277,10 +277,11 @@ const AdminLoginPage: React.FC<AdminLoginPageProps> = ({ onLogin, onNavigateHome
       }));
       sessionStorage.setItem('admin_authenticated', 'true');
       
-      console.log('EMERGENCY: Calling onLogin() now');
-      onLogin();
-      setLoading(false);
-      return;
+      // EMERGENCY: 強制ログインパス - 開発環境でのみ
+      // console.log('EMERGENCY: Calling onLogin() now');
+      // onLogin();
+      // setLoading(false);
+      // return;
 
       // アカウントロック状態チェック
       if (adminCredentials.locked_until) {
@@ -382,11 +383,11 @@ const AdminLoginPage: React.FC<AdminLoginPageProps> = ({ onLogin, onNavigateHome
         sessionStorage.setItem('admin_authenticated', 'true');
         
         // セッション期限の監視を開始
-        const sessionExpiry = setTimeout(() => {
-          localStorage.removeItem('admin_session');
-          sessionStorage.removeItem('admin_authenticated');
-          window.location.reload(); // セッション期限切れ時の自動ログアウト
-        }, 30 * 60 * 1000); // 30分
+        // const sessionExpiry = setTimeout(() => {
+        //   localStorage.removeItem('admin_session');
+        //   sessionStorage.removeItem('admin_authenticated');
+        //   window.location.reload(); // セッション期限切れ時の自動ログアウト
+        // }, 30 * 60 * 1000); // 30分
 
         // 監査ログに記録
         await SupabaseAdminAuth.recordAuditLog(

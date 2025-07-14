@@ -15,7 +15,7 @@ import AdminDashboardPage from './components/AdminDashboardPage';
 // 新しいSupabase Auth関連のインポート
 import { SupabaseAuthLogin } from './components/SupabaseAuthLogin';
 import LoginSelectionPage from './components/LoginSelectionPage';
-import { AuthGuard, AuthenticatedHeader } from './components/AuthGuard';
+// import { AuthGuard, AuthenticatedHeader } from './components/AuthGuard';
 import { OneTimeUsageNotice } from './components/OneTimeUsageNotice';
 import { supabase } from './components/supabaseClient';
 import type { User } from '@supabase/supabase-js';
@@ -29,54 +29,54 @@ import ProductionSecurityValidator from './components/ProductionSecurityValidato
 import { measurePageLoad } from './components/PerformanceMonitor';
 
 
-// セキュリティ関数: HTMLサニタイゼーション
-const sanitizeHTML = (html: string): string => {
-  // 危険なタグとスクリプトを除去
-  const dangerousPatterns = [
-    /<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi,
-    /<iframe\b[^<]*(?:(?!<\/iframe>)<[^<]*)*<\/iframe>/gi,
-    /<object\b[^<]*(?:(?!<\/object>)<[^<]*)*<\/object>/gi,
-    /<embed\b[^<]*>/gi,
-    /<form\b[^<]*(?:(?!<\/form>)<[^<]*)*<\/form>/gi,
-    /javascript:/gi,
-    /on\w+\s*=/gi,
-    /<[^>]*vbscript:/gi,
-    /<[^>]*data:/gi
-  ];
-  
-  let sanitized = html;
-  dangerousPatterns.forEach(pattern => {
-    sanitized = sanitized.replace(pattern, '');
-  });
-  
-  return sanitized.trim();
-};
+// セキュリティ関数: HTMLサニタイゼーション（コメントアウト - 未使用）
+// const sanitizeHTML = (html: string): string => {
+//   // 危険なタグとスクリプトを除去
+//   const dangerousPatterns = [
+//     /<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi,
+//     /<iframe\b[^<]*(?:(?!<\/iframe>)<[^<]*)*<\/iframe>/gi,
+//     /<object\b[^<]*(?:(?!<\/object>)<[^<]*)*<\/object>/gi,
+//     /<embed\b[^<]*>/gi,
+//     /<form\b[^<]*(?:(?!<\/form>)<[^<]*)*<\/form>/gi,
+//     /javascript:/gi,
+//     /on\w+\s*=/gi,
+//     /<[^>]*vbscript:/gi,
+//     /<[^>]*data:/gi
+//   ];
+//   
+//   let sanitized = html;
+//   dangerousPatterns.forEach(pattern => {
+//     sanitized = sanitized.replace(pattern, '');
+//   });
+//   
+//   return sanitized.trim();
+// };
 
-// HTML検証関数
-const isValidHTML = (html: string): boolean => {
-  // 基本的な安全性チェック
-  const allowedTags = ['link', 'meta', 'style', 'title', 'noscript'];
-  try {
-    const doc = new DOMParser().parseFromString(html, 'text/html');
-    const errorNode = doc.querySelector('parsererror');
-    
-    if (errorNode) {
-      return false;
-    }
-    
-    // すべての要素が許可されたタグかチェック
-    const elements = doc.body.querySelectorAll('*');
-    for (const element of elements) {
-      if (!allowedTags.includes(element.tagName.toLowerCase())) {
-        return false;
-      }
-    }
-    
-    return true;
-  } catch (error) {
-    return false;
-  }
-};
+// HTML検証関数（コメントアウト - 未使用）
+// const isValidHTML = (html: string): boolean => {
+//   // 基本的な安全性チェック
+//   const allowedTags = ['link', 'meta', 'style', 'title', 'noscript'];
+//   try {
+//     const doc = new DOMParser().parseFromString(html, 'text/html');
+//     const errorNode = doc.querySelector('parsererror');
+//     
+//     if (errorNode) {
+//       return false;
+//     }
+//     
+//     // すべての要素が許可されたタグかチェック
+//     const elements = doc.body.querySelectorAll('*');
+//     for (const element of elements) {
+//       if (!allowedTags.includes(element.tagName.toLowerCase())) {
+//         return false;
+//       }
+//     }
+//     
+//     return true;
+//   } catch (error) {
+//     return false;
+//   }
+// };
 
 const App: React.FC = () => {
   // 要件定義書に基づくページ状態の更新
@@ -95,7 +95,7 @@ const App: React.FC = () => {
   // 状態変更を監視するuseEffect
   useEffect(() => {
     // 状態変更の処理（ログ出力は本番環境では無効）
-  }, [currentPage, isAdminLoggedIn, isSupabaseAuth]);
+  }, [isAdminLoggedIn, isSupabaseAuth]);
 
   useEffect(() => {
     // Apply body class for verification and results pages for consistent styling
@@ -109,7 +109,7 @@ const App: React.FC = () => {
     return () => {
       document.body.classList.remove('verification-page-active');
     };
-  }, [currentPage]);
+  }, []);
 
   // Supabase認証状態の監視
   useEffect(() => {
@@ -123,7 +123,8 @@ const App: React.FC = () => {
           setIsAdminLoggedIn(true);
           
           // プロファイルからパスワード変更要求をチェック
-          const { data: _, error: __ } = await supabase
+          // const { data: profileData, error: profileError } = await supabase
+          await supabase
             .from('profiles')
             .select('requires_password_change')
             .eq('id', session.user.id)
@@ -143,7 +144,8 @@ const App: React.FC = () => {
               setIsAdminLoggedIn(true);
               
               // パスワード変更要求をチェック
-              const { data: ___, error: ____ } = await supabase
+              // const { data: userProfileData, error: userProfileError } = await supabase
+              await supabase
                 .from('profiles')
                 .select('requires_password_change')
                 .eq('id', session.user.id)

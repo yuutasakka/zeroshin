@@ -49,11 +49,31 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return;
     }
 
+    // 環境判定
+    const isProduction = process.env.NODE_ENV === 'production' ||
+                        (typeof process !== 'undefined' && 
+                         !process.env.NODE_ENV?.includes('dev'));
+    
+    if (!isProduction) {
+      console.log(`📱 SMS送信リクエスト: ${phoneNumber} (IP: ${clientIP})`);
+    }
+    
     const result = await SMSAuthService.sendOTP(phoneNumber);
     
+    if (!isProduction) {
+      console.log(`📱 SMS送信結果:`, result);
+    }
+    
     if (!result.success) {
+      if (!isProduction) {
+        console.error(`❌ SMS送信失敗: ${result.error}`);
+      }
       res.status(400).json({ error: result.error });
       return;
+    }
+    
+    if (!isProduction) {
+      console.log('✅ SMS送信成功');
     }
 
     // セキュリティヘッダー設定

@@ -14,7 +14,7 @@ export default defineConfig(({ mode }) => {
     server: {
       port: 5174,
       open: true,
-      host: 'localhost',
+      host: '0.0.0.0',
       strictPort: false,
       hmr: isDev ? {
         port: 5175,
@@ -29,7 +29,7 @@ export default defineConfig(({ mode }) => {
     },
     preview: {
       port: 4173,
-      host: 'localhost',
+      host: '0.0.0.0',
       strictPort: false,
       // プレビューでもWebSocketを無効化
       ws: false
