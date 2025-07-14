@@ -351,11 +351,11 @@ const ProductSettingsPanel: React.FC<ProductSettingsPanelProps> = ({ messageHand
                       <i
                         key={i}
                         className={`fas fa-star text-sm ${
-                          i < company.rating ? 'text-yellow-400' : 'text-gray-300'
+                          i < (company.rating || 0) ? 'text-yellow-400' : 'text-gray-300'
                         }`}
                       ></i>
                     ))}
-                    <span className="ml-2 text-sm text-gray-600">{company.rating}/5</span>
+                    <span className="ml-2 text-sm text-gray-600">{company.rating || 0}/5</span>
                   </div>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">

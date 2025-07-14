@@ -282,6 +282,16 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
     }
   };
 
+  const setDefaultLegalLinks = () => {
+    const defaultLinks: LegalLink[] = [
+      { id: 1, link_type: 'privacy_policy', title: 'プライバシーポリシー', url: '#privacy', is_active: true, created_at: '', updated_at: '' },
+      { id: 2, link_type: 'terms_of_service', title: '利用規約', url: '#terms', is_active: true, created_at: '', updated_at: '' },
+      { id: 3, link_type: 'specified_commercial_transactions', title: '特定商取引法', url: '#scta', is_active: true, created_at: '', updated_at: '' },
+      { id: 4, link_type: 'company_info', title: '会社概要', url: '#company', is_active: true, created_at: '', updated_at: '' }
+    ];
+    setLegalLinks(defaultLinks);
+  };
+
   const loadLegalLinksFromSupabase = async () => {
     try {
       const supabaseLegalLinks = await SupabaseAdminAPI.loadAdminSetting('legal_links');
@@ -299,19 +309,9 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
     }
   };
 
-  const setDefaultLegalLinks = () => {
-    const defaultLinks: LegalLink[] = [
-      { id: 1, link_type: 'privacy_policy', title: 'プライバシーポリシー', url: '#privacy', is_active: true, created_at: '', updated_at: '' },
-      { id: 2, link_type: 'terms_of_service', title: '利用規約', url: '#terms', is_active: true, created_at: '', updated_at: '' },
-      { id: 3, link_type: 'specified_commercial_transactions', title: '特定商取引法', url: '#scta', is_active: true, created_at: '', updated_at: '' },
-      { id: 4, link_type: 'company_info', title: '会社概要', url: '#company', is_active: true, created_at: '', updated_at: '' }
-    ];
-    setLegalLinks(defaultLinks);
-  };
-
   // 共通エラー処理ヘルパー
   const handleError = (error: unknown, userMessage: string, logContext?: string) => {
-    const errorMsg = error?.message || error?.toString() || 'Unknown error';
+    const errorMsg = (error as Error)?.message || error?.toString() || 'Unknown error';
     secureLog(`${logContext || 'Error'}:`, errorMsg);
     setGlobalError(userMessage);
     _setGlobalLoading(false);
@@ -456,8 +456,8 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
               };
               
               return {
-                id: session.session_id || session.id,
-                timestamp: session.verification_timestamp || session.created_at,
+                id: session.session_id || session.id || '',
+                timestamp: session.verification_timestamp || session.created_at || '',
                 phoneNumber: session.phone_number,
                 diagnosisAnswers: diagnosisAnswers,
                 smsVerified: session.sms_verified || false,
@@ -3581,7 +3581,7 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
                                         <i className="fas fa-edit mr-1"></i>編集
                                     </button>
                                     <button
-                                        onClick={() => handleDeletePlanner(planner.id)}
+                                        onClick={() => planner.id && handleDeletePlanner(planner.id)}
                                         className="flex-1 bg-red-500 hover:bg-red-600 text-white text-sm py-2 px-3 rounded transition-colors"
                                     >
                                         <i className="fas fa-trash mr-1"></i>削除

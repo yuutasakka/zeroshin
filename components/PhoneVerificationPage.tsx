@@ -622,7 +622,7 @@ const PhoneVerificationPage: React.FC<PhoneVerificationPageProps> = ({
                   className="w-full px-4 py-4 text-center text-3xl font-mono border border-gray-300 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all duration-200 tracking-widest shadow-sm bg-gray-50"
                   maxLength={6}
                   required
-                  disabled={lockoutTime && lockoutTime > 0}
+                  disabled={!!(lockoutTime && lockoutTime > 0)}
                 />
                 {otpCode.length > 0 && otpCode.length < 6 && (
                   <p className="text-center text-sm text-gray-500 mt-2">
@@ -668,7 +668,7 @@ const PhoneVerificationPage: React.FC<PhoneVerificationPageProps> = ({
 
               <button
                 type="submit"
-                disabled={loading || otpCode.length !== 6 || (lockoutTime && lockoutTime > 0)}
+                disabled={loading || otpCode.length !== 6 || !!(lockoutTime && lockoutTime > 0)}
                 className="w-full bg-gradient-to-r from-emerald-500 to-blue-500 hover:from-emerald-600 hover:to-blue-600 text-white font-semibold py-4 px-6 rounded-xl transition-all duration-200 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none shadow-lg"
               >
                 {loading ? (
@@ -693,7 +693,7 @@ const PhoneVerificationPage: React.FC<PhoneVerificationPageProps> = ({
               ) : (
                 <button
                   onClick={handleResendOTP}
-                  disabled={loading || (lockoutTime && lockoutTime > 0)}
+                  disabled={loading || !!(lockoutTime && lockoutTime > 0)}
                   className="text-emerald-600 hover:text-emerald-800 text-sm transition-colors duration-200 font-medium disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   🔄 認証コードを再送信
@@ -709,7 +709,7 @@ const PhoneVerificationPage: React.FC<PhoneVerificationPageProps> = ({
                   setLockoutTime(null);
                   setLockoutEndTime(null);
                 }}
-                disabled={lockoutTime && lockoutTime > 0}
+                disabled={!!(lockoutTime && lockoutTime > 0)}
                 className="w-full text-gray-600 hover:text-gray-800 py-2 transition-colors duration-200 text-sm disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <i className="fas fa-edit mr-2"></i>

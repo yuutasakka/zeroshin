@@ -694,7 +694,8 @@ const DiagnosisResultsPage: React.FC<DiagnosisResultsPageProps> = ({ diagnosisDa
           personalizedMessage += `${ageLabel}のお客様ですね！`;
         }
         if (restoredDiagnosisData.purpose) {
-          const purposeLabel = {'education': 'お子様の教育費', 'home': 'マイホーム購入', 'retirement': '老後の生活', 'increase_assets': '資産増加'}[restoredDiagnosisData.purpose] || restoredDiagnosisData.purpose;
+          const purposeLabels = {'education': 'お子様の教育費', 'home': 'マイホーム購入', 'retirement': '老後の生活', 'increase_assets': '資産増加'} as const;
+          const purposeLabel = purposeLabels[restoredDiagnosisData.purpose as keyof typeof purposeLabels] || restoredDiagnosisData.purpose;
           personalizedMessage += `${purposeLabel}を目的とされているのですね。\n`;
         }
         personalizedMessage += `AIが分析した結果、お客様の状況に合わせた積立NISAやiDeCoの活用、そしてリスク許容度に合わせたポートフォリオの構築がおすすめです。\n特に${futureAge}歳での目標資産額 ${targetAmount.toLocaleString()}万円は素晴らしい目標です。\n焦らず、コツコツと資産形成を続けていきましょう！\n詳しいプランについては、ぜひ専門家にご相談ください。`;
@@ -729,46 +730,46 @@ const DiagnosisResultsPage: React.FC<DiagnosisResultsPageProps> = ({ diagnosisDa
 
       if (experience === 'beginner') {
         state.currentFinancialProducts
-          .filter(p => p.tags.includes('beginner-friendly') && !productIds.has(p.id))
+          .filter(p => p.tags?.includes('beginner-friendly') && !productIds.has(p.id))
           .forEach(p => { filteredProducts.push(p); productIds.add(p.id); });
       } else if (experience === 'studied') {
         state.currentFinancialProducts
-          .filter(p => (p.tags.includes('beginner-friendly') || p.tags.includes('diversified')) && !productIds.has(p.id))
+          .filter(p => (p.tags?.includes('beginner-friendly') || p.tags?.includes('diversified')) && !productIds.has(p.id))
           .forEach(p => { filteredProducts.push(p); productIds.add(p.id); });
       } else if (experience === 'experienced') {
         state.currentFinancialProducts
-          .filter(p => p.tags.includes('experienced-friendly') && !productIds.has(p.id))
+          .filter(p => p.tags?.includes('experienced-friendly') && !productIds.has(p.id))
           .forEach(p => { filteredProducts.push(p); productIds.add(p.id); });
       }
 
       if (age === '20s' || age === '30s') {
         state.currentFinancialProducts
-          .filter(p => (p.tags.includes('growth') || p.id === 'ideco_nisa' || p.id === 'investment_trusts_etf' || p.id === 'robo_advisor') && !productIds.has(p.id))
+          .filter(p => (p.tags?.includes('growth') || p.id === 'ideco_nisa' || p.id === 'investment_trusts_etf' || p.id === 'robo_advisor') && !productIds.has(p.id))
           .forEach(p => { filteredProducts.push(p); productIds.add(p.id); });
       } else if (age === '40s' || age === '50s') {
         state.currentFinancialProducts
-          .filter(p => (p.tags.includes('long-term') || p.id === 'bonds' || p.id === 'insurance_products') && !productIds.has(p.id))
+          .filter(p => (p.tags?.includes('long-term') || p.id === 'bonds' || p.id === 'insurance_products') && !productIds.has(p.id))
           .forEach(p => { filteredProducts.push(p); productIds.add(p.id); });
       } else if (age === '60plus') {
         state.currentFinancialProducts
-          .filter(p => (p.tags.includes('stable') || p.tags.includes('capital-preservation') || p.id === 'deposits' || p.id === 'insurance_products') && !productIds.has(p.id))
+          .filter(p => (p.tags?.includes('stable') || p.tags?.includes('capital-preservation') || p.id === 'deposits' || p.id === 'insurance_products') && !productIds.has(p.id))
           .forEach(p => { filteredProducts.push(p); productIds.add(p.id); });
       }
 
       const productsWithReasons: RecommendedProductWithReason[] = filteredProducts.map(product => {
         const reasons = new Set<string>();
         if (product.alwaysRecommend) reasons.add("多くの方にご好評の、人気の定番商品です！");
-        if (experience === 'beginner' && product.tags.includes('beginner-friendly')) reasons.add("投資が初めての方でも安心してスタートできます。");
-        if ((experience === 'studied' || experience === 'experienced') && product.tags.includes('diversified') && (product.id === 'investment_trusts_etf' || product.id === 'reit')) {
+        if (experience === 'beginner' && product.tags?.includes('beginner-friendly')) reasons.add("投資が初めての方でも安心してスタートできます。");
+        if ((experience === 'studied' || experience === 'experienced') && product.tags?.includes('diversified') && (product.id === 'investment_trusts_etf' || product.id === 'reit')) {
           reasons.add("分散投資でリスクを抑えたい方におすすめです。");
         }
-        if (age && (age === '20s' || age === '30s') && product.tags.includes('growth')) {
+        if (age && (age === '20s' || age === '30s') && product.tags?.includes('growth')) {
           reasons.add("若い世代の積極的な資産形成に向いています。");
         }
-        if (age && (age === '50s' || age === '60plus') && product.tags.includes('stable')) {
+        if (age && (age === '50s' || age === '60plus') && product.tags?.includes('stable')) {
           reasons.add("安定性を重視する世代に適した選択肢です。");
         }
-        if (purpose === 'retirement' && product.tags.includes('tax-efficient')) {
+        if (purpose === 'retirement' && product.tags?.includes('tax-efficient')) {
           reasons.add("老後資金準備のための税制優遇が期待できます。");
         }
 
@@ -888,10 +889,13 @@ const DiagnosisResultsPage: React.FC<DiagnosisResultsPageProps> = ({ diagnosisDa
               )}
               
               {/* メール相談ボタン */}
-              {state.selectedExpert.contact_info.email && (
+              {(state.selectedExpert.contact_info as any).email && (
                 <button
                   onClick={() => {
-                    window.location.href = `mailto:${state.selectedExpert?.contact_info.email}?subject=資産運用相談の件&body=お名前:%0D%0A電話番号:%0D%0A相談内容:%0D%0A`;
+                    const email = (state.selectedExpert?.contact_info as any)?.email;
+                    if (email) {
+                      window.location.href = `mailto:${email}?subject=資産運用相談の件&body=お名前:%0D%0A電話番号:%0D%0A相談内容:%0D%0A`;
+                    }
                   }}
                   className="w-full bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 text-white font-bold py-4 px-6 rounded-lg transition-all duration-200 transform hover:scale-105 hover:shadow-lg cursor-pointer flex items-center justify-center"
                 >
@@ -1023,7 +1027,7 @@ const DiagnosisResultsPage: React.FC<DiagnosisResultsPageProps> = ({ diagnosisDa
                     </ul>
                   </div>
                   <div className="flex flex-wrap gap-2 mb-4">
-                    {product.tags.map(tag => (
+                    {product.tags?.map(tag => (
                       <span key={tag} className="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded">
                         {tag}
                       </span>
@@ -1032,9 +1036,9 @@ const DiagnosisResultsPage: React.FC<DiagnosisResultsPageProps> = ({ diagnosisDa
                   
                   {/* ボタンセクション */}
                   <div className="flex flex-col sm:flex-row gap-2 mt-4">
-                    {product.url && (
+                    {(product as any).url && (
                       <a 
-                        href={sanitizeUrl(product.url)}
+                        href={sanitizeUrl((product as any).url)}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="flex-1 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white font-medium py-2 px-4 rounded-lg transition-all duration-200 transform hover:scale-105 hover:shadow-lg cursor-pointer text-center"
@@ -1043,9 +1047,9 @@ const DiagnosisResultsPage: React.FC<DiagnosisResultsPageProps> = ({ diagnosisDa
                         詳細を見る
                       </a>
                     )}
-                    {product.application_url && (
+                    {(product as any).application_url && (
                       <a 
-                        href={sanitizeUrl(product.application_url)}
+                        href={sanitizeUrl((product as any).application_url)}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="flex-1 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white font-medium py-2 px-4 rounded-lg transition-all duration-200 transform hover:scale-105 hover:shadow-lg cursor-pointer text-center"
@@ -1054,7 +1058,7 @@ const DiagnosisResultsPage: React.FC<DiagnosisResultsPageProps> = ({ diagnosisDa
                         お申し込み
                       </a>
                     )}
-                    {!product.url && !product.application_url && (
+                    {!(product as any).url && !(product as any).application_url && (
                       <div className="text-center text-gray-500 text-sm py-2">
                         <i className="fas fa-info-circle mr-2"></i>
                         詳細情報は準備中です

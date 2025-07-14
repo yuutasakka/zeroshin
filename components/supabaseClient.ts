@@ -1586,6 +1586,62 @@ export class AdminApprovalSystem {
 // 管理者メール認証クラス
 export class AdminEmailAuth {
   
+  // パスワード検証
+  static validatePassword(password: string): { isValid: boolean; errors: string[] } {
+    const errors: string[] = [];
+    
+    // 最小長チェック
+    if (password.length < 12) {
+      errors.push('パスワードは12文字以上で入力してください');
+    }
+    
+    // 大文字チェック
+    if (!/[A-Z]/.test(password)) {
+      errors.push('大文字を含めてください');
+    }
+    
+    // 小文字チェック
+    if (!/[a-z]/.test(password)) {
+      errors.push('小文字を含めてください');
+    }
+    
+    // 数字チェック
+    if (!/\d/.test(password)) {
+      errors.push('数字を含めてください');
+    }
+    
+    // 特殊文字チェック
+    if (!/[!@#$%^&*(),.?":{}|<>]/.test(password)) {
+      errors.push('特殊文字(!@#$%^&*(),.?":{}|<>)を含めてください');
+    }
+    
+    // 弱いパスワードパターンをチェック
+    const weakPatterns = [
+      /password/i,
+      /admin/i,
+      /123/,
+      /qwerty/i,
+      /abc/i,
+      /ai.conectx/i // アプリ名を含むパスワードを禁止
+    ];
+    
+    const hasWeakPattern = weakPatterns.some(pattern => pattern.test(password));
+    if (hasWeakPattern) {
+      errors.push('弱いパスワードパターンは使用できません');
+    }
+    
+    // 連続する文字をチェック
+    const hasSequentialChars = /(.)\1{2,}/.test(password); // 同じ文字3回以上連続
+    if (hasSequentialChars) {
+      errors.push('同じ文字を3回以上連続して使用することはできません');
+    }
+    
+    return {
+      isValid: errors.length === 0,
+      errors
+    };
+  }
+  
   // 管理者メール認証の開始
   static async initiateEmailVerification(credentials: {
     email: string;

@@ -300,8 +300,7 @@ const MainVisualAndDiagnosis: React.FC<MainVisualAndDiagnosisProps> = ({ onProce
                     <button
                         type="button"
                         onClick={handleReturnFromConsent}
-                        className="premium-button w-full"
-                        className="bg-gray-200 text-gray-700"
+                        className="bg-gray-200 text-gray-700 w-full premium-button"
                     >
                         <i className="fas fa-arrow-left mr-2"></i>
                         診断に戻る

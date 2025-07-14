@@ -36,11 +36,11 @@ export interface DiagnosisFormState {
 export interface Company {
   id: string;
   name: string;
-  description: string;
-  website: string;
-  rating: number;
-  establishedYear: number;
-  isActive: boolean;
+  description?: string;
+  website?: string;
+  rating?: number;
+  establishedYear?: number;
+  isActive?: boolean;
   websiteUrl?: string; // 既存コードとの互換性
   actionText?: string; // 既存コードとの互換性
   logoUrl?: string; // Optional: for company logos
@@ -49,16 +49,16 @@ export interface Company {
 export interface FinancialProduct {
   id: string;
   name: string;
-  description: string;
-  category: 'stocks' | 'bonds' | 'funds' | 'insurance' | 'savings' | 'crypto' | 'real_estate' | 'commodities' | 'other';
-  riskLevel: number; // 1-5
-  expectedReturn: number;
-  minimumInvestment: number;
-  features: string[];
-  pros: string[];
-  cons: string[];
-  companyId: string;
-  isActive: boolean;
+  description?: string;
+  category?: 'stocks' | 'bonds' | 'funds' | 'insurance' | 'savings' | 'crypto' | 'real_estate' | 'commodities' | 'other';
+  riskLevel?: number; // 1-5
+  expectedReturn?: number;
+  minimumInvestment?: number;
+  features?: string[];
+  pros?: string[];
+  cons?: string[];
+  companyId?: string;
+  isActive?: boolean;
   shortDescription?: string; // 既存コードとの互換性
   longDescription?: string; // 既存コードとの互換性
   iconClass?: string; // Font Awesome class, e.g., 'fas fa-chart-line'

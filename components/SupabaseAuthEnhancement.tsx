@@ -82,14 +82,14 @@ export class EnhancedSupabaseAuth {
       if (requiresConfirmation) {
         return {
           success: true,
-          user: data.user,
+          user: data.user || undefined || undefined,
           requiresConfirmation: true
         };
       }
 
       return {
         success: true,
-        user: data.user
+        user: data.user || undefined
       };
 
     } catch (error) {
@@ -151,7 +151,7 @@ export class EnhancedSupabaseAuth {
 
       return {
         success: true,
-        user: data.user
+        user: data.user || undefined
       };
 
     } catch (error) {

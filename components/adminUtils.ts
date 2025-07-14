@@ -16,7 +16,7 @@ export class SecureStorage {
   static encrypt(data: any): string {
     try {
       const jsonString = JSON.stringify(data);
-      const encrypted = CryptoJS.AES.encrypt(jsonString, this.encryptionKey).toString();
+      const encrypted = CryptoJS.AES.encrypt(jsonString, this.encryptionKey || '').toString();
       return encrypted;
     } catch (error) {
       secureLog('暗号化エラー:', error);
@@ -27,7 +27,7 @@ export class SecureStorage {
   static decrypt(encryptedData: string): any {
     try {
       if (!encryptedData) return null;
-      const decrypted = CryptoJS.AES.decrypt(encryptedData, this.encryptionKey);
+      const decrypted = CryptoJS.AES.decrypt(encryptedData, this.encryptionKey || '');
       const jsonString = decrypted.toString(CryptoJS.enc.Utf8);
       return JSON.parse(jsonString);
     } catch (error) {

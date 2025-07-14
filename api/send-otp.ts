@@ -1,10 +1,20 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { SMSAuthService } from '../src/api/smsAuth';
 import { SecurityMiddleware } from '../src/middleware/securityVercel';
+import ProductionLogger from '../src/utils/productionLogger';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
-  // CORS設定
-  res.setHeader('Access-Control-Allow-Origin', '*');
+  // CORS設定 - 本番環境用
+  const allowedOrigins = [
+    'https://moneyticket.vercel.app',
+    'https://moneyticket-git-main-sakkayuta.vercel.app',
+    'http://localhost:5174', // 開発環境
+    'http://127.0.0.1:5174'
+  ];
+  const origin = req.headers.origin;
+  if (allowedOrigins.includes(origin)) {
+    res.setHeader('Access-Control-Allow-Origin', origin);
+  }
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
 
@@ -49,32 +59,21 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return;
     }
 
-    // 環境判定
-    const isProduction = process.env.NODE_ENV === 'production' ||
-                        (typeof process !== 'undefined' && 
-                         !process.env.NODE_ENV?.includes('dev'));
+    // 環境判定（プロダクションロガーで使用）
     
-    if (!isProduction) {
-      console.log(`📱 SMS送信リクエスト: ${phoneNumber} (IP: ${clientIP})`);
-    }
+    ProductionLogger.info('SMS送信リクエスト', { phoneNumber: phoneNumber.substring(0, 3) + '***', clientIP });
     
     const result = await SMSAuthService.sendOTP(phoneNumber);
     
-    if (!isProduction) {
-      console.log(`📱 SMS送信結果:`, result);
-    }
+    ProductionLogger.info('SMS送信結果', { success: result.success, hasError: !!result.error });
     
     if (!result.success) {
-      if (!isProduction) {
-        console.error(`❌ SMS送信失敗: ${result.error}`);
-      }
+      ProductionLogger.error('SMS送信失敗', undefined, { error: result.error });
       res.status(400).json({ error: result.error });
       return;
     }
     
-    if (!isProduction) {
-      console.log('✅ SMS送信成功');
-    }
+    ProductionLogger.info('SMS送信成功');
 
     // セキュリティヘッダー設定
     res.setHeader('X-Content-Type-Options', 'nosniff');

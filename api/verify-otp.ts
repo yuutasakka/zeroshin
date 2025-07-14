@@ -1,10 +1,20 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { SMSAuthService } from '../src/api/smsAuth';
 import { SecurityMiddleware } from '../src/middleware/securityVercel';
+import ProductionLogger from '../src/utils/productionLogger';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
-  // CORS設定
-  res.setHeader('Access-Control-Allow-Origin', '*');
+  // CORS設定 - 本番環境用
+  const allowedOrigins = [
+    'https://moneyticket.vercel.app',
+    'https://moneyticket-git-main-sakkayuta.vercel.app',
+    'http://localhost:5174', // 開発環境
+    'http://127.0.0.1:5174'
+  ];
+  const origin = req.headers.origin;
+  if (allowedOrigins.includes(origin)) {
+    res.setHeader('Access-Control-Allow-Origin', origin);
+  }
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
 
@@ -51,25 +61,16 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return;
     }
 
-    // 環境判定
-    const isProduction = process.env.NODE_ENV === 'production' ||
-                        (typeof process !== 'undefined' && 
-                         !process.env.NODE_ENV?.includes('dev'));
+    // 環境判定（プロダクションロガーで使用）
     
-    if (!isProduction) {
-      console.log(`🔍 OTP検証リクエスト: ${phoneNumber}, OTP: ${otp}`);
-    }
+    ProductionLogger.info('OTP検証リクエスト', { phoneNumber: phoneNumber.substring(0, 3) + '***', otp: '***' });
     
     const result = await SMSAuthService.verifyOTP(phoneNumber, otp);
     
-    if (!isProduction) {
-      console.log(`🔍 OTP検証結果:`, result);
-    }
+    ProductionLogger.info('OTP検証結果', { success: result.success, hasError: !!result.error });
     
     if (result.success) {
-      if (!isProduction) {
-        console.log('✅ OTP検証成功 - セッション作成');
-      }
+      ProductionLogger.info('OTP検証成功 - セッション作成');
       // セッション管理は簡化（Vercel Functions環境）
       res.setHeader('Set-Cookie', [
         `session_verified=true; HttpOnly; Secure; SameSite=Strict; Max-Age=1800; Path=/`,
@@ -81,9 +82,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         message: '認証が完了しました'
       });
     } else {
-      if (!isProduction) {
-        console.error(`❌ OTP検証失敗: ${result.error}`);
-      }
+      ProductionLogger.error('OTP検証失敗', undefined, { error: result.error });
       res.status(400).json({ 
         success: false, 
         error: result.error 
