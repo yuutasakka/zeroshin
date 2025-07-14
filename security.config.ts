@@ -335,16 +335,16 @@ export const SECURITY_CONFIG = {
 
 // Supabase設定の中央管理
 export const SUPABASE_CONFIG = {
-  url: process.env.NEXT_PUBLIC_SUPABASE_URL || (typeof import.meta !== 'undefined' && (import.meta as any).env?.VITE_SUPABASE_URL) || (() => {
+  url: (typeof import.meta !== 'undefined' && (import.meta as any).env?.VITE_SUPABASE_URL) || 
+       process.env.VITE_SUPABASE_URL || 
+       process.env.NEXT_PUBLIC_SUPABASE_URL || 
+       'https://eqirzbuqgymrtnfmvwhq.supabase.co',
+  anonKey: (typeof import.meta !== 'undefined' && (import.meta as any).env?.VITE_SUPABASE_ANON_KEY) || 
+           process.env.VITE_SUPABASE_ANON_KEY || 
+           process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || (() => {
     if (process.env.NODE_ENV === 'production') {
-      throw new Error('NEXT_PUBLIC_SUPABASE_URL must be set in production environment');
-    }
-    console.warn('⚠️ Using empty Supabase URL in development. Set VITE_SUPABASE_URL environment variable.');
-    return '';
-  })(),
-  anonKey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || (typeof import.meta !== 'undefined' && (import.meta as any).env?.VITE_SUPABASE_ANON_KEY) || (() => {
-    if (process.env.NODE_ENV === 'production') {
-      throw new Error('NEXT_PUBLIC_SUPABASE_ANON_KEY must be set in production environment');
+      console.error('🚨 CRITICAL: VITE_SUPABASE_ANON_KEY environment variable is missing!');
+      return '';
     }
     console.warn('⚠️ Using empty Supabase anon key in development. Set VITE_SUPABASE_ANON_KEY environment variable.');
     return '';

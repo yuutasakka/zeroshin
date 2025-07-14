@@ -3,9 +3,21 @@ import { SECURITY_CONFIG, SUPABASE_CONFIG, secureLog } from '../security.config'
 
 // Supabaseクライアント設定（Environment変数優先、フォールバック対応）
 export const createSupabaseClient = () => {
+  const url = SUPABASE_CONFIG.url;
+  const key = SUPABASE_CONFIG.anonKey;
+  
+  // デバッグ情報をログ出力
+  console.log('🔍 Supabase Client Configuration:');
+  console.log('URL:', url ? 'SET' : 'NOT SET');
+  console.log('Anon Key:', key ? `SET (${key.length} chars)` : 'NOT SET');
+  
+  if (!url || !key) {
+    console.error('🚨 Supabase configuration incomplete:', { url: !!url, key: !!key });
+  }
+  
   return {
-    url: SUPABASE_CONFIG.url,
-    key: SUPABASE_CONFIG.anonKey
+    url: url,
+    key: key
   };
 };
 

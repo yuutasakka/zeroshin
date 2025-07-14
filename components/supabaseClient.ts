@@ -1,21 +1,40 @@
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import CryptoJS from 'crypto-js';
 
-// Supabase設定 - import.meta.envを使用
+// Supabase設定 - 複数の環境変数ソースをサポート
 const getEnvVar = (viteVar: string, fallback: string) => {
-  // import.meta.env から取得
-  const value = (import.meta as any).env?.[viteVar];
-  if (value) {
-    return value;
+  // 1. import.meta.env (Vite development and build)
+  if (typeof import.meta !== 'undefined' && import.meta && (import.meta as any).env) {
+    const value = (import.meta as any).env[viteVar];
+    if (value) {
+      console.log(`✅ Found ${viteVar} in import.meta.env`);
+      return value;
+    }
   }
   
+  // 2. process.env (Node.js environments, Vercel runtime)
+  if (typeof process !== 'undefined' && process.env) {
+    const value = process.env[viteVar];
+    if (value) {
+      console.log(`✅ Found ${viteVar} in process.env`);
+      return value;
+    }
+  }
+  
+  // 3. window.__ENV__ (Runtime environment injection)
+  if (typeof window !== 'undefined' && (window as any).__ENV__) {
+    const value = (window as any).__ENV__[viteVar];
+    if (value) {
+      console.log(`✅ Found ${viteVar} in window.__ENV__`);
+      return value;
+    }
+  }
+  
+  console.warn(`⚠️ ${viteVar} not found in any environment source, using fallback`);
   return fallback;
 };
 
-const supabaseUrl = getEnvVar(
-  'VITE_SUPABASE_URL',
-  'https://your-project.supabase.co'
-);
+const supabaseUrl = getEnvVar('VITE_SUPABASE_URL', 'https://eqirzbuqgymrtnfmvwhq.supabase.co');
 
 // セキュリティ向上: 本番環境ではハードコードされたキーを削除
 const supabaseAnonKey = (() => {
