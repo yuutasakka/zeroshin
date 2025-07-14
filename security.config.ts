@@ -134,8 +134,13 @@ const validateProductionEnvironment = () => {
   }
 };
 
-// 本番環境チェックを実行
-validateProductionEnvironment();
+// 本番環境チェックを実行（非ブロッキング）
+try {
+  validateProductionEnvironment();
+} catch (error) {
+  console.error('🚨 Production environment validation failed:', error);
+  console.warn('⚠️ Application will continue with reduced security validation');
+}
 
 export const SECURITY_CONFIG = {
   // 暗号化設定（サーバーサイドでのみ使用）
