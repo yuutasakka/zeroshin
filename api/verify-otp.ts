@@ -8,6 +8,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   const allowedOrigins = [
     'https://moneyticket.vercel.app',
     'https://moneyticket-git-main-sakkayuta.vercel.app',
+    'https://moneyticket01-10gswrw2q-seai0520s-projects.vercel.app', // 現在のデプロイ先
     'http://localhost:5174', // 開発環境
     'http://127.0.0.1:5174'
   ];
