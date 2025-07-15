@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { defaultFirstConsultationOffer, FirstConsultationOffer } from '../data/homepageContentData';
+import { defaultFirstConsultationOffer, FirstConsultationOffer, defaultCTAButtonConfig, CTAButtonConfig } from '../data/homepageContentData';
 import { secureLog } from '../security.config';
 import { createSupabaseClient } from './adminUtils';
 
@@ -51,6 +51,7 @@ const createSupabaseHelper = () => {
 
 const CallToActionSection: React.FC = () => {
   const [consultationOffer, setConsultationOffer] = useState<FirstConsultationOffer>(defaultFirstConsultationOffer);
+  const [ctaButtonConfig, setCtaButtonConfig] = useState<CTAButtonConfig>(defaultCTAButtonConfig);
 
   useEffect(() => {
     const loadConsultationOffer = async () => {
@@ -128,13 +129,81 @@ const CallToActionSection: React.FC = () => {
       }
     };
 
+    const loadCTAButtonConfig = async () => {
+      try {
+        // ローカルストレージを確認
+        const localCTAConfig = localStorage.getItem('customCTAButtonConfig');
+        if (localCTAConfig) {
+          try {
+            const parsedLocal = JSON.parse(localCTAConfig);
+            setCtaButtonConfig(parsedLocal);
+            secureLog('ローカルストレージからCTAボタン設定を読み込み');
+            return;
+          } catch (parseError) {
+            secureLog('ローカルストレージのCTAボタン設定解析エラー:', parseError);
+          }
+        }
+
+        const supabase = createSupabaseHelper();
+        
+        // Supabaseから取得を試行
+        try {
+          const { data: ctaResponse, error: ctaError } = await supabase
+            .from('homepage_content_settings')
+            .select('setting_data')
+            .eq('setting_key', 'cta_button_config')
+            .single();
+
+          if (!ctaError && ctaResponse?.setting_data) {
+            const ctaConfigFromSupabase = ctaResponse.setting_data;
+            setCtaButtonConfig(ctaConfigFromSupabase);
+            // Supabaseデータをローカルストレージにバックアップ
+            localStorage.setItem('customCTAButtonConfig', JSON.stringify(ctaConfigFromSupabase));
+            secureLog('SupabaseからCTAボタン設定を読み込み、ローカルにバックアップ');
+            return;
+          } else {
+            secureLog('CTAボタン設定が見つからないため、デフォルトデータを使用:', ctaError);
+          }
+        } catch (supabaseError) {
+          secureLog('Supabase接続エラー（cta_button_config）:', supabaseError);
+          // エラー時はデフォルトデータを使用
+        }
+
+        secureLog('CTAボタンのデフォルトデータを使用');
+      } catch (error) {
+        secureLog('CTAボタン設定の読み込みエラー、フォールバック処理中:', error);
+        secureLog('最終フォールバック: デフォルトCTAボタン設定を使用');
+      }
+    };
+
     loadConsultationOffer();
+    loadCTAButtonConfig();
   }, []);
 
-  const scrollToDiagnosis = () => {
-    const diagnosisSection = document.getElementById('diagnosis-form-section');
-    if (diagnosisSection) {
-      diagnosisSection.scrollIntoView({ behavior: 'smooth' });
+  const handleCTAButtonClick = () => {
+    switch (ctaButtonConfig.button_type) {
+      case 'scroll_to_diagnosis':
+        const diagnosisSection = document.getElementById('diagnosis-form-section');
+        if (diagnosisSection) {
+          diagnosisSection.scrollIntoView({ behavior: 'smooth' });
+        }
+        break;
+      case 'external_url':
+        if (ctaButtonConfig.button_url) {
+          window.open(ctaButtonConfig.button_url, '_blank', 'noopener,noreferrer');
+        }
+        break;
+      case 'phone_call':
+        if (ctaButtonConfig.phone_number) {
+          window.location.href = `tel:${ctaButtonConfig.phone_number}`;
+        }
+        break;
+      default:
+        // フォールバック: 診断セクションにスクロール
+        const fallbackSection = document.getElementById('diagnosis-form-section');
+        if (fallbackSection) {
+          fallbackSection.scrollIntoView({ behavior: 'smooth' });
+        }
     }
   };
 
@@ -164,16 +233,16 @@ const CallToActionSection: React.FC = () => {
         <div className="space-y-6">
           <button
             type="button"
-            onClick={scrollToDiagnosis}
-            className="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white font-bold py-4 px-8 md:px-12 rounded-full text-lg md:text-xl transition-all duration-300 transform hover:scale-105 shadow-lg"
+            onClick={handleCTAButtonClick}
+            className={`bg-gradient-to-r ${ctaButtonConfig.button_style.bg_color} hover:${ctaButtonConfig.button_style.hover_color} ${ctaButtonConfig.button_style.text_color} font-bold py-4 px-8 md:px-12 rounded-full text-lg md:text-xl transition-all duration-300 transform hover:scale-105 shadow-lg`}
           >
-            <i className="fas fa-comments mr-3"></i>
-            今すぐ無料相談を始める
+            <i className={`${ctaButtonConfig.button_style.icon} mr-3`}></i>
+            {ctaButtonConfig.button_text}
           </button>
           
           <p className="text-sm text-gray-500">
             <i className="fas fa-phone mr-2"></i>
-            お電話でのご相談：0120-999-888（平日9:00-18:00）
+            お電話でのご相談：{ctaButtonConfig.phone_number}（{ctaButtonConfig.phone_hours}）
           </p>
         </div>
         

@@ -247,25 +247,25 @@ const ProductSettingsPanel: React.FC<ProductSettingsPanelProps> = ({ messageHand
                   <div className="text-sm text-gray-500 truncate max-w-xs">{product.description}</div>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                  {getCategoryLabel(product.category)}
+                  {getCategoryLabel(product.category || '')}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
                   <span className={`px-2 py-1 text-xs rounded-full ${
-                    product.riskLevel <= 2 ? 'bg-green-100 text-green-800' :
-                    product.riskLevel <= 3 ? 'bg-yellow-100 text-yellow-800' :
+                    (product.riskLevel ?? 0) <= 2 ? 'bg-green-100 text-green-800' :
+                    (product.riskLevel ?? 0) <= 3 ? 'bg-yellow-100 text-yellow-800' :
                     'bg-red-100 text-red-800'
                   }`}>
-                    {getRiskLevelLabel(product.riskLevel)}
+                    {getRiskLevelLabel(product.riskLevel ?? 0)}
                   </span>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                  {product.expectedReturn}%
+                  {product.expectedReturn ?? 0}%
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                  {product.minimumInvestment.toLocaleString()}万円
+                  {(product.minimumInvestment ?? 0).toLocaleString()}万円
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                  {getCompanyName(product.companyId)}
+                  {getCompanyName(product.companyId || '')}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
                   <span className={`px-2 py-1 text-xs rounded-full ${

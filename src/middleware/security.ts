@@ -1,9 +1,7 @@
-// セキュリティミドルウェア
-import { NextRequest, NextResponse } from 'next/server';
-
+// セキュリティミドルウェア - Vite対応版
 export class SecurityMiddleware {
   // CSRFトークンの検証
-  static async verifyCSRFToken(request: NextRequest): Promise<boolean> {
+  static async verifyCSRFToken(request: Request): Promise<boolean> {
     if (['POST', 'PUT', 'DELETE', 'PATCH'].includes(request.method)) {
       const csrfToken = request.headers.get('x-csrf-token');
       const sessionToken = request.headers.get('x-session-token');
@@ -20,7 +18,7 @@ export class SecurityMiddleware {
   }
 
   // セキュリティヘッダーの設定
-  static setSecurityHeaders(response: NextResponse): NextResponse {
+  static setSecurityHeaders(response: Response): Response {
     // Content Security Policy
     response.headers.set(
       'Content-Security-Policy',
@@ -38,7 +36,7 @@ export class SecurityMiddleware {
   }
 
   // IPアドレスの取得
-  static getClientIP(request: NextRequest): string {
+  static getClientIP(request: Request): string {
     const forwarded = request.headers.get('x-forwarded-for');
     const realIP = request.headers.get('x-real-ip');
     
@@ -50,7 +48,7 @@ export class SecurityMiddleware {
       return realIP;
     }
     
-    return request.ip || 'unknown';
+    return 'unknown';
   }
 
   // レート制限のチェック（メモリベース実装）

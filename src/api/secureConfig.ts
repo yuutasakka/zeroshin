@@ -11,13 +11,14 @@ interface SecureConfig {
 export class SecureConfigManager {
   private static encryptionKey = process.env.ENCRYPTION_KEY;
 
-  // 暗号化
+  // 暗号化 - AES-256-CBCモード使用（セキュア）
   private static encrypt(text: string): string {
     if (!this.encryptionKey) throw new Error('Encryption key not found');
     
     const algorithm = 'aes-256-cbc';
-    const iv = crypto.randomBytes(16);
-    const cipher = crypto.createCipher(algorithm, this.encryptionKey);
+    const iv = crypto.randomBytes(16); // CBCでは128ビット
+    const key = crypto.scryptSync(this.encryptionKey, 'salt', 32); // 32バイトキー生成
+    const cipher = crypto.createCipher(algorithm, key, iv);
     
     let encrypted = cipher.update(text, 'utf8', 'hex');
     encrypted += cipher.final('hex');
@@ -25,7 +26,7 @@ export class SecureConfigManager {
     return iv.toString('hex') + ':' + encrypted;
   }
 
-  // 復号化
+  // 復号化 - AES-256-CBCモード使用（セキュア）
   private static decrypt(encryptedText: string): string {
     if (!this.encryptionKey) throw new Error('Encryption key not found');
     
@@ -35,8 +36,9 @@ export class SecureConfigManager {
     
     const iv = Buffer.from(parts[0], 'hex');
     const encrypted = parts[1];
+    const key = crypto.scryptSync(this.encryptionKey, 'salt', 32); // 32バイトキー生成
     
-    const decipher = crypto.createDecipher(algorithm, this.encryptionKey);
+    const decipher = crypto.createDecipher(algorithm, key, iv);
     
     let decrypted = decipher.update(encrypted, 'hex', 'utf8');
     decrypted += decipher.final('utf8');

@@ -199,7 +199,7 @@ const ReliabilitySection: React.FC = () => {
   return (
     <section id="reliability-section" className="py-16 md:py-20 px-4 bg-white">
       <div className="container mx-auto px-4 max-w-7xl">
-        <style jsx>{`
+        <style>{`
           .stats-card {
             background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
             border: 1px solid #e0e7ff;

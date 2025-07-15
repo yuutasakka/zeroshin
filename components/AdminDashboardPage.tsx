@@ -13,7 +13,9 @@ import {
   FooterData,
   defaultHeaderData,
   defaultMainVisualData,
-  defaultFooterData
+  defaultFooterData,
+  CTAButtonConfig,
+  defaultCTAButtonConfig
 } from '../data/homepageContentData';
 import { SECURITY_CONFIG, secureLog } from '../security.config';
 import { SupabaseAdminAPI, SecureStorage, createSupabaseClient } from './adminUtils';
@@ -336,6 +338,7 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
   // Homepage Content Settings State
   const [reasonsToChoose, setReasonsToChoose] = useState<ReasonsToChooseData>(defaultReasonsToChooseData);
   const [firstConsultationOffer, setFirstConsultationOffer] = useState<FirstConsultationOffer>(defaultFirstConsultationOffer);
+  const [ctaButtonConfig, setCtaButtonConfig] = useState<CTAButtonConfig>(defaultCTAButtonConfig);
   const [homepageContentStatus, setHomepageContentStatus] = useState<string>('');
   
   // ヘッダー・メインビジュアル・フッター設定のstate
@@ -665,6 +668,16 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
         } else {
           secureLog('デフォルトの初回相談限定特典を使用');
           setFirstConsultationOffer(defaultFirstConsultationOffer);
+        }
+
+        // CTAボタン設定
+        const supabaseCTA = await loadHomepageContentFromSupabase('cta_button_config');
+        if (supabaseCTA) {
+          secureLog('SupabaseからCTAボタン設定を読み込み');
+          setCtaButtonConfig(supabaseCTA);
+        } else {
+          secureLog('デフォルトのCTAボタン設定を使用');
+          setCtaButtonConfig(defaultCTAButtonConfig);
         }
 
         // ヘッダーデータ
@@ -1457,7 +1470,7 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
 
   // 通知テスト機能
   // Homepage Content Settings Handlers
-  const saveHomepageContentToSupabase = async (settingKey: string, settingData: ReasonsToChooseData | FirstConsultationOffer | HeaderData | MainVisualData | FooterData) => {
+  const saveHomepageContentToSupabase = async (settingKey: string, settingData: ReasonsToChooseData | FirstConsultationOffer | HeaderData | MainVisualData | FooterData | CTAButtonConfig) => {
     try {
       const response = await fetch(`${supabaseConfig.url}/rest/v1/homepage_content_settings`, {
         method: 'POST',
@@ -1524,12 +1537,30 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
     setFirstConsultationOffer(prev => ({ ...prev, [field]: value }));
   };
 
+  const handleCTAButtonConfigChange = (field: keyof CTAButtonConfig, value: string | object) => {
+    if (field === 'button_style' && typeof value === 'object') {
+      setCtaButtonConfig(prev => ({ ...prev, button_style: { ...prev.button_style, ...value } }));
+    } else {
+      setCtaButtonConfig(prev => ({ ...prev, [field]: value }));
+    }
+  };
+
+  const handleCTAButtonStyleChange = (field: string, value: string) => {
+    setCtaButtonConfig(prev => ({
+      ...prev,
+      button_style: {
+        ...prev.button_style,
+        [field]: value
+      }
+    }));
+  };
+
   const handleSaveHomepageContentSettings = async () => {
     setHomepageContentStatus('💾 ホームページコンテンツを保存中...');
     
     try {
       // データの基本チェック
-      if (!reasonsToChoose.title || !reasonsToChoose.subtitle || !firstConsultationOffer.title) {
+      if (!reasonsToChoose.title || !reasonsToChoose.subtitle || !firstConsultationOffer.title || !ctaButtonConfig.button_text) {
         setHomepageContentStatus('❌ 必須項目が入力されていません。');
         setTimeout(() => setHomepageContentStatus(''), 5000);
         return;
@@ -1559,7 +1590,18 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
         secureLog('初回相談限定特典のSupabase保存エラー:', error);
       }
 
-      if (successCount === 2) {
+      // CTAボタン設定を保存
+      try {
+        const ctaSuccess = await saveHomepageContentToSupabase('cta_button_config', ctaButtonConfig);
+        if (ctaSuccess) {
+          secureLog('CTAボタン設定をSupabaseに保存完了');
+          successCount++;
+        }
+      } catch (error) {
+        secureLog('CTAボタン設定のSupabase保存エラー:', error);
+      }
+
+      if (successCount === 3) {
         setHomepageContentStatus('✅ ホームページコンテンツが正常に保存され、データベースに反映されました');
       } else if (successCount > 0) {
         setHomepageContentStatus('⚠️ 一部のコンテンツが保存されました（部分的成功）');
@@ -2790,6 +2832,159 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
                                     placeholder="var(--accent-gold)"
                                 />
                             </div>
+                        </div>
+                    </div>
+
+                    {/* CTAボタン設定 */}
+                    <div className="p-6 bg-green-50 border border-green-200 rounded-lg">
+                        <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+                            <i className="fas fa-mouse-pointer mr-2 text-green-600"></i>
+                            CTAボタン設定（今すぐ相談を始める）
+                        </h3>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-2">
+                                    ボタンテキスト
+                                </label>
+                                <input
+                                    type="text"
+                                    value={ctaButtonConfig.button_text}
+                                    onChange={(e) => handleCTAButtonConfigChange('button_text', e.target.value)}
+                                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                                    placeholder="例: 今すぐ無料相談を始める"
+                                />
+                            </div>
+                            
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-2">
+                                    ボタンタイプ
+                                </label>
+                                <select
+                                    value={ctaButtonConfig.button_type}
+                                    onChange={(e) => handleCTAButtonConfigChange('button_type', e.target.value)}
+                                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                                >
+                                    <option value="scroll_to_diagnosis">診断フォームにスクロール</option>
+                                    <option value="external_url">外部URLに移動</option>
+                                    <option value="phone_call">電話発信</option>
+                                </select>
+                            </div>
+                            
+                            {ctaButtonConfig.button_type === 'external_url' && (
+                                <div className="md:col-span-2">
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                                        リンク先URL
+                                    </label>
+                                    <input
+                                        type="url"
+                                        value={ctaButtonConfig.button_url}
+                                        onChange={(e) => handleCTAButtonConfigChange('button_url', e.target.value)}
+                                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                                        placeholder="https://example.com/"
+                                    />
+                                </div>
+                            )}
+                            
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-2">
+                                    電話番号
+                                </label>
+                                <input
+                                    type="tel"
+                                    value={ctaButtonConfig.phone_number}
+                                    onChange={(e) => handleCTAButtonConfigChange('phone_number', e.target.value)}
+                                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                                    placeholder="0120-999-888"
+                                />
+                            </div>
+                            
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-2">
+                                    営業時間
+                                </label>
+                                <input
+                                    type="text"
+                                    value={ctaButtonConfig.phone_hours}
+                                    onChange={(e) => handleCTAButtonConfigChange('phone_hours', e.target.value)}
+                                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                                    placeholder="平日9:00-18:00"
+                                />
+                            </div>
+                        </div>
+
+                        {/* ボタンスタイル設定 */}
+                        <div className="border-t pt-6">
+                            <h4 className="text-md font-semibold text-gray-700 mb-4">ボタンスタイル設定</h4>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <label className="block text-xs font-medium text-gray-600 mb-1">
+                                        背景色（CSS）
+                                    </label>
+                                    <input
+                                        type="text"
+                                        value={ctaButtonConfig.button_style.bg_color}
+                                        onChange={(e) => handleCTAButtonStyleChange('bg_color', e.target.value)}
+                                        className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-green-500 text-sm"
+                                        placeholder="from-blue-500 to-blue-600"
+                                    />
+                                </div>
+                                
+                                <div>
+                                    <label className="block text-xs font-medium text-gray-600 mb-1">
+                                        ホバー色（CSS）
+                                    </label>
+                                    <input
+                                        type="text"
+                                        value={ctaButtonConfig.button_style.hover_color}
+                                        onChange={(e) => handleCTAButtonStyleChange('hover_color', e.target.value)}
+                                        className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-green-500 text-sm"
+                                        placeholder="from-blue-600 to-blue-700"
+                                    />
+                                </div>
+                                
+                                <div>
+                                    <label className="block text-xs font-medium text-gray-600 mb-1">
+                                        テキスト色（CSS）
+                                    </label>
+                                    <input
+                                        type="text"
+                                        value={ctaButtonConfig.button_style.text_color}
+                                        onChange={(e) => handleCTAButtonStyleChange('text_color', e.target.value)}
+                                        className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-green-500 text-sm"
+                                        placeholder="text-white"
+                                    />
+                                </div>
+                                
+                                <div>
+                                    <label className="block text-xs font-medium text-gray-600 mb-1">
+                                        アイコンクラス
+                                    </label>
+                                    <input
+                                        type="text"
+                                        value={ctaButtonConfig.button_style.icon}
+                                        onChange={(e) => handleCTAButtonStyleChange('icon', e.target.value)}
+                                        className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-green-500 text-sm"
+                                        placeholder="fas fa-comments"
+                                    />
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* プレビュー */}
+                        <div className="mt-6 p-4 bg-white border rounded-lg">
+                            <h5 className="text-sm font-medium text-gray-700 mb-3">ボタンプレビュー：</h5>
+                            <button
+                                className={`bg-gradient-to-r ${ctaButtonConfig.button_style.bg_color} hover:${ctaButtonConfig.button_style.hover_color} ${ctaButtonConfig.button_style.text_color} font-bold py-3 px-6 rounded-full text-md transition-all duration-300 transform hover:scale-105 shadow-lg`}
+                                disabled
+                            >
+                                <i className={`${ctaButtonConfig.button_style.icon} mr-2`}></i>
+                                {ctaButtonConfig.button_text}
+                            </button>
+                            <p className="text-xs text-gray-500 mt-2">
+                                <i className="fas fa-phone mr-1"></i>
+                                お電話でのご相談：{ctaButtonConfig.phone_number}（{ctaButtonConfig.phone_hours}）
+                            </p>
                         </div>
                     </div>
 

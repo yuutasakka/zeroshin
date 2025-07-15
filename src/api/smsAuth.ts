@@ -24,7 +24,7 @@ export class SMSAuthService {
     }
   }
 
-  static async sendOTP(phoneNumber: string): Promise<{ success: boolean; error?: string }> {
+  static async sendOTP(phoneNumber: string, ipAddress?: string): Promise<{ success: boolean; error?: string }> {
     try {
       // 電話番号の正規化
       const normalizedPhone = this.normalizePhoneNumber(phoneNumber);
@@ -33,8 +33,8 @@ export class SMSAuthService {
         return { success: false, error: 'Invalid phone number format' };
       }
 
-      // レート制限チェック
-      const rateLimitOk = await this.checkRateLimit(normalizedPhone);
+      // レート制限チェック（電話番号 + IP アドレス）
+      const rateLimitOk = await this.checkRateLimit(normalizedPhone, ipAddress);
       if (!rateLimitOk) {
         return { success: false, error: 'SMS送信回数の上限に達しました。1時間後にお試しください。' };
       }
@@ -47,21 +47,8 @@ export class SMSAuthService {
       const hasTwilioConfig = config.accountSid && config.authToken && config.phoneNumber;
       
       if (!hasTwilioConfig) {
-        if (isProduction) {
-          console.error('🚫 本番環境: Twilio設定が不完全です');
-          return { success: false, error: 'SMS送信サービスが利用できません。管理者にお問い合わせください。' };
-        } else {
-          // 開発環境でのみシミュレート実行
-          console.log('📱 開発モード: SMS送信をシミュレートします');
-          console.log(`電話番号: ${normalizedPhone}`);
-          console.log(`認証コード: ${otp}`);
-          
-          // OTPをデータベースに保存（開発環境でのみ）
-          const expiresAt = new Date(Date.now() + 5 * 60 * 1000);
-          await this.saveOTPToDatabase(normalizedPhone, otp, expiresAt);
-          
-          return { success: true };
-        }
+        console.error('🚫 Twilio設定が不完全です');
+        return { success: false, error: 'SMS送信サービスが利用できません。管理者にお問い合わせください。' };
       }
 
       const client = await this.getTwilioClient();
@@ -70,7 +57,7 @@ export class SMSAuthService {
       const expiresAt = new Date(Date.now() + 5 * 60 * 1000);
       
       // Supabaseに保存
-      await this.saveOTPToDatabase(normalizedPhone, otp, expiresAt);
+      await this.saveOTPToDatabase(normalizedPhone, otp, expiresAt, ipAddress);
       
       // SMS送信
       if ((client as any)._isDirectAPI) {
@@ -96,12 +83,8 @@ export class SMSAuthService {
     try {
       const normalizedPhone = this.normalizePhoneNumber(phoneNumber);
       
-      // 開発環境用フォールバックコードチェック（本番環境では無効）
+      // セキュリティ強化: 開発環境バイパス削除（本番環境準備）
       const isProduction = this.isProductionEnvironment();
-      if (!isProduction && (otp === '123456' || otp === '000000')) {
-        console.log('📱 開発モード: フォールバックコードでログイン');
-        return { success: true };
-      }
       
       // データベースからOTPを確認
       const storedOTP = await this.getOTPFromDatabase(normalizedPhone);
@@ -181,18 +164,39 @@ export class SMSAuthService {
   }
 
   private static validatePhoneNumber(phone: string): boolean {
-    return /^(090|080|070)\d{8}$/.test(phone);
+    // 日本の携帯電話番号とIP電話番号をサポート
+    const patterns = [
+      /^(090|080|070)\d{8}$/, // 携帯電話
+      /^050\d{8}$/,           // IP電話
+      /^(020|060)\d{8}$/,     // PHS・その他サービス
+    ];
+    return patterns.some(pattern => pattern.test(phone));
   }
   
-  // 環境判定メソッド
+  // 環境判定メソッド - セキュリティ強化版
   private static isProductionEnvironment(): boolean {
-    // 理由: 本番環境でのセキュリティ強化のため
-    return process.env.NODE_ENV === 'production' ||
-           (typeof window !== 'undefined' && 
-            window.location.hostname !== 'localhost' && 
-            !window.location.hostname.includes('127.0.0.1') &&
-            !window.location.hostname.includes('preview') &&
-            !window.location.hostname.includes('dev'));
+    // 複数の指標で本番環境を判定（セキュリティ強化）
+    const nodeEnvProd = process.env.NODE_ENV === 'production';
+    const vercelEnvProd = process.env.VERCEL_ENV === 'production';
+    const prodFlag = process.env.PRODUCTION_MODE === 'true';
+    const buildTarget = process.env.BUILD_TARGET === 'production';
+    
+    // サーバーサイドでの厳密判定
+    if (typeof window === 'undefined') {
+      return nodeEnvProd || vercelEnvProd || prodFlag || buildTarget;
+    }
+    
+    // クライアントサイドでの追加チェック（バックアップ）
+    const hostname = window.location.hostname;
+    const isLocalhost = hostname === 'localhost' || 
+                       hostname.includes('127.0.0.1') || 
+                       hostname.includes('0.0.0.0');
+    const isDevDomain = hostname.includes('preview') || 
+                       hostname.includes('dev') || 
+                       hostname.includes('staging') ||
+                       hostname.includes('test');
+    
+    return (nodeEnvProd || vercelEnvProd || prodFlag) && !isLocalhost && !isDevDomain;
   }
 
   // Twilio HTTP API直接使用
@@ -219,7 +223,7 @@ export class SMSAuthService {
   }
 
   // OTPをデータベースに保存
-  private static async saveOTPToDatabase(phoneNumber: string, otp: string, expiresAt: Date): Promise<void> {
+  private static async saveOTPToDatabase(phoneNumber: string, otp: string, expiresAt: Date, ipAddress?: string): Promise<void> {
     const { supabaseAdmin } = await import('../lib/supabaseAuth');
     
     // 既存のOTPを削除
@@ -235,7 +239,8 @@ export class SMSAuthService {
         phone_number: phoneNumber,
         otp_code: otp,
         expires_at: expiresAt.toISOString(),
-        attempts: 0
+        attempts: 0,
+        request_ip: ipAddress || 'unknown'
       });
 
     if (error) {
@@ -299,7 +304,7 @@ export class SMSAuthService {
     const { supabaseAdmin } = await import('../lib/supabaseAuth');
     
     try {
-      // 電話番号単位のレート制限（1時間に3回）
+      // 1. 電話番号単位のレート制限（1時間に3回）
       const { data: phoneLimit, error: phoneError } = await supabaseAdmin
         .rpc('check_sms_rate_limit', { phone: phoneNumber });
 
@@ -312,16 +317,46 @@ export class SMSAuthService {
         return false; // 電話番号制限に達している
       }
 
-      // IPアドレス制限も追加（IPがある場合）
+      // 2. IPアドレス制限（IPがある場合）
       if (ipAddress) {
+        // 2-1. IP単位の制限（1時間に10回）
         const { data: ipData } = await supabaseAdmin
           .from('sms_verifications')
           .select('created_at')
+          .eq('request_ip', ipAddress)
           .gte('created_at', new Date(Date.now() - 60 * 60 * 1000).toISOString())
           .limit(10);
 
         if (ipData && ipData.length >= 10) {
           return false; // IP単位の制限
+        }
+
+        // 2-2. グローバル制限（全体で1時間に100回）
+        const { data: globalData } = await supabaseAdmin
+          .from('sms_verifications')
+          .select('created_at')
+          .gte('created_at', new Date(Date.now() - 60 * 60 * 1000).toISOString())
+          .limit(100);
+
+        if (globalData && globalData.length >= 100) {
+          return false; // グローバル制限
+        }
+      }
+
+      // 3. 不審なパターンの検出
+      const { data: recentAttempts } = await supabaseAdmin
+        .from('sms_verifications')
+        .select('phone_number, request_ip, created_at')
+        .gte('created_at', new Date(Date.now() - 10 * 60 * 1000).toISOString()) // 10分以内
+        .limit(20);
+
+      if (recentAttempts && recentAttempts.length > 0) {
+        // 同一IPから複数の電話番号への送信をチェック
+        const ipAttempts = recentAttempts.filter(a => a.request_ip === ipAddress);
+        const uniquePhones = new Set(ipAttempts.map(a => a.phone_number));
+        
+        if (uniquePhones.size > 5) {
+          return false; // 同一IPから5個以上の電話番号への送信を拒否
         }
       }
 

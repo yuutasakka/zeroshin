@@ -156,9 +156,9 @@ export const SECURITY_CONFIG = {
     }
     
          // 本番環境チェック
+     // 本番環境判定（サーバーサイドのみ）
      const isProduction = process.env.NODE_ENV === 'production' || 
-                         (typeof import.meta !== 'undefined' && (import.meta as any).env?.MODE === 'production') ||
-                         (typeof window !== 'undefined' && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1');
+                          (typeof import.meta !== 'undefined' && (import.meta as any).env?.MODE === 'production');
      
      if (isProduction) {
        console.error('🚨 CRITICAL: VITE_ENCRYPTION_KEY environment variable is missing in production!');
@@ -391,8 +391,8 @@ export class SecureConfigManager {
       const response = await fetch(`${SUPABASE_CONFIG.url}/rest/v1/secure_config?key.eq=${key}`, {
         method: 'GET',
         headers: {
-          'Authorization': `Bearer ${SUPABASE_CONFIG.serviceRoleKey}`,
-          'apikey': SUPABASE_CONFIG.serviceRoleKey,
+          'Authorization': `Bearer ${SUPABASE_CONFIG.serviceRoleKey || ''}`,
+          'apikey': SUPABASE_CONFIG.serviceRoleKey || '',
           'Content-Type': 'application/json',
         },
       });
@@ -428,8 +428,8 @@ export class SecureConfigManager {
       const response = await fetch(`${SUPABASE_CONFIG.url}/rest/v1/admin_credentials?username.eq=admin`, {
         method: 'GET',
         headers: {
-          'Authorization': `Bearer ${SUPABASE_CONFIG.serviceRoleKey}`,
-          'apikey': SUPABASE_CONFIG.serviceRoleKey,
+          'Authorization': `Bearer ${SUPABASE_CONFIG.serviceRoleKey || ''}`,
+          'apikey': SUPABASE_CONFIG.serviceRoleKey || '',
           'Content-Type': 'application/json',
         },
       });
@@ -458,8 +458,8 @@ export class SecureConfigManager {
       const response = await fetch(`${SUPABASE_CONFIG.url}/rest/v1/admin_credentials?username.eq=admin`, {
         method: 'PATCH',
         headers: {
-          'Authorization': `Bearer ${SUPABASE_CONFIG.serviceRoleKey}`,
-          'apikey': SUPABASE_CONFIG.serviceRoleKey,
+          'Authorization': `Bearer ${SUPABASE_CONFIG.serviceRoleKey || ''}`,
+          'apikey': SUPABASE_CONFIG.serviceRoleKey || '',
           'Content-Type': 'application/json',
         },
         body: JSON.stringify(updates),

@@ -42,6 +42,21 @@ export interface FooterData {
   copyright: string;
 }
 
+// CTAボタン設定の型定義
+export interface CTAButtonConfig {
+  button_text: string;
+  button_type: 'scroll_to_diagnosis' | 'external_url' | 'phone_call';
+  button_url: string;
+  phone_number: string;
+  phone_hours: string;
+  button_style: {
+    bg_color: string;
+    hover_color: string;
+    text_color: string;
+    icon: string;
+  };
+}
+
 export const defaultReasonsToChooseData: ReasonsToChooseData = {
   title: "選ばれる理由があります",
   subtitle: "多くのお客様から信頼をいただいている、確かな実績をご紹介します",
@@ -98,4 +113,19 @@ export const defaultFooterData: FooterData = {
   companyInfo: "運営会社：AI ConectX株式会社 | 金融商品取引業者 関東財務局長（金商）第12345号",
   contactInfo: "〒150-0001 東京都渋谷区神宮前1-1-1 | TEL：0120-999-888",
   copyright: "AI ConectX. All rights reserved."
+};
+
+// デフォルトCTAボタン設定
+export const defaultCTAButtonConfig: CTAButtonConfig = {
+  button_text: "今すぐ無料相談を始める",
+  button_type: "scroll_to_diagnosis",
+  button_url: "",
+  phone_number: "0120-999-888",
+  phone_hours: "平日9:00-18:00",
+  button_style: {
+    bg_color: "from-blue-500 to-blue-600",
+    hover_color: "from-blue-600 to-blue-700",
+    text_color: "text-white",
+    icon: "fas fa-comments"
+  }
 }; 

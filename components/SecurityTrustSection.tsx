@@ -31,7 +31,7 @@ const SecurityTrustSection: React.FC = () => {
   return (
     <section className="py-16 md:py-20 px-4 bg-white">
       <div className="container mx-auto px-4 max-w-7xl">
-        <style jsx>{`
+        <style>{`
           .luxury-card {
             background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
             border: 1px solid #e2e8f0;
