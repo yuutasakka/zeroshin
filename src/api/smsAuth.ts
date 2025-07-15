@@ -173,17 +173,17 @@ export class SMSAuthService {
     return patterns.some(pattern => pattern.test(phone));
   }
   
-  // 環境判定メソッド - セキュリティ強化版
+  // 環境判定メソッド - セキュリティ強化版（本番環境のみ）
   private static isProductionEnvironment(): boolean {
-    // 複数の指標で本番環境を判定（セキュリティ強化）
+    // 本番環境の厳密判定 - 開発バイパスを完全に削除
     const nodeEnvProd = process.env.NODE_ENV === 'production';
     const vercelEnvProd = process.env.VERCEL_ENV === 'production';
     const prodFlag = process.env.PRODUCTION_MODE === 'true';
-    const buildTarget = process.env.BUILD_TARGET === 'production';
     
     // サーバーサイドでの厳密判定
     if (typeof window === 'undefined') {
-      return nodeEnvProd || vercelEnvProd || prodFlag || buildTarget;
+      // サーバーサイドでは常に本番環境として扱う（セキュリティ強化）
+      return true;
     }
     
     // クライアントサイドでの追加チェック（バックアップ）
@@ -196,6 +196,7 @@ export class SMSAuthService {
                        hostname.includes('staging') ||
                        hostname.includes('test');
     
+    // 本番環境でのみ動作するよう厳密化
     return (nodeEnvProd || vercelEnvProd || prodFlag) && !isLocalhost && !isDevDomain;
   }
 
