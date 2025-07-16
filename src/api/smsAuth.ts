@@ -47,7 +47,16 @@ export class SMSAuthService {
       const hasTwilioConfig = config.accountSid && config.authToken && config.phoneNumber;
       
       if (!hasTwilioConfig) {
-        console.error('🚫 Twilio設定が不完全です');
+        console.error('🚫 Twilio設定が不完全です', {
+          hasAccountSid: !!config.accountSid,
+          hasAuthToken: !!config.authToken,
+          hasPhoneNumber: !!config.phoneNumber,
+          config: {
+            accountSid: config.accountSid ? `${config.accountSid.substring(0, 4)}...` : 'なし',
+            authToken: config.authToken ? `${config.authToken.substring(0, 4)}...` : 'なし',
+            phoneNumber: config.phoneNumber || 'なし'
+          }
+        });
         return { success: false, error: 'SMS送信サービスが利用できません。管理者にお問い合わせください。' };
       }
 
@@ -60,17 +69,26 @@ export class SMSAuthService {
       await this.saveOTPToDatabase(normalizedPhone, otp, expiresAt, ipAddress);
       
       // SMS送信
+      console.log('📱 SMS送信開始', {
+        to: normalizedPhone,
+        otp: `${otp.substring(0, 2)}****`,
+        isDirectAPI: !!(client as any)._isDirectAPI
+      });
+      
       if ((client as any)._isDirectAPI) {
         // Twilio HTTP API直接使用
         await this.sendSMSDirectAPI(client, normalizedPhone, otp);
       } else {
         // Twilio SDK使用
-        await (client as any).messages.create({
+        const result = await (client as any).messages.create({
           body: `【AI ConectX】認証コード: ${otp}\n\n※5分間有効です。第三者には絶対に教えないでください。`,
-          from: (client as any).phoneNumber,
+          from: config.phoneNumber,
           to: normalizedPhone
         });
+        console.log('📤 Twilio SDK送信完了', { sid: result.sid, status: result.status });
       }
+      
+      console.log('✅ SMS送信完了', { to: normalizedPhone });
 
       return { success: true };
     } catch (error) {
@@ -155,22 +173,31 @@ export class SMSAuthService {
 
   private static normalizePhoneNumber(phone: string): string {
     // 全角数字を半角に変換
-    const halfWidth = phone.replace(/[０-９]/g, (match) => {
+    let normalized = phone.replace(/[０-９]/g, (match) => {
       return String.fromCharCode(match.charCodeAt(0) - 0xFEE0);
     });
     
-    // 数字以外を削除
-    return halfWidth.replace(/\D/g, '');
+    // +81形式に統一（フロントエンドと同じ処理）
+    normalized = normalized.replace(/\D/g, ''); // 数字以外を削除
+    
+    if (normalized.startsWith('0')) {
+      // 0から始まる場合は+81に変換
+      normalized = '+81' + normalized.substring(1);
+    } else if (normalized.startsWith('81')) {
+      // 81から始まる場合は+を追加
+      normalized = '+' + normalized;
+    } else if (!normalized.startsWith('+')) {
+      // +がない場合は+81を追加
+      normalized = '+81' + normalized;
+    }
+    
+    return normalized;
   }
 
   private static validatePhoneNumber(phone: string): boolean {
-    // 日本の携帯電話番号とIP電話番号をサポート
-    const patterns = [
-      /^(090|080|070)\d{8}$/, // 携帯電話
-      /^050\d{8}$/,           // IP電話
-      /^(020|060)\d{8}$/,     // PHS・その他サービス
-    ];
-    return patterns.some(pattern => pattern.test(phone));
+    // +81形式の日本の電話番号パターン（フロントエンドと統一）
+    const phoneRegex = /^\+81[1-9]\d{8,9}$/;
+    return phoneRegex.test(phone);
   }
   
   // 環境判定メソッド - セキュリティ強化版（本番環境のみ）
@@ -205,6 +232,12 @@ export class SMSAuthService {
   private static async sendSMSDirectAPI(client: any, to: string, otp: string): Promise<void> {
     const auth = Buffer.from(`${client.accountSid}:${client.authToken}`).toString('base64');
     
+    console.log('🌐 Twilio Direct API呼び出し', {
+      url: `https://api.twilio.com/2010-04-01/Accounts/${client.accountSid}/Messages.json`,
+      from: client.phoneNumber,
+      to: to
+    });
+    
     const response = await fetch(`https://api.twilio.com/2010-04-01/Accounts/${client.accountSid}/Messages.json`, {
       method: 'POST',
       headers: {
@@ -218,10 +251,25 @@ export class SMSAuthService {
       })
     });
 
+    console.log('📡 Twilio API応答', {
+      status: response.status,
+      statusText: response.statusText,
+      ok: response.ok
+    });
+
     if (!response.ok) {
       const errorData = await response.text();
+      console.error('❌ Twilio API エラー詳細:', errorData);
       throw new Error(`Twilio API error: ${response.status} ${errorData}`);
     }
+    
+    const result = await response.json();
+    console.log('📤 Twilio Direct API送信完了', { 
+      sid: result.sid, 
+      status: result.status,
+      error_code: result.error_code,
+      error_message: result.error_message
+    });
   }
 
   // OTPをデータベースに保存
