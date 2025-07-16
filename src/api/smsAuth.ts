@@ -1,9 +1,13 @@
 // SMS認証API - サーバーサイドのみ
-import { SecureConfigManager } from './secureConfig';
+// import { SecureConfigManager } from './secureConfig'; // 直接環境変数アクセスに変更
 
 export class SMSAuthService {
   private static async getTwilioClient() {
-    const config = await SecureConfigManager.getTwilioConfig();
+    const config = {
+      accountSid: process.env.TWILIO_ACCOUNT_SID,
+      authToken: process.env.TWILIO_AUTH_TOKEN,
+      phoneNumber: process.env.TWILIO_PHONE_NUMBER
+    };
     
     if (!config.accountSid || !config.authToken) {
       throw new Error('Twilio configuration not found');
@@ -43,7 +47,12 @@ export class SMSAuthService {
       
       // 環境判定とTwilio設定チェック
       const isProduction = this.isProductionEnvironment();
-      const config = await SecureConfigManager.getTwilioConfig();
+      // 直接環境変数から取得（Vercelファンクション内での確実な動作のため）
+      const config = {
+        accountSid: process.env.TWILIO_ACCOUNT_SID,
+        authToken: process.env.TWILIO_AUTH_TOKEN,
+        phoneNumber: process.env.TWILIO_PHONE_NUMBER
+      };
       const hasTwilioConfig = config.accountSid && config.authToken && config.phoneNumber;
       
       if (!hasTwilioConfig) {
@@ -92,8 +101,13 @@ export class SMSAuthService {
 
       return { success: true };
     } catch (error) {
-      console.error('SMS sending failed:', error);
-      return { success: false, error: 'Failed to send SMS' };
+      console.error('💥 SMS送信エラー詳細:', {
+        error: error.message,
+        stack: error.stack,
+        phoneNumber: normalizedPhone,
+        hasConfig: !!(process.env.TWILIO_ACCOUNT_SID && process.env.TWILIO_AUTH_TOKEN && process.env.TWILIO_PHONE_NUMBER)
+      });
+      return { success: false, error: `SMS送信に失敗しました: ${error.message}` };
     }
   }
 
