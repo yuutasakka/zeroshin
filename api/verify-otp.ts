@@ -14,7 +14,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     'https://moneyticket01-jba8tb9fl-seai0520s-projects.vercel.app', // 以前のデプロイ先
     'https://moneyticket01-5dbezddft-seai0520s-projects.vercel.app', // 以前のデプロイ先
     'https://moneyticket01-8hq0b6f3c-seai0520s-projects.vercel.app', // 以前のデプロイ先
-    'https://moneyticket01-ixkbvpo36-seai0520s-projects.vercel.app', // 現在のデプロイ先
+    'https://moneyticket01-ixkbvpo36-seai0520s-projects.vercel.app', // 以前のデプロイ先
+    'https://moneyticket01-jaskh9loi-seai0520s-projects.vercel.app', // 現在のデプロイ先
   ];
   const origin = req.headers.origin;
   if (origin && allowedOrigins.includes(origin)) {
