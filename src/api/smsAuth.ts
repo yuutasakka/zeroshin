@@ -104,7 +104,7 @@ export class SMSAuthService {
       console.error('💥 SMS送信エラー詳細:', {
         error: error?.message || 'Unknown error',
         stack: error?.stack || 'No stack trace',
-        phoneNumber: normalizedPhone,
+        phoneNumber: phoneNumber,
         hasConfig: !!(process.env.TWILIO_ACCOUNT_SID && process.env.TWILIO_AUTH_TOKEN && process.env.TWILIO_PHONE_NUMBER)
       });
       return { success: false, error: `SMS送信に失敗しました: ${error?.message || 'Unknown error'}` };
