@@ -9,7 +9,6 @@
     "GENERATE_SOURCEMAP": "false",
     "VITE_DEBUG": "false"
   },
-  "public": true,
   "rewrites": [
     {
       "source": "/(.*)",
