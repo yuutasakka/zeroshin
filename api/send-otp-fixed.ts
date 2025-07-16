@@ -70,13 +70,18 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
     console.log('🔢 OTP生成:', otp.substring(0, 2) + '****');
 
-    // 電話番号正規化
+    // 電話番号正規化（Twilioテスト成功形式に合わせて修正）
     let normalizedPhone = phoneNumber.replace(/\D/g, '');
+    console.log('🔍 正規化前:', phoneNumber, '→', normalizedPhone);
+    
     if (normalizedPhone.startsWith('0')) {
+      // 090-5704-4893 → 09057044893 → +819057044893
       normalizedPhone = '+81' + normalizedPhone.substring(1);
     } else if (normalizedPhone.startsWith('81')) {
+      // 81で始まる場合は+を追加
       normalizedPhone = '+' + normalizedPhone;
     } else if (!normalizedPhone.startsWith('+')) {
+      // +がない場合は+81を追加
       normalizedPhone = '+81' + normalizedPhone;
     }
 
