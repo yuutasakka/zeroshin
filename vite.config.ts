@@ -69,9 +69,8 @@ export default defineConfig(({ mode }) => {
         output: {
           manualChunks: {
             vendor: ['react', 'react-dom'],
-            utils: ['crypto-js', 'chart.js'],
-            supabase: ['@supabase/supabase-js'],
-            ai: ['@ai-sdk/google', '@google/generative-ai']
+            utils: ['crypto-js'],
+            supabase: ['@supabase/supabase-js']
           }
         }
       },
