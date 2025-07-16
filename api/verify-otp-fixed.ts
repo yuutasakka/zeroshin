@@ -1,5 +1,10 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 
+// グローバル型定義
+declare global {
+  var otpStore: Map<string, { otp: string; expiresAt: number; attempts: number }> | undefined;
+}
+
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   // CORS設定 - 本番環境用
   const allowedOrigins = [

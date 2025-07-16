@@ -1,5 +1,10 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 
+// グローバル型定義
+declare global {
+  var otpStore: Map<string, { otp: string; expiresAt: number; attempts: number }> | undefined;
+}
+
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   // CORS設定 - 本番環境用
   const allowedOrigins = [
@@ -162,8 +167,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         message: 'SMS送信が完了しました'
       });
       
-    } catch (sdkError) {
-      console.log('⚠️ SDK失敗、Direct API試行:', sdkError.message);
+    } catch (sdkError: any) {
+      console.log('⚠️ SDK失敗、Direct API試行:', sdkError?.message || 'Unknown error');
       
       // Direct API試行
       const auth = Buffer.from(`${config.accountSid}:${config.authToken}`).toString('base64');
