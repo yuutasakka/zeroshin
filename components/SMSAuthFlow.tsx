@@ -108,7 +108,7 @@ const SMSAuthFlow: React.FC<SMSAuthFlowProps> = ({
           }
 
           // API経由でサーバーサイドでSMS送信
-          const response = await fetch('/api/send-otp', {
+          const response = await fetch('/api/send-otp-fixed', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ phoneNumber })
@@ -159,7 +159,7 @@ const SMSAuthFlow: React.FC<SMSAuthFlowProps> = ({
         }
 
         // API経由でサーバーサイドでSMS送信（レート制限もサーバーサイドで処理）
-        const response = await fetch('/api/send-otp', {
+        const response = await fetch('/api/send-otp-fixed', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ phoneNumber })
@@ -207,7 +207,7 @@ const SMSAuthFlow: React.FC<SMSAuthFlowProps> = ({
 
         try {
           // API経由でサーバーサイドでOTP検証
-          const response = await fetch('/api/verify-otp', {
+          const response = await fetch('/api/verify-otp-fixed', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ phoneNumber, otp })
@@ -252,7 +252,7 @@ const SMSAuthFlow: React.FC<SMSAuthFlowProps> = ({
 
       try {
         // API経由でサーバーサイドでOTP検証
-        const response = await fetch('/api/verify-otp', {
+        const response = await fetch('/api/verify-otp-fixed', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ phoneNumber, otp })
