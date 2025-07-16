@@ -76,35 +76,39 @@ const PhoneVerificationPage: React.FC<PhoneVerificationPageProps> = ({
             return;
           }
 
-          // SMS認証は現在無効化（全環境で開発モード使用）
-          const isProduction = false;
-          
+          // 本番環境必須 - 開発環境は無効
           setLoading(true);
           
-          if (!isProduction) {
-            // 開発環境では固定コード "123456" を使用
+          // 本番環境でのみ動作 - Supabase SMS設定確認
+          // フロントエンドでは環境変数は直接確認不可、Supabaseに依存
+          
+          // 独自API経由でSMS送信（本番環境のみ）
+          try {
+            const response = await fetch('/api/send-otp', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                phoneNumber: normalizedPhone
+              })
+            });
+
+            if (!response.ok) {
+              const errorData = await response.json().catch(() => ({}));
+              throw new Error(errorData.error || 'SMS送信に失敗しました');
+            }
+
+            const result = await response.json();
+            if (!result.success) {
+              throw new Error(result.error || 'SMS送信に失敗しました');
+            }
+            
             setStep('otp-verification');
             setCountdown(60);
-          } else {
-            // 本番環境では実際のSMS認証を実行（現在無効）
-            try {
-              const { error } = await supabase.auth.signInWithOtp({
-                phone: normalizedPhone,
-                options: { channel: 'sms' }
-              });
-              
-              if (error) {
-                throw error;
-              }
-              
-              setStep('otp-verification');
-              setCountdown(60);
-            } catch (smsError) {
-              console.error('SMS送信エラー:', smsError);
-              // フォールバック: 開発モードで続行
-              setStep('otp-verification');
-              setCountdown(60);
-            }
+          } catch (smsError: any) {
+            console.error('SMS送信エラー:', smsError);
+            throw new Error(smsError.message || 'SMS送信に失敗しました。電話番号を確認してもう一度お試しください。');
           }
           
         } catch (error: any) {
@@ -242,44 +246,40 @@ const PhoneVerificationPage: React.FC<PhoneVerificationPageProps> = ({
         return;
       }
       
-      // 環境判定（現在は全環境で開発モードを使用）
-      const isProduction = false; // SMS認証の問題により一時的に無効化
-      
+      // 独自API経由でOTP検証（本番環境のみ）
       let authSuccess = false;
       
-      if (!isProduction) {
-        // 開発環境: 固定コード "123456" で認証
-        if (otpCode === '123456') {
-          authSuccess = true;
-        } else {
-          handleFailedAttempt();
-          throw new Error('認証コード "123456" を入力してください');
-        }
-      } else {
-        // 本番環境: Supabase SMS認証（現在無効）
-        try {
-          const { data, error } = await supabase.auth.verifyOtp({
-            phone: normalizedPhone,
-            token: otpCode,
-            type: 'sms'
-          });
+      try {
+        const response = await fetch('/api/verify-otp', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            phoneNumber: normalizedPhone,
+            otpCode: otpCode
+          })
+        });
 
-          if (error) {
-            console.error('SMS認証エラー:', error);
-            handleFailedAttempt();
-            throw new Error('SMS認証に失敗しました。コード "123456" をお試しください。');
-          }
-          
-          authSuccess = !!data.user;
-        } catch (smsError) {
-          console.error('SMS認証例外:', smsError);
-          // フォールバック: 固定コードでの認証を許可
-          if (otpCode === '123456') {
-            authSuccess = true;
-          } else {
-            throw new Error('認証に失敗しました。コード "123456" をお試しください。');
-          }
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({}));
+          handleFailedAttempt();
+          throw new Error(errorData.error || '認証に失敗しました');
         }
+
+        const result = await response.json();
+        if (!result.success) {
+          handleFailedAttempt();
+          throw new Error(result.error || '認証コードが正しくありません。再度確認してください。');
+        }
+        
+        authSuccess = result.success;
+      } catch (smsError: any) {
+        console.error('SMS認証例外:', smsError);
+        if (!smsError.message?.includes('認証コード')) {
+          handleFailedAttempt();
+        }
+        throw new Error(smsError.message || 'SMS認証サービスに接続できません。しばらく後にもう一度お試しください。');
       }
 
       if (authSuccess) {

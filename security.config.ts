@@ -18,9 +18,22 @@ export class SecureStorage {
   private static encryptionKey: string | null = null;
 
   private static getEncryptionKey(): string {
-    // クライアントサイドでは簡易暗号化のみ使用
+    // クライアントサイドでの環境変数取得
     if (typeof window !== 'undefined') {
-      return 'client-side-simple-key';
+      // Vite環境変数の取得
+      if (typeof import.meta !== 'undefined' && (import.meta as any).env) {
+        const key = (import.meta as any).env.VITE_ENCRYPTION_KEY;
+        if (key) return key;
+      }
+      
+      // フォールバック: セッション固有キー
+      const sessionKey = sessionStorage.getItem('app_encryption_key');
+      if (sessionKey) return sessionKey;
+      
+      // 最終フォールバック: 時間ベースキー（セキュリティは低い）
+      const fallbackKey = `client-${Date.now().toString(36)}-${Math.random().toString(36)}`;
+      sessionStorage.setItem('app_encryption_key', fallbackKey);
+      return fallbackKey;
     }
     
     // サーバーサイドでは環境変数から取得
@@ -71,9 +84,18 @@ export class SecureStorage {
   }
 
   private static simpleEncrypt(text: string, key: string): string {
-    // WARNING: This is basic obfuscation only - NOT suitable for sensitive data
+    // crypto-jsを使用した実装（正式な暗号化）
+    if (typeof window !== 'undefined' && (window as any).CryptoJS) {
+      try {
+        return (window as any).CryptoJS.AES.encrypt(text, key).toString();
+      } catch (error) {
+        console.warn('CryptoJS encryption failed, falling back to basic encoding:', error);
+      }
+    }
+    
+    // フォールバック: 基本的な難読化（開発用のみ）
     if (typeof window !== 'undefined') {
-      console.warn('⚠️ Using basic obfuscation - implement proper encryption for sensitive data');
+      console.warn('⚠️ 基本的な暗号化を使用中。本番環境では crypto-js を導入してください');
       return btoa(encodeURIComponent(text));
     }
     
@@ -82,7 +104,17 @@ export class SecureStorage {
   }
 
   private static simpleDecrypt(encryptedText: string, key: string): string {
-    // クライアントサイドでは基本的な復号化のみ
+    // crypto-jsを使用した実装（正式な暗号化）
+    if (typeof window !== 'undefined' && (window as any).CryptoJS) {
+      try {
+        const bytes = (window as any).CryptoJS.AES.decrypt(encryptedText, key);
+        return bytes.toString((window as any).CryptoJS.enc.Utf8);
+      } catch (error) {
+        console.warn('CryptoJS decryption failed, falling back to basic decoding:', error);
+      }
+    }
+    
+    // フォールバック: 基本的な復号化
     if (typeof window !== 'undefined') {
       try {
         return decodeURIComponent(atob(encryptedText));
@@ -99,7 +131,13 @@ export class SecureStorage {
 
 // 本番環境での必須環境変数チェック
 const validateProductionEnvironment = () => {
-  const isProduction = process.env.NODE_ENV === 'production' || 
+  const isProduction = (() => {
+    if (typeof window !== 'undefined') {
+      return window.location.hostname !== 'localhost' && 
+             window.location.hostname !== '127.0.0.1';
+    }
+    return process.env.NODE_ENV === 'production';
+  })() || 
                       (typeof import.meta !== 'undefined' && (import.meta as any).env?.MODE === 'production') ||
                       (typeof window !== 'undefined' && window.location.hostname !== 'localhost' && 
                        !window.location.hostname.includes('127.0.0.1') && 
@@ -158,8 +196,18 @@ export const SECURITY_CONFIG = {
     
          // 本番環境チェック
      // 本番環境判定（サーバーサイドのみ）
-     const isProduction = process.env.NODE_ENV === 'production' || 
-                          (typeof import.meta !== 'undefined' && (import.meta as any).env?.MODE === 'production');
+     const isProduction = (() => {
+    try {
+      if (typeof window !== 'undefined' && window && (window as any).location) {
+        const location = (window as any).location;
+        return location.hostname !== 'localhost' && 
+               location.hostname !== '127.0.0.1';
+      }
+    } catch {
+      // ブラウザ環境でない場合はサーバーサイド判定
+    }
+    return process.env.NODE_ENV === 'production';
+  })();
      
      if (isProduction) {
        console.error('🚨 CRITICAL: VITE_ENCRYPTION_KEY environment variable is missing in production!');
@@ -510,7 +558,13 @@ export class SecureConfigManager {
 // セキュアなログ出力（本番環境では完全無効化）
 export const secureLog = (message: string, data?: any) => {
   // 本番環境では一切ログを出力しない
-  const isProduction = process.env.NODE_ENV === 'production' || 
+  const isProduction = (() => {
+    if (typeof window !== 'undefined') {
+      return window.location.hostname !== 'localhost' && 
+             window.location.hostname !== '127.0.0.1';
+    }
+    return process.env.NODE_ENV === 'production';
+  })() || 
                       (typeof import.meta !== 'undefined' && (import.meta as any).env?.MODE === 'production') ||
                       (typeof window !== 'undefined' && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1');
   

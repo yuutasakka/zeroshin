@@ -47,13 +47,14 @@ const supabaseAnonKey = (() => {
   
   if (isProduction && !key) {
     console.error('🚨 CRITICAL: VITE_SUPABASE_ANON_KEY environment variable is missing in production!');
-    throw new Error('Supabase configuration is required in production environment');
+    // アプリケーション全体のクラッシュを防ぐため、エラーを返すが続行
+    console.warn('⚠️ Supabase will be initialized with limited functionality');
+    return 'missing-key-will-cause-limited-functionality';
   }
   
-  // 開発環境でのフォールバック（開発用のみ）
   if (!key && !isProduction) {
-    console.warn('⚠️ Using development Supabase key. Set VITE_SUPABASE_ANON_KEY for production.');
-    return 'your-supabase-anon-key';
+    console.warn('⚠️ VITE_SUPABASE_ANON_KEY not found, using fallback for development');
+    return 'dev-fallback-key';
   }
   
   return key;

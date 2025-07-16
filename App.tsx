@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import ErrorBoundary from './components/ErrorBoundary';
 import Header from './components/Header';
 // 要件定義書に基づく新しいコンポーネント
 import AIConectXHero from './components/AIConectXHero';
@@ -134,32 +135,62 @@ const App: React.FC = () => {
           setCurrentPage('adminDashboard');
         }
 
-        // 認証状態の変更を監視
+        // 管理者認証状態の監視（一般ユーザーとは完全分離）
         const { data: { subscription } } = supabase.auth.onAuthStateChange(
           async (_event, session) => {
             
             if (session?.user) {
-              setSupabaseUser(session.user);
-              setIsSupabaseAuth(true);
-              setIsAdminLoggedIn(true);
+              // 管理者専用のSupabase認証のみを処理
+              // 一般ユーザーのSMS認証とは完全に分離
               
-              // パスワード変更要求をチェック
-              // const { data: userProfileData, error: userProfileError } = await supabase
-              await supabase
-                .from('profiles')
-                .select('requires_password_change')
-                .eq('id', session.user.id)
-                .single();
-
-              // パスワード変更機能は現在無効化されているため、常に管理画面に遷移
-              setCurrentPage('adminDashboard');
+              // 管理者認証情報の確認（複数フィールドで安全に照合）
+              let adminData = null;
+              let adminError = null;
+              
+              // 1. メールアドレスでの照合
+              if (session.user.email) {
+                const { data, error } = await supabase
+                  .from('admin_credentials')
+                  .select('*')
+                  .eq('username', session.user.email)
+                  .eq('is_active', true)
+                  .maybeSingle();
+                if (data) { adminData = data; adminError = error; }
+              }
+              
+              // 2. 電話番号での照合（メールで見つからない場合）
+              if (!adminData && session.user.phone) {
+                const { data, error } = await supabase
+                  .from('admin_credentials')
+                  .select('*')
+                  .eq('phone_number', session.user.phone)
+                  .eq('is_active', true)
+                  .maybeSingle();
+                if (data) { adminData = data; adminError = error; }
+              }
+              
+              if (adminData && !adminError) {
+                // 正当な管理者の場合のみ権限付与
+                setSupabaseUser(session.user);
+                setIsSupabaseAuth(true);
+                setIsAdminLoggedIn(true);
+                setCurrentPage('adminDashboard');
+              } else {
+                // 管理者でない場合は認証を拒否
+                console.warn('Unauthorized Supabase login attempt');
+                await supabase.auth.signOut();
+                setSupabaseUser(null);
+                setIsSupabaseAuth(false);
+                setIsAdminLoggedIn(false);
+                setCurrentPage('home');
+              }
             } else {
               setSupabaseUser(null);
               // Supabase認証が解除された場合のみ状態をリセット
               if (isSupabaseAuth) {
                 setIsSupabaseAuth(false);
                 setIsAdminLoggedIn(false);
-                setCurrentPage('diagnosis');
+                setCurrentPage('home');
               }
             }
           }
@@ -487,7 +518,8 @@ const App: React.FC = () => {
   const renderCurrentPage = () => {
     if (currentPage === 'home') {
       return (
-        <div style={{ minHeight: '100vh', background: '#eaf6fb', padding: 0, margin: 0, width: '100%', maxWidth: '100vw', boxSizing: 'border-box', overflowX: 'hidden' }}>
+        <ErrorBoundary>
+          <div style={{ minHeight: '100vh', background: '#eaf6fb', padding: 0, margin: 0, width: '100%', maxWidth: '100vw', boxSizing: 'border-box', overflowX: 'hidden' }}>
           <Header />
           
           {/* 1番目: メインヒーロー（あなたの未来の資産を診断！） */}
@@ -665,6 +697,7 @@ const App: React.FC = () => {
             }
           `}</style>
         </div>
+        </ErrorBoundary>
       );
     }
     // 管理者ログイン状態の場合（セキュリティ強化）

@@ -188,16 +188,17 @@ export class SMSAuthService {
     
     // クライアントサイドでの追加チェック（バックアップ）
     const hostname = window.location.hostname;
-    const isLocalhost = hostname === 'localhost' || 
-                       hostname.includes('127.0.0.1') || 
-                       hostname.includes('0.0.0.0');
-    const isDevDomain = hostname.includes('preview') || 
-                       hostname.includes('dev') || 
-                       hostname.includes('staging') ||
-                       hostname.includes('test');
+    // 本番環境以外は全て無効化
+    const isNonProduction = hostname === 'localhost' || 
+                            hostname.includes('127.0.0.1') || 
+                            hostname.includes('0.0.0.0') ||
+                            hostname.includes('preview') || 
+                            hostname.includes('dev') || 
+                            hostname.includes('staging') ||
+                            hostname.includes('test');
     
     // 本番環境でのみ動作するよう厳密化
-    return (nodeEnvProd || vercelEnvProd || prodFlag) && !isLocalhost && !isDevDomain;
+    return (nodeEnvProd || vercelEnvProd || prodFlag) && !isNonProduction;
   }
 
   // Twilio HTTP API直接使用

@@ -3,9 +3,13 @@ import type { VercelRequest, VercelResponse } from '@vercel/node';
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   // CORS設定
   // セキュリティ強化: 特定のオリジンのみ許可
-  const allowedOrigins = process.env.NODE_ENV === 'production' 
-    ? ['https://your-domain.com', 'https://www.your-domain.com']
-    : ['http://localhost:5174', 'http://localhost:3000'];
+  const allowedOrigins = [
+    'https://moneyticket.vercel.app',
+    'https://moneyticket-git-main-sakkayuta.vercel.app',
+    'https://moneyticket01-10gswrw2q-seai0520s-projects.vercel.app',
+    'https://moneyticket01-rogabfsul-seai0520s-projects.vercel.app',
+    'https://moneyticket01-18dyp3oo0-seai0520s-projects.vercel.app',
+  ];
   
   const origin = req.headers.origin;
   if (origin && allowedOrigins.includes(origin)) {

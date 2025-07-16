@@ -1,9 +1,16 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
-// CORS設定
+// CORS設定 - 本番ドメインのみ許可
+const allowedOrigins = [
+  'https://moneyticket.vercel.app',
+  'https://moneyticket-git-main-sakkayuta.vercel.app',
+  'https://moneyticket01-10gswrw2q-seai0520s-projects.vercel.app',
+  'https://moneyticket01-rogabfsul-seai0520s-projects.vercel.app',
+  'https://moneyticket01-18dyp3oo0-seai0520s-projects.vercel.app',
+];
+
 const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
   'Access-Control-Allow-Methods': 'POST, OPTIONS',
 };
@@ -172,9 +179,16 @@ function logWarn(message: string, data?: any) {
 }
 
 serve(async (req) => {
+  // 動的CORS設定
+  const origin = req.headers.get('origin');
+  const dynamicCorsHeaders = {
+    ...corsHeaders,
+    'Access-Control-Allow-Origin': (origin && allowedOrigins.includes(origin)) ? origin : 'null'
+  };
+
   // CORS プリフライトリクエストの処理
   if (req.method === 'OPTIONS') {
-    return new Response('ok', { headers: corsHeaders });
+    return new Response('ok', { headers: dynamicCorsHeaders });
   }
 
   try {
@@ -185,7 +199,7 @@ serve(async (req) => {
         JSON.stringify({ success: false, error: '認証が必要です' }),
         { 
           status: 401, 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+          headers: { ...dynamicCorsHeaders, 'Content-Type': 'application/json' } 
         }
       );
     }
@@ -206,7 +220,7 @@ serve(async (req) => {
         JSON.stringify({ success: false, error: 'requestIdとactionは必須です' }),
         { 
           status: 400, 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+          headers: { ...dynamicCorsHeaders, 'Content-Type': 'application/json' } 
         }
       );
     }
@@ -216,7 +230,7 @@ serve(async (req) => {
         JSON.stringify({ success: false, error: 'actionはapproveまたはrejectである必要があります' }),
         { 
           status: 400, 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+          headers: { ...dynamicCorsHeaders, 'Content-Type': 'application/json' } 
         }
       );
     }
@@ -234,7 +248,7 @@ serve(async (req) => {
         JSON.stringify({ success: false, error: '申請が見つからないか、既に処理済みです' }),
         { 
           status: 404, 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+          headers: { ...dynamicCorsHeaders, 'Content-Type': 'application/json' } 
         }
       );
     }
@@ -268,7 +282,7 @@ serve(async (req) => {
           }),
           { 
             status: 500, 
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+            headers: { ...dynamicCorsHeaders, 'Content-Type': 'application/json' } 
           }
         );
       }
@@ -329,7 +343,7 @@ serve(async (req) => {
         }),
         { 
           status: 500, 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+          headers: { ...dynamicCorsHeaders, 'Content-Type': 'application/json' } 
         }
       );
     }
@@ -380,7 +394,7 @@ serve(async (req) => {
       JSON.stringify(response),
       { 
         status: 200, 
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        headers: { ...dynamicCorsHeaders, 'Content-Type': 'application/json' } 
       }
     );
 
@@ -393,7 +407,7 @@ serve(async (req) => {
       }),
       { 
         status: 500, 
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        headers: { ...dynamicCorsHeaders, 'Content-Type': 'application/json' } 
       }
     );
   }

@@ -121,7 +121,7 @@ export class SecureConfigManager {
 
   // アプリケーション設定の取得
   static async getAppConfig() {
-    const title = await this.getSecureConfig('app_title') || process.env.VITE_APP_TITLE || 'MoneyTicket';
+    const title = await this.getSecureConfig('app_title') || process.env.VITE_APP_TITLE || 'AI ConectX';
     const version = await this.getSecureConfig('app_version') || process.env.VITE_APP_VERSION || '1.0.0';
     const description = await this.getSecureConfig('app_description') || process.env.VITE_APP_DESCRIPTION || '資産運用診断アプリケーション';
     
@@ -151,7 +151,7 @@ export class SecureConfigManager {
   // 設定の初期化（必要な設定がSupabaseに存在しない場合の初期化）
   static async initializeDefaultConfigs(): Promise<void> {
     const defaultConfigs = [
-      { key: 'app_title', value: 'MoneyTicket', encrypt: false },
+      { key: 'app_title', value: 'AI ConectX', encrypt: false },
       { key: 'app_version', value: '1.0.0', encrypt: false },
       { key: 'app_description', value: '資産運用診断アプリケーション', encrypt: false },
       { key: 'rate_limit_window_ms', value: '900000', encrypt: false },
