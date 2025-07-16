@@ -16,7 +16,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       phoneNumber: process.env.TWILIO_PHONE_NUMBER
     };
 
-    const debugInfo = {
+    const debugInfo: any = {
       nodeEnv: process.env.NODE_ENV,
       vercelEnv: process.env.VERCEL_ENV,
       hasAccountSid: !!config.accountSid,

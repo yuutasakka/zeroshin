@@ -100,14 +100,14 @@ export class SMSAuthService {
       console.log('✅ SMS送信完了', { to: normalizedPhone });
 
       return { success: true };
-    } catch (error) {
+    } catch (error: any) {
       console.error('💥 SMS送信エラー詳細:', {
-        error: error.message,
-        stack: error.stack,
+        error: error?.message || 'Unknown error',
+        stack: error?.stack || 'No stack trace',
         phoneNumber: normalizedPhone,
         hasConfig: !!(process.env.TWILIO_ACCOUNT_SID && process.env.TWILIO_AUTH_TOKEN && process.env.TWILIO_PHONE_NUMBER)
       });
-      return { success: false, error: `SMS送信に失敗しました: ${error.message}` };
+      return { success: false, error: `SMS送信に失敗しました: ${error?.message || 'Unknown error'}` };
     }
   }
 
