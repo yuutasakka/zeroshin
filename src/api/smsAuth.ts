@@ -74,8 +74,14 @@ export class SMSAuthService {
       // OTPをデータベースに保存（5分間有効）
       const expiresAt = new Date(Date.now() + 5 * 60 * 1000);
       
-      // Supabaseに保存
-      await this.saveOTPToDatabase(normalizedPhone, otp, expiresAt, ipAddress);
+      // Supabaseに保存（一時的にエラーハンドリング強化）
+      try {
+        await this.saveOTPToDatabase(normalizedPhone, otp, expiresAt, ipAddress);
+        console.log('✅ OTPデータベース保存成功');
+      } catch (dbError: any) {
+        console.error('⚠️ OTPデータベース保存失敗（継続）:', dbError?.message);
+        // データベース保存失敗でもSMS送信は継続
+      }
       
       // SMS送信
       console.log('📱 SMS送信開始', {
