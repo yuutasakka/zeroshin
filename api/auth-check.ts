@@ -2,7 +2,15 @@ import type { VercelRequest, VercelResponse } from '@vercel/node';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   // CORS設定
-  res.setHeader('Access-Control-Allow-Origin', '*');
+  // セキュリティ強化: 特定のオリジンのみ許可
+  const allowedOrigins = process.env.NODE_ENV === 'production' 
+    ? ['https://your-domain.com', 'https://www.your-domain.com']
+    : ['http://localhost:5174', 'http://localhost:3000'];
+  
+  const origin = req.headers.origin;
+  if (origin && allowedOrigins.includes(origin)) {
+    res.setHeader('Access-Control-Allow-Origin', origin);
+  }
   res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
 

@@ -71,13 +71,14 @@ export class SecureStorage {
   }
 
   private static simpleEncrypt(text: string, key: string): string {
-    // クライアントサイドでは基本的な難読化のみ（機密データには使用しない）
+    // WARNING: This is basic obfuscation only - NOT suitable for sensitive data
     if (typeof window !== 'undefined') {
+      console.warn('⚠️ Using basic obfuscation - implement proper encryption for sensitive data');
       return btoa(encodeURIComponent(text));
     }
     
     // サーバーサイドでは実際の暗号化が必要
-    throw new Error('Use proper encryption for server-side operations');
+    throw new Error('Use proper encryption library (crypto-js AES) for server-side operations');
   }
 
   private static simpleDecrypt(encryptedText: string, key: string): string {

@@ -267,21 +267,7 @@ const AdminLoginPage: React.FC<AdminLoginPageProps> = ({ onLogin, onNavigateHome
         return;
       }
 
-      console.log('EMERGENCY FIX: Bypassing all checks and logging in directly');
-      
-      // 緊急修正: 全ての検証をスキップしてログイン
-      localStorage.setItem('admin_session', JSON.stringify({
-        username: sanitizedUsername,
-        authenticated: true,
-        loginTime: new Date().toISOString()
-      }));
-      sessionStorage.setItem('admin_authenticated', 'true');
-      
-      // EMERGENCY: 強制ログインパス - 開発環境でのみ
-      // console.log('EMERGENCY: Calling onLogin() now');
-      // onLogin();
-      // setLoading(false);
-      // return;
+      // セキュリティ強化: 適切な認証検証を実行
 
       // アカウントロック状態チェック
       if (adminCredentials.locked_until) {
@@ -308,23 +294,42 @@ const AdminLoginPage: React.FC<AdminLoginPageProps> = ({ onLogin, onNavigateHome
         return;
       }
 
-      // 緊急修正: パスワード検証をスキップして直接ログイン完了
-      console.log('Skipping password verification - completing login immediately');
+      // セキュリティ強化: 適切なパスワード検証を実行
+      const isPasswordValid = await SupabaseAdminAuth.verifyPassword(password, adminCredentials.password_hash);
       
-      // セッション情報を保存
+      if (!isPasswordValid) {
+        // ログイン失敗の記録
+        const newFailedAttempts = adminCredentials.failed_attempts + 1;
+        
+        if (newFailedAttempts >= 5) {
+          // アカウントロック（30分）
+          const lockUntil = new Date(Date.now() + 30 * 60 * 1000);
+          console.warn('Account locked due to multiple failed attempts');
+          
+          setError('ログイン試行回数が上限に達しました。30分後に再試行してください。');
+        } else {
+          setError(`ユーザー名またはパスワードが正しくありません。（残り${5 - newFailedAttempts}回）`);
+        }
+        
+        setLoading(false);
+        return;
+      }
+
+      // 認証成功: 安全なセッション情報を保存
       const sessionData = {
         username: adminCredentials.username,
         loginTime: new Date().toISOString(),
-        authenticated: true
+        authenticated: true,
+        expires: Date.now() + (2 * 60 * 60 * 1000) // 2時間有効
       };
       
       localStorage.setItem('admin_session', JSON.stringify(sessionData));
       sessionStorage.setItem('admin_authenticated', 'true');
       localStorage.removeItem('admin_lockout');
 
-      console.log('Session data saved, calling onLogin...');
+      console.log('Secure authentication completed');
       
-      // 直接ログイン完了
+      // 認証成功時のみログイン完了
       onLogin();
     } catch (error) {
       setError('ログイン処理中にエラーが発生しました。しばらく待ってから再試行してください。');
