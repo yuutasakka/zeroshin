@@ -487,7 +487,7 @@ const App: React.FC = () => {
   const renderCurrentPage = () => {
     if (currentPage === 'home') {
       return (
-        <div style={{ minHeight: '100vh', background: '#eaf6fb', padding: 0, margin: 0, width: '100vw', boxSizing: 'border-box', overflowX: 'hidden' }}>
+        <div style={{ minHeight: '100vh', background: '#eaf6fb', padding: 0, margin: 0, width: '100%', maxWidth: '100vw', boxSizing: 'border-box', overflowX: 'hidden' }}>
           <Header />
           
           {/* 1番目: メインヒーロー（あなたの未来の資産を診断！） */}
@@ -599,33 +599,68 @@ const App: React.FC = () => {
               box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
             }
             
-            @media (max-width: 768px) {
+            /* タブレット対応 */
+            @media (max-width: 1024px) and (min-width: 769px) {
               .hero-section {
-                padding: 10px 0;
+                padding: 30px 0;
               }
               
               .diagnosis-section {
-                padding: 20px 10px;
+                padding: 30px 20px;
+              }
+              
+              .home-right-col {
+                max-width: 600px;
+                padding: 24px;
+              }
+            }
+            
+            /* スマートフォン（一般） */
+            @media (max-width: 768px) {
+              .hero-section {
+                padding: 15px 0;
+              }
+              
+              .diagnosis-section {
+                padding: 20px 1rem;
               }
               
               .additional-sections {
-                padding: 20px 10px;
+                padding: 20px 1rem;
               }
               
               .home-right-col {
-                max-width: 100% !important;
+                max-width: calc(100vw - 2rem) !important;
                 margin: 0 auto;
-                padding: 15px;
+                padding: 18px;
+                border-radius: 16px;
               }
             }
+            
+            /* スマートフォン（小画面） */
             @media (max-width: 480px) {
               .diagnosis-section {
-                padding: 15px 5px;
+                padding: 15px 0.75rem;
               }
               
               .home-right-col {
+                max-width: calc(100vw - 1.5rem) !important;
+                padding: 12px;
+                border-radius: 12px;
+                margin: 0 0.75rem;
+              }
+            }
+            
+            /* 極小画面対応 */
+            @media (max-width: 375px) {
+              .diagnosis-section {
+                padding: 10px 0.5rem;
+              }
+              
+              .home-right-col {
+                max-width: calc(100vw - 1rem) !important;
                 padding: 10px;
-                border-radius: 15px;
+                margin: 0 0.5rem;
               }
             }
           `}</style>
