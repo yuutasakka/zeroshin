@@ -10,7 +10,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     'https://moneyticket-git-main-sakkayuta.vercel.app',
     'https://moneyticket01-10gswrw2q-seai0520s-projects.vercel.app', // 以前のデプロイ先
     'https://moneyticket01-rogabfsul-seai0520s-projects.vercel.app', // 以前のデプロイ先
-    'https://moneyticket01-18dyp3oo0-seai0520s-projects.vercel.app', // 現在のデプロイ先
+    'https://moneyticket01-18dyp3oo0-seai0520s-projects.vercel.app', // 以前のデプロイ先
+    'https://moneyticket01-jba8tb9fl-seai0520s-projects.vercel.app', // 現在のデプロイ先
   ];
   const origin = req.headers.origin;
   if (origin && allowedOrigins.includes(origin)) {

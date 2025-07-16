@@ -168,15 +168,20 @@ const PhoneVerificationPage: React.FC<PhoneVerificationPageProps> = ({
         return;
       }
       
-      const { error } = await supabase.auth.signInWithOtp({
-        phone: normalizedPhone,
-        options: {
-          channel: 'sms'
-        }
+      const response = await fetch('/api/send-otp', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          phoneNumber: normalizedPhone
+        })
       });
 
-      if (error) {
-        throw error;
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        console.error('SMS送信API失敗:', { status: response.status, statusText: response.statusText, error: errorData });
+        throw new Error(errorData.error || `SMS送信に失敗しました (${response.status})`);
       }
 
       setStep('otp-verification');
@@ -257,14 +262,15 @@ const PhoneVerificationPage: React.FC<PhoneVerificationPageProps> = ({
           },
           body: JSON.stringify({
             phoneNumber: normalizedPhone,
-            otpCode: otpCode
+            otp: otpCode
           })
         });
 
         if (!response.ok) {
           const errorData = await response.json().catch(() => ({}));
+          console.error('OTP認証API失敗:', { status: response.status, statusText: response.statusText, error: errorData });
           handleFailedAttempt();
-          throw new Error(errorData.error || '認証に失敗しました');
+          throw new Error(errorData.error || `認証に失敗しました (${response.status})`);
         }
 
         const result = await response.json();
@@ -398,15 +404,20 @@ const PhoneVerificationPage: React.FC<PhoneVerificationPageProps> = ({
     try {
       const normalizedPhone = normalizePhoneNumber(phoneNumber);
       
-      const { error } = await supabase.auth.signInWithOtp({
-        phone: normalizedPhone,
-        options: {
-          channel: 'sms'
-        }
+      const response = await fetch('/api/send-otp', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          phoneNumber: normalizedPhone
+        })
       });
 
-      if (error) {
-        throw error;
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        console.error('SMS送信API失敗:', { status: response.status, statusText: response.statusText, error: errorData });
+        throw new Error(errorData.error || `SMS送信に失敗しました (${response.status})`);
       }
 
       setCountdown(60);
