@@ -1,5 +1,6 @@
 // SMS認証API - サーバーサイドのみ
 // import { SecureConfigManager } from './secureConfig'; // 直接環境変数アクセスに変更
+import { supabaseAdmin } from '../lib/supabaseAuth';
 
 export class SMSAuthService {
   private static async getTwilioClient() {
@@ -15,7 +16,8 @@ export class SMSAuthService {
 
     // 本番環境ではTwilio SDKを使用
     try {
-      const twilio = (await import('twilio')).default;
+      // 静的インポートに変更（サーバーレス環境対応）
+      const twilio = require('twilio');
       return twilio(config.accountSid, config.authToken);
     } catch (error) {
       // Twilio SDKが利用できない場合はHTTP API直接使用
@@ -311,7 +313,7 @@ export class SMSAuthService {
 
   // OTPをデータベースに保存
   private static async saveOTPToDatabase(phoneNumber: string, otp: string, expiresAt: Date, ipAddress?: string): Promise<void> {
-    const { supabaseAdmin } = await import('../lib/supabaseAuth');
+    // supabaseAdmin は既にインポート済み
     
     // 既存のOTPを削除
     await supabaseAdmin
@@ -337,7 +339,7 @@ export class SMSAuthService {
 
   // OTPをデータベースから取得
   private static async getOTPFromDatabase(phoneNumber: string): Promise<{ otp: string; expiresAt: Date; attempts: number } | null> {
-    const { supabaseAdmin } = await import('../lib/supabaseAuth');
+    // supabaseAdmin は既にインポート済み
     
     const { data, error } = await supabaseAdmin
       .from('sms_verifications')
@@ -361,7 +363,7 @@ export class SMSAuthService {
 
   // OTP試行回数を増加
   private static async incrementOTPAttempts(phoneNumber: string): Promise<void> {
-    const { supabaseAdmin } = await import('../lib/supabaseAuth');
+    // supabaseAdmin は既にインポート済み
     
     await supabaseAdmin
       .from('sms_verifications')
@@ -374,7 +376,7 @@ export class SMSAuthService {
 
   // OTPを認証済みとしてマーク
   private static async markOTPAsVerified(phoneNumber: string): Promise<void> {
-    const { supabaseAdmin } = await import('../lib/supabaseAuth');
+    // supabaseAdmin は既にインポート済み
     
     await supabaseAdmin
       .from('sms_verifications')
@@ -388,7 +390,7 @@ export class SMSAuthService {
 
   // レート制限チェック（複数の制限軸）
   private static async checkRateLimit(phoneNumber: string, ipAddress?: string): Promise<boolean> {
-    const { supabaseAdmin } = await import('../lib/supabaseAuth');
+    // supabaseAdmin は既にインポート済み
     
     try {
       // 1. 電話番号単位のレート制限（1時間に3回）
