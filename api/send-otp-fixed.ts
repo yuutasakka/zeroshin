@@ -94,22 +94,55 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return;
     }
 
-    // OTPをメモリに保存（簡素化）
-    global.otpStore = global.otpStore || new Map();
-    global.otpStore.set(normalizedPhone, {
-      otp: otp,
-      expiresAt: Date.now() + 5 * 60 * 1000, // 5分間
-      attempts: 0
-    });
+    // OTPをSupabaseに永続化保存（本番環境対応）
+    try {
+      // Supabase Admin接続（環境変数から直接）
+      const { createClient } = require('@supabase/supabase-js');
+      const supabaseAdmin = createClient(
+        process.env.VITE_SUPABASE_URL!,
+        process.env.SUPABASE_SERVICE_ROLE_KEY!
+      );
 
-    // 古いOTPを削除（メモリクリーンアップ）
-    for (const [phone, data] of global.otpStore.entries()) {
-      if (data.expiresAt < Date.now()) {
-        global.otpStore.delete(phone);
+      // 既存のOTPを削除
+      await supabaseAdmin
+        .from('sms_verifications')
+        .delete()
+        .eq('phone_number', normalizedPhone);
+
+      // 新しいOTPを保存
+      const expiresAt = new Date(Date.now() + 5 * 60 * 1000);
+      const { error } = await supabaseAdmin
+        .from('sms_verifications')
+        .insert({
+          phone_number: normalizedPhone,
+          otp_code: otp,
+          expires_at: expiresAt.toISOString(),
+          attempts: 0,
+          request_ip: req.headers['x-forwarded-for']?.toString().split(',')[0] || 'unknown'
+        });
+
+      if (error) {
+        console.error('❌ Supabase OTP保存エラー:', error);
+        // フォールバック: メモリに保存
+        global.otpStore = global.otpStore || new Map();
+        global.otpStore.set(normalizedPhone, {
+          otp: otp,
+          expiresAt: Date.now() + 5 * 60 * 1000,
+          attempts: 0
+        });
+        console.log('💾 フォールバック: メモリに保存');
+      } else {
+        console.log('✅ Supabase OTP保存成功');
       }
+    } catch (dbError) {
+      console.error('⚠️ DB接続失敗、メモリにフォールバック:', dbError);
+      global.otpStore = global.otpStore || new Map();
+      global.otpStore.set(normalizedPhone, {
+        otp: otp,
+        expiresAt: Date.now() + 5 * 60 * 1000,
+        attempts: 0
+      });
     }
-
-    console.log('💾 OTPメモリ保存完了');
 
     // Twilio SMS送信
     try {

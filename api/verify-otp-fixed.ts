@@ -69,9 +69,44 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     console.log('📲 正規化後:', normalizedPhone);
 
-    // メモリからOTP取得
-    global.otpStore = global.otpStore || new Map();
-    const storedData = global.otpStore.get(normalizedPhone);
+    // SupabaseからOTP取得（メモリフォールバック付き）
+    let storedData = null;
+    
+    try {
+      // Supabase Admin接続
+      const { createClient } = require('@supabase/supabase-js');
+      const supabaseAdmin = createClient(
+        process.env.VITE_SUPABASE_URL!,
+        process.env.SUPABASE_SERVICE_ROLE_KEY!
+      );
+
+      const { data, error } = await supabaseAdmin
+        .from('sms_verifications')
+        .select('otp_code, expires_at, attempts')
+        .eq('phone_number', normalizedPhone)
+        .eq('is_verified', false)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .single();
+
+      if (!error && data) {
+        storedData = {
+          otp: data.otp_code,
+          expiresAt: new Date(data.expires_at).getTime(),
+          attempts: data.attempts || 0
+        };
+        console.log('✅ Supabase OTP取得成功');
+      } else {
+        console.log('⚠️ Supabase OTP取得失敗、メモリ確認');
+        // フォールバック: メモリから取得
+        global.otpStore = global.otpStore || new Map();
+        storedData = global.otpStore.get(normalizedPhone);
+      }
+    } catch (dbError) {
+      console.error('⚠️ DB接続失敗、メモリから取得:', dbError);
+      global.otpStore = global.otpStore || new Map();
+      storedData = global.otpStore.get(normalizedPhone);
+    }
     
     if (!storedData) {
       console.log('❌ OTP not found');
@@ -82,7 +117,17 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     // 期限チェック
     if (Date.now() > storedData.expiresAt) {
       console.log('❌ OTP expired');
-      global.otpStore.delete(normalizedPhone);
+      // DBとメモリ両方から削除
+      try {
+        const { createClient } = require('@supabase/supabase-js');
+        const supabaseAdmin = createClient(
+          process.env.VITE_SUPABASE_URL!,
+          process.env.SUPABASE_SERVICE_ROLE_KEY!
+        );
+        await supabaseAdmin.from('sms_verifications').delete().eq('phone_number', normalizedPhone);
+      } catch {}
+      global.otpStore?.delete(normalizedPhone);
+      
       res.status(400).json({ error: '認証コードの有効期限が切れています。新しいコードを取得してください。' });
       return;
     }
@@ -90,15 +135,37 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     // 試行回数チェック
     if (storedData.attempts >= 5) {
       console.log('❌ Too many attempts');
-      global.otpStore.delete(normalizedPhone);
+      // DBとメモリ両方から削除
+      try {
+        const { createClient } = require('@supabase/supabase-js');
+        const supabaseAdmin = createClient(
+          process.env.VITE_SUPABASE_URL!,
+          process.env.SUPABASE_SERVICE_ROLE_KEY!
+        );
+        await supabaseAdmin.from('sms_verifications').delete().eq('phone_number', normalizedPhone);
+      } catch {}
+      global.otpStore?.delete(normalizedPhone);
+      
       res.status(400).json({ error: '認証コードの入力回数が上限に達しました。新しいコードを取得してください。' });
       return;
     }
 
     // OTP検証
     if (storedData.otp !== otp) {
-      storedData.attempts++;
-      const remainingAttempts = 5 - storedData.attempts;
+      // 試行回数を増加
+      try {
+        const { createClient } = require('@supabase/supabase-js');
+        const supabaseAdmin = createClient(
+          process.env.VITE_SUPABASE_URL!,
+          process.env.SUPABASE_SERVICE_ROLE_KEY!
+        );
+        await supabaseAdmin
+          .from('sms_verifications')
+          .update({ attempts: storedData.attempts + 1 })
+          .eq('phone_number', normalizedPhone);
+      } catch {}
+      
+      const remainingAttempts = 5 - (storedData.attempts + 1);
       console.log(`❌ OTP不一致: 残り${remainingAttempts}回`);
       
       res.status(400).json({ 
@@ -109,8 +176,19 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     console.log('✅ OTP認証成功');
 
-    // 認証成功時の処理
-    global.otpStore.delete(normalizedPhone); // 使用済みOTPを削除
+    // 認証成功時の処理 - DBとメモリ両方から削除
+    try {
+      const { createClient } = require('@supabase/supabase-js');
+      const supabaseAdmin = createClient(
+        process.env.VITE_SUPABASE_URL!,
+        process.env.SUPABASE_SERVICE_ROLE_KEY!
+      );
+      await supabaseAdmin
+        .from('sms_verifications')
+        .update({ is_verified: true, verified_at: new Date().toISOString() })
+        .eq('phone_number', normalizedPhone);
+    } catch {}
+    global.otpStore?.delete(normalizedPhone);
 
     // セッション設定
     res.setHeader('Set-Cookie', [
