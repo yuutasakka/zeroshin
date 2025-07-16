@@ -109,16 +109,15 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         .delete()
         .eq('phone_number', normalizedPhone);
 
-      // 新しいOTPを保存
-      const expiresAt = new Date(Date.now() + 5 * 60 * 1000);
+      // 新しいOTPを保存（created_atベースの期限管理）
       const { error } = await supabaseAdmin
         .from('sms_verifications')
         .insert({
           phone_number: normalizedPhone,
           otp_code: otp,
-          expires_at: expiresAt.toISOString(),
           attempts: 0,
           request_ip: req.headers['x-forwarded-for']?.toString().split(',')[0] || 'unknown'
+          // expires_atは不要 - created_atから5分で自動判定
         });
 
       if (error) {
@@ -197,10 +196,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       });
     }
 
-    // セキュリティヘッダー設定
+    // セキュリティヘッダー設定（完全版）
     res.setHeader('X-Content-Type-Options', 'nosniff');
     res.setHeader('X-Frame-Options', 'DENY');
     res.setHeader('X-XSS-Protection', '1; mode=block');
+    res.setHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
+    res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
 
   } catch (error) {
     console.error('💥 SMS送信エラー:', error);

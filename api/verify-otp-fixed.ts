@@ -82,7 +82,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
       const { data, error } = await supabaseAdmin
         .from('sms_verifications')
-        .select('otp_code, expires_at, attempts')
+        .select('otp_code, created_at, attempts')
         .eq('phone_number', normalizedPhone)
         .eq('is_verified', false)
         .order('created_at', { ascending: false })
@@ -90,12 +90,16 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         .single();
 
       if (!error && data) {
+        // UTC基準の期限チェック（created_atから5分）
+        const createdAt = new Date(data.created_at).getTime();
+        const expiresAt = createdAt + (5 * 60 * 1000); // 5分後
+        
         storedData = {
           otp: data.otp_code,
-          expiresAt: new Date(data.expires_at).getTime(),
+          expiresAt: expiresAt,
           attempts: data.attempts || 0
         };
-        console.log('✅ Supabase OTP取得成功');
+        console.log('✅ Supabase OTP取得成功 (UTC基準期限:', new Date(expiresAt).toISOString(), ')');
       } else {
         console.log('⚠️ Supabase OTP取得失敗、メモリ確認');
         // フォールバック: メモリから取得
@@ -201,10 +205,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       message: '認証が完了しました'
     });
 
-    // セキュリティヘッダー設定
+    // セキュリティヘッダー設定（完全版）
     res.setHeader('X-Content-Type-Options', 'nosniff');
     res.setHeader('X-Frame-Options', 'DENY');
     res.setHeader('X-XSS-Protection', '1; mode=block');
+    res.setHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
+    res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
 
   } catch (error) {
     console.error('💥 OTP認証エラー:', error);
