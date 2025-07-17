@@ -136,14 +136,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         };
         logger.info('Supabase OTP取得成功');
       } else {
-        logger.warn('Supabase OTP取得失敗、メモリ確認', { error });
+        logger.warn('Supabase OTP取得失敗、メモリ確認');
         // フォールバック: メモリから取得
         global.otpStore = global.otpStore || new Map();
         storedData = global.otpStore.get(normalizedPhone);
         logger.info('メモリ検索完了', { found: !!storedData });
       }
     } catch (dbError) {
-      logger.error('DB接続失敗、メモリから取得', { error: dbError });
+      logger.error('DB接続失敗、メモリから取得', dbError as Error);
       global.otpStore = global.otpStore || new Map();
       storedData = global.otpStore.get(normalizedPhone);
       logger.info('メモリ検索結果', { found: !!storedData });
@@ -270,7 +270,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
 
   } catch (error) {
-    logger.error('OTP認証エラー', { error: error?.message || 'Unknown error' });
+    logger.error('OTP認証エラー', error as Error);
     res.status(500).json({ error: '認証に失敗しました' });
   }
 }

@@ -196,7 +196,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         .eq('phone_number', normalizedPhone);
       
       if (deleteError) {
-        logger.error('既存OTP削除エラー', { error: deleteError });
+        logger.error('既存OTP削除エラー', deleteError as Error);
       }
 
       // 新しいOTPを保存
@@ -210,7 +210,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         });
 
       if (error) {
-        logger.error('Supabase OTP保存エラー', { error });
+        logger.error('Supabase OTP保存エラー', error as Error);
         // フォールバック: メモリに保存
         global.otpStore = global.otpStore || new Map();
         global.otpStore.set(normalizedPhone, {
@@ -223,7 +223,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         logger.info('Supabase OTP保存成功');
       }
     } catch (dbError) {
-      logger.error('DB接続失敗、メモリにフォールバック', { error: dbError });
+      logger.error('DB接続失敗、メモリにフォールバック', dbError as Error);
       global.otpStore = global.otpStore || new Map();
       global.otpStore.set(normalizedPhone, {
         otp: otp,
@@ -283,7 +283,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         messageResponse = { success: true, message: 'SMS送信が完了しました' };
         
       } catch (apiError: any) {
-        logger.error('全SMS送信方法失敗', { error: apiError?.message });
+        logger.error('全SMS送信方法失敗', apiError as Error);
         throw apiError;
       }
     }
@@ -303,10 +303,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     // セキュリティヘッダー設定は応答済みなので削除
 
   } catch (error: any) {
-    logger.error('SMS送信エラー', { 
-      error: error?.message || 'Unknown error',
-      type: error?.constructor?.name 
-    });
+    logger.error('SMS送信エラー', error as Error);
     
     // クライアントには一般的なエラーメッセージを返す
     res.status(500).json({ error: 'SMS送信に失敗しました。しばらく時間をおいてお試しください。' });
