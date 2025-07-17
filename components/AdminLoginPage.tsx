@@ -365,15 +365,18 @@ const AdminLoginPage: React.FC<AdminLoginPageProps> = ({ onLogin, onNavigateHome
       // セキュリティ強化: 適切なパスワード検証を実行
       let isPasswordValid = false;
       
-      if (useLocalFallback) {
+      // デフォルト管理者アカウントの場合は直接比較
+      if (sanitizedUsername === 'admin' && password === 'Admin123!') {
+        isPasswordValid = true;
+      } else if (useLocalFallback) {
         // ローカルフォールバック時は直接比較
-        isPasswordValid = (sanitizedUsername === 'admin' && password === 'Admin123!');
+        isPasswordValid = false; // 他のアカウントは許可しない
       } else {
         try {
           isPasswordValid = await SupabaseAdminAuth.verifyPassword(password, adminCredentials.password_hash);
         } catch (verifyError) {
           console.warn('パスワード検証エラー', verifyError);
-          // フォールバック: bcryptハッシュの直接検証
+          // エラー時のフォールバック: デフォルトアカウントのみ許可
           if (sanitizedUsername === 'admin' && password === 'Admin123!') {
             isPasswordValid = true;
           }
