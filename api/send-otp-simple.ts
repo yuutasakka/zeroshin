@@ -87,6 +87,41 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         attempts: 0
       });
       
+      // Supabaseにも保存を試行
+      try {
+        console.log('[Simple SMS] Supabaseへの保存試行...');
+        const { createClient } = await import('@supabase/supabase-js');
+        const supabaseAdmin = createClient(
+          process.env.VITE_SUPABASE_URL!,
+          process.env.SUPABASE_SERVICE_ROLE_KEY!
+        );
+        
+        // 既存のOTPを削除
+        await supabaseAdmin
+          .from('sms_verifications')
+          .delete()
+          .eq('phone_number', normalizedPhone);
+        
+        // 新しいOTPを保存
+        const { error } = await supabaseAdmin
+          .from('sms_verifications')
+          .insert({
+            phone_number: normalizedPhone,
+            otp_code: otp,
+            attempts: 0,
+            request_ip: req.headers['x-forwarded-for']?.toString().split(',')[0] || 'unknown'
+          });
+          
+        if (error) {
+          console.error('[Simple SMS] Supabase保存エラー:', error);
+        } else {
+          console.log('[Simple SMS] Supabase保存成功');
+        }
+      } catch (dbError) {
+        console.error('[Simple SMS] Supabase接続エラー:', dbError);
+        // エラーが発生してもメモリ保存があるので続行
+      }
+      
       return res.status(200).json({ 
         success: true, 
         message: 'SMS送信が完了しました',

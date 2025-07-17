@@ -485,14 +485,14 @@ export class DiagnosisSessionManager {
   // 電話番号の重複チェック
   async checkPhoneNumberUsage(phoneNumber: string): Promise<boolean> {
     try {
-      const normalizedPhone = phoneNumber.replace(/\D/g, '');
+      // phoneNumberはすでに+81形式で渡される
       
       // Supabaseを試行
       if (await this.isSupabaseAvailable()) {
         const { data, error } = await this.supabase
           .from('diagnosis_sessions')
           .select('id')
-          .eq('phone_number', normalizedPhone)
+          .eq('phone_number', phoneNumber) // +81形式で検索
           .eq('sms_verified', true)
           .limit(1);
 
@@ -504,7 +504,7 @@ export class DiagnosisSessionManager {
       // フォールバック: ローカルストレージをチェック
       const localSessions = this.getLocalSessions();
       return localSessions.some(session => 
-        session.phone_number === normalizedPhone && session.sms_verified === true
+        session.phone_number === phoneNumber && session.sms_verified === true // +81形式で比較
       );
     } catch (error) {
       console.error('電話番号重複チェック例外:', error);
@@ -512,7 +512,7 @@ export class DiagnosisSessionManager {
       // ローカルストレージのフォールバック
       const localSessions = this.getLocalSessions();
       return localSessions.some(session => 
-        session.phone_number === phoneNumber.replace(/\D/g, '') && session.sms_verified === true
+        session.phone_number === phoneNumber && session.sms_verified === true // +81形式で比較
       );
     }
   }
@@ -520,11 +520,11 @@ export class DiagnosisSessionManager {
   // 新しい診断セッションを作成
   async createDiagnosisSession(phoneNumber: string, diagnosisAnswers: any): Promise<string | null> {
     try {
-      const normalizedPhone = phoneNumber.replace(/\D/g, '');
+      // phoneNumberはすでに+81形式で渡されるので、そのまま使用
       const sessionId = `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
       
       const sessionData = {
-        phone_number: normalizedPhone,
+        phone_number: phoneNumber, // +81形式のまま保存
         diagnosis_answers: diagnosisAnswers,
         session_id: sessionId,
         sms_verified: false,
@@ -556,7 +556,7 @@ export class DiagnosisSessionManager {
       // エラー時もローカルストレージにフォールバック
       const sessionId = `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
       const sessionData = {
-        phone_number: phoneNumber.replace(/\D/g, ''),
+        phone_number: phoneNumber, // +81形式のまま保存
         diagnosis_answers: diagnosisAnswers,
         session_id: sessionId,
         sms_verified: false,
@@ -571,7 +571,7 @@ export class DiagnosisSessionManager {
   // SMS認証完了時にセッションを更新
   async updateSessionVerification(sessionId: string, phoneNumber: string): Promise<boolean> {
     try {
-      const normalizedPhone = phoneNumber.replace(/\D/g, '');
+      // phoneNumberはすでに+81形式
       const updateData = {
         sms_verified: true,
         verification_timestamp: new Date().toISOString()
@@ -663,14 +663,14 @@ export class DiagnosisSessionManager {
   // 特定の電話番号の最新の認証済みセッションを取得
   async getLatestVerifiedSession(phoneNumber: string): Promise<any | null> {
     try {
-      const normalizedPhone = phoneNumber.replace(/\D/g, '');
+      // phoneNumberはすでに+81形式
 
       // Supabaseを試行
       if (await this.isSupabaseAvailable()) {
         const { data, error } = await this.supabase
           .from('diagnosis_sessions')
           .select('*')
-          .eq('phone_number', normalizedPhone)
+          .eq('phone_number', phoneNumber) // +81形式で検索
           .eq('sms_verified', true)
           .order('verification_timestamp', { ascending: false })
           .limit(1)
@@ -685,7 +685,7 @@ export class DiagnosisSessionManager {
       console.warn('Supabase利用不可、ローカルストレージから取得');
       const localSessions = this.getLocalSessions();
       const userSessions = localSessions
-        .filter(session => session.phone_number === normalizedPhone && session.sms_verified === true)
+        .filter(session => session.phone_number === phoneNumber && session.sms_verified === true) // +81形式で比較
         .sort((a, b) => new Date(b.verification_timestamp || b.created_at).getTime() - 
                        new Date(a.verification_timestamp || a.created_at).getTime());
       
@@ -696,7 +696,7 @@ export class DiagnosisSessionManager {
       // エラー時もローカルストレージから試行
       const localSessions = this.getLocalSessions();
       const userSessions = localSessions
-        .filter(session => session.phone_number === phoneNumber.replace(/\D/g, '') && session.sms_verified === true);
+        .filter(session => session.phone_number === phoneNumber && session.sms_verified === true); // +81形式で比較
       
       return userSessions.length > 0 ? userSessions[0] : null;
     }
