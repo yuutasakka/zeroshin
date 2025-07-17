@@ -832,17 +832,17 @@ const DiagnosisResultsPage: React.FC<DiagnosisResultsPageProps> = ({ diagnosisDa
       {/* 専門家相談ポップアップ */}
       {state.showExpertModal && state.selectedExpert && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl p-6 max-w-md w-full mx-4 shadow-2xl">
+          <div className="bg-white rounded-2xl p-4 sm:p-6 md:p-8 max-w-md w-full mx-auto shadow-2xl">
             <div className="text-center mb-6">
               <img 
                 src={sanitizeUrl(state.selectedExpert.image_url)} 
                 alt={sanitizeText(state.selectedExpert.name)}
                 className="w-20 h-20 rounded-full object-cover mx-auto mb-4"
               />
-              <h3 className="text-xl font-bold text-gray-800 mb-2">
+              <h3 className="text-lg sm:text-xl md:text-2xl font-bold text-gray-800 mb-2">
                 {sanitizeText(state.selectedExpert.name)}
               </h3>
-              <p className="text-gray-600">{sanitizeText(state.selectedExpert.title)}</p>
+              <p className="text-sm sm:text-base text-gray-600">{sanitizeText(state.selectedExpert.title)}</p>
               <div className="flex items-center justify-center mt-2">
                 <div className="text-yellow-400 text-sm mr-2">
                   {'★'.repeat(Math.floor(state.selectedExpert.rating))}
@@ -862,12 +862,12 @@ const DiagnosisResultsPage: React.FC<DiagnosisResultsPageProps> = ({ diagnosisDa
                   onClick={() => {
                     window.location.href = `tel:${state.selectedExpert?.contact_info.phone_number}`;
                   }}
-                  className="w-full bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white font-bold py-4 px-6 rounded-lg transition-all duration-200 transform hover:scale-105 hover:shadow-lg cursor-pointer flex items-center justify-center"
+                  className="w-full bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white font-bold py-3 sm:py-4 px-4 sm:px-6 rounded-lg transition-all duration-200 transform hover:scale-105 hover:shadow-lg cursor-pointer flex items-center justify-center text-sm sm:text-base"
                 >
                   <i className="fas fa-phone mr-3 text-lg"></i>
                   <div className="text-left">
-                    <div className="text-lg">電話で相談</div>
-                    <div className="text-sm opacity-90">{state.selectedExpert.contact_info.phone_number}</div>
+                    <div className="text-base sm:text-lg">電話で相談</div>
+                    <div className="text-xs sm:text-sm opacity-90">{state.selectedExpert.contact_info.phone_number}</div>
                   </div>
                 </button>
               )}
@@ -878,12 +878,12 @@ const DiagnosisResultsPage: React.FC<DiagnosisResultsPageProps> = ({ diagnosisDa
                   onClick={() => {
                     window.open(sanitizeUrl(state.selectedExpert?.contact_info.line_url || ''), '_blank');
                   }}
-                  className="w-full bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white font-bold py-4 px-6 rounded-lg transition-all duration-200 transform hover:scale-105 hover:shadow-lg cursor-pointer flex items-center justify-center"
+                  className="w-full bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white font-bold py-3 sm:py-4 px-4 sm:px-6 rounded-lg transition-all duration-200 transform hover:scale-105 hover:shadow-lg cursor-pointer flex items-center justify-center text-sm sm:text-base"
                 >
                   <i className="fab fa-line mr-3 text-lg"></i>
                   <div className="text-left">
-                    <div className="text-lg">LINEで相談</div>
-                    <div className="text-sm opacity-90">チャットでお気軽に相談</div>
+                    <div className="text-base sm:text-lg">LINEで相談</div>
+                    <div className="text-xs sm:text-sm opacity-90">チャットでお気軽に相談</div>
                   </div>
                 </button>
               )}
@@ -897,12 +897,12 @@ const DiagnosisResultsPage: React.FC<DiagnosisResultsPageProps> = ({ diagnosisDa
                       window.location.href = `mailto:${email}?subject=資産運用相談の件&body=お名前:%0D%0A電話番号:%0D%0A相談内容:%0D%0A`;
                     }
                   }}
-                  className="w-full bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 text-white font-bold py-4 px-6 rounded-lg transition-all duration-200 transform hover:scale-105 hover:shadow-lg cursor-pointer flex items-center justify-center"
+                  className="w-full bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 text-white font-bold py-3 sm:py-4 px-4 sm:px-6 rounded-lg transition-all duration-200 transform hover:scale-105 hover:shadow-lg cursor-pointer flex items-center justify-center text-sm sm:text-base"
                 >
                   <i className="fas fa-envelope mr-3 text-lg"></i>
                   <div className="text-left">
-                    <div className="text-lg">メールで相談</div>
-                    <div className="text-sm opacity-90">詳細なご相談も可能</div>
+                    <div className="text-base sm:text-lg">メールで相談</div>
+                    <div className="text-xs sm:text-sm opacity-90">詳細なご相談も可能</div>
                   </div>
                 </button>
               )}
@@ -925,7 +925,7 @@ const DiagnosisResultsPage: React.FC<DiagnosisResultsPageProps> = ({ diagnosisDa
                 dispatch({ type: 'SET_EXPERT_MODAL', payload: false });
                 dispatch({ type: 'SET_SELECTED_EXPERT', payload: null });
               }}
-              className="w-full mt-6 bg-gray-300 hover:bg-gray-400 text-gray-700 font-medium py-3 px-6 rounded-lg transition-all duration-200 hover:shadow-md cursor-pointer"
+              className="w-full mt-4 sm:mt-6 bg-gray-300 hover:bg-gray-400 text-gray-700 font-medium py-2.5 sm:py-3 px-4 sm:px-6 rounded-lg transition-all duration-200 hover:shadow-md cursor-pointer text-sm sm:text-base"
             >
               閉じる
             </button>
@@ -933,9 +933,9 @@ const DiagnosisResultsPage: React.FC<DiagnosisResultsPageProps> = ({ diagnosisDa
         </div>
       )}
       
-      <div className="min-h-screen pt-12 pb-20" style={{ fontFamily: 'var(--font-primary)' }}>
-      <div className="container mx-auto px-4 max-w-3xl relative z-10">
-        <div className="luxury-card p-6 md:p-10 text-center shadow-2xl">
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 pt-12 pb-20" style={{ fontFamily: 'var(--font-primary)' }}>
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-6xl relative z-10">
+        <div className="luxury-card p-4 sm:p-6 md:p-8 lg:p-10 text-center shadow-2xl">
           <div className="mb-8">
             <div 
               className="inline-block p-5 rounded-full mb-5 shadow-lg"
@@ -943,7 +943,7 @@ const DiagnosisResultsPage: React.FC<DiagnosisResultsPageProps> = ({ diagnosisDa
             >
               <i className="fas fa-chart-line text-white text-3xl"></i>
             </div>
-            <h1 className="text-3xl md:text-4xl font-bold text-gray-800 mb-2">
+            <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-gray-800 mb-2 leading-tight">
               診断結果
             </h1>
             <p className="text-gray-600 text-lg">
@@ -951,12 +951,12 @@ const DiagnosisResultsPage: React.FC<DiagnosisResultsPageProps> = ({ diagnosisDa
             </p>
           </div>
 
-          <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-6 rounded-xl mb-8">
+          <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-4 sm:p-6 md:p-8 rounded-xl mb-6 md:mb-8 shadow-sm">
             <div className="text-center">
               <p className="text-gray-700 text-lg mb-4">
                 <strong>{futureAge}歳時点での予想資産額</strong>
               </p>
-              <div className="text-5xl md:text-6xl font-bold text-blue-600 mb-2">
+              <div className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-blue-600 mb-2">
                 {state.displayAmount.toLocaleString()}
                 <span className="text-2xl text-gray-600">万円</span>
               </div>
@@ -967,8 +967,8 @@ const DiagnosisResultsPage: React.FC<DiagnosisResultsPageProps> = ({ diagnosisDa
           </div>
 
           {/* AI アドバイス セクション */}
-          <div className="bg-white p-6 rounded-xl shadow-md mb-8">
-            <h2 className="text-2xl font-bold text-gray-800 mb-4 flex items-center justify-center">
+          <div className="bg-white p-4 sm:p-6 md:p-8 rounded-xl shadow-md mb-6 md:mb-8">
+            <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-800 mb-4 flex items-center justify-center">
               <i className="fas fa-robot text-blue-600 mr-2"></i>
               AIによる個別アドバイス
             </h2>
@@ -999,15 +999,15 @@ const DiagnosisResultsPage: React.FC<DiagnosisResultsPageProps> = ({ diagnosisDa
 
           {/* おすすめ商品セクション */}
           {state.recommendedProducts.length > 0 && (
-            <div className="bg-white p-6 rounded-xl shadow-md mb-8">
-              <h2 className="text-2xl font-bold text-gray-800 mb-6 flex items-center justify-center">
+            <div className="bg-white p-4 sm:p-6 md:p-8 rounded-xl shadow-md mb-6 md:mb-8">
+              <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-800 mb-4 md:mb-6 flex items-center justify-center">
                 <i className="fas fa-star text-yellow-500 mr-2"></i>
                 あなたにおすすめの金融商品
               </h2>
               
-              <div className="grid gap-4">
+              <div className="grid gap-3 sm:gap-4 md:gap-6 lg:grid-cols-2">
                 {state.recommendedProducts.map((product, index) => (
-                <div key={product.id} className="bg-gray-50 p-4 rounded-lg text-left">
+                <div key={product.id} className="bg-gray-50 p-3 sm:p-4 md:p-5 rounded-lg text-left hover:shadow-md transition-shadow duration-200">
                   <div className="flex items-center mb-2">
                     <span className="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full mr-2">
                       #{index + 1}
@@ -1035,7 +1035,7 @@ const DiagnosisResultsPage: React.FC<DiagnosisResultsPageProps> = ({ diagnosisDa
                   </div>
                   
                   {/* ボタンセクション */}
-                  <div className="flex flex-col sm:flex-row gap-2 mt-4">
+                  <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 mt-3 sm:mt-4">
                     {(product as any).url && (
                       <a 
                         href={sanitizeUrl((product as any).url)}
@@ -1072,8 +1072,8 @@ const DiagnosisResultsPage: React.FC<DiagnosisResultsPageProps> = ({ diagnosisDa
           )}
 
           {/* 専門家相談セクション */}
-          <div className="bg-white p-6 rounded-xl shadow-md mb-8">
-            <h2 className="text-2xl font-bold text-gray-800 mb-4 flex items-center justify-center">
+          <div className="bg-white p-4 sm:p-6 md:p-8 rounded-xl shadow-md mb-6 md:mb-8">
+            <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-800 mb-4 flex items-center justify-center">
               <i className="fas fa-user-tie text-green-600 mr-2"></i>
               専門家によるサポート
             </h2>
@@ -1082,13 +1082,13 @@ const DiagnosisResultsPage: React.FC<DiagnosisResultsPageProps> = ({ diagnosisDa
             </p>
             
             {state.financialPlanners.length > 0 && (
-              <div className="grid gap-4 mb-6">
+              <div className="grid gap-3 sm:gap-4 md:gap-6 lg:grid-cols-2 mb-4 md:mb-6">
                 {state.financialPlanners.map((planner) => (
-                  <div key={planner.id} className="bg-gray-50 p-4 rounded-lg flex items-center">
+                  <div key={planner.id} className="bg-gray-50 p-3 sm:p-4 md:p-5 rounded-lg flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4 hover:shadow-md transition-shadow duration-200">
                     <img 
                       src={sanitizeUrl(planner.image_url)} 
                       alt={sanitizeText(planner.name)}
-                      className="w-16 h-16 rounded-full object-cover mr-4"
+                      className="w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 rounded-full object-cover flex-shrink-0"
                     />
                     <div className="flex-1 text-left">
                       <h3 className="font-semibold text-gray-800">{sanitizeText(planner.name)}</h3>
@@ -1105,7 +1105,7 @@ const DiagnosisResultsPage: React.FC<DiagnosisResultsPageProps> = ({ diagnosisDa
                         dispatch({ type: 'SET_SELECTED_EXPERT', payload: planner });
                         dispatch({ type: 'SET_EXPERT_MODAL', payload: true });
                       }}
-                      className="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white font-medium py-2 px-4 rounded-lg transition-all duration-200 transform hover:scale-105 hover:shadow-lg cursor-pointer ml-4"
+                      className="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white font-medium py-2 px-3 sm:px-4 rounded-lg transition-all duration-200 transform hover:scale-105 hover:shadow-lg cursor-pointer text-sm sm:text-base w-full sm:w-auto mt-3 sm:mt-0 sm:ml-auto"
                     >
                       <i className="fas fa-comments mr-2"></i>
                       相談する
@@ -1120,7 +1120,7 @@ const DiagnosisResultsPage: React.FC<DiagnosisResultsPageProps> = ({ diagnosisDa
 
 
           {/* アクションボタン */}
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+          <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center">
             <button
               onClick={() => {
                 const url = window.location.href;
@@ -1142,21 +1142,21 @@ const DiagnosisResultsPage: React.FC<DiagnosisResultsPageProps> = ({ diagnosisDa
                   document.body.appendChild(modal);
                 });
               }}
-              className="bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white font-semibold py-3 px-6 rounded-lg transition-all duration-200 transform hover:scale-105 hover:shadow-lg cursor-pointer"
+              className="bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white font-semibold py-2.5 sm:py-3 px-4 sm:px-6 rounded-lg transition-all duration-200 transform hover:scale-105 hover:shadow-lg cursor-pointer text-sm sm:text-base"
             >
               <i className="fas fa-share mr-2"></i>
               この結果をシェア
             </button>
             <button
               onClick={() => window.print()}
-              className="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white font-semibold py-3 px-6 rounded-lg transition-all duration-200 transform hover:scale-105 hover:shadow-lg cursor-pointer"
+              className="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white font-semibold py-2.5 sm:py-3 px-4 sm:px-6 rounded-lg transition-all duration-200 transform hover:scale-105 hover:shadow-lg cursor-pointer text-sm sm:text-base"
             >
               <i className="fas fa-print mr-2"></i>
               結果を印刷
             </button>
             <button
               onClick={() => window.location.href = '/'}
-              className="bg-gradient-to-r from-gray-500 to-gray-600 hover:from-gray-600 hover:to-gray-700 text-white font-semibold py-3 px-6 rounded-lg transition-all duration-200 transform hover:scale-105 hover:shadow-lg cursor-pointer"
+              className="bg-gradient-to-r from-gray-500 to-gray-600 hover:from-gray-600 hover:to-gray-700 text-white font-semibold py-2.5 sm:py-3 px-4 sm:px-6 rounded-lg transition-all duration-200 transform hover:scale-105 hover:shadow-lg cursor-pointer text-sm sm:text-base"
             >
               <i className="fas fa-home mr-2"></i>
               ホームに戻る
