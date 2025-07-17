@@ -24,7 +24,7 @@ import { resetToSampleData } from '../data/sampleData';
 import { useColorTheme } from './ColorThemeContext';
 import TwoFactorAuth from './TwoFactorAuth';
 import KeyRotationManager from './KeyRotationManager';
-import SecurityIntegration from './SecurityIntegration';
+// import SecurityIntegration from './SecurityIntegration'; // 非表示
 import AdminApprovalDashboard from './AdminApprovalDashboard';
 
 const supabaseConfig = createSupabaseClient();
@@ -350,7 +350,7 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
   // セキュリティ機能のstate
   const [showTwoFactorAuth, setShowTwoFactorAuth] = useState(false);
   const [showKeyRotationManager, setShowKeyRotationManager] = useState(false);
-  const [showSecurityIntegration, setShowSecurityIntegration] = useState(false);
+  // const [showSecurityIntegration, setShowSecurityIntegration] = useState(false); // 非表示
   const [twoFactorAuthMode, setTwoFactorAuthMode] = useState<'setup' | 'verify'>('setup');
   const [adminTotpSecret, setAdminTotpSecret] = useState<string>('');
 
@@ -3587,7 +3587,8 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
 
                 </div>
 
-                {/* セキュリティAPI統合（新機能） */}
+                {/* セキュリティAPI統合（新機能） - 非表示 */}
+                {/*
                 <div className="bg-gradient-to-br from-green-50 to-emerald-100 p-6 rounded-xl shadow-md border border-green-200 mt-6">
                     <div className="flex items-center justify-center w-12 h-12 bg-green-500 rounded-lg mb-4 mx-auto">
                         <i className="fas fa-plug text-white text-xl"></i>
@@ -3603,6 +3604,7 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
                         🔌 API連携設定
                     </button>
                 </div>
+                */
 
                 {/* セキュリティダッシュボード */}
                 <div className="bg-gray-50 p-6 rounded-xl mb-6">
@@ -4154,11 +4156,14 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
 
 
 
+        {/* セキュリティAPI統合モーダル - 非表示 */}
+        {/*
         {showSecurityIntegration && (
             <SecurityIntegration
                 onClose={() => setShowSecurityIntegration(false)}
             />
         )}
+        */}
 
       </main>
 
