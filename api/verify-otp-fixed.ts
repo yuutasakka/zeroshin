@@ -23,9 +23,13 @@ if (typeof setInterval !== 'undefined') {
   setInterval(cleanupBlockedIPs, 5 * 60 * 1000);
 }
 
-import ProductionLogger from '../src/utils/productionLogger';
+// import ProductionLogger from '../src/utils/productionLogger';
 
-const logger = ProductionLogger;
+const logger = { 
+  info: (message: string, data?: any) => console.log(`[INFO] ${message}`, data || ''),
+  error: (message: string, error?: any) => console.error(`[ERROR] ${message}`, error || ''),
+  warn: (message: string, data?: any) => console.warn(`[WARN] ${message}`, data || '')
+};
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   // CORS設定 - 本番環境用

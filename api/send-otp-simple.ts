@@ -18,6 +18,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   try {
     console.log('[Simple SMS] リクエスト開始');
+    console.log('[Simple SMS] Method:', req.method);
+    console.log('[Simple SMS] Body:', JSON.stringify(req.body));
     
     const { phoneNumber } = req.body;
     
