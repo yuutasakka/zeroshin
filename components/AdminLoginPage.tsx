@@ -115,6 +115,13 @@ const AdminLoginPage: React.FC<AdminLoginPageProps> = ({ onLogin, onNavigateHome
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     
+    // ロックアウト状態の確認
+    if (isLocked && lockoutTime && Date.now() < lockoutTime) {
+      const remainingTime = Math.ceil((lockoutTime - Date.now()) / 60000);
+      setError(`アカウントがロックされています。あと${remainingTime}分お待ちください。`);
+      return;
+    }
+    
     // 入力をサニタイゼーション
     const sanitizedEmail = sanitizeInput(email);
     const sanitizedPhoneNumber = phoneNumber.replace(/\D/g, ''); // 数字のみ
@@ -155,9 +162,9 @@ const AdminLoginPage: React.FC<AdminLoginPageProps> = ({ onLogin, onNavigateHome
     const hasNumber = /[0-9]/.test(password);
     // 許可する記号を拡張
     const allowedSymbols = "!@#$%^&*()_+-=[]{};':\"|,.<>/?`~";
-    const hasSymbol = new RegExp(`[${allowedSymbols.replace(/[-/\\^$*+?.()|[\]{}]/g, '\\$&')}]`).test(password);
+    const hasSymbol = new RegExp(`[${allowedSymbols.replace(/[\-\[\]\/\{\}\(\)\*\+\?\.\\\^\$\|]/g, '\\$&')}]`).test(password);
     const hasMinLength = password.length >= 8;
-    const hasOnlyAllowedChars = new RegExp(`^[A-Za-z\d${allowedSymbols.replace(/[-/\\^$*+?.()|[\]{}]/g, '\\$&')}]+$`).test(password);
+    const hasOnlyAllowedChars = new RegExp(`^[A-Za-z0-9${allowedSymbols.replace(/[\-\[\]\/\{\}\(\)\*\+\?\.\\\^\$\|]/g, '\\$&')}]+$`).test(password);
 
     if (!hasMinLength) {
       setError('パスワードは8文字以上で入力してください。');
@@ -181,6 +188,8 @@ const AdminLoginPage: React.FC<AdminLoginPageProps> = ({ onLogin, onNavigateHome
     }
     if (!hasOnlyAllowedChars) {
       setError('パスワードに使用できない文字が含まれています。使用可能な記号: !@#$%^&*()_+-=[]{};\':\"|,.<>/?`~');
+      // 新規登録の失敗も試行回数としてカウント
+      await recordFailedAttempt('パスワード検証エラー');
       return;
     }
 
