@@ -78,7 +78,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     // 有効期限チェック
     if (storedData.expiresAt < Date.now()) {
       console.log('[Simple Verify] OTPの有効期限切れ');
-      global.otpStore.delete(normalizedPhone);
+      if (global.otpStore) {
+        global.otpStore.delete(normalizedPhone);
+      }
       return res.status(400).json({ error: '認証コードの有効期限が切れました' });
     }
 
