@@ -3587,8 +3587,7 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
 
                 </div>
 
-                {/* セキュリティAPI統合（新機能） - 非表示 */}
-                {/*
+                {/* セキュリティAPI統合（新機能） - 非表示
                 <div className="bg-gradient-to-br from-green-50 to-emerald-100 p-6 rounded-xl shadow-md border border-green-200 mt-6">
                     <div className="flex items-center justify-center w-12 h-12 bg-green-500 rounded-lg mb-4 mx-auto">
                         <i className="fas fa-plug text-white text-xl"></i>
@@ -3604,7 +3603,7 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
                         🔌 API連携設定
                     </button>
                 </div>
-                */
+                */}
 
                 {/* セキュリティダッシュボード */}
                 <div className="bg-gray-50 p-6 rounded-xl mb-6">
