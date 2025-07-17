@@ -36,9 +36,10 @@ const OptimizedPhoneVerification: React.FC<OptimizedPhoneVerificationProps> = ({
   // 自動送信処理
   useEffect(() => {
     if (phoneNumber) {
+      console.log('初回送信: 電話番号', phoneNumber);
       sendOTP();
     }
-  }, []);
+  }, [phoneNumber]); // phoneNumberを依存配列に追加
 
   // カウントダウンタイマー
   useEffect(() => {

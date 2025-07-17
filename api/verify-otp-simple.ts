@@ -32,13 +32,43 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       normalizedPhone = '+81' + normalizedPhone.substring(1);
     }
 
-    // メモリからOTPを取得
-    if (!global.otpStore) {
-      console.log('[Simple Verify] OTPストアが存在しません');
-      return res.status(400).json({ error: '認証コードが見つかりません' });
+    // まずSupabaseからOTPを取得を試みる
+    let storedData = null;
+    
+    try {
+      console.log('[Simple Verify] SupabaseからOTP取得を試行...');
+      const { createClient } = await import('@supabase/supabase-js');
+      const supabaseAdmin = createClient(
+        process.env.VITE_SUPABASE_URL!,
+        process.env.SUPABASE_SERVICE_ROLE_KEY!
+      );
+      
+      const { data: verificationData } = await supabaseAdmin
+        .from('sms_verifications')
+        .select('*')
+        .eq('phone_number', normalizedPhone)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .single();
+        
+      if (verificationData) {
+        console.log('[Simple Verify] SupabaseからOTP取得成功');
+        // Supabaseのデータをメモリストアの形式に変換
+        storedData = {
+          otp: verificationData.otp_code,
+          expiresAt: new Date(verificationData.created_at).getTime() + 5 * 60 * 1000,
+          attempts: verificationData.attempts || 0
+        };
+      }
+    } catch (dbError) {
+      console.error('[Simple Verify] Supabaseアクセスエラー:', dbError);
     }
-
-    const storedData = global.otpStore.get(normalizedPhone);
+    
+    // Supabaseから取得できなかった場合はメモリから取得
+    if (!storedData && global.otpStore) {
+      console.log('[Simple Verify] メモリストアからOTP取得を試行...');
+      storedData = global.otpStore.get(normalizedPhone);
+    }
     
     if (!storedData) {
       console.log('[Simple Verify] OTPが見つかりません:', normalizedPhone);
@@ -59,7 +89,26 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       
       if (storedData.attempts >= 5) {
         console.log('[Simple Verify] 試行回数超過');
-        global.otpStore.delete(normalizedPhone);
+        
+        // Supabaseから削除
+        try {
+          const { createClient } = await import('@supabase/supabase-js');
+          const supabaseAdmin = createClient(
+            process.env.VITE_SUPABASE_URL!,
+            process.env.SUPABASE_SERVICE_ROLE_KEY!
+          );
+          
+          await supabaseAdmin
+            .from('sms_verifications')
+            .delete()
+            .eq('phone_number', normalizedPhone);
+        } catch (dbError) {
+          console.error('[Simple Verify] Supabase削除エラー:', dbError);
+        }
+        
+        if (global.otpStore) {
+          global.otpStore.delete(normalizedPhone);
+        }
         return res.status(429).json({ error: '試行回数が上限に達しました' });
       }
       
@@ -71,7 +120,29 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     // 認証成功
     console.log('[Simple Verify] 認証成功');
-    global.otpStore.delete(normalizedPhone);
+    
+    // Supabaseから削除
+    try {
+      const { createClient } = await import('@supabase/supabase-js');
+      const supabaseAdmin = createClient(
+        process.env.VITE_SUPABASE_URL!,
+        process.env.SUPABASE_SERVICE_ROLE_KEY!
+      );
+      
+      await supabaseAdmin
+        .from('sms_verifications')
+        .delete()
+        .eq('phone_number', normalizedPhone);
+        
+      console.log('[Simple Verify] SupabaseからOTP削除完了');
+    } catch (dbError) {
+      console.error('[Simple Verify] Supabase削除エラー:', dbError);
+    }
+    
+    // メモリからも削除
+    if (global.otpStore) {
+      global.otpStore.delete(normalizedPhone);
+    }
     
     return res.status(200).json({ 
       success: true,
