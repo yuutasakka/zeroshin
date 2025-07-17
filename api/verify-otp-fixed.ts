@@ -23,6 +23,10 @@ if (typeof setInterval !== 'undefined') {
   setInterval(cleanupBlockedIPs, 5 * 60 * 1000);
 }
 
+import ProductionLogger from '../src/utils/productionLogger';
+
+const logger = new ProductionLogger();
+
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   // CORS設定 - 本番環境用
   const allowedOrigins = [
@@ -53,7 +57,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   try {
-    console.log('🔍 OTP認証開始');
+    logger.info('OTP認証開始');
     
     const { phoneNumber, otp } = req.body;
     
@@ -62,16 +66,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return;
     }
 
-    console.log('📞 認証リクエスト:', { phoneNumber, otp: otp.substring(0, 2) + '****' });
-    console.log('🔧 環境変数確認:', {
-      supabaseUrl: process.env.VITE_SUPABASE_URL ? '設定済み' : '未設定',
-      serviceRoleKey: process.env.SUPABASE_SERVICE_ROLE_KEY ? '設定済み' : '未設定',
-      twilioSid: process.env.TWILIO_ACCOUNT_SID ? '設定済み' : '未設定'
-    });
+    logger.info('認証リクエスト受信');
 
     // 電話番号正規化（フロントエンドと統一）
     let normalizedPhone = phoneNumber.replace(/\D/g, '');
-    console.log('🔍 正規化前:', phoneNumber, '→', normalizedPhone);
+    // 電話番号正規化
     
     // フロントエンドと同じ検証（090/080/070のみ許可）
     if (!normalizedPhone.match(/^(090|080|070)\d{8}$/)) {
@@ -84,7 +83,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       normalizedPhone = '+81' + normalizedPhone.substring(1);
     }
 
-    console.log('📲 正規化後:', normalizedPhone);
+    logger.info('電話番号正規化完了');
 
     // IPアドレス取得
     const clientIp = req.headers['x-forwarded-for']?.toString().split(',')[0] || 
@@ -96,7 +95,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const ipBlock = global.ipBlockStore.get(clientIp);
     
     if (ipBlock && ipBlock.blockedUntil > Date.now()) {
-      console.log('🚫 IPブロック中:', clientIp);
+      logger.warn('IPブロック中', { ip: clientIp });
       res.status(429).json({ error: '認証試行回数が多すぎます。しばらくお待ちください。' });
       return;
     }
@@ -106,14 +105,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     
     try {
       // Supabase Admin接続
-      console.log('🔗 Supabase接続試行...');
+      logger.info('Supabase接続試行');
       const { createClient } = await import('@supabase/supabase-js');
       const supabaseAdmin = createClient(
         process.env.VITE_SUPABASE_URL!,
         process.env.SUPABASE_SERVICE_ROLE_KEY!
       );
 
-      console.log('🔍 DB検索条件:', { phone_number: normalizedPhone, is_verified: false });
+      logger.info('DB検索開始');
       const { data, error } = await supabaseAdmin
         .from('sms_verifications')
         .select('otp_code, created_at, attempts')
@@ -123,7 +122,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         .limit(1)
         .single();
 
-      console.log('📋 DB検索結果:', { data, error });
+      logger.info('DB検索完了', { found: !!data });
 
       if (!error && data) {
         // UTC基準の期限チェック（created_atから5分）
@@ -135,35 +134,30 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           expiresAt: expiresAt,
           attempts: data.attempts || 0
         };
-        console.log('✅ Supabase OTP取得成功 (UTC基準期限:', new Date(expiresAt).toISOString(), ')');
+        logger.info('Supabase OTP取得成功');
       } else {
-        console.log('⚠️ Supabase OTP取得失敗、メモリ確認');
-        console.log('📊 エラー詳細:', error);
+        logger.warn('Supabase OTP取得失敗、メモリ確認', { error });
         // フォールバック: メモリから取得
         global.otpStore = global.otpStore || new Map();
         storedData = global.otpStore.get(normalizedPhone);
         logger.info('メモリ検索完了', { found: !!storedData });
       }
     } catch (dbError) {
-      console.error('⚠️ DB接続失敗、メモリから取得:', dbError);
+      logger.error('DB接続失敗、メモリから取得', { error: dbError });
       global.otpStore = global.otpStore || new Map();
       storedData = global.otpStore.get(normalizedPhone);
-      console.log('💾 メモリ検索結果（例外時）:', storedData ? 'データあり' : 'データなし');
+      logger.info('メモリ検索結果', { found: !!storedData });
     }
     
     if (!storedData) {
-      console.log('❌ OTP not found');
-      console.log('🔍 デバッグ情報:');
-      console.log('  - 検索対象電話番号:', normalizedPhone);
-      console.log('  - メモリストア存在:', !!global.otpStore);
-      console.log('  - メモリストアサイズ:', global.otpStore?.size || 0);
+      logger.warn('OTP not found');
       res.status(400).json({ error: '認証コードが見つかりません。新しいコードを取得してください。' });
       return;
     }
 
     // 期限チェック
     if (Date.now() > storedData.expiresAt) {
-      console.log('❌ OTP expired');
+      logger.warn('OTP expired');
       // DBとメモリ両方から削除
       try {
         const { createClient } = require('@supabase/supabase-js');
@@ -181,7 +175,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     // 試行回数チェック
     if (storedData.attempts >= 5) {
-      console.log('❌ Too many attempts');
+      logger.warn('Too many attempts');
       
       // IPブロック設定（1時間）
       const ipData = global.ipBlockStore.get(clientIp) || { attempts: 0, blockedUntil: 0 };
@@ -205,7 +199,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
 
     // OTP検証
-    console.log('🔢 OTP比較:', { 入力値: otp, 保存値: storedData.otp, 一致: storedData.otp === otp });
+    logger.info('OTP検証実行');
     if (storedData.otp !== otp) {
       // 試行回数を増加
       storedData.attempts++;
@@ -233,7 +227,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       } catch {}
       
       const remainingAttempts = 5 - (storedData.attempts + 1);
-      console.log(`❌ OTP不一致: 残り${remainingAttempts}回`);
+      logger.warn(`OTP不一致: 残り${remainingAttempts}回`);
       
       res.status(400).json({ 
         error: `認証コードが正しくありません。残り${remainingAttempts}回入力できます。` 
@@ -241,7 +235,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return;
     }
 
-    console.log('✅ OTP認証成功');
+    logger.info('OTP認証成功');
 
     // 認証成功時の処理 - DBとメモリ両方から削除
     try {
@@ -276,7 +270,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
 
   } catch (error) {
-    console.error('💥 OTP認証エラー:', error);
+    logger.error('OTP認証エラー', { error: error?.message || 'Unknown error' });
     res.status(500).json({ error: '認証に失敗しました' });
   }
 }

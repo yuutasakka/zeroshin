@@ -35,7 +35,9 @@ if (typeof setInterval !== 'undefined') {
   setInterval(cleanupExpiredData, 5 * 60 * 1000);
 }
 
-import { productionLogger as logger } from '../src/utils/productionLogger';
+import ProductionLogger from '../src/utils/productionLogger';
+
+const logger = new ProductionLogger();
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   // CORS設定 - 本番環境用
