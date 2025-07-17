@@ -25,6 +25,7 @@ const PhoneVerificationPage: React.FC<PhoneVerificationPageProps> = ({
   const [error, setError] = useState<string | null>(null);
   const [countdown, setCountdown] = useState(0);
   const [showUsageNotice, setShowUsageNotice] = useState(false);
+  const [isInitialSMSSent, setIsInitialSMSSent] = useState(false); // SMS送信済みフラグを追加
   
   // 試行回数制限の状態
   const [failedAttempts, setFailedAttempts] = useState(0);
@@ -59,7 +60,8 @@ const PhoneVerificationPage: React.FC<PhoneVerificationPageProps> = ({
   // 診断フォームから電話番号が渡された場合、自動的にSMS送信を行う
   useEffect(() => {
     const handleAutoSendSMS = async () => {
-      if (!hasPhoneFromSession || step !== 'phone-input') return;
+      // 既に送信済み、または電話番号がない、またはOTP入力画面でない場合はスキップ
+      if (isInitialSMSSent || !hasPhoneFromSession || step !== 'otp-verification') return;
       
       try {
           if (!validatePhoneNumber(phoneNumber)) {
@@ -104,7 +106,7 @@ const PhoneVerificationPage: React.FC<PhoneVerificationPageProps> = ({
               throw new Error(result.error || 'SMS送信に失敗しました');
             }
             
-            setStep('otp-verification');
+            setIsInitialSMSSent(true); // 送信済みフラグを設定
             setCountdown(60);
           } catch (smsError: any) {
             console.error('SMS送信エラー:', smsError);
@@ -119,7 +121,7 @@ const PhoneVerificationPage: React.FC<PhoneVerificationPageProps> = ({
       };
 
     handleAutoSendSMS();
-  }, [hasPhoneFromSession, step, phoneNumber]);
+  }, [hasPhoneFromSession, step, phoneNumber, isInitialSMSSent]);
 
   // 電話番号の形式を正規化
   const normalizePhoneNumber = (phone: string): string => {
@@ -425,6 +427,7 @@ const PhoneVerificationPage: React.FC<PhoneVerificationPageProps> = ({
       }
 
       setCountdown(60);
+      setIsInitialSMSSent(true); // 再送信でもフラグを設定
       
     } catch (error: any) {
       setError(error.message || 'SMS再送信に失敗しました。');
@@ -729,6 +732,7 @@ const PhoneVerificationPage: React.FC<PhoneVerificationPageProps> = ({
                   setFailedAttempts(0);
                   setLockoutTime(null);
                   setLockoutEndTime(null);
+                  setIsInitialSMSSent(false); // フラグをリセット
                 }}
                 disabled={!!(lockoutTime && lockoutTime > 0)}
                 className="w-full text-gray-600 hover:text-gray-800 py-2 transition-colors duration-200 text-sm disabled:opacity-50 disabled:cursor-not-allowed"
@@ -781,6 +785,7 @@ const PhoneVerificationPage: React.FC<PhoneVerificationPageProps> = ({
                 setFailedAttempts(0);
                 setLockoutTime(null);
                 setLockoutEndTime(null);
+                setIsInitialSMSSent(false); // フラグをリセット
               }}
               className="w-full bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white font-semibold py-3 px-4 rounded-xl transition-all duration-200"
             >
