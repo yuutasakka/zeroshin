@@ -1823,7 +1823,7 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
               </button>
               <button
                 onClick={onLogout}
-                className="bg-red-500 hover:bg-red-600 text-white font-semibold py-2 px-4 rounded-lg shadow-md hover:shadow-lg transition duration-150 ease-in-out flex items-center"
+                className="bg-red-500 hover:bg-red-600 text-white font-semibold py-2 px-4 rounded-lg shadow-md hover:shadow-lg transition duration-150 ease-in-out flex items-center justify-center"
                 aria-label="ログアウト"
               >
                 <i className="fas fa-sign-out-alt mr-2"></i>
@@ -1898,98 +1898,98 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
             <div className="flex flex-wrap gap-2">
                 <button 
                     onClick={() => setViewMode('userHistory')}
-                    className={`admin-nav-button px-4 py-2 rounded-md text-sm font-medium transition-colors ${viewMode === 'userHistory' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}`}
+                    className={`admin-nav-button px-4 py-2 rounded-md text-sm font-medium transition-colors flex items-center justify-center ${viewMode === 'userHistory' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}`}
                 >
                     <i className="fas fa-users-cog mr-2"></i>
                     <span>ユーザー診断履歴</span>
                 </button>
                 <button 
                     onClick={() => setViewMode('productSettings')}
-                    className={`admin-nav-button px-4 py-2 rounded-md text-sm font-medium transition-colors ${viewMode === 'productSettings' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}`}
+                    className={`admin-nav-button px-4 py-2 rounded-md text-sm font-medium transition-colors flex items-center justify-center ${viewMode === 'productSettings' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}`}
                 >
                     <i className="fas fa-gifts mr-2"></i>
                     <span>商品リンク設定</span>
                 </button>
                 <button 
                     onClick={() => setViewMode('adminSettings')}
-                    className={`admin-nav-button px-4 py-2 rounded-md text-sm font-medium transition-colors ${viewMode === 'adminSettings' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}`}
+                    className={`admin-nav-button px-4 py-2 rounded-md text-sm font-medium transition-colors flex items-center justify-center ${viewMode === 'adminSettings' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}`}
                 >
                     <i className="fas fa-user-cog mr-2"></i>
                     <span>管理者設定</span>
                 </button>
                  <button 
                     onClick={() => setViewMode('testimonialSettings')}
-                    className={`admin-nav-button px-4 py-2 rounded-md text-sm font-medium transition-colors ${viewMode === 'testimonialSettings' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}`}
+                    className={`admin-nav-button px-4 py-2 rounded-md text-sm font-medium transition-colors flex items-center justify-center ${viewMode === 'testimonialSettings' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}`}
                 >
                     <i className="fas fa-comments mr-2"></i>
                     <span>お客様の声 管理</span>
                 </button>
                 <button 
                     onClick={() => setViewMode('analyticsSettings')}
-                    className={`admin-nav-button px-4 py-2 rounded-md text-sm font-medium transition-colors ${viewMode === 'analyticsSettings' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}`}
+                    className={`admin-nav-button px-4 py-2 rounded-md text-sm font-medium transition-colors flex items-center justify-center ${viewMode === 'analyticsSettings' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}`}
                 >
                     <i className="fas fa-chart-line mr-2"></i>
                     <span>アナリティクス設定</span>
                 </button>
                  <button 
                     onClick={() => setViewMode('notificationSettings')}
-                    className={`admin-nav-button px-4 py-2 rounded-md text-sm font-medium transition-colors ${viewMode === 'notificationSettings' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}`}
+                    className={`admin-nav-button px-4 py-2 rounded-md text-sm font-medium transition-colors flex items-center justify-center ${viewMode === 'notificationSettings' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}`}
                 >
                     <i className="fas fa-bell mr-2"></i>
                     <span>通知設定</span>
                 </button>
                 <button 
                     onClick={() => setViewMode('legalLinksSettings')}
-                    className={`admin-nav-button px-4 py-2 rounded-md text-sm font-medium transition-colors ${viewMode === 'legalLinksSettings' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}`}
+                    className={`admin-nav-button px-4 py-2 rounded-md text-sm font-medium transition-colors flex items-center justify-center ${viewMode === 'legalLinksSettings' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}`}
                 >
                     <i className="fas fa-gavel mr-2"></i>
                     <span>リーガルリンク設定</span>
                 </button>
                 <button 
                     onClick={() => setViewMode('homepageContentSettings')}
-                    className={`admin-nav-button px-4 py-2 rounded-md text-sm font-medium transition-colors ${viewMode === 'homepageContentSettings' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}`}
+                    className={`admin-nav-button px-4 py-2 rounded-md text-sm font-medium transition-colors flex items-center justify-center ${viewMode === 'homepageContentSettings' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}`}
                 >
                     <i className="fas fa-home mr-2"></i>
                     <span>ホームページコンテンツ設定</span>
                 </button>
                                  <button 
                      onClick={() => setViewMode('headerAndVisualSettings')}
-                     className={`admin-nav-button px-4 py-2 rounded-md text-sm font-medium transition-colors ${viewMode === 'headerAndVisualSettings' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}`}
+                     className={`admin-nav-button px-4 py-2 rounded-md text-sm font-medium transition-colors flex items-center justify-center ${viewMode === 'headerAndVisualSettings' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}`}
                  >
                      <i className="fas fa-heading mr-2"></i>
                      <span>ヘッダー・メインビジュアル・フッター設定</span>
                  </button>
                  <button 
                      onClick={() => setViewMode('colorThemeSettings')}
-                     className={`admin-nav-button px-4 py-2 rounded-md text-sm font-medium transition-colors ${viewMode === 'colorThemeSettings' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}`}
+                     className={`admin-nav-button px-4 py-2 rounded-md text-sm font-medium transition-colors flex items-center justify-center ${viewMode === 'colorThemeSettings' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}`}
                  >
                      <i className="fas fa-palette mr-2"></i>
                      <span>カラーテーマ設定</span>
                  </button>
                  <button 
                      onClick={() => setViewMode('securitySettings')}
-                     className={`admin-nav-button px-4 py-2 rounded-md text-sm font-medium transition-colors ${viewMode === 'securitySettings' ? 'bg-red-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}`}
+                     className={`admin-nav-button px-4 py-2 rounded-md text-sm font-medium transition-colors flex items-center justify-center ${viewMode === 'securitySettings' ? 'bg-red-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}`}
                  >
                      <i className="fas fa-shield-alt mr-2"></i>
                      <span>セキュリティ設定</span>
                  </button>
                  <button 
                      onClick={() => setViewMode('financialPlannersSettings')}
-                     className={`admin-nav-button px-4 py-2 rounded-md text-sm font-medium transition-colors ${viewMode === 'financialPlannersSettings' ? 'bg-purple-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}`}
+                     className={`admin-nav-button px-4 py-2 rounded-md text-sm font-medium transition-colors flex items-center justify-center ${viewMode === 'financialPlannersSettings' ? 'bg-purple-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}`}
                  >
                      <i className="fas fa-user-tie mr-2"></i>
                      <span>FP管理</span>
                  </button>
                  <button 
                      onClick={() => setViewMode('expertContactSettings')}
-                     className={`admin-nav-button px-4 py-2 rounded-md text-sm font-medium transition-colors ${viewMode === 'expertContactSettings' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}`}
+                     className={`admin-nav-button px-4 py-2 rounded-md text-sm font-medium transition-colors flex items-center justify-center ${viewMode === 'expertContactSettings' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}`}
                  >
                      <i className="fas fa-phone mr-2"></i>
                      <span>専門家設定</span>
                  </button>
                  <button 
                      onClick={() => setViewMode('approvalRequests')}
-                     className={`admin-nav-button px-4 py-2 rounded-md text-sm font-medium transition-colors ${viewMode === 'approvalRequests' ? 'bg-orange-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}`}
+                     className={`admin-nav-button px-4 py-2 rounded-md text-sm font-medium transition-colors flex items-center justify-center ${viewMode === 'approvalRequests' ? 'bg-orange-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}`}
                  >
                      <i className="fas fa-user-check mr-2"></i>
                      <span>🔰 承認申請一覧</span>
@@ -2000,7 +2000,7 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
             <div className="mt-4 pt-4 border-t border-gray-200">
                 <button 
                     onClick={handleResetToSampleData}
-                    className="bg-orange-500 hover:bg-orange-600 text-white font-medium px-4 py-2 rounded-md text-sm transition-colors flex items-center"
+                    className="bg-orange-500 hover:bg-orange-600 text-black font-medium px-4 py-2 rounded-md text-sm transition-colors flex items-center"
                 >
                     <i className="fas fa-refresh mr-2"></i>
                     <span>🔄 サンプルデータで初期化</span>
@@ -2019,7 +2019,7 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
                     </div>
                     <button
                         onClick={handleExportCSV}
-                        className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-lg shadow-md transition duration-150 ease-in-out flex items-center text-sm"
+                        className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-lg shadow-md transition duration-150 ease-in-out flex items-center justify-center text-sm"
                         disabled={userSessions.length === 0}
                     >
                         <i className="fas fa-file-csv mr-2"></i>CSVエクスポート
