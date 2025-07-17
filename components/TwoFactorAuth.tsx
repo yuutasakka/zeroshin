@@ -427,7 +427,7 @@ const TwoFactorAuth: React.FC<TwoFactorAuthProps> = ({
             <div className="flex space-x-3">
               <button
                 onClick={handleSetupComplete}
-                className="flex-1 bg-green-600 hover:bg-green-700 text-white font-medium py-2 px-4 rounded-md transition-colors"
+                className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-md transition-colors"
               >
                 設定完了
               </button>
@@ -521,7 +521,7 @@ const TwoFactorAuth: React.FC<TwoFactorAuthProps> = ({
                   <button
                     onClick={handleBackupCodeVerify}
                     disabled={loading || !backupCodeInput}
-                    className="flex-1 bg-green-600 hover:bg-green-700 disabled:bg-gray-400 text-white font-medium py-2 px-4 rounded-md transition-colors"
+                    className="flex-1 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white font-medium py-2 px-4 rounded-md transition-colors"
                   >
                     {loading ? '認証中...' : 'バックアップコードで認証'}
                   </button>

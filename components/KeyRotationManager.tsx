@@ -546,7 +546,7 @@ const KeyRotationManager: React.FC<KeyRotationManagerProps> = ({ onClose }) => {
                 <button
                   onClick={savePolicies}
                   disabled={loading}
-                  className="bg-green-600 hover:bg-green-700 disabled:bg-gray-400 text-white px-4 py-2 rounded-md text-sm font-medium"
+                  className="bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white px-4 py-2 rounded-md text-sm font-medium"
                 >
                   💾 ポリシーを保存
                 </button>

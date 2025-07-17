@@ -189,7 +189,7 @@ const PendingRequestsComponent: React.FC<PendingRequestsComponentProps> = ({ onS
                   <button
                     onClick={() => openActionModal(request, 'approve')}
                     disabled={processingId === request.id.toString()}
-                    className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     <i className="fas fa-check mr-1"></i>
                     承認

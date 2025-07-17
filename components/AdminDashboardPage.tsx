@@ -2019,7 +2019,7 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
                     </div>
                     <button
                         onClick={handleExportCSV}
-                        className="bg-green-500 hover:bg-green-600 text-white font-semibold py-2 px-4 rounded-lg shadow-md transition duration-150 ease-in-out flex items-center text-sm"
+                        className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-lg shadow-md transition duration-150 ease-in-out flex items-center text-sm"
                         disabled={userSessions.length === 0}
                     >
                         <i className="fas fa-file-csv mr-2"></i>CSVエクスポート
@@ -2182,7 +2182,7 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
                     </div>
                     <button
                         onClick={() => handleOpenTestimonialModal()}
-                        className="bg-green-500 hover:bg-green-600 text-white font-semibold py-2 px-4 rounded-lg shadow-md transition duration-150 ease-in-out flex items-center text-sm"
+                        className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-lg shadow-md transition duration-150 ease-in-out flex items-center text-sm"
                     >
                         <i className="fas fa-plus mr-2"></i>新規追加
                     </button>
@@ -2453,7 +2453,7 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
                                 <button
                                     type="button"
                                     onClick={() => handleTestNotification('line')}
-                                    className="bg-green-500 hover:bg-green-600 text-white text-xs px-3 py-1 rounded shadow transition-colors mt-2"
+                                    className="bg-blue-600 hover:bg-blue-700 text-white text-xs px-3 py-1 rounded shadow transition-colors mt-2"
                                 >
                                     <i className="fab fa-line mr-1"></i>テスト送信
                                 </button>
@@ -2682,7 +2682,7 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
                                 <h4 className="text-md font-semibold text-gray-700">理由項目</h4>
                                 <button
                                     onClick={handleAddReason}
-                                    className="bg-green-500 hover:bg-green-600 text-white font-semibold py-2 px-4 rounded-lg shadow-md transition duration-150 ease-in-out flex items-center text-sm"
+                                    className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-lg shadow-md transition duration-150 ease-in-out flex items-center text-sm"
                                 >
                                     <i className="fas fa-plus mr-2"></i>項目を追加
                                 </button>
@@ -3560,7 +3560,7 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
                                     setTwoFactorAuthMode('verify');
                                     setShowTwoFactorAuth(true);
                                 }}
-                                className="w-full bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+                                className="w-full bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
                             >
                                 ✅ 2FA認証テスト
                             </button>
@@ -3598,7 +3598,7 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
                     </p>
                     <button
                         onClick={() => setShowSecurityIntegration(true)}
-                        className="w-full bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+                        className="w-full bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
                     >
                         🔌 API連携設定
                     </button>
@@ -3698,7 +3698,7 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
                     </div>
                     <button
                         onClick={() => handleOpenPlannerModal()}
-                        className="bg-green-500 hover:bg-green-600 text-white font-semibold py-2 px-4 rounded-lg shadow-md transition duration-150 ease-in-out flex items-center text-sm"
+                        className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-lg shadow-md transition duration-150 ease-in-out flex items-center text-sm"
                     >
                         <i className="fas fa-plus mr-2"></i>新規追加
                     </button>
