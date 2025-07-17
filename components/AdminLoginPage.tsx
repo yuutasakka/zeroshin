@@ -189,7 +189,13 @@ const AdminLoginPage: React.FC<AdminLoginPageProps> = ({ onLogin, onNavigateHome
     if (!hasOnlyAllowedChars) {
       setError('パスワードに使用できない文字が含まれています。使用可能な記号: !@#$%^&*()_+-=[]{};\':\"|,.<>/?`~');
       // 新規登録の失敗も試行回数としてカウント
-      await recordFailedAttempt('パスワード検証エラー');
+      const newAttempts = loginAttempts + 1;
+      setLoginAttempts(newAttempts);
+      
+      if (newAttempts >= MAX_LOGIN_ATTEMPTS) {
+        setLockout(newAttempts);
+        setError(`試行回数が上限に達しました。${LOCKOUT_DURATION / 60000}分後に再試行してください。`);
+      }
       return;
     }
 
@@ -229,23 +235,46 @@ const AdminLoginPage: React.FC<AdminLoginPageProps> = ({ onLogin, onNavigateHome
   // ログインハンドラー
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // ロックアウト状態を再チェック
+    const lockoutData = localStorage.getItem('admin_lockout');
+    if (lockoutData) {
+      const { until } = JSON.parse(lockoutData);
+      if (Date.now() < until) {
+        const remainingTime = Math.ceil((until - Date.now()) / 60000);
+        setError(`アカウントがロックされています。あと${remainingTime}分お待ちください。`);
+        return;
+      } else {
+        // ロックアウト期間が終了していたらクリア
+        localStorage.removeItem('admin_lockout');
+        setIsLocked(false);
+        setLockoutTime(null);
+        setLoginAttempts(0);
+      }
+    }
+    
+    // 試行回数を即座にカウントアップ
+    const newAttempts = loginAttempts + 1;
+    setLoginAttempts(newAttempts);
+    
+    // 最大試行回数に達した場合はロックアウト
+    if (newAttempts >= MAX_LOGIN_ATTEMPTS) {
+      setLockout(newAttempts);
+      setError(`ログイン試行回数が上限に達しました。${LOCKOUT_DURATION / 60000}分後に再試行してください。`);
+      return;
+    }
+    
     setLoading(true);
     setError('');
     
     // 入力をサニタイゼーション
     const sanitizedUsername = sanitizeInput(username);
     
-    secureLog('管理者ログイン処理開始', { username: sanitizedUsername });
+    secureLog('管理者ログイン処理開始', { username: sanitizedUsername, attempt: newAttempts });
 
     // 基本検証
     if (!sanitizedUsername || !password) {
-      setError('ユーザー名とパスワードを入力してください。');
-      setLoading(false);
-      return;
-    }
-
-    if (isLocked) {
-      setError('アカウントがロックされています。時間をおいて再試行してください。');
+      setError(`ユーザー名とパスワードを入力してください。（残り${MAX_LOGIN_ATTEMPTS - newAttempts}回）`);
       setLoading(false);
       return;
     }
@@ -293,7 +322,15 @@ const AdminLoginPage: React.FC<AdminLoginPageProps> = ({ onLogin, onNavigateHome
       }
       
       if (!adminCredentials) {
-        await recordFailedAttempt('ユーザー名が見つかりません');
+        setError(`ユーザー名が見つかりません。（残り${MAX_LOGIN_ATTEMPTS - newAttempts}回）`);
+        // 監査ログに記録
+        await SupabaseAdminAuth.recordLoginAttempt(
+          sanitizedUsername,
+          false,
+          'ユーザー名が見つかりません',
+          undefined,
+          navigator.userAgent
+        );
         setLoading(false);
         return;
       }
@@ -344,17 +381,24 @@ const AdminLoginPage: React.FC<AdminLoginPageProps> = ({ onLogin, onNavigateHome
       }
       
       if (!isPasswordValid) {
-        // ログイン失敗の記録
-        const newFailedAttempts = adminCredentials.failed_attempts + 1;
+        setError(`ユーザー名またはパスワードが正しくありません。（残り${MAX_LOGIN_ATTEMPTS - newAttempts}回）`);
         
-        if (newFailedAttempts >= 5) {
-          // アカウントロック（30分）
-          const lockUntil = new Date(Date.now() + 30 * 60 * 1000);
-          console.warn('Account locked due to multiple failed attempts');
-          
-          setError('ログイン試行回数が上限に達しました。30分後に再試行してください。');
-        } else {
-          setError(`ユーザー名またはパスワードが正しくありません。（残り${5 - newFailedAttempts}回）`);
+        // 監査ログに記録
+        await SupabaseAdminAuth.recordLoginAttempt(
+          sanitizedUsername,
+          false,
+          'パスワードが正しくありません',
+          undefined,
+          navigator.userAgent
+        );
+        
+        // Supabaseに失敗回数を更新（試行）
+        try {
+          if (!useLocalFallback) {
+            await SupabaseAdminAuth.updateFailedAttempts(sanitizedUsername, newAttempts);
+          }
+        } catch (updateError) {
+          console.warn('失敗回数の更新エラー:', updateError);
         }
         
         setLoading(false);
@@ -372,6 +416,11 @@ const AdminLoginPage: React.FC<AdminLoginPageProps> = ({ onLogin, onNavigateHome
       localStorage.setItem('admin_session', JSON.stringify(sessionData));
       sessionStorage.setItem('admin_authenticated', 'true');
       localStorage.removeItem('admin_lockout');
+      
+      // 試行回数をリセット
+      setLoginAttempts(0);
+      setIsLocked(false);
+      setLockoutTime(null);
 
       console.log('Secure authentication completed');
       
