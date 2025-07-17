@@ -82,7 +82,12 @@ const OptimizedDiagnosisFlow: React.FC<OptimizedDiagnosisFlowProps> = ({ onCompl
   };
 
   const handlePhoneNumberChange = (value: string) => {
-    const numbers = value.replace(/\D/g, '');
+    // 全角数字を半角数字に変換
+    const halfWidthValue = value.replace(/[０-９]/g, (match) => {
+      return String.fromCharCode(match.charCodeAt(0) - 0xFEE0);
+    });
+    
+    const numbers = halfWidthValue.replace(/\D/g, '');
     if (numbers.length <= 11) {
       setPhoneInput(formatPhoneNumber(numbers));
       setPhoneError('');
@@ -127,9 +132,14 @@ const OptimizedDiagnosisFlow: React.FC<OptimizedDiagnosisFlowProps> = ({ onCompl
       return;
     }
     
+    // 全角数字を半角に変換してから数字のみ抽出
+    const halfWidthPhone = phoneInput.replace(/[０-９]/g, (match) => {
+      return String.fromCharCode(match.charCodeAt(0) - 0xFEE0);
+    });
+    
     const finalAnswers = {
       ...answers,
-      phoneNumber: phoneInput.replace(/\D/g, '')
+      phoneNumber: halfWidthPhone.replace(/\D/g, '')
     };
     
     onComplete(finalAnswers);

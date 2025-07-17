@@ -123,28 +123,32 @@ const PhoneVerificationPage: React.FC<PhoneVerificationPageProps> = ({
 
   // 電話番号の形式を正規化
   const normalizePhoneNumber = (phone: string): string => {
-    // 日本の電話番号を国際形式に変換
-    let normalized = phone.replace(/[^\d]/g, ''); // 数字のみ抽出
+    // 全角数字を半角数字に変換
+    const halfWidthPhone = phone.replace(/[０-９]/g, (match) => {
+      return String.fromCharCode(match.charCodeAt(0) - 0xFEE0);
+    });
     
+    // ハイフンやスペースを削除し、数字のみ抽出
+    let normalized = halfWidthPhone.replace(/[^\d]/g, '');
+    
+    // API用の形式（090xxxxxxxx）として返す
+    return normalized;
+  };
+  
+  // 国際形式に変換する関数（Supabase用）
+  const toInternationalFormat = (phone: string): string => {
+    const normalized = normalizePhoneNumber(phone);
     if (normalized.startsWith('0')) {
-      // 0から始まる場合は+81に変換
-      normalized = '+81' + normalized.substring(1);
-    } else if (normalized.startsWith('81')) {
-      // 81から始まる場合は+を追加
-      normalized = '+' + normalized;
-    } else if (!normalized.startsWith('+')) {
-      // +がない場合は+81を追加
-      normalized = '+81' + normalized;
+      return '+81' + normalized.substring(1);
     }
-    
     return normalized;
   };
 
   // 電話番号の検証
   const validatePhoneNumber = (phone: string): boolean => {
     const normalized = normalizePhoneNumber(phone);
-    // 日本の電話番号パターン（+81から始まる）
-    const phoneRegex = /^\+81[1-9]\d{8,9}$/;
+    // 日本の電話番号パターン（090/080/070で始まる11桁）
+    const phoneRegex = /^(090|080|070)\d{8}$/;
     return phoneRegex.test(normalized);
   };
 
@@ -410,7 +414,7 @@ const PhoneVerificationPage: React.FC<PhoneVerificationPageProps> = ({
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          phoneNumber: normalizedPhone
+          phoneNumber: normalizedPhone  // API用の標準形式（090xxxxxxxx）
         })
       });
 

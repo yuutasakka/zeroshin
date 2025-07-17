@@ -20,7 +20,18 @@ const OptimizedPhoneVerification: React.FC<OptimizedPhoneVerificationProps> = ({
   const [isSuccess, setIsSuccess] = useState(false);
   const [focusedIndex, setFocusedIndex] = useState(0);
 
-  const phoneNumber = userSession.phoneNumber || '';
+  // 電話番号の正規化（全角→半角、ハイフン削除）
+  const normalizePhoneNumber = (phone: string): string => {
+    // 全角数字を半角数字に変換
+    const halfWidthPhone = phone.replace(/[０-９]/g, (match) => {
+      return String.fromCharCode(match.charCodeAt(0) - 0xFEE0);
+    });
+    
+    // ハイフンやスペースを削除し、数字のみ抽出
+    return halfWidthPhone.replace(/[^\d]/g, '');
+  };
+  
+  const phoneNumber = normalizePhoneNumber(userSession.phoneNumber || '');
 
   // 自動送信処理
   useEffect(() => {
