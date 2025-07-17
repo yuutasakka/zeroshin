@@ -3,7 +3,9 @@ import ErrorBoundary from './components/ErrorBoundary';
 import Header from './components/Header';
 // 要件定義書に基づく新しいコンポーネント
 import AIConectXHero from './components/AIConectXHero';
+import EnhancedHero from './components/EnhancedHero';
 import DiagnosisFlow, { DiagnosisAnswers } from './components/DiagnosisFlow';
+import OptimizedDiagnosisFlow, { OptimizedDiagnosisAnswers } from './components/OptimizedDiagnosisFlow';
 import SMSAuthFlow from './components/SMSAuthFlow';
 import ReliabilitySection from './components/ReliabilitySection';
 import SecurityTrustSection from './components/SecurityTrustSection';
@@ -524,24 +526,38 @@ const App: React.FC = () => {
           
           {/* 1番目: メインヒーロー（あなたの未来の資産を診断！） */}
           <div className="hero-section">
-            <AIConectXHero onStartDiagnosis={handleStartDiagnosis} />
+            <EnhancedHero onStartDiagnosis={handleStartDiagnosis} />
           </div>
           
           {/* 2番目: 診断フォーム */}
           <div className="diagnosis-section">
             <div className="home-right-col">
-              <DiagnosisFlow
-                onComplete={(answers) => {
-                  console.log('🔍 App.tsx: 診断完了 - 回答データ:', answers);
-                  setDiagnosisAnswers(answers);
+              <OptimizedDiagnosisFlow
+                onComplete={(optimizedAnswers) => {
+                  console.log('🔍 App.tsx: 最適化診断完了 - 回答データ:', optimizedAnswers);
+                  
+                  // OptimizedDiagnosisAnswersからDiagnosisAnswersに変換
+                  const [age, experience] = (optimizedAnswers.ageAndExperience || '-').split('-');
+                  const [purpose, budget] = (optimizedAnswers.purposeAndBudget || '-').split('-');
+                  
+                  const convertedAnswers: DiagnosisAnswers = {
+                    age: age || '',
+                    experience: experience || '',
+                    purpose: purpose || '',
+                    amount: budget || '',
+                    timing: 'now', // クイック診断では常に「すぐに」
+                    phone: optimizedAnswers.phoneNumber || ''
+                  };
+                  
+                  setDiagnosisAnswers(convertedAnswers);
                   
                   // 診断データを従来の形式に変換
                   const legacyDiagnosisData: DiagnosisFormState = {
-                    age: answers.age || '',
-                    investmentExperience: answers.experience || '',
-                    investmentGoal: answers.purpose || '',
-                    monthlyInvestment: answers.amount || '',
-                    investmentHorizon: answers.timing || '',
+                    age: convertedAnswers.age || '',
+                    investmentExperience: convertedAnswers.experience || '',
+                    investmentGoal: convertedAnswers.purpose || '',
+                    monthlyInvestment: convertedAnswers.amount || '',
+                    investmentHorizon: convertedAnswers.timing || '',
                     // 既存のフィールドもデフォルト値で埋める
                     annualIncome: '',
                     riskTolerance: '',
@@ -552,7 +568,7 @@ const App: React.FC = () => {
                   setDiagnosisData(legacyDiagnosisData);
                   
                   setCurrentPage('verification');
-                  setPhoneNumberToVerify(answers.phone || null);
+                  setPhoneNumberToVerify(convertedAnswers.phone || null);
                 }}
                 onCancel={() => {}}
               />
@@ -596,16 +612,16 @@ const App: React.FC = () => {
             /* 新しい縦型レイアウト - 視認性向上 */
             .hero-section {
               width: 100%;
-              padding: 40px 0 20px 0;
-              background: linear-gradient(135deg, #f8f9ff 0%, #fff4fc 100%);
+              padding: 0;
+              background: transparent;
             }
             
             .diagnosis-section {
               width: 100%;
-              padding: 60px 20px;
+              padding: 80px 20px;
               display: flex;
               justify-content: center;
-              background: #f8f9fa;
+              background: linear-gradient(to bottom, #f8f9ff 0%, #ffffff 100%);
               position: relative;
             }
             
@@ -629,18 +645,10 @@ const App: React.FC = () => {
             
             .home-right-col {
               width: 100%;
-              max-width: 600px;
+              max-width: 900px;
               transition: all 0.3s ease;
-              padding: 40px;
-              border-radius: 24px;
-              background: #ffffff;
-              box-shadow: 0 10px 40px rgba(0, 0, 0, 0.08);
-              border: 1px solid #f0f0f0;
-            }
-            
-            .home-right-col:hover {
-              transform: translateY(-2px);
-              box-shadow: 0 15px 50px rgba(0, 0, 0, 0.12);
+              background: transparent;
+              padding: 0;
             }
             
             /* タブレット対応 */
