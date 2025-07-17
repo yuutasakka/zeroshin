@@ -1989,10 +1989,10 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
                  </button>
                  <button 
                      onClick={() => setViewMode('approvalRequests')}
-                     className={`admin-nav-button px-4 py-2 rounded-md text-sm font-medium transition-colors flex items-center justify-center ${viewMode === 'approvalRequests' ? 'bg-orange-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}`}
+                     className={`admin-nav-button px-4 py-2 rounded-md text-sm font-medium transition-colors flex items-center justify-center ${viewMode === 'approvalRequests' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}`}
                  >
                      <i className="fas fa-user-check mr-2"></i>
-                     <span>🔰 承認申請一覧</span>
+                     <span>承認申請一覧</span>
                  </button>
             </div>
             
@@ -2015,7 +2015,7 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
             <div className="bg-white p-6 md:p-8 rounded-xl shadow-2xl mb-8">
                 <h2 className="text-2xl font-bold text-gray-800 mb-6 flex items-center justify-between">
                     <div className="flex items-center">
-                        <i className="fas fa-users-cog mr-3 text-blue-600"></i>ユーザー診断履歴
+                        ユーザー診断履歴
                     </div>
                     <button
                         onClick={handleExportCSV}
