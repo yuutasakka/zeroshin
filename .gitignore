@@ -45,6 +45,13 @@ ADMIN_CREDENTIALS.md
 .vscode/settings.json
 .idea/workspace.xml
 
+# Debug and test files
+test_*.js
+test_*.cjs
+debug_*.js
+*_test.js
+*_debug.js
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json

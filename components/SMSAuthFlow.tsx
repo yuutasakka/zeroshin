@@ -58,18 +58,20 @@ const SMSAuthFlow: React.FC<SMSAuthFlowProps> = ({
     setError('');
   };
 
-  // 既存認証済みチェック（Supabase経由）
+  // 既存認証済みチェック（Cookie経由）
   const checkExistingAuth = async (phone: string): Promise<boolean> => {
     try {
       // API経由でサーバーサイドで確認
       const response = await fetch('/api/auth-check', {
         method: 'GET',
-        headers: { 'Content-Type': 'application/json' }
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include' // Cookieを送信
       });
       
       if (response.ok) {
-        const { verified } = await response.json();
-        return verified;
+        const { authenticated, user } = await response.json();
+        // 同じ電話番号で認証済みかチェック
+        return authenticated && user?.phoneNumber === normalizePhoneNumber(phone);
       }
       
       return false;
@@ -81,66 +83,7 @@ const SMSAuthFlow: React.FC<SMSAuthFlowProps> = ({
 
   // SMS送信処理
   const handleSendSMS = async () => {
-    if (process.env.NODE_ENV !== 'production') {
-      await measureAsync('SMS送信', PERF_TARGETS.smsSend, async () => {
-        if (!validatePhoneNumber(phoneNumber)) {
-          setError('正しい電話番号を入力してください（090/080/070で始まる11桁）');
-          return;
-        }
-
-        setIsLoading(true);
-        setError('');
-
-        try {
-          // 既存認証済みチェック
-          const isAlreadyVerified = await checkExistingAuth(phoneNumber);
-          if (isAlreadyVerified) {
-            setError('すでに認証済みです。再診断できません。');
-            setIsLoading(false);
-            return;
-          }
-
-          // 1時間あたり3回制限チェック（実装は後で）
-          if (resendCount >= 3) {
-            setError('送信回数の上限に達しました。1時間後にお試しください。');
-            setIsLoading(false);
-            return;
-          }
-
-          // API経由でサーバーサイドでSMS送信
-          const response = await fetch('/api/send-otp-fixed', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ phoneNumber })
-          });
-          
-          if (!response.ok) {
-            const { error } = await response.json();
-            throw new Error(error || 'SMS送信に失敗しました');
-          }
-          
-          // 成功時の処理
-          setStep('otp');
-          setRemainingTime(300); // 5分
-          setResendCount(prev => prev + 1);
-          setCanResend(false);
-          
-          // 再送可能までの時間（60秒）
-          setTimeout(() => {
-            setCanResend(true);
-          }, 60000);
-
-        } catch (error) {
-          if (error instanceof Error) {
-            setError(error.message);
-          } else {
-            setError('SMS送信に失敗しました。後ほどお試しください。');
-          }
-        } finally {
-          setIsLoading(false);
-        }
-      });
-    } else {
+    const performSendSMS = async () => {
       if (!validatePhoneNumber(phoneNumber)) {
         setError('正しい電話番号を入力してください（090/080/070で始まる11桁）');
         return;
@@ -158,7 +101,14 @@ const SMSAuthFlow: React.FC<SMSAuthFlowProps> = ({
           return;
         }
 
-        // API経由でサーバーサイドでSMS送信（レート制限もサーバーサイドで処理）
+        // 1時間あたり3回制限チェック（実装は後で）
+        if (resendCount >= 3) {
+          setError('送信回数の上限に達しました。1時間後にお試しください。');
+          setIsLoading(false);
+          return;
+        }
+
+        // API経由でサーバーサイドでSMS送信
         const response = await fetch('/api/send-otp-fixed', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -190,58 +140,18 @@ const SMSAuthFlow: React.FC<SMSAuthFlowProps> = ({
       } finally {
         setIsLoading(false);
       }
+    };
+
+    if (process.env.NODE_ENV !== 'production') {
+      await measureAsync('SMS送信', PERF_TARGETS.smsSend, performSendSMS);
+    } else {
+      await performSendSMS();
     }
   };
 
   // OTP認証
   const handleVerify = async (otp: string) => {
-    if (process.env.NODE_ENV !== 'production') {
-      await measureAsync('認証処理', PERF_TARGETS.smsVerify, async () => {
-        if (otp.length !== 6) {
-          setError('6桁のOTPを入力してください。');
-          return;
-        }
-
-        setIsLoading(true);
-        setError('');
-
-        try {
-          // API経由でサーバーサイドでOTP検証
-          const response = await fetch('/api/verify-otp-fixed', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ phoneNumber, otp })
-          });
-          
-          if (!response.ok) {
-            const { error } = await response.json();
-            throw new Error(error || '認証に失敗しました');
-          }
-          
-          const result = await response.json();
-          
-          // API結果に基づく処理
-          const isValid = result.success;
-          
-          if (isValid) {
-            // 認証成功
-            onAuthComplete(phoneNumber);
-          } else {
-            setError('認証コードが正しくありません。');
-            // 失敗回数をカウントアップ（5回でIPブロック）
-          }
-
-        } catch (error) {
-          if (error instanceof Error) {
-            setError(error.message);
-          } else {
-            setError('認証に失敗しました。もう一度お試しください。');
-          }
-        } finally {
-          setIsLoading(false);
-        }
-      });
-    } else {
+    const performVerify = async () => {
       if (otp.length !== 6) {
         setError('6桁のOTPを入力してください。');
         return;
@@ -283,6 +193,12 @@ const SMSAuthFlow: React.FC<SMSAuthFlowProps> = ({
       } finally {
         setIsLoading(false);
       }
+    };
+
+    if (process.env.NODE_ENV !== 'production') {
+      await measureAsync('認証処理', PERF_TARGETS.smsVerify, performVerify);
+    } else {
+      await performVerify();
     }
   };
 

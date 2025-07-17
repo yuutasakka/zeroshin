@@ -3,6 +3,24 @@ import type { VercelRequest, VercelResponse } from '@vercel/node';
 // グローバル型定義
 declare global {
   var otpStore: Map<string, { otp: string; expiresAt: number; attempts: number }> | undefined;
+  var ipBlockStore: Map<string, { attempts: number; blockedUntil: number }> | undefined;
+}
+
+// IPブロックストアのクリーンアップ
+const cleanupBlockedIPs = () => {
+  const now = Date.now();
+  if (global.ipBlockStore) {
+    for (const [key, value] of global.ipBlockStore.entries()) {
+      if (value.blockedUntil < now) {
+        global.ipBlockStore.delete(key);
+      }
+    }
+  }
+};
+
+// 5分ごとにクリーンアップを実行
+if (typeof setInterval !== 'undefined') {
+  setInterval(cleanupBlockedIPs, 5 * 60 * 1000);
 }
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
@@ -10,26 +28,15 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   const allowedOrigins = [
     'https://moneyticket.vercel.app',
     'https://moneyticket-git-main-sakkayuta.vercel.app',
-    'https://moneyticket01-10gswrw2q-seai0520s-projects.vercel.app',
-    'https://moneyticket01-rogabfsul-seai0520s-projects.vercel.app',
-    'https://moneyticket01-18dyp3oo0-seai0520s-projects.vercel.app',
-    'https://moneyticket01-jba8tb9fl-seai0520s-projects.vercel.app',
-    'https://moneyticket01-5dbezddft-seai0520s-projects.vercel.app',
-    'https://moneyticket01-8hq0b6f3c-seai0520s-projects.vercel.app',
-    'https://moneyticket01-49mjpk0jf-seai0520s-projects.vercel.app',
-    'https://moneyticket01-ixkbvpo36-seai0520s-projects.vercel.app',
-    'https://moneyticket01-knwbw1xhr-seai0520s-projects.vercel.app',
-    'https://moneyticket01-jaskh9loi-seai0520s-projects.vercel.app',
-    'https://moneyticket01-fru2t4as7-seai0520s-projects.vercel.app',
-    'https://moneyticket01-5wrbneqpz-seai0520s-projects.vercel.app',
-    'https://moneyticket01-iz92wyew3-seai0520s-projects.vercel.app',
-    'https://moneyticket01-pbcipwr4q-seai0520s-projects.vercel.app',
-    'https://moneyticket01-52157o3m3-seai0520s-projects.vercel.app',
-    'https://moneyticket01-3k0j3cwan-seai0520s-projects.vercel.app',
-    'https://moneyticket01-ep83ycdvf-seai0520s-projects.vercel.app',
-  ];
+    // Vercelプレビューデプロイメント用の動的マッチング
+    process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : ''
+  ].filter(Boolean);
+  
+  // プレビューデプロイメントのパターンマッチング
   const origin = req.headers.origin;
-  if (origin && allowedOrigins.includes(origin)) {
+  const isVercelPreview = origin && /^https:\/\/moneyticket01-[a-z0-9]+-seai0520s-projects\.vercel\.app$/.test(origin);
+  
+  if (origin && (allowedOrigins.includes(origin) || isVercelPreview)) {
     res.setHeader('Access-Control-Allow-Origin', origin);
   }
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
@@ -56,35 +63,57 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
 
     console.log('📞 認証リクエスト:', { phoneNumber, otp: otp.substring(0, 2) + '****' });
+    console.log('🔧 環境変数確認:', {
+      supabaseUrl: process.env.VITE_SUPABASE_URL ? '設定済み' : '未設定',
+      serviceRoleKey: process.env.SUPABASE_SERVICE_ROLE_KEY ? '設定済み' : '未設定',
+      twilioSid: process.env.TWILIO_ACCOUNT_SID ? '設定済み' : '未設定'
+    });
 
-    // 電話番号正規化（Twilioテスト成功形式に合わせて修正）
+    // 電話番号正規化（フロントエンドと統一）
     let normalizedPhone = phoneNumber.replace(/\D/g, '');
     console.log('🔍 正規化前:', phoneNumber, '→', normalizedPhone);
     
+    // フロントエンドと同じ検証（090/080/070のみ許可）
+    if (!normalizedPhone.match(/^(090|080|070)\d{8}$/)) {
+      res.status(400).json({ error: '正しい電話番号を入力してください（090/080/070で始まる11桁）' });
+      return;
+    }
+    
+    // +81形式に変換
     if (normalizedPhone.startsWith('0')) {
-      // 090-5704-4893 → 09057044893 → +819057044893
       normalizedPhone = '+81' + normalizedPhone.substring(1);
-    } else if (normalizedPhone.startsWith('81')) {
-      // 81で始まる場合は+を追加
-      normalizedPhone = '+' + normalizedPhone;
-    } else if (!normalizedPhone.startsWith('+')) {
-      // +がない場合は+81を追加
-      normalizedPhone = '+81' + normalizedPhone;
     }
 
     console.log('📲 正規化後:', normalizedPhone);
+
+    // IPアドレス取得
+    const clientIp = req.headers['x-forwarded-for']?.toString().split(',')[0] || 
+                     req.headers['x-real-ip']?.toString() || 
+                     'unknown';
+
+    // IPブロックチェック
+    global.ipBlockStore = global.ipBlockStore || new Map();
+    const ipBlock = global.ipBlockStore.get(clientIp);
+    
+    if (ipBlock && ipBlock.blockedUntil > Date.now()) {
+      console.log('🚫 IPブロック中:', clientIp);
+      res.status(429).json({ error: '認証試行回数が多すぎます。しばらくお待ちください。' });
+      return;
+    }
 
     // SupabaseからOTP取得（メモリフォールバック付き）
     let storedData = null;
     
     try {
       // Supabase Admin接続
-      const { createClient } = require('@supabase/supabase-js');
+      console.log('🔗 Supabase接続試行...');
+      const { createClient } = await import('@supabase/supabase-js');
       const supabaseAdmin = createClient(
         process.env.VITE_SUPABASE_URL!,
         process.env.SUPABASE_SERVICE_ROLE_KEY!
       );
 
+      console.log('🔍 DB検索条件:', { phone_number: normalizedPhone, is_verified: false });
       const { data, error } = await supabaseAdmin
         .from('sms_verifications')
         .select('otp_code, created_at, attempts')
@@ -93,6 +122,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         .order('created_at', { ascending: false })
         .limit(1)
         .single();
+
+      console.log('📋 DB検索結果:', { data, error });
 
       if (!error && data) {
         // UTC基準の期限チェック（created_atから5分）
@@ -107,18 +138,25 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         console.log('✅ Supabase OTP取得成功 (UTC基準期限:', new Date(expiresAt).toISOString(), ')');
       } else {
         console.log('⚠️ Supabase OTP取得失敗、メモリ確認');
+        console.log('📊 エラー詳細:', error);
         // フォールバック: メモリから取得
         global.otpStore = global.otpStore || new Map();
         storedData = global.otpStore.get(normalizedPhone);
+        logger.info('メモリ検索完了', { found: !!storedData });
       }
     } catch (dbError) {
       console.error('⚠️ DB接続失敗、メモリから取得:', dbError);
       global.otpStore = global.otpStore || new Map();
       storedData = global.otpStore.get(normalizedPhone);
+      console.log('💾 メモリ検索結果（例外時）:', storedData ? 'データあり' : 'データなし');
     }
     
     if (!storedData) {
       console.log('❌ OTP not found');
+      console.log('🔍 デバッグ情報:');
+      console.log('  - 検索対象電話番号:', normalizedPhone);
+      console.log('  - メモリストア存在:', !!global.otpStore);
+      console.log('  - メモリストアサイズ:', global.otpStore?.size || 0);
       res.status(400).json({ error: '認証コードが見つかりません。新しいコードを取得してください。' });
       return;
     }
@@ -144,9 +182,16 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     // 試行回数チェック
     if (storedData.attempts >= 5) {
       console.log('❌ Too many attempts');
+      
+      // IPブロック設定（1時間）
+      const ipData = global.ipBlockStore.get(clientIp) || { attempts: 0, blockedUntil: 0 };
+      ipData.attempts++;
+      ipData.blockedUntil = Date.now() + 60 * 60 * 1000; // 1時間ブロック
+      global.ipBlockStore.set(clientIp, ipData);
+      
       // DBとメモリ両方から削除
       try {
-        const { createClient } = require('@supabase/supabase-js');
+        const { createClient } = await import('@supabase/supabase-js');
         const supabaseAdmin = createClient(
           process.env.VITE_SUPABASE_URL!,
           process.env.SUPABASE_SERVICE_ROLE_KEY!
@@ -160,10 +205,23 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
 
     // OTP検証
+    console.log('🔢 OTP比較:', { 入力値: otp, 保存値: storedData.otp, 一致: storedData.otp === otp });
     if (storedData.otp !== otp) {
       // 試行回数を増加
+      storedData.attempts++;
+      
+      // IPごとの失敗回数を記録
+      const ipData = global.ipBlockStore.get(clientIp) || { attempts: 0, blockedUntil: 0 };
+      ipData.attempts++;
+      
+      // 短期間に5回失敗したらIPブロック
+      if (ipData.attempts >= 5) {
+        ipData.blockedUntil = Date.now() + 60 * 60 * 1000; // 1時間ブロック
+        global.ipBlockStore.set(clientIp, ipData);
+      }
+      
       try {
-        const { createClient } = require('@supabase/supabase-js');
+        const { createClient } = await import('@supabase/supabase-js');
         const supabaseAdmin = createClient(
           process.env.VITE_SUPABASE_URL!,
           process.env.SUPABASE_SERVICE_ROLE_KEY!
