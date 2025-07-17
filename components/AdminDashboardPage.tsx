@@ -3801,12 +3801,14 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
 
                 {/* プランナー編集モーダル */}
                 {showPlannerModal && editingPlanner && (
-                    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-                        <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-                            <div className="p-6">
-                                <h3 className="text-lg font-semibold text-gray-800 mb-4">
+                    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4 overflow-y-auto">
+                        <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full my-8 max-h-[85vh] flex flex-col">
+                            <div className="p-6 flex-shrink-0 border-b">
+                                <h3 className="text-lg font-semibold text-gray-800">
                                     {editingPlanner.id ? 'ファイナンシャルプランナー編集' : '新規ファイナンシャルプランナー追加'}
                                 </h3>
+                            </div>
+                            <div className="p-6 overflow-y-auto flex-grow">
                                 
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                     <div>
@@ -3952,7 +3954,11 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
                                     </label>
                                 </div>
 
-                                <div className="flex justify-end space-x-3 mt-6">
+                            </div>
+                            
+                            {/* 固定フッター */}
+                            <div className="p-6 border-t bg-gray-50 flex-shrink-0">
+                                <div className="flex justify-end space-x-3">
                                     <button
                                         onClick={handleClosePlannerModal}
                                         className="px-4 py-2 text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300 transition-colors"
