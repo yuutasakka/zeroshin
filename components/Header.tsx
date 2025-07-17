@@ -6,6 +6,7 @@ import { createSupabaseClient } from './adminUtils';
 
 const Header: React.FC = () => {
   const [headerData, setHeaderData] = useState<HeaderData>(defaultHeaderData);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   useEffect(() => {
     loadHeaderFromSupabase();
@@ -106,33 +107,93 @@ const Header: React.FC = () => {
   };
 
   return (
-    <header className="py-2 px-4 relative z-50"> {/* 上部空白削除: パディングを縮小 */}
-      <div className="container mx-auto px-4">
-        <div className="flex items-center justify-between">
-          <a href="#top" onClick={scrollToTop} className="flex items-center space-x-3 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-var(--accent-gold) rounded-md">
-            <div 
-              className="w-12 h-12 rounded-full flex items-center justify-center" 
-              style={{ background: 'linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%)' }}
-              aria-hidden="true"
+    <>
+      <header className="fixed top-0 left-0 right-0 bg-white shadow-sm z-50">
+        <div className="container mx-auto px-4 lg:px-8">
+          <div className="flex items-center justify-between h-16 md:h-20">
+            <a href="#top" onClick={scrollToTop} className="flex items-center space-x-2 md:space-x-3 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-blue-500 rounded-md">
+              <div 
+                className="w-10 h-10 md:w-12 md:h-12 rounded-full flex items-center justify-center" 
+                style={{ background: 'linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%)' }}
+                aria-hidden="true"
+              >
+                <i className="fas fa-coins text-white text-lg md:text-xl"></i>
+              </div>
+              <h1 className="text-lg sm:text-xl md:text-2xl font-bold" style={{color: '#1e40af'}}>{headerData.title}</h1>
+            </a>
+            
+            {/* デスクトップナビゲーション */}
+            <nav className="hidden md:flex items-center space-x-6">
+              <a href="#main-visual-section" onClick={(e) => scrollToSection(e, 'main-visual-section')} className="text-sm md:text-base text-gray-600 hover:text-blue-600 transition-colors font-medium">サービス概要</a>
+              <a href="#reliability-section" onClick={(e) => scrollToSection(e, 'reliability-section')} className="text-sm md:text-base text-gray-600 hover:text-blue-600 transition-colors font-medium">選ばれる理由</a>
+              <a href="#cta-section" onClick={(e) => scrollToSection(e, 'cta-section')} className="text-sm md:text-base text-gray-600 hover:text-blue-600 transition-colors font-medium">お問い合わせ</a>
+            </nav>
+            
+            {/* モバイルメニューボタン */}
+            <button
+              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+              className="md:hidden p-2 rounded-md hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              aria-label="メニューを開く"
             >
-              <i className="fas fa-coins text-white text-xl"></i>
-            </div>
-            <h1 className="text-xl md:text-2xl font-bold" style={{color: '#1e40af'}}>{headerData.title}</h1>
-          </a>
-          <nav className="hidden md:flex items-center space-x-6">
-            <a href="#main-visual-section" onClick={(e) => scrollToSection(e, 'main-visual-section')} className="text-sm md:text-base text-gray-600 hover:text-blue-600 transition-colors font-medium">サービス概要</a>
-            <a href="#reliability-section" onClick={(e) => scrollToSection(e, 'reliability-section')} className="text-sm md:text-base text-gray-600 hover:text-blue-600 transition-colors font-medium">選ばれる理由</a>
-            <a href="#cta-section" onClick={(e) => scrollToSection(e, 'cta-section')} className="text-sm md:text-base text-gray-600 hover:text-blue-600 transition-colors font-medium">お問い合わせ</a>
-          </nav>
-        </div>
-         <div className="sm:hidden mt-3 px-3 py-2 rounded-full shadow-lg text-center flex justify-center items-center" style={{background: 'rgba(255,255,255,0.9)'}}>
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                {isMobileMenuOpen ? (
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                ) : (
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                )}
+              </svg>
+            </button>
+          </div>
+          
+          {/* サブタイトル（モバイル） */}
+          <div className="sm:hidden px-3 py-2 text-center">
             <span className="text-xs" style={{color: '#374151'}}>
               <i className="fas fa-star mr-1" style={{color: '#3b82f6'}}></i>
               {headerData.subtitle}
             </span>
+          </div>
         </div>
-      </div>
-    </header>
+        
+        {/* モバイルメニュー */}
+        <div className={`md:hidden ${isMobileMenuOpen ? 'block' : 'hidden'}`}>
+          <nav className="bg-white border-t border-gray-200 px-4 py-2">
+            <a 
+              href="#main-visual-section" 
+              onClick={(e) => {
+                scrollToSection(e, 'main-visual-section');
+                setIsMobileMenuOpen(false);
+              }} 
+              className="block py-3 px-4 text-base text-gray-600 hover:text-blue-600 hover:bg-gray-50 rounded-md transition-colors"
+            >
+              サービス概要
+            </a>
+            <a 
+              href="#reliability-section" 
+              onClick={(e) => {
+                scrollToSection(e, 'reliability-section');
+                setIsMobileMenuOpen(false);
+              }} 
+              className="block py-3 px-4 text-base text-gray-600 hover:text-blue-600 hover:bg-gray-50 rounded-md transition-colors"
+            >
+              選ばれる理由
+            </a>
+            <a 
+              href="#cta-section" 
+              onClick={(e) => {
+                scrollToSection(e, 'cta-section');
+                setIsMobileMenuOpen(false);
+              }} 
+              className="block py-3 px-4 text-base text-gray-600 hover:text-blue-600 hover:bg-gray-50 rounded-md transition-colors"
+            >
+              お問い合わせ
+            </a>
+          </nav>
+        </div>
+      </header>
+      
+      {/* ヘッダー分のスペーサー */}
+      <div className="h-16 md:h-20"></div>
+    </>
   );
 };
 

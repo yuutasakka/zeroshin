@@ -519,7 +519,7 @@ const App: React.FC = () => {
     if (currentPage === 'home') {
       return (
         <ErrorBoundary>
-          <div style={{ minHeight: '100vh', background: '#eaf6fb', padding: 0, margin: 0, width: '100%', maxWidth: '100vw', boxSizing: 'border-box', overflowX: 'hidden' }}>
+          <div style={{ minHeight: '100vh', background: '#ffffff', padding: 0, margin: 0, width: '100%', maxWidth: '100vw', boxSizing: 'border-box', overflowX: 'hidden' }}>
           <Header />
           
           {/* 1番目: メインヒーロー（あなたの未来の資産を診断！） */}
@@ -593,106 +593,136 @@ const App: React.FC = () => {
               }
             }
             
-            /* 新しい縦型レイアウト */
+            /* 新しい縦型レイアウト - 視認性向上 */
             .hero-section {
               width: 100%;
-              padding: 20px 0;
+              padding: 40px 0 20px 0;
+              background: linear-gradient(135deg, #f8f9ff 0%, #fff4fc 100%);
             }
             
             .diagnosis-section {
               width: 100%;
-              padding: 40px 20px;
+              padding: 60px 20px;
               display: flex;
               justify-content: center;
-              background: rgba(255, 255, 255, 0.3);
-              backdrop-filter: blur(5px);
+              background: #f8f9fa;
+              position: relative;
+            }
+            
+            .diagnosis-section::before {
+              content: '';
+              position: absolute;
+              top: 0;
+              left: 0;
+              right: 0;
+              height: 1px;
+              background: linear-gradient(90deg, transparent, #e0e0e0, transparent);
             }
             
             .additional-sections {
               width: 100%;
-              padding: 40px 20px;
+              padding: 60px 20px;
               max-width: 1200px;
               margin: 0 auto;
+              background: #ffffff;
             }
             
             .home-right-col {
               width: 100%;
-              max-width: 500px;
+              max-width: 600px;
               transition: all 0.3s ease;
-              padding: 20px;
-              border-radius: 20px;
-              background: rgba(255, 255, 255, 0.4);
-              backdrop-filter: blur(10px);
-              border: 1px solid rgba(255, 255, 255, 0.2);
+              padding: 40px;
+              border-radius: 24px;
+              background: #ffffff;
+              box-shadow: 0 10px 40px rgba(0, 0, 0, 0.08);
+              border: 1px solid #f0f0f0;
             }
             
             .home-right-col:hover {
               transform: translateY(-2px);
-              box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
+              box-shadow: 0 15px 50px rgba(0, 0, 0, 0.12);
             }
             
             /* タブレット対応 */
             @media (max-width: 1024px) and (min-width: 769px) {
               .hero-section {
-                padding: 30px 0;
+                padding: 30px 0 15px 0;
               }
               
               .diagnosis-section {
-                padding: 30px 20px;
+                padding: 40px 20px;
               }
               
               .home-right-col {
                 max-width: 600px;
-                padding: 24px;
+                padding: 32px;
+              }
+              
+              .additional-sections {
+                padding: 40px 20px;
               }
             }
             
             /* スマートフォン（一般） */
             @media (max-width: 768px) {
               .hero-section {
-                padding: 15px 0;
+                padding: 20px 0 10px 0;
               }
               
               .diagnosis-section {
-                padding: 20px 1rem;
+                padding: 30px 16px;
               }
               
               .additional-sections {
-                padding: 20px 1rem;
+                padding: 30px 16px;
               }
               
               .home-right-col {
-                max-width: calc(100vw - 2rem) !important;
+                max-width: calc(100% - 32px);
                 margin: 0 auto;
-                padding: 18px;
-                border-radius: 16px;
+                padding: 24px;
+                border-radius: 20px;
+                box-shadow: 0 8px 30px rgba(0, 0, 0, 0.06);
               }
             }
             
             /* スマートフォン（小画面） */
             @media (max-width: 480px) {
               .diagnosis-section {
-                padding: 15px 0.75rem;
+                padding: 24px 12px;
               }
               
               .home-right-col {
-                max-width: calc(100vw - 1.5rem) !important;
-                padding: 12px;
-                border-radius: 12px;
-                margin: 0 0.75rem;
+                max-width: calc(100% - 24px);
+                padding: 20px;
+                border-radius: 16px;
+                margin: 0 auto;
+              }
+              
+              .additional-sections {
+                padding: 24px 12px;
               }
             }
             
-            /* 極小画面対応 */
+            /* 極小画面対応（iPhone SE等） */
             @media (max-width: 375px) {
+              .hero-section {
+                padding: 16px 0 8px 0;
+              }
+              
               .diagnosis-section {
-                padding: 10px 0.5rem;
+                padding: 20px 10px;
               }
               
               .home-right-col {
-                max-width: calc(100vw - 1rem) !important;
-                padding: 10px;
-                margin: 0 0.5rem;
+                max-width: calc(100% - 20px);
+                padding: 16px;
+                margin: 0 auto;
+                border-radius: 12px;
+              }
+              
+              .additional-sections {
+                padding: 20px 10px;
               }
             }
           `}</style>

@@ -42,7 +42,8 @@ const logger = ProductionLogger;
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   // CORS設定 - 本番環境用
   const allowedOrigins = [
-    'https://moneyticket.vercel.app',
+    'https://moneyticket01.vercel.app',
+    'https://moneyticket01-seai0520s-projects.vercel.app',
     'https://moneyticket-git-main-sakkayuta.vercel.app',
     // Vercelプレビューデプロイメント用の動的マッチング
     process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : ''
