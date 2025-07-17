@@ -25,7 +25,7 @@ if (typeof setInterval !== 'undefined') {
 
 import ProductionLogger from '../src/utils/productionLogger';
 
-const logger = new ProductionLogger();
+const logger = ProductionLogger;
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   // CORS設定 - 本番環境用
