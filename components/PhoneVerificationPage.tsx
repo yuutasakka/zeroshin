@@ -484,7 +484,9 @@ const PhoneVerificationPage: React.FC<PhoneVerificationPageProps> = ({
         {/* メインヘッダー */}
         <div className="text-center mb-8">
           <div className="w-20 h-20 bg-gradient-to-r from-emerald-400 to-blue-500 rounded-full flex items-center justify-center mx-auto mb-6 shadow-lg">
-            <div className="text-white text-3xl">📱</div>
+            <svg className="w-12 h-12 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
+            </svg>
           </div>
           <h1 className="text-3xl font-bold text-gray-800 mb-3">
             あなたの診断結果が
@@ -497,22 +499,22 @@ const PhoneVerificationPage: React.FC<PhoneVerificationPageProps> = ({
           
           {/* 結果の魅力をアピール */}
           <div className="bg-gradient-to-r from-emerald-50 to-blue-50 rounded-xl p-6 mb-6">
-            <h3 className="text-lg font-semibold text-gray-800 mb-3">🎯 あなた専用の診断結果をご用意</h3>
+            <h3 className="text-lg font-semibold text-gray-800 mb-3">あなた専用の診断結果をご用意</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm text-gray-700">
               <div className="flex items-center">
-                <span className="text-emerald-500 mr-2">✨</span>
+                <span className="text-emerald-500 mr-2">•</span>
                 個別の投資戦略プラン
               </div>
               <div className="flex items-center">
-                <span className="text-blue-500 mr-2">📊</span>
+                <span className="text-blue-500 mr-2">•</span>
                 資産成長シミュレーション
               </div>
               <div className="flex items-center">
-                <span className="text-purple-500 mr-2">🎯</span>
+                <span className="text-purple-500 mr-2">•</span>
                 リスク分析と対策
               </div>
               <div className="flex items-center">
-                <span className="text-orange-500 mr-2">💡</span>
+                <span className="text-orange-500 mr-2">•</span>
                 専門家おすすめ商品
               </div>
             </div>
@@ -521,7 +523,9 @@ const PhoneVerificationPage: React.FC<PhoneVerificationPageProps> = ({
           {hasPhoneFromSession && step === 'otp-verification' && (
             <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-4">
               <p className="text-green-700 text-sm">
-                <i className="fas fa-check-circle mr-2"></i>
+                <svg className="w-4 h-4 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                </svg>
                 {phoneNumber} に認証コードを送信しました
               </p>
             </div>
@@ -559,7 +563,7 @@ const PhoneVerificationPage: React.FC<PhoneVerificationPageProps> = ({
 
               {error && (
                 <div className="p-4 bg-red-50 border border-red-200 rounded-xl">
-                  <p className="text-red-600 text-sm">⚠️ {error}</p>
+                  <p className="text-red-600 text-sm">{error}</p>
                 </div>
               )}
 
@@ -575,7 +579,7 @@ const PhoneVerificationPage: React.FC<PhoneVerificationPageProps> = ({
                   </div>
                 ) : (
                   <>
-                    <span className="text-lg">🚀 認証コードを受け取る</span>
+                    <span className="text-lg">認証コードを受け取る</span>
                     <div className="text-sm opacity-90 mt-1">診断結果まであと1ステップ！</div>
                   </>
                 )}
@@ -599,7 +603,9 @@ const PhoneVerificationPage: React.FC<PhoneVerificationPageProps> = ({
           <div className="bg-white rounded-2xl shadow-xl p-8 border border-gray-100">
             <div className="text-center mb-8">
               <div className="w-16 h-16 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <div className="text-emerald-600 text-2xl">💬</div>
+                <svg className="w-10 h-10 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
+                </svg>
               </div>
               <h3 className="text-xl font-semibold text-gray-800 mb-3">認証コードを入力してください</h3>
               <p className="text-gray-600 text-sm mb-2">
@@ -618,7 +624,7 @@ const PhoneVerificationPage: React.FC<PhoneVerificationPageProps> = ({
                  window.location.hostname.includes('127.0.0.1'))) && (
                 <div className="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
                   <p className="text-yellow-800 text-sm font-medium">
-                    🔧 開発環境用認証コード: <strong>123456</strong>
+                    開発環境用認証コード: <strong>123456</strong>
                   </p>
                   <p className="text-yellow-700 text-xs mt-1">
                     本番環境では実際のSMSが送信されます
@@ -651,13 +657,13 @@ const PhoneVerificationPage: React.FC<PhoneVerificationPageProps> = ({
                 <div className="p-4 bg-orange-50 border border-orange-200 rounded-xl">
                   {lockoutTime && lockoutTime > 0 ? (
                     <p className="text-orange-700 text-sm text-center">
-                      🔒 認証がロックされています<br />
+                      認証がロックされています<br />
                       残り時間: <strong className="text-lg font-mono">{formatLockoutTime(lockoutTime)}</strong><br />
                       <span className="text-xs">セキュリティのため一時的にロックされています</span>
                     </p>
                   ) : (
                     <p className="text-orange-700 text-sm text-center">
-                      ⚠️ 認証失敗: {failedAttempts}/{MAX_ATTEMPTS}回<br />
+                      認証失敗: {failedAttempts}/{MAX_ATTEMPTS}回<br />
                       <span className="text-xs">
                         {MAX_ATTEMPTS - failedAttempts}回失敗すると{Math.floor(LOCKOUT_DURATION / 60000)}分間ロックされます
                       </span>
@@ -668,13 +674,13 @@ const PhoneVerificationPage: React.FC<PhoneVerificationPageProps> = ({
 
               {error && (
                 <div className="p-4 bg-red-50 border border-red-200 rounded-xl">
-                  <p className="text-red-600 text-sm text-center">❌ {error}</p>
+                  <p className="text-red-600 text-sm text-center">{error}</p>
                 </div>
               )}
 
               {/* 重要な警告メッセージ */}
               <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-xl">
-                <h4 className="text-yellow-800 font-semibold text-sm mb-2">⚠️ 重要なお知らせ</h4>
+                <h4 className="text-yellow-800 font-semibold text-sm mb-2">重要なお知らせ</h4>
                 <p className="text-yellow-700 text-xs leading-relaxed">
                   この認証を完了せずに画面を閉じると、<strong>診断結果を二度と受け取ることができません</strong>。<br />
                   お一人様一回限りの診断のため、再診断はできませんのでご注意ください。
@@ -693,7 +699,7 @@ const PhoneVerificationPage: React.FC<PhoneVerificationPageProps> = ({
                   </div>
                 ) : (
                   <>
-                    <span className="text-lg text-white">🎉 認証完了して結果を受け取る</span>
+                    <span className="text-lg text-white">認証完了して結果を受け取る</span>
                     <div className="text-sm text-white opacity-90 mt-1">あなた専用の投資プランが待っています！</div>
                   </>
                 )}
@@ -703,7 +709,7 @@ const PhoneVerificationPage: React.FC<PhoneVerificationPageProps> = ({
             <div className="mt-6 text-center space-y-3">
               {countdown > 0 ? (
                 <p className="text-gray-500 text-sm">
-                  📱 再送信まで <strong className="font-mono">{countdown}秒</strong>
+                  再送信まで <strong className="font-mono">{countdown}秒</strong>
                 </p>
               ) : (
                 <button
@@ -711,7 +717,7 @@ const PhoneVerificationPage: React.FC<PhoneVerificationPageProps> = ({
                   disabled={loading || !!(lockoutTime && lockoutTime > 0)}
                   className="text-emerald-600 hover:text-emerald-800 text-sm transition-colors duration-200 font-medium disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  🔄 認証コードを再送信
+                  認証コードを再送信
                 </button>
               )}
 
@@ -738,7 +744,9 @@ const PhoneVerificationPage: React.FC<PhoneVerificationPageProps> = ({
         {step === 'success' && (
           <div className="bg-white rounded-2xl shadow-xl p-8 text-center border border-gray-100">
             <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
-              <div className="text-green-600 text-3xl">🎉</div>
+              <svg className="w-12 h-12 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+              </svg>
             </div>
             <h3 className="text-2xl font-bold text-gray-800 mb-4">認証完了！</h3>
             <p className="text-gray-600 mb-6 text-lg">
@@ -758,7 +766,9 @@ const PhoneVerificationPage: React.FC<PhoneVerificationPageProps> = ({
         {step === 'error' && (
           <div className="bg-white rounded-2xl shadow-xl p-8 text-center border border-gray-100">
             <div className="w-20 h-20 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-6">
-              <div className="text-red-600 text-3xl">⚠️</div>
+              <svg className="w-12 h-12 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
             </div>
             <h3 className="text-xl font-semibold text-gray-800 mb-4">認証に失敗しました</h3>
             <p className="text-gray-600 mb-6">
@@ -783,15 +793,15 @@ const PhoneVerificationPage: React.FC<PhoneVerificationPageProps> = ({
         <div className="mt-8 text-center">
           <div className="flex items-center justify-center space-x-6 text-sm text-gray-500">
             <div className="flex items-center">
-              <span className="text-green-500 mr-2">🔒</span>
+              <span className="text-green-500 mr-2">•</span>
               セキュア認証
             </div>
             <div className="flex items-center">
-              <span className="text-blue-500 mr-2">📱</span>
+              <span className="text-blue-500 mr-2">•</span>
               SMS暗号化
             </div>
             <div className="flex items-center">
-              <span className="text-purple-500 mr-2">🛡️</span>
+              <span className="text-purple-500 mr-2">•</span>
               個人情報保護
             </div>
           </div>

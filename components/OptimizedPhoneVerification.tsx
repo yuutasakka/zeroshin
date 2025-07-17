@@ -175,7 +175,9 @@ const OptimizedPhoneVerification: React.FC<OptimizedPhoneVerificationProps> = ({
           {!isSuccess ? (
             <>
               <div className="w-20 h-20 bg-gradient-to-br from-blue-500 to-purple-500 rounded-full flex items-center justify-center mx-auto mb-6">
-                <span className="text-3xl">📱</span>
+                <svg className="w-12 h-12 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                </svg>
               </div>
 
               <h2 className="text-2xl font-bold text-gray-800 mb-2">
@@ -247,8 +249,10 @@ const OptimizedPhoneVerification: React.FC<OptimizedPhoneVerificationProps> = ({
           ) : (
             /* 成功画面 */
             <>
-              <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6 animate-scaleIn">
-                <span className="text-3xl">✅</span>
+              <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6 animate-bounce">
+                <svg className="w-12 h-12 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                </svg>
               </div>
               <h2 className="text-2xl font-bold text-gray-800 mb-2">
                 認証成功！
@@ -275,23 +279,6 @@ const OptimizedPhoneVerification: React.FC<OptimizedPhoneVerificationProps> = ({
           </div>
         )}
       </div>
-
-      <style jsx>{`
-        @keyframes scaleIn {
-          from {
-            transform: scale(0);
-            opacity: 0;
-          }
-          to {
-            transform: scale(1);
-            opacity: 1;
-          }
-        }
-        
-        .animate-scaleIn {
-          animation: scaleIn 0.5s ease-out;
-        }
-      `}</style>
     </div>
   );
 };

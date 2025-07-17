@@ -583,7 +583,7 @@ export class DiagnosisSessionManager {
           .from('diagnosis_sessions')
           .update(updateData)
           .eq('session_id', sessionId)
-          .eq('phone_number', normalizedPhone);
+          .eq('phone_number', phoneNumber);
 
         if (!error) {
           // ローカルストレージも更新

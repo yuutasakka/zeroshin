@@ -18,7 +18,6 @@ interface OptimizedDiagnosisFlowProps {
 const quickDiagnosisProfiles = [
   {
     id: 'young-beginner',
-    icon: '🌱',
     title: '投資デビュー',
     subtitle: '20-30代・初心者',
     description: '少額から始めたい',
@@ -29,7 +28,6 @@ const quickDiagnosisProfiles = [
   },
   {
     id: 'family-planner',
-    icon: '👨‍👩‍👧',
     title: '家族の未来',
     subtitle: '30-40代・教育資金',
     description: '子供の将来に備えたい',
@@ -40,7 +38,6 @@ const quickDiagnosisProfiles = [
   },
   {
     id: 'retirement-prep',
-    icon: '🏖️',
     title: '老後の安心',
     subtitle: '40-50代・老後準備',
     description: 'セカンドライフの準備',
@@ -51,7 +48,6 @@ const quickDiagnosisProfiles = [
   },
   {
     id: 'wealth-builder',
-    icon: '💎',
     title: '資産形成',
     subtitle: '全年代・資産拡大',
     description: '本格的な資産運用',
@@ -163,9 +159,6 @@ const OptimizedDiagnosisFlow: React.FC<OptimizedDiagnosisFlowProps> = ({ onCompl
                 onClick={() => setAnswers(prev => ({ ...prev, ageAndExperience: `${age}-${prev.ageAndExperience?.split('-')[1] || ''}` }))}
               >
                 <span className="font-medium">{age}</span>
-                <span className="text-2xl group-hover:scale-110 transition-transform">
-                  {age === '20代' ? '🌱' : age === '30代' ? '🏃' : age === '40代' ? '💼' : age === '50代' ? '🎯' : '🏆'}
-                </span>
               </button>
             ))}
           </div>
@@ -175,9 +168,9 @@ const OptimizedDiagnosisFlow: React.FC<OptimizedDiagnosisFlowProps> = ({ onCompl
           <label className="block text-sm font-medium text-gray-700 mb-3">投資経験</label>
           <div className="space-y-3">
             {[
-              { value: 'beginner', label: '初心者', icon: '🔰', desc: 'これから始めたい' },
-              { value: 'basic', label: '勉強中', icon: '📚', desc: '基礎知識あり' },
-              { value: 'experienced', label: '経験者', icon: '📊', desc: '運用実績あり' }
+              { value: 'beginner', label: '初心者', desc: 'これから始めたい' },
+              { value: 'basic', label: '勉強中', desc: '基礎知識あり' },
+              { value: 'experienced', label: '経験者', desc: '運用実績あり' }
             ].map((exp) => (
               <button
                 key={exp.value}
@@ -193,7 +186,6 @@ const OptimizedDiagnosisFlow: React.FC<OptimizedDiagnosisFlowProps> = ({ onCompl
                     <div className="font-medium">{exp.label}</div>
                     <div className="text-sm text-gray-500">{exp.desc}</div>
                   </div>
-                  <span className="text-2xl">{exp.icon}</span>
                 </div>
               </button>
             ))}
@@ -215,10 +207,10 @@ const OptimizedDiagnosisFlow: React.FC<OptimizedDiagnosisFlowProps> = ({ onCompl
           <label className="block text-sm font-medium text-gray-700 mb-3">投資の目的</label>
           <div className="grid grid-cols-2 gap-4">
             {[
-              { value: 'education', label: '教育資金', icon: '🎓' },
-              { value: 'housing', label: '住宅資金', icon: '🏠' },
-              { value: 'retirement', label: '老後資金', icon: '🏖️' },
-              { value: 'wealth', label: '資産拡大', icon: '💎' }
+              { value: 'education', label: '教育資金' },
+              { value: 'housing', label: '住宅資金' },
+              { value: 'retirement', label: '老後資金' },
+              { value: 'wealth', label: '資産拡大' }
             ].map((purpose) => (
               <button
                 key={purpose.value}
@@ -232,8 +224,7 @@ const OptimizedDiagnosisFlow: React.FC<OptimizedDiagnosisFlowProps> = ({ onCompl
                   setAnswers(prev => ({ ...prev, purposeAndBudget: `${purpose.value}-${budget}` }));
                 }}
               >
-                <div className="text-3xl mb-2">{purpose.icon}</div>
-                <div className="font-medium">{purpose.label}</div>
+                <div className="font-medium text-lg">{purpose.label}</div>
               </button>
             ))}
           </div>
@@ -309,7 +300,7 @@ const OptimizedDiagnosisFlow: React.FC<OptimizedDiagnosisFlowProps> = ({ onCompl
             <div className={`absolute right-4 top-1/2 -translate-y-1/2 ${
               validatePhoneNumber(phoneInput) ? 'text-green-500' : 'text-gray-400'
             }`}>
-              {validatePhoneNumber(phoneInput) ? '✅' : '📱'}
+              {validatePhoneNumber(phoneInput) ? '✓' : ''}
             </div>
           )}
         </div>
@@ -320,7 +311,7 @@ const OptimizedDiagnosisFlow: React.FC<OptimizedDiagnosisFlowProps> = ({ onCompl
         
         <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
           <p className="text-sm text-blue-800 text-center">
-            <span className="font-medium">🔒 セキュアな認証</span><br />
+            <span className="font-medium">セキュアな認証</span><br />
             SMS認証で本人確認を行い、安全に結果をお届けします
           </p>
         </div>
@@ -341,7 +332,7 @@ const OptimizedDiagnosisFlow: React.FC<OptimizedDiagnosisFlowProps> = ({ onCompl
     <div className={`space-y-8 ${isTransitioning ? 'opacity-0' : 'opacity-100'} transition-opacity duration-300`}>
       <div className="text-center">
         <h2 className="text-3xl font-bold text-gray-800 mb-3">
-          ⚡ 30秒で完了する資産診断
+          30秒で完了する資産診断
         </h2>
         <p className="text-lg text-gray-600">
           あなたに近いプロフィールを選ぶだけで、最適な投資プランをご提案
@@ -359,7 +350,7 @@ const OptimizedDiagnosisFlow: React.FC<OptimizedDiagnosisFlowProps> = ({ onCompl
             }`}
             onClick={() => handleQuickDiagnosis(profile)}
           >
-            <div className="text-4xl mb-3">{profile.icon}</div>
+            <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-500 rounded-full mx-auto mb-3"></div>
             <h3 className="text-xl font-bold text-gray-800 mb-1">{profile.title}</h3>
             <p className="text-sm text-gray-600 mb-2">{profile.subtitle}</p>
             <p className="text-xs text-gray-500">{profile.description}</p>
@@ -424,43 +415,6 @@ const OptimizedDiagnosisFlow: React.FC<OptimizedDiagnosisFlowProps> = ({ onCompl
           )}
         </div>
       </div>
-      
-      <style jsx>{`
-        @keyframes fade-in {
-          from {
-            opacity: 0;
-            transform: translateY(20px);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0);
-          }
-        }
-        
-        .animate-fade-in {
-          animation: fade-in 0.5s ease-out;
-        }
-        
-        .slider::-webkit-slider-thumb {
-          appearance: none;
-          width: 24px;
-          height: 24px;
-          background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
-          border-radius: 50%;
-          cursor: pointer;
-          box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
-        }
-        
-        .slider::-moz-range-thumb {
-          width: 24px;
-          height: 24px;
-          background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
-          border-radius: 50%;
-          cursor: pointer;
-          box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
-          border: none;
-        }
-      `}</style>
     </section>
   );
 };

@@ -223,7 +223,7 @@ const AIConectXHero: React.FC<AIConectXHeroProps> = ({ onStartDiagnosis }) => {
         @media (max-width: 768px) {
           .hero-section {
             min-height: 50vh !important;
-            padding-top: 70px !important;
+            padding-top: 90px !important;
             padding-bottom: 30px !important;
           }
           .hero-title-text {
@@ -268,7 +268,7 @@ const AIConectXHero: React.FC<AIConectXHeroProps> = ({ onStartDiagnosis }) => {
         @media (max-width: 375px) {
           .hero-section {
             min-height: 45vh !important;
-            padding-top: 60px !important;
+            padding-top: 80px !important;
           }
           .hero-title-text {
             font-size: 1.3rem !important;
@@ -300,15 +300,12 @@ const AIConectXHero: React.FC<AIConectXHeroProps> = ({ onStartDiagnosis }) => {
           
           {/* メインタイトル */}
           <div style={heroStyles.title}>
-            <span style={heroStyles.titleEmoji}>💰</span>
             <h1 style={heroStyles.titleText} className="hero-title-text">{mainVisualData.title}</h1>
           </div>
           
           {/* サブタイトル */}
           <div style={heroStyles.subtitle}>
-            <span style={heroStyles.subtitleEmoji}>✨</span>
             <h2 style={heroStyles.subtitleText} className="hero-subtitle-text">{mainVisualData.subtitle}</h2>
-            <span style={heroStyles.subtitleEmoji}>✨</span>
           </div>
           
           {/* 診断開始ボタン */}
@@ -329,7 +326,6 @@ const AIConectXHero: React.FC<AIConectXHeroProps> = ({ onStartDiagnosis }) => {
                 e.currentTarget.style.background = 'linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%)';
               }}
             >
-              <span style={heroStyles.featureEmoji}>📊</span>
               <span>診断を始める</span>
             </button>
           </div>
@@ -337,15 +333,12 @@ const AIConectXHero: React.FC<AIConectXHeroProps> = ({ onStartDiagnosis }) => {
           {/* 安心・安全メッセージ */}
           <div style={heroStyles.features}>
             <div style={heroStyles.feature}>
-              <span style={heroStyles.featureEmoji}>🔒</span>
               <span style={heroStyles.featureText} className="hero-feature-text">SMS認証で安心・安全</span>
             </div>
             <div style={heroStyles.feature}>
-              <span style={heroStyles.featureEmoji}>🎯</span>
               <span style={heroStyles.featureText} className="hero-feature-text">14種類の投資商品から最適提案</span>
             </div>
             <div style={heroStyles.feature}>
-              <span style={heroStyles.featureEmoji}>👨‍💼</span>
               <span style={heroStyles.featureText} className="hero-feature-text">専門家の紹介まで無料</span>
             </div>
           </div>
