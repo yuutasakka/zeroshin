@@ -272,12 +272,18 @@ const AdminLoginPage: React.FC<AdminLoginPageProps> = ({ onLogin, onNavigateHome
     
     secureLog('管理者ログイン処理開始', { username: sanitizedUsername, attempt: newAttempts });
 
-    // 基本検証
+    // 基本検証 - パスワードはサニタイズしない
     if (!sanitizedUsername || !password) {
       setError(`ユーザー名とパスワードを入力してください。（残り${MAX_LOGIN_ATTEMPTS - newAttempts}回）`);
       setLoading(false);
       return;
     }
+    
+    console.log('🔐 入力確認', {
+      username: sanitizedUsername,
+      passwordLength: password.length,
+      passwordContainsSpecialChar: /[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]/.test(password)
+    });
 
     try {
       secureLog('監査ログ記録開始');
@@ -365,19 +371,32 @@ const AdminLoginPage: React.FC<AdminLoginPageProps> = ({ onLogin, onNavigateHome
       // セキュリティ強化: 適切なパスワード検証を実行
       let isPasswordValid = false;
       
+      console.log('🔑 パスワード検証開始', {
+        sanitizedUsername,
+        passwordLength: password.length,
+        useLocalFallback,
+        hasAdminCredentials: !!adminCredentials,
+        passwordHash: adminCredentials?.password_hash?.substring(0, 20) + '...'
+      });
+      
       // デフォルト管理者アカウントの場合は直接比較
       if (sanitizedUsername === 'admin' && password === 'Admin123!') {
+        console.log('✅ デフォルト管理者アカウントで認証成功');
         isPasswordValid = true;
       } else if (useLocalFallback) {
         // ローカルフォールバック時は直接比較
+        console.log('❌ ローカルフォールバック: 他のアカウントは許可されません');
         isPasswordValid = false; // 他のアカウントは許可しない
       } else {
         try {
+          console.log('🔍 SupabaseAdminAuth.verifyPasswordを呼び出し中...');
           isPasswordValid = await SupabaseAdminAuth.verifyPassword(password, adminCredentials.password_hash);
+          console.log('🔍 verifyPassword結果:', isPasswordValid);
         } catch (verifyError) {
-          console.warn('パスワード検証エラー', verifyError);
+          console.warn('⚠️ パスワード検証エラー', verifyError);
           // エラー時のフォールバック: デフォルトアカウントのみ許可
           if (sanitizedUsername === 'admin' && password === 'Admin123!') {
+            console.log('✅ エラー時のフォールバック: デフォルト管理者アカウントで認証成功');
             isPasswordValid = true;
           }
         }
