@@ -108,8 +108,8 @@ const SMSAuthFlow: React.FC<SMSAuthFlowProps> = ({
           return;
         }
 
-        // API経由でサーバーサイドでSMS送信
-        const response = await fetch('/api/send-otp-fixed', {
+        // API経由でサーバーサイドでSMS送信（簡易版を使用）
+        const response = await fetch('/api/send-otp-simple', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ phoneNumber })
@@ -161,8 +161,8 @@ const SMSAuthFlow: React.FC<SMSAuthFlowProps> = ({
       setError('');
 
       try {
-        // API経由でサーバーサイドでOTP検証
-        const response = await fetch('/api/verify-otp-fixed', {
+        // API経由でサーバーサイドでOTP検証（簡易版を使用）
+        const response = await fetch('/api/verify-otp-simple', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ phoneNumber, otp })
