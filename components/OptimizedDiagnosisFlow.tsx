@@ -155,10 +155,17 @@ const OptimizedDiagnosisFlow: React.FC<OptimizedDiagnosisFlowProps> = ({ onCompl
             {['20代', '30代', '40代', '50代', '60代以上'].map((age) => (
               <button
                 key={age}
-                className="w-full p-4 text-left rounded-xl border-2 hover:border-blue-500 hover:bg-blue-50 transition-all duration-200 flex items-center justify-between group"
+                className={`w-full p-4 text-left rounded-xl border-2 transition-all duration-200 flex items-center justify-between group ${
+                  answers.ageAndExperience?.split('-')[0] === age 
+                    ? 'border-blue-500 bg-blue-50' 
+                    : 'border-gray-200 hover:border-blue-500 hover:bg-blue-50'
+                }`}
                 onClick={() => setAnswers(prev => ({ ...prev, ageAndExperience: `${age}-${prev.ageAndExperience?.split('-')[1] || ''}` }))}
               >
                 <span className="font-medium">{age}</span>
+                {answers.ageAndExperience?.split('-')[0] === age && (
+                  <i className="fas fa-check-circle text-blue-500"></i>
+                )}
               </button>
             ))}
           </div>
@@ -174,7 +181,11 @@ const OptimizedDiagnosisFlow: React.FC<OptimizedDiagnosisFlowProps> = ({ onCompl
             ].map((exp) => (
               <button
                 key={exp.value}
-                className="w-full p-4 text-left rounded-xl border-2 hover:border-blue-500 hover:bg-blue-50 transition-all duration-200"
+                className={`w-full p-4 text-left rounded-xl border-2 transition-all duration-200 ${
+                  answers.ageAndExperience?.split('-')[1] === exp.value
+                    ? 'border-blue-500 bg-blue-50'
+                    : 'border-gray-200 hover:border-blue-500 hover:bg-blue-50'
+                }`}
                 onClick={() => {
                   const age = answers.ageAndExperience?.split('-')[0] || '';
                   setAnswers(prev => ({ ...prev, ageAndExperience: `${age}-${exp.value}` }));
@@ -186,6 +197,9 @@ const OptimizedDiagnosisFlow: React.FC<OptimizedDiagnosisFlowProps> = ({ onCompl
                     <div className="font-medium">{exp.label}</div>
                     <div className="text-sm text-gray-500">{exp.desc}</div>
                   </div>
+                  {answers.ageAndExperience?.split('-')[1] === exp.value && (
+                    <i className="fas fa-check-circle text-blue-500"></i>
+                  )}
                 </div>
               </button>
             ))}
