@@ -1815,7 +1815,7 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
               
               <button
                 onClick={onNavigateHome}
-                className="text-gray-300 hover:text-white text-sm transition duration-150 ease-in-out flex items-center"
+                className="text-gray-300 hover:text-white text-sm transition duration-150 ease-in-out flex items-center justify-center"
                 aria-label="ホームページへ戻る"
               >
                 <i className="fas fa-home mr-1"></i>
@@ -2000,7 +2000,7 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
             <div className="mt-4 pt-4 border-t border-gray-200">
                 <button 
                     onClick={handleResetToSampleData}
-                    className="bg-orange-500 hover:bg-orange-600 text-black font-medium px-4 py-2 rounded-md text-sm transition-colors flex items-center"
+                    className="bg-orange-500 hover:bg-orange-600 text-black font-medium px-4 py-2 rounded-md text-sm transition-colors flex items-center justify-center"
                 >
                     <i className="fas fa-refresh mr-2"></i>
                     <span>🔄 サンプルデータで初期化</span>
@@ -2166,7 +2166,7 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
                         secureLog('商品設定保存ボタンがクリックされました');
                         handleSaveProductSettings();
                     }}
-                    className="mt-6 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-6 rounded-lg shadow-md transition duration-150 ease-in-out flex items-center"
+                    className="mt-6 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-6 rounded-lg shadow-md transition duration-150 ease-in-out flex items-center justify-center"
                 >
                     <i className="fas fa-save mr-2"></i>商品設定を保存
                 </button>
@@ -2182,7 +2182,7 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
                     </div>
                     <button
                         onClick={() => handleOpenTestimonialModal()}
-                        className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-lg shadow-md transition duration-150 ease-in-out flex items-center text-sm"
+                        className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-lg shadow-md transition duration-150 ease-in-out flex items-center justify-center text-sm"
                     >
                         <i className="fas fa-plus mr-2"></i>新規追加
                     </button>
@@ -2220,7 +2220,7 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
                 
                 <button
                     onClick={handleSaveTestimonialSettings}
-                    className="mt-6 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-6 rounded-lg shadow-md transition duration-150 ease-in-out flex items-center"
+                    className="mt-6 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-6 rounded-lg shadow-md transition duration-150 ease-in-out flex items-center justify-center"
                 >
                     <i className="fas fa-save mr-2"></i>お客様の声を保存
                 </button>
@@ -2314,7 +2314,7 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
                 </div>
                 <button
                     onClick={handleSaveTrackingScripts}
-                    className="mt-6 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-6 rounded-lg shadow-md transition duration-150 ease-in-out flex items-center"
+                    className="mt-6 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-6 rounded-lg shadow-md transition duration-150 ease-in-out flex items-center justify-center"
                 >
                     <i className="fas fa-save mr-2"></i>トラッキング設定を保存
                 </button>
@@ -2512,7 +2512,7 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
                 </div>
                  <button
                     onClick={handleSaveNotificationSettings}
-                    className="mt-8 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-6 rounded-lg shadow-md transition duration-150 ease-in-out flex items-center"
+                    className="mt-8 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-6 rounded-lg shadow-md transition duration-150 ease-in-out flex items-center justify-center"
                 >
                     <i className="fas fa-save mr-2"></i>通知設定を保存
                 </button>
@@ -2682,7 +2682,7 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
                                 <h4 className="text-md font-semibold text-gray-700">理由項目</h4>
                                 <button
                                     onClick={handleAddReason}
-                                    className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-lg shadow-md transition duration-150 ease-in-out flex items-center text-sm"
+                                    className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-lg shadow-md transition duration-150 ease-in-out flex items-center justify-center text-sm"
                                 >
                                     <i className="fas fa-plus mr-2"></i>項目を追加
                                 </button>
@@ -3699,7 +3699,7 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
                     </div>
                     <button
                         onClick={() => handleOpenPlannerModal()}
-                        className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-lg shadow-md transition duration-150 ease-in-out flex items-center text-sm"
+                        className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-lg shadow-md transition duration-150 ease-in-out flex items-center justify-center text-sm"
                     >
                         <i className="fas fa-plus mr-2"></i>新規追加
                     </button>
@@ -4109,7 +4109,7 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
 
                 <button
                     onClick={handleSaveExpertContactSettings}
-                    className="mt-6 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-6 rounded-lg shadow-md transition duration-150 ease-in-out flex items-center"
+                    className="mt-6 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-6 rounded-lg shadow-md transition duration-150 ease-in-out flex items-center justify-center"
                 >
                     <i className="fas fa-save mr-2"></i>専門家設定を保存
                 </button>

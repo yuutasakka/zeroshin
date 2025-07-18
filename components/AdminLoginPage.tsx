@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { SupabaseAdminAuth } from './supabaseClient';
+import { SupabaseAdminAuth, supabase } from './supabaseClient';
 import { secureLog, SecureStorage } from '../security.config';
 import AdminDefaultAccount from './AdminDefaultAccount';
 
@@ -204,17 +204,60 @@ const AdminLoginPage: React.FC<AdminLoginPageProps> = ({ onLogin, onNavigateHome
     setSuccess('');
 
     try {
-      // メール認証機能は現在実装されていません
-      setError('メール認証機能は現在無効化されています。従来のログインをご利用ください。');
+      // パスワードをハッシュ化
+      const hashedPassword = await SupabaseAdminAuth.hashPassword(password);
+      
+      // 管理者登録申請を作成
+      const registrationData = {
+        email: sanitizedEmail,
+        password_hash: hashedPassword,
+        full_name: fullName,
+        phone_number: `+81${sanitizedPhoneNumber}`,
+        reason: reason,
+        department: department || '',
+        role: role || 'admin',
+        status: 'pending'
+      };
+
+      // 登録申請をSupabaseに保存
+      const { data: registration, error: registrationError } = await supabase
+        .from('admin_registrations')
+        .insert([registrationData])
+        .select()
+        .single();
+
+      if (registrationError) {
+        throw registrationError;
+      }
+
+      setSuccess('管理者登録申請が送信されました。承認されるまでお待ちください。');
       
       // 監査ログに記録
       await SupabaseAdminAuth.recordAuditLog(
-        'admin_email_verification_attempted',
-        `管理者メール認証試行: ${sanitizedEmail}`,
+        'admin_registration_requested',
+        `管理者登録申請: ${sanitizedEmail}`,
         sanitizedEmail,
         'info',
-        { phone_number: `+81${sanitizedPhoneNumber}`, user_agent: navigator.userAgent }
+        { 
+          phone_number: `+81${sanitizedPhoneNumber}`, 
+          full_name: fullName,
+          department: department,
+          user_agent: navigator.userAgent 
+        }
       );
+
+      // フォームをリセット
+      setTimeout(() => {
+        setMode('login');
+        setEmail('');
+        setPassword('');
+        setConfirmPassword('');
+        setPhoneNumber('');
+        setFullName('');
+        setDepartment('');
+        setRole('admin');
+        setReason('');
+      }, 3000);
     } catch (error) {
       setError('メール認証処理中にエラーが発生しました。しばらく待ってから再試行してください。');
       secureLog('管理者メール認証エラー:', error);
