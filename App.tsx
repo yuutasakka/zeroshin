@@ -1,35 +1,80 @@
-import React, { useState, useEffect } from 'react';
-import ErrorBoundary from './components/ErrorBoundary';
-import Header from './components/Header';
+import React, { useState, useEffect, lazy, Suspense } from 'react';
+import ErrorBoundary from './src/components/ErrorBoundary';
+import Header from './src/components/Header';
 // 要件定義書に基づく新しいコンポーネント
-import AIConectXHero from './components/AIConectXHero';
-import EnhancedHero from './components/EnhancedHero';
-import DiagnosisFlow, { DiagnosisAnswers } from './components/DiagnosisFlow';
-import OptimizedDiagnosisFlow, { OptimizedDiagnosisAnswers } from './components/OptimizedDiagnosisFlow';
-import SMSAuthFlow from './components/SMSAuthFlow';
-import ReliabilitySection from './components/ReliabilitySection';
-import SecurityTrustSection from './components/SecurityTrustSection';
-import CallToActionSection from './components/CallToActionSection';
-import Footer from './components/Footer';
-import PhoneVerificationPage from './components/PhoneVerificationPage';
-import DiagnosisResultsPage from './components/DiagnosisResultsPage';
-import AdminLoginPage from './components/AdminLoginPage';
-import AdminDashboardPage from './components/AdminDashboardPage';
-// 新しいSupabase Auth関連のインポート
-import { SupabaseAuthLogin } from './components/SupabaseAuthLogin';
-import LoginSelectionPage from './components/LoginSelectionPage';
-// import { AuthGuard, AuthenticatedHeader } from './components/AuthGuard';
-import { OneTimeUsageNotice } from './components/OneTimeUsageNotice';
-import { supabase } from './components/supabaseClient';
-import type { User } from '@supabase/supabase-js';
+import AIConectXHero from './src/components/AIConectXHero';
+import EnhancedHero from './src/components/EnhancedHero';
+import OptimizedDiagnosisFlow from './src/components/OptimizedDiagnosisFlow';
+// DiagnosisAnswersは削除されたコンポーネントの型なので、OptimizedDiagnosisAnswersを使用
+type DiagnosisAnswers = {
+  age: string;
+  experience: string;
+  purpose: string;
+  amount: string;
+  timing: string;
+  phone?: string;
+};
+import SMSAuthFlow from './src/components/SMSAuthFlow';
+import ReliabilitySection from './src/components/ReliabilitySection';
+import SecurityTrustSection from './src/components/SecurityTrustSection';
+import CallToActionSection from './src/components/CallToActionSection';
+import Footer from './src/components/Footer';
 
-import { ColorThemeProvider } from './components/ColorThemeContext';
+// 動的インポート（Code Splitting）
+const PhoneVerificationPage = lazy(() => import('./src/components/PhoneVerificationPage'));
+const DiagnosisResultsPage = lazy(() => import('./src/components/DiagnosisResultsPage'));
+const AdminLoginPage = lazy(() => import('./src/components/AdminLoginPage'));
+const AdminDashboardPage = lazy(() => import('./src/components/AdminDashboardPage'));
+// 新しいSupabase Auth関連の動的インポート
+const SupabaseAuthLogin = lazy(() => import('./src/components/SupabaseAuthLogin').then(module => ({ default: module.SupabaseAuthLogin })));
+const LoginSelectionPage = lazy(() => import('./src/components/LoginSelectionPage'));
+const RegistrationRequestPage = lazy(() => import('./src/components/RegistrationRequestPage'));
+const AdminPasswordResetPage = lazy(() => import('./src/components/AdminPasswordResetPage'));
+
+// 基本コンポーネント（即時読み込み）
+import { OneTimeUsageNotice } from './src/components/OneTimeUsageNotice';
+import { supabase } from './src/components/supabaseClient';
+import type { User } from '@supabase/supabase-js';
+import { ColorThemeProvider } from './src/components/ColorThemeContext';
+import { DesignSettingsProvider } from './src/contexts/DesignSettingsContext';
+import TemplateStyleProvider from './src/components/TemplateStyleProvider';
 import { DiagnosisFormState, PageView } from './types';
 import { initializeSampleData } from './data/sampleData';
-import RegistrationRequestPage from './components/RegistrationRequestPage';
-import AdminPasswordResetPage from './components/AdminPasswordResetPage';
-import ProductionSecurityValidator from './components/ProductionSecurityValidator';
-import { measurePageLoad } from './components/PerformanceMonitor';
+import ProductionSecurityValidator from './src/components/ProductionSecurityValidator';
+import { measurePageLoad } from './src/components/PerformanceMonitor';
+import PWAInstallPrompt from './src/components/PWAInstallPrompt';
+import { AccessibilityProvider } from './src/components/AccessibilityProvider';
+import SkipLinks from './src/components/SkipLinks';
+import AccessibilityAnnouncer from './src/components/AccessibilityAnnouncer';
+import AccessibilitySettings from './src/components/AccessibilitySettings';
+
+// ローディングコンポーネント
+const LoadingSpinner = () => (
+  <div style={{ 
+    display: 'flex', 
+    justifyContent: 'center', 
+    alignItems: 'center', 
+    height: '100vh',
+    background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'
+  }}>
+    <div style={{
+      width: '50px',
+      height: '50px',
+      border: '3px solid rgba(255,255,255,0.3)',
+      borderTop: '3px solid white',
+      borderRadius: '50%',
+      animation: 'spin 1s linear infinite'
+    }}></div>
+    <style>{`
+      @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+      }
+    `}</style>
+  </div>
+);
+// import I18nProvider from './src/i18n/I18nProvider';
+// import { initializeLanguage } from './src/utils/languageStorage';
 
 
 // セキュリティ関数: HTMLサニタイゼーション（コメントアウト - 未使用）
@@ -99,6 +144,11 @@ const App: React.FC = () => {
   useEffect(() => {
     // 状態変更の処理（ログ出力は本番環境では無効）
   }, [isAdminLoggedIn, isSupabaseAuth]);
+
+  // 言語初期化
+  // useEffect(() => {
+  //   initializeLanguage();
+  // }, []);
 
   useEffect(() => {
     // Apply body class for verification and results pages for consistent styling
@@ -201,10 +251,20 @@ const App: React.FC = () => {
         return () => subscription.unsubscribe();
       } catch (error) {
         // Supabase認証初期化エラーは無視（フォールバック認証が動作）
+        return () => {}; // クリーンアップ関数を提供
       }
     };
 
-    initSupabaseAuth();
+    const cleanup = initSupabaseAuth();
+    return () => {
+      if (cleanup && typeof cleanup.then === 'function') {
+        cleanup.then(cleanupFn => {
+          if (cleanupFn && typeof cleanupFn === 'function') {
+            cleanupFn();
+          }
+        });
+      }
+    };
   }, []);
 
 
@@ -405,6 +465,7 @@ const App: React.FC = () => {
       setDiagnosisData(legacyDiagnosisData);
     }
     setCurrentPage('results');
+    return; // 明示的なreturn追加
   };
 
   const handleSMSAuthCancel = () => {
@@ -790,12 +851,14 @@ const App: React.FC = () => {
       console.log('Rendering AdminDashboardPage');
       try {
         return (
-          <div style={{ minHeight: '100vh', backgroundColor: '#f5f5f5' }}>
-            <AdminDashboardPage 
-              onLogout={handleAdminLogout}
-              onNavigateHome={navigateToHome}
-            />
-          </div>
+          <Suspense fallback={<LoadingSpinner />}>
+            <div style={{ minHeight: '100vh', backgroundColor: '#f5f5f5' }}>
+              <AdminDashboardPage 
+                onLogout={handleAdminLogout}
+                onNavigateHome={navigateToHome}
+              />
+            </div>
+          </Suspense>
         );
       } catch (error) {
         console.error('AdminDashboardPage render error:', error);
@@ -824,66 +887,105 @@ const App: React.FC = () => {
 
     // 管理者関連ページ
     if (currentPage === 'loginSelection') {
-      return <LoginSelectionPage 
-        onSelectTraditionalAuth={navigateToTraditionalLogin}
-        onSelectSupabaseAuth={navigateToSupabaseLogin}
-        onNavigateHome={navigateToHome}
-      />;
+      return (
+        <Suspense fallback={<LoadingSpinner />}>
+          <LoginSelectionPage 
+            onSelectTraditionalAuth={navigateToTraditionalLogin}
+            onSelectSupabaseAuth={navigateToSupabaseLogin}
+            onNavigateHome={navigateToHome}
+          />
+        </Suspense>
+      );
     }
 
     if (currentPage === 'traditionalLogin') {
-      return <AdminLoginPage 
-        onLogin={handleAdminLoginSuccess}
-        onNavigateHome={navigateToHome}
-        onNavigateToPasswordReset={navigateToPasswordReset}
-      />;
+      return (
+        <Suspense fallback={<LoadingSpinner />}>
+          <AdminLoginPage 
+            onLogin={handleAdminLoginSuccess}
+            onNavigateHome={navigateToHome}
+            onNavigateToPasswordReset={navigateToPasswordReset}
+          />
+        </Suspense>
+      );
     }
 
     if (currentPage === 'supabaseLogin') {
-      return <SupabaseAuthLogin 
-        onLogin={handleAdminLoginSuccess}
-        onNavigateHome={navigateToHome} 
-      />;
+      return (
+        <Suspense fallback={<LoadingSpinner />}>
+          <SupabaseAuthLogin 
+            onLogin={handleAdminLoginSuccess}
+            onNavigateHome={navigateToHome} 
+          />
+        </Suspense>
+      );
     }
 
     if (currentPage === 'registrationRequest') {
-      return <RegistrationRequestPage onNavigateHome={navigateToHome} />;
+      return (
+        <Suspense fallback={<LoadingSpinner />}>
+          <RegistrationRequestPage onNavigateHome={navigateToHome} />
+        </Suspense>
+      );
     }
 
     if (currentPage === 'passwordReset') {
-      return <AdminPasswordResetPage onNavigateBack={() => setCurrentPage('traditionalLogin')} />;
+      return (
+        <Suspense fallback={<LoadingSpinner />}>
+          <AdminPasswordResetPage onNavigateBack={() => setCurrentPage('traditionalLogin')} />
+        </Suspense>
+      );
     }
 
     // 既存の電話認証ページ（後で削除予定）
     if (currentPage === 'verification') {
       return (
-        <PhoneVerificationPage
-          userSession={{
-            id: `verification-${Date.now()}`,
-            timestamp: new Date().toISOString(),
-            phoneNumber: phoneNumberToVerify || '',
-            diagnosisAnswers: diagnosisData || {}
-          }}
-          onVerificationSuccess={handleVerificationComplete}
-          onBack={handleVerificationCancel}
-        />
+        <Suspense fallback={<LoadingSpinner />}>
+          <PhoneVerificationPage
+            userSession={{
+              id: `verification-${Date.now()}`,
+              timestamp: new Date().toISOString(),
+              phoneNumber: phoneNumberToVerify || '',
+              diagnosisAnswers: diagnosisData || {}
+            }}
+            onVerificationSuccess={handleVerificationComplete}
+            onBack={handleVerificationCancel}
+          />
+        </Suspense>
       );
     }
 
     if (currentPage === 'results') {
       return (
-        <DiagnosisResultsPage
-          diagnosisData={diagnosisData}
-          onReturnToStart={handleReturnToStart}
-        />
+        <Suspense fallback={<LoadingSpinner />}>
+          <DiagnosisResultsPage
+            diagnosisData={diagnosisData}
+            onReturnToStart={handleReturnToStart}
+          />
+        </Suspense>
       );
     }
 
-    // 要件定義書に基づく新しいページフロー
+    // 要件定義書に基づく新しいページフロー - OptimizedDiagnosisFlowを使用
     if (currentPage === 'diagnosis') {
       return (
-        <DiagnosisFlow
-          onComplete={handleDiagnosisComplete}
+        <OptimizedDiagnosisFlow
+          onComplete={(optimizedAnswers) => {
+            // OptimizedDiagnosisAnswersからDiagnosisAnswersに変換
+            const [age, experience] = (optimizedAnswers.ageAndExperience || '-').split('-');
+            const [purpose, budget] = (optimizedAnswers.purposeAndBudget || '-').split('-');
+            
+            const convertedAnswers: DiagnosisAnswers = {
+              age: age || '',
+              experience: experience || '',
+              purpose: purpose || '',
+              amount: budget || '',
+              timing: 'now',
+              phone: optimizedAnswers.phoneNumber || ''
+            };
+            
+            handleDiagnosisComplete(convertedAnswers);
+          }}
           onCancel={handleDiagnosisCancel}
         />
       );
@@ -924,15 +1026,28 @@ const App: React.FC = () => {
   }
 
   return (
-    <ColorThemeProvider>
-      <div className="App min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
-        <ProductionSecurityValidator />
-        
-        {renderCurrentPage()}
-        
-        {usageNotice}
-      </div>
-    </ColorThemeProvider>
+    <AccessibilityProvider>
+        <DesignSettingsProvider>
+          <ColorThemeProvider>
+            <TemplateStyleProvider>
+              <div className="App min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
+                <SkipLinks />
+                <AccessibilityAnnouncer />
+                <ProductionSecurityValidator />
+                
+                <main id="main-content">
+                  {renderCurrentPage()}
+                </main>
+                
+                {usageNotice}
+                <PWAInstallPrompt />
+                <AccessibilitySettings />
+                {/* <AccessibilityAudit /> */}
+              </div>
+            </TemplateStyleProvider>
+          </ColorThemeProvider>
+        </DesignSettingsProvider>
+      </AccessibilityProvider>
   );
 };
 

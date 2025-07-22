@@ -1,17 +1,7 @@
 // セキュリティ設定の中央管理（完全Supabaseベース）
 
 // Vite環境変数の型定義（vite/clientで提供される型を拡張）
-declare global {
-  interface ImportMetaEnv {
-    readonly VITE_ENCRYPTION_KEY?: string;
-    readonly VITE_JWT_SECRET?: string;
-    readonly VITE_SESSION_SECRET?: string;
-    readonly VITE_SUPABASE_URL?: string;
-    readonly VITE_SUPABASE_ANON_KEY?: string;
-    readonly VITE_SUPABASE_SERVICE_ROLE_KEY?: string;
-    readonly MODE?: string;
-  }
-}
+// Import Meta環境変数の型定義はsrc/types/vite-env.d.tsで管理
 
 // セキュアなストレージクラス
 export class SecureStorage {

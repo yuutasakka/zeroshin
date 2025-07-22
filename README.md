@@ -1,14 +1,29 @@
-# Run and deploy your AI Studio app
+# MoneyTicket アプリケーション
 
-This contains everything you need to run your app locally.
+AI ConectX プロジェクトの本番環境アプリケーション
 
-## Run Locally
+## セットアップ
 
-**Prerequisites:**  Node.js
+1. 依存関係のインストール
+```bash
+npm install
+```
 
+2. 環境変数の設定
+```bash
+cp .env.example .env.local
+# .env.local に実際の認証情報を設定
+```
 
-1. Install dependencies:
-   `npm install`
-2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
-3. Run the app:
-   `npm run dev`
+3. 開発サーバーの起動
+```bash
+npm run dev
+```
+
+## ドキュメント
+
+詳細なドキュメントは [docs/](./docs/) ディレクトリを参照してください。
+
+- [環境セットアップ](./docs/ENVIRONMENT_SETUP.md)
+- [デプロイメントガイド](./docs/DEPLOYMENT_GUIDE.md)
+- [セキュリティ監査](./docs/FINAL_SECURITY_AUDIT.md)

@@ -354,7 +354,7 @@ app.post('/api/sms/send', smsLimiter, phoneValidation, async (req: Request, res:
 
       console.log(`SMS送信成功: [電話番号非表示] (SID: ${smsResult.sid})`);
 
-      res.json({
+      return res.json({
         success: true,
         message: 'SMS認証コードを送信しました',
         phoneNumber: normalizedPhoneNumber
@@ -483,7 +483,7 @@ app.post('/api/sms/verify', authLimiter, verificationValidation, async (req: Req
 
       console.log(`認証成功: ${normalizedPhoneNumber}`);
       
-      res.json({
+      return res.json({
         success: true,
         message: '認証が完了しました',
         verified: true,
@@ -495,7 +495,7 @@ app.post('/api/sms/verify', authLimiter, verificationValidation, async (req: Req
         providedCode: code,
         ip: clientIP
       });
-      res.status(400).json({
+      return res.status(400).json({
         error: '認証コードが正しくありません',
         verified: false
       });

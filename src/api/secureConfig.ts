@@ -32,7 +32,9 @@ export class SecureConfigManager {
     
     const algorithm = 'aes-256-cbc';
     const parts = encryptedText.split(':');
-    if (parts.length !== 2) throw new Error('Invalid encrypted data format');
+    if (parts.length !== 2 || !parts[0] || !parts[1]) {
+      throw new Error('Invalid encrypted data format');
+    }
     
     const iv = Buffer.from(parts[0], 'hex');
     const encrypted = parts[1];
