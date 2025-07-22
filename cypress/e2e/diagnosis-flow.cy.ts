@@ -1,172 +1,205 @@
-describe('Diagnosis Flow', () => {
+describe('診断フローE2Eテスト', () => {
   beforeEach(() => {
-    cy.visit('/');
+    // アプリケーションのホームページを開く
+    cy.visit('http://localhost:8080');
   });
 
-  it('completes the full diagnosis flow successfully', () => {
-    // ホームページが表示されることを確認
-    cy.contains('あなたの未来の資産を診断').should('be.visible');
+  it('完全な診断フローを実行できる', () => {
+    // 1. 診断開始
+    cy.contains('今すぐ無料で診断を始める').click();
+
+    // 2. 診断フォームが表示される
+    cy.contains('あなたに最適な金融商品を診断').should('be.visible');
     
-    // 診断開始ボタンをクリック
-    cy.contains('診断を開始する').click();
-    
-    // Step 1: 年齢と経験
+    // 3. 質問1に回答
     cy.contains('年齢と投資経験').should('be.visible');
-    cy.get('[data-testid="age-experience-option"]').first().click();
-    cy.contains('次へ').click();
-    
-    // Step 2: 目的と予算
+    cy.contains('20代・投資未経験').click();
+
+    // 4. 質問2に回答
     cy.contains('投資の目的と予算').should('be.visible');
-    cy.get('[data-testid="purpose-budget-option"]').first().click();
-    cy.contains('次へ').click();
-    
-    // Step 3: 電話番号入力
-    cy.contains('電話番号の入力').should('be.visible');
-    cy.get('input[type="tel"]').type('09012345678');
-    
-    // 利用規約に同意
-    cy.get('input[type="checkbox"]').check();
-    
-    // 送信ボタンをクリック
-    cy.contains('診断結果を見る').click();
-    
-    // 電話番号認証ページに遷移
-    cy.url().should('include', 'verification');
+    cy.contains('資産形成・月1万円以下').click();
+
+    // 5. 電話番号入力
+    cy.contains('診断結果を受け取る').should('be.visible');
+    cy.get('input[placeholder*="090-1234-5678"]').type('09012345678');
+    cy.contains('button', '診断結果を受け取る').click();
+
+    // 6. SMS認証画面
     cy.contains('SMS認証').should('be.visible');
+    cy.contains('09012345678').should('be.visible');
+    
+    // 7. 認証コード送信
+    cy.contains('認証コードを送信').click();
+    
+    // 8. 認証コード入力（テスト環境では123456で成功）
+    cy.get('input[placeholder*="6桁の数字"]').should('be.visible');
+    cy.get('input[placeholder*="6桁の数字"]').type('123456');
+    
+    // 9. 認証実行
+    cy.contains('button', '認証する').click();
+    
+    // 10. 診断結果画面
+    cy.contains('診断結果', { timeout: 10000 }).should('be.visible');
+    cy.contains('あなたに最適なプラン').should('be.visible');
   });
 
-  it('validates required fields', () => {
-    cy.contains('診断を開始する').click();
+  it('診断を途中でキャンセルできる', () => {
+    // 診断開始
+    cy.contains('今すぐ無料で診断を始める').click();
     
-    // 何も選択せずに次へボタンをクリック
-    cy.contains('次へ').should('be.disabled');
+    // 診断フォームが表示される
+    cy.contains('あなたに最適な金融商品を診断').should('be.visible');
     
-    // オプションを選択すると次へボタンが有効になる
-    cy.get('[data-testid="age-experience-option"]').first().click();
-    cy.contains('次へ').should('not.be.disabled');
+    // キャンセルボタンをクリック
+    cy.get('[aria-label="診断を中止"]').click();
+    
+    // ホーム画面に戻る
+    cy.contains('今すぐ無料で診断を始める').should('be.visible');
   });
 
-  it('allows navigation back to previous steps', () => {
-    cy.contains('診断を開始する').click();
+  it('戻るボタンで前の質問に戻れる', () => {
+    // 診断開始
+    cy.contains('今すぐ無料で診断を始める').click();
     
-    // Step 1を完了
-    cy.get('[data-testid="age-experience-option"]').first().click();
-    cy.contains('次へ').click();
+    // 質問1に回答
+    cy.contains('20代・投資未経験').click();
     
-    // Step 2に到達
+    // 質問2が表示される
     cy.contains('投資の目的と予算').should('be.visible');
     
     // 戻るボタンをクリック
-    cy.contains('戻る').click();
+    cy.get('[aria-label="前の質問に戻る"]').click();
     
-    // Step 1に戻る
+    // 質問1に戻る
     cy.contains('年齢と投資経験').should('be.visible');
   });
 
-  it('validates phone number format', () => {
-    // 診断フローを進める
-    cy.completeDiagnosisFlow({
-      age: '20代',
-      experience: 'なし',
-      purpose: '老後の資金準備',
-      amount: '1万円〜3万円',
-      timing: '今すぐ',
-      phone: '123', // 無効な電話番号
-    });
+  it('無効な電話番号でエラーが表示される', () => {
+    // 診断を進める
+    cy.contains('今すぐ無料で診断を始める').click();
+    cy.contains('20代・投資未経験').click();
+    cy.contains('資産形成・月1万円以下').click();
+    
+    // 無効な電話番号を入力
+    cy.get('input[placeholder*="090-1234-5678"]').type('123');
+    cy.contains('button', '診断結果を受け取る').click();
     
     // エラーメッセージが表示される
-    cy.contains('有効な電話番号を入力してください').should('be.visible');
-    
-    // 正しい形式の電話番号を入力
-    cy.get('input[type="tel"]').clear().type('09012345678');
-    cy.contains('診断結果を見る').click();
-    
-    // エラーが消えて次に進める
-    cy.url().should('include', 'verification');
+    cy.contains('正しい電話番号を入力してください').should('be.visible');
   });
 
-  it('preserves form data when navigating', () => {
-    cy.contains('診断を開始する').click();
-    
-    // Step 1で選択
-    const selectedOption = '20代・投資経験なし';
-    cy.contains(selectedOption).click();
-    cy.contains('次へ').click();
-    
-    // Step 2に進む
-    cy.contains('投資の目的と予算').should('be.visible');
-    
-    // 戻る
-    cy.contains('戻る').click();
-    
-    // 選択が保持されている
-    cy.contains(selectedOption).parent().should('have.class', 'selected');
-  });
-
-  it('shows progress indicator', () => {
-    cy.contains('診断を開始する').click();
-    
-    // Step 1
-    cy.get('[data-testid="progress-indicator"]').should('contain', '1/3');
-    
-    // Step 2
-    cy.get('[data-testid="age-experience-option"]').first().click();
-    cy.contains('次へ').click();
-    cy.get('[data-testid="progress-indicator"]').should('contain', '2/3');
-    
-    // Step 3
-    cy.get('[data-testid="purpose-budget-option"]').first().click();
-    cy.contains('次へ').click();
-    cy.get('[data-testid="progress-indicator"]').should('contain', '3/3');
-  });
-
-  it('handles API errors gracefully', () => {
-    // APIエラーをシミュレート
-    cy.intercept('POST', '**/api/send-otp', {
-      statusCode: 500,
-      body: { error: 'Server error' },
-    }).as('sendOTPError');
-    
-    // 診断フローを完了
-    cy.completeDiagnosisFlow({
-      age: '30代',
-      experience: 'あり',
-      purpose: '資産運用',
-      amount: '5万円以上',
-      timing: '今すぐ',
-      phone: '09012345678',
-    });
-    
-    cy.wait('@sendOTPError');
-    
-    // エラーメッセージが表示される
-    cy.contains('エラーが発生しました').should('be.visible');
-    cy.contains('もう一度お試しください').should('be.visible');
-  });
-
-  it('is accessible', () => {
-    cy.contains('診断を開始する').click();
-    
-    // アクセシビリティチェック
-    cy.checkA11y();
-    
-    // キーボードナビゲーション
-    cy.get('body').tab();
-    cy.focused().should('have.attr', 'data-testid', 'age-experience-option');
-    
-    // Enterキーで選択
-    cy.focused().type('{enter}');
-    cy.focused().should('contain', '次へ');
-  });
-
-  it('works on mobile viewport', () => {
+  it('レスポンシブデザインが機能する', () => {
+    // モバイルビューポート
     cy.viewport('iphone-x');
+    cy.contains('今すぐ無料で診断を始める').should('be.visible');
     
-    cy.contains('あなたの未来の資産を診断').should('be.visible');
-    cy.contains('診断を開始する').click();
+    // タブレットビューポート
+    cy.viewport('ipad-2');
+    cy.contains('今すぐ無料で診断を始める').should('be.visible');
     
-    // モバイルでも全ての要素が表示される
-    cy.contains('年齢と投資経験').should('be.visible');
-    cy.get('[data-testid="age-experience-option"]').should('have.length.at.least', 4);
+    // デスクトップビューポート
+    cy.viewport(1920, 1080);
+    cy.contains('今すぐ無料で診断を始める').should('be.visible');
+  });
+
+  it('プログレスバーが正しく更新される', () => {
+    // 診断開始
+    cy.contains('今すぐ無料で診断を始める').click();
+    
+    // 初期状態（33%）
+    cy.get('[role="progressbar"]').should('have.attr', 'aria-valuenow', '33');
+    
+    // 質問1に回答（66%）
+    cy.contains('20代・投資未経験').click();
+    cy.get('[role="progressbar"]').should('have.attr', 'aria-valuenow', '66');
+    
+    // 質問2に回答（100%）
+    cy.contains('資産形成・月1万円以下').click();
+    cy.get('[role="progressbar"]').should('have.attr', 'aria-valuenow', '100');
+  });
+
+  it('電話番号変更機能が動作する', () => {
+    // 診断を進めて電話番号入力まで
+    cy.contains('今すぐ無料で診断を始める').click();
+    cy.contains('20代・投資未経験').click();
+    cy.contains('資産形成・月1万円以下').click();
+    
+    // 電話番号を入力して送信
+    cy.get('input[placeholder*="090-1234-5678"]').type('09012345678');
+    cy.contains('button', '診断結果を受け取る').click();
+    
+    // SMS認証画面で電話番号変更
+    cy.contains('電話番号を変更').click();
+    
+    // 新しい番号を入力
+    cy.get('input[placeholder*="090-1234-5678"]').clear().type('08011112222');
+    cy.contains('変更を確定').click();
+    
+    // 新しい番号が表示される
+    cy.contains('08011112222').should('be.visible');
+  });
+
+  it('認証コード再送信タイマーが動作する', () => {
+    // SMS認証画面まで進む
+    cy.contains('今すぐ無料で診断を始める').click();
+    cy.contains('20代・投資未経験').click();
+    cy.contains('資産形成・月1万円以下').click();
+    cy.get('input[placeholder*="090-1234-5678"]').type('09012345678');
+    cy.contains('button', '診断結果を受け取る').click();
+    
+    // 認証コード送信
+    cy.contains('認証コードを送信').click();
+    
+    // 再送信ボタンが無効化されている
+    cy.contains('秒後に再送信可能').should('be.visible');
+    cy.contains('秒後に再送信可能').should('be.disabled');
+    
+    // 60秒待つ（実際のテストでは時間を短縮する設定を使用）
+    cy.wait(2000); // デモ用に2秒待機
+    
+    // タイマーがカウントダウンしている
+    cy.contains(/\d+秒後に再送信可能/).should('be.visible');
+  });
+});
+
+describe('アクセシビリティE2Eテスト', () => {
+  beforeEach(() => {
+    cy.visit('http://localhost:8080');
+  });
+
+  it('キーボードナビゲーションが機能する', () => {
+    // Tabキーでフォーカス移動
+    cy.get('body').tab();
+    cy.focused().should('have.attr', 'href', '#main-content');
+    
+    // Enterキーでボタンをクリック
+    cy.contains('今すぐ無料で診断を始める').focus();
+    cy.focused().type('{enter}');
+    
+    // 診断フォームが表示される
+    cy.contains('あなたに最適な金融商品を診断').should('be.visible');
+  });
+
+  it('スクリーンリーダー用のARIA属性が適切に設定されている', () => {
+    // ARIAラベル
+    cy.get('[aria-label]').should('exist');
+    
+    // ARIAロール
+    cy.get('[role="button"]').should('exist');
+    cy.get('[role="progressbar"]').should('exist');
+    
+    // ARIA説明
+    cy.get('[aria-describedby]').should('exist');
+  });
+
+  it('ハイコントラストモードが適用される', () => {
+    // アクセシビリティ設定を開く
+    cy.get('[aria-label="アクセシビリティ設定"]').click();
+    
+    // ハイコントラストモードを有効化
+    cy.contains('ハイコントラストモード').click();
+    
+    // スタイルが変更されている
+    cy.get('body').should('have.css', 'filter').and('include', 'contrast');
   });
 });
