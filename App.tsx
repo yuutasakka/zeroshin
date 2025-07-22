@@ -43,6 +43,8 @@ import { initializeSampleData } from './data/sampleData';
 import ProductionSecurityValidator from './src/components/ProductionSecurityValidator';
 import { measurePageLoad } from './src/components/PerformanceMonitor';
 import PWAInstallPrompt from './src/components/PWAInstallPrompt';
+import PWAUpdatePrompt from './src/components/PWAUpdatePrompt';
+import OfflineIndicator from './src/components/OfflineIndicator';
 import { AccessibilityProvider } from './src/components/AccessibilityProvider';
 import SkipLinks from './src/components/SkipLinks';
 import AccessibilityAnnouncer from './src/components/AccessibilityAnnouncer';
@@ -1041,6 +1043,8 @@ const App: React.FC = () => {
                 
                 {usageNotice}
                 <PWAInstallPrompt />
+                <PWAUpdatePrompt />
+                <OfflineIndicator />
                 <AccessibilitySettings />
                 {/* <AccessibilityAudit /> */}
               </div>

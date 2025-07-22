@@ -78,6 +78,8 @@
     "tsx": "^4.19.2",
     "typescript": "^5.8.3",
     "vite": "^7.0.4",
-    "vitest": "^3.2.4"
+    "vite-plugin-pwa": "^1.0.1",
+    "vitest": "^3.2.4",
+    "workbox-window": "^7.3.0"
   }
 }
