@@ -3,7 +3,7 @@
   "buildCommand": "npm run build",
   "outputDirectory": "dist",
   "devCommand": "npm run dev",
-  "installCommand": "npm install --legacy-peer-deps --include=dev",
+  "installCommand": "npm install --legacy-peer-deps",
   "env": {
     "NODE_ENV": "production",
     "GENERATE_SOURCEMAP": "false",
@@ -11,7 +11,7 @@
   },
   "rewrites": [
     {
-      "source": "/(.*)",
+      "source": "/((?!assets/).*)",
       "destination": "/index.html"
     }
   ],
