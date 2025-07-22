@@ -66,5 +66,11 @@ module.exports = {
     'public/',
     'supabase/functions/',
     'server/',
+    'cypress/',
+    'api/',
+    'scripts/',
+    'docs/',
+    '*.config.*',
+    'vite.config.ts.backup'
   ],
 };
