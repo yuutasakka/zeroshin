@@ -45,6 +45,8 @@ import { measurePageLoad } from './src/components/PerformanceMonitor';
 import PWAInstallPrompt from './src/components/PWAInstallPrompt';
 import PWAUpdatePrompt from './src/components/PWAUpdatePrompt';
 import OfflineIndicator from './src/components/OfflineIndicator';
+import SEOHead from './src/components/SEOHead';
+import { HelmetProvider } from 'react-helmet-async';
 import { AccessibilityProvider } from './src/components/AccessibilityProvider';
 import SkipLinks from './src/components/SkipLinks';
 import AccessibilityAnnouncer from './src/components/AccessibilityAnnouncer';
@@ -1028,30 +1030,33 @@ const App: React.FC = () => {
   }
 
   return (
-    <AccessibilityProvider>
-        <DesignSettingsProvider>
-          <ColorThemeProvider>
-            <TemplateStyleProvider>
-              <div className="App min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
-                <SkipLinks />
-                <AccessibilityAnnouncer />
-                <ProductionSecurityValidator />
-                
-                <main id="main-content">
-                  {renderCurrentPage()}
-                </main>
-                
-                {usageNotice}
-                <PWAInstallPrompt />
-                <PWAUpdatePrompt />
-                <OfflineIndicator />
-                <AccessibilitySettings />
-                {/* <AccessibilityAudit /> */}
-              </div>
-            </TemplateStyleProvider>
-          </ColorThemeProvider>
-        </DesignSettingsProvider>
-      </AccessibilityProvider>
+    <HelmetProvider>
+      <AccessibilityProvider>
+          <DesignSettingsProvider>
+            <ColorThemeProvider>
+              <TemplateStyleProvider>
+                <div className="App min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
+                  <SEOHead />
+                  <SkipLinks />
+                  <AccessibilityAnnouncer />
+                  <ProductionSecurityValidator />
+                  
+                  <main id="main-content">
+                    {renderCurrentPage()}
+                  </main>
+                  
+                  {usageNotice}
+                  <PWAInstallPrompt />
+                  <PWAUpdatePrompt />
+                  <OfflineIndicator />
+                  <AccessibilitySettings />
+                  {/* <AccessibilityAudit /> */}
+                </div>
+              </TemplateStyleProvider>
+            </ColorThemeProvider>
+          </DesignSettingsProvider>
+        </AccessibilityProvider>
+    </HelmetProvider>
   );
 };
 
