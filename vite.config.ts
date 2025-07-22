@@ -21,32 +21,49 @@ export default defineConfig({
       compress: {
         drop_console: true,
         drop_debugger: true,
-        pure_funcs: ['console.log', 'console.info', 'console.debug']
+        pure_funcs: ['console.log', 'console.info', 'console.debug'],
+        unsafe: true,
+        passes: 2
+      },
+      mangle: {
+        safari10: true
       }
     },
-    chunkSizeWarningLimit: 500,
+    chunkSizeWarningLimit: 300,
     rollupOptions: {
       external: ['mock-aws-s3', 'aws-sdk', 'nock', '@mapbox/node-pre-gyp'],
       output: {
-        manualChunks: {
-          'vendor-react': ['react', 'react-dom'],
-          'vendor-supabase': ['@supabase/supabase-js'],
-          'vendor-utils': ['crypto-js', 'qrcode.react'],
-          'admin-components': [
-            './src/components/AdminDashboardPage',
-            './src/components/AdminLoginPage',
-            './src/components/AdminPasswordResetPage'
-          ],
-          'diagnosis-components': [
-            './src/components/OptimizedDiagnosisFlow',
-            './src/components/DiagnosisResultsPage'
-          ],
-          'auth-components': [
-            './src/components/PhoneVerificationPage',
-            './src/components/SMSAuthFlow',
-            './src/components/SupabaseAuthLogin'
-          ]
+        manualChunks: (id) => {
+          if (id.includes('node_modules')) {
+            if (id.includes('react') || id.includes('react-dom')) {
+              return 'vendor-react';
+            }
+            if (id.includes('@supabase')) {
+              return 'vendor-supabase';
+            }
+            if (id.includes('crypto-js') || id.includes('qrcode')) {
+              return 'vendor-utils';
+            }
+            if (id.includes('@emotion')) {
+              return 'vendor-emotion';
+            }
+            return 'vendor-others';
+          }
+          if (id.includes('src/components/Admin')) {
+            return 'admin-components';
+          }
+          if (id.includes('src/components/Diagnosis') || id.includes('src/components/OptimizedDiagnosis')) {
+            return 'diagnosis-components';
+          }
+          if (id.includes('src/components/Phone') || id.includes('src/components/SMS') || id.includes('src/components/Supabase')) {
+            return 'auth-components';
+          }
         }
+      },
+      treeshake: {
+        moduleSideEffects: false,
+        propertyReadSideEffects: false,
+        tryCatchDeoptimization: false
       }
     }
   }
