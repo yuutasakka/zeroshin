@@ -313,18 +313,17 @@ export class SupabaseAdminAuth {
     
     try {
       // bcryptを使用してソルト付きでハッシュ化（10ラウンド）
-      const bcrypt = await import('bcrypt');
-      const saltRounds = 12; // 本番環境では12ラウンド推奨
-      const hash = await bcrypt.hash(password, saltRounds);
+      // ブラウザ環境ではbcryptが使用できないため、コメントアウト
+      // const bcrypt = await import('bcrypt');
+      // const saltRounds = 12; // 本番環境では12ラウンド推奨
+      // const hash = await bcrypt.hash(password, saltRounds);
       
       if (isDevelopment) {
-        console.log('🔐 bcryptハッシュ化完了', { 
-          resultLength: hash.length,
-          resultPrefix: hash.substring(0, 10) + '...'
-        });
+        console.log('🔐 bcryptはブラウザで使用不可、SHA-256にフォールバック');
       }
       
-      return hash;
+      // bcryptが使用できないため、必ずエラーをスロー
+      throw new Error('bcrypt not available in browser');
     } catch (error) {
       if (isDevelopment) {
         console.error('💥 bcryptハッシュ化エラー:', error);
