@@ -86,7 +86,7 @@ const PhoneVerificationPage: React.FC<PhoneVerificationPageProps> = ({
           
           // 独自API経由でSMS送信（本番環境のみ）
           try {
-            const response = await fetch('/api/send-otp-simple', {
+            const response = await fetch('/api/sms/send', {
               method: 'POST',
               headers: {
                 'Content-Type': 'application/json',
@@ -174,7 +174,7 @@ const PhoneVerificationPage: React.FC<PhoneVerificationPageProps> = ({
         return;
       }
       
-      const response = await fetch('/api/send-otp-simple', {
+      const response = await fetch('/api/sms/send', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -261,14 +261,14 @@ const PhoneVerificationPage: React.FC<PhoneVerificationPageProps> = ({
       let authSuccess = false;
       
       try {
-        const response = await fetch('/api/verify-otp-simple', {
+        const response = await fetch('/api/sms/verify', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
             phoneNumber: normalizedPhone,
-            otp: otpCode
+            code: otpCode
           })
         });
 
@@ -410,7 +410,7 @@ const PhoneVerificationPage: React.FC<PhoneVerificationPageProps> = ({
     try {
       const normalizedPhone = normalizePhoneNumber(phoneNumber);
       
-      const response = await fetch('/api/send-otp-simple', {
+      const response = await fetch('/api/sms/send', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -638,7 +638,9 @@ const PhoneVerificationPage: React.FC<PhoneVerificationPageProps> = ({
 
             <form onSubmit={handleVerifyOTP} className="space-y-6">
               <div>
+                <label htmlFor="otp-input" className="sr-only">6桁の認証コードを入力</label>
                 <input
+                  id="otp-input"
                   type="text"
                   value={otpCode}
                   onChange={(e) => setOtpCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
@@ -647,9 +649,14 @@ const PhoneVerificationPage: React.FC<PhoneVerificationPageProps> = ({
                   maxLength={6}
                   required
                   disabled={!!(lockoutTime && lockoutTime > 0)}
+                  aria-label="6桁の認証コードを入力してください"
+                  aria-describedby="otp-help lockout-info"
+                  aria-required="true"
+                  inputMode="numeric"
+                  autoComplete="one-time-code"
                 />
                 {otpCode.length > 0 && otpCode.length < 6 && (
-                  <p className="text-center text-sm text-gray-500 mt-2">
+                  <p id="otp-help" className="text-center text-sm text-gray-500 mt-2" aria-live="polite">
                     あと{6 - otpCode.length}桁入力してください
                   </p>
                 )}
@@ -657,7 +664,7 @@ const PhoneVerificationPage: React.FC<PhoneVerificationPageProps> = ({
 
               {/* 試行回数とロックアウト情報 */}
               {(failedAttempts > 0 || (lockoutTime && lockoutTime > 0)) && (
-                <div className="p-4 bg-orange-50 border border-orange-200 rounded-xl">
+                <div id="lockout-info" className="p-4 bg-orange-50 border border-orange-200 rounded-xl" role="alert" aria-live="assertive">
                   {lockoutTime && lockoutTime > 0 ? (
                     <p className="text-orange-700 text-sm text-center">
                       認証がロックされています<br />
@@ -702,8 +709,8 @@ const PhoneVerificationPage: React.FC<PhoneVerificationPageProps> = ({
                   </div>
                 ) : (
                   <>
-                    <span className="text-lg text-white">認証完了して結果を受け取る</span>
-                    <div className="text-sm text-white opacity-90 mt-1">あなた専用の投資プランが待っています！</div>
+                    <span className="text-lg text-gray-800">認証完了して結果を受け取る</span>
+                    <div className="text-sm text-gray-800 opacity-90 mt-1">あなた専用の投資プランが待っています！</div>
                   </>
                 )}
               </button>

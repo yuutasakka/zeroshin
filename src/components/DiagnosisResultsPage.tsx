@@ -899,6 +899,8 @@ const DiagnosisResultsPage: React.FC<DiagnosisResultsPageProps> = ({ diagnosisDa
                     }
                   }}
                   className="w-full bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 text-white font-bold py-3 sm:py-4 px-4 sm:px-6 rounded-lg transition-all duration-200 transform hover:scale-105 hover:shadow-lg cursor-pointer flex items-center justify-center text-sm sm:text-base"
+                  aria-label={`${state.selectedExpert?.name}にメールで相談する`}
+                  role="button"
                 >
                   <i className="fas fa-envelope mr-3 text-lg"></i>
                   <div className="text-left">
@@ -1144,6 +1146,7 @@ const DiagnosisResultsPage: React.FC<DiagnosisResultsPageProps> = ({ diagnosisDa
                 });
               }}
               className="bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white font-semibold py-2.5 sm:py-3 px-4 sm:px-6 rounded-lg transition-all duration-200 transform hover:scale-105 hover:shadow-lg cursor-pointer text-sm sm:text-base"
+              aria-label="診断結果のURLをクリップボードにコピーしてシェアする"
             >
               <i className="fas fa-share mr-2"></i>
               この結果をシェア
@@ -1151,13 +1154,15 @@ const DiagnosisResultsPage: React.FC<DiagnosisResultsPageProps> = ({ diagnosisDa
             <button
               onClick={() => window.print()}
               className="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white font-semibold py-2.5 sm:py-3 px-4 sm:px-6 rounded-lg transition-all duration-200 transform hover:scale-105 hover:shadow-lg cursor-pointer text-sm sm:text-base"
+              aria-label="診断結果をプリンターで印刷する"
             >
               <i className="fas fa-print mr-2"></i>
               結果を印刷
             </button>
             <button
-              onClick={() => window.location.href = '/'}
+              onClick={onReturnToStart}
               className="bg-gradient-to-r from-gray-500 to-gray-600 hover:from-gray-600 hover:to-gray-700 text-white font-semibold py-2.5 sm:py-3 px-4 sm:px-6 rounded-lg transition-all duration-200 transform hover:scale-105 hover:shadow-lg cursor-pointer text-sm sm:text-base"
+              aria-label="ホームページに戻って新しい診断を始める"
             >
               <i className="fas fa-home mr-2"></i>
               ホームに戻る

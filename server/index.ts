@@ -12,9 +12,11 @@ import * as fs from 'fs';
 import * as path from 'path';
 import { randomBytes } from 'crypto';
 import { SecureConfigManager, SECURITY_CONFIG } from '../security.config';
+import { setupSwagger, setupMockEndpoints, apiVersioning } from './swagger';
 
-// 環境変数を読み込み
-dotenv.config();
+// 環境変数を読み込み (.env.local を優先)
+dotenv.config({ path: '.env.local' });
+dotenv.config(); // .envもロード
 
 // ロガーの設定
 const logger = winston.createLogger({
@@ -177,6 +179,7 @@ let twilioPhoneNumber: string = '';
 
 const initializeTwilio = async () => {
   try {
+    // Supabaseの環境設定から取得（本番環境用）
     const accountSid = await SecureConfigManager.getSecureConfig('twilio_account_sid') || process.env.TWILIO_ACCOUNT_SID;
     const authToken = await SecureConfigManager.getSecureConfig('twilio_auth_token') || process.env.TWILIO_AUTH_TOKEN;
     twilioPhoneNumber = await SecureConfigManager.getSecureConfig('twilio_phone_number') || process.env.TWILIO_PHONE_NUMBER || '';
@@ -196,8 +199,12 @@ const initializeTwilio = async () => {
   } catch (error) {
     logger.error('Twilio初期化エラー', error);
     console.error('❌ Twilio初期化に失敗:', error);
+    
+    // 開発環境では警告のみ、本番環境では終了
     if (NODE_ENV === 'production') {
       process.exit(1);
+    } else {
+      console.warn('🚧 開発環境: Twilio初期化失敗 - デモモードで続行');
     }
   }
 };
@@ -564,7 +571,23 @@ process.on('SIGINT', () => {
 // サーバー起動
 const startServer = async () => {
   try {
-    await initializeTwilio();
+    // Twilio初期化（エラーが発生しても継続）
+    try {
+      await initializeTwilio();
+    } catch (twilioError) {
+      console.warn('🚧 Twilioの初期化をスキップして続行:', twilioError instanceof Error ? twilioError.message : twilioError);
+    }
+    
+    // APIバージョニングミドルウェア
+    app.use(apiVersioning());
+    
+    // Swagger UIとAPIドキュメントの設定
+    setupSwagger(app);
+    
+    // 開発環境でのモックエンドポイント
+    if (NODE_ENV === 'development') {
+      setupMockEndpoints(app);
+    }
     
     app.listen(PORT, () => {
       logger.info('サーバー起動', {
@@ -573,6 +596,7 @@ const startServer = async () => {
       });
       console.log(`🚀 セキュア認証サーバーが http://localhost:${PORT} で起動しました`);
       console.log(`🔒 セキュリティ機能: Helmet, CORS制限, レート制限, 入力検証, IPアドレス制限, ログ記録`);
+      console.log(`📚 API仕様書: http://localhost:${PORT}/api-docs`);
     });
   } catch (error) {
     logger.error('サーバー起動エラー', error);

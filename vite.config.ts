@@ -67,9 +67,16 @@ export default defineConfig({
     })
   ],
   server: {
-    port: 8080,
+    port: 8081,
     host: '127.0.0.1',
-    open: false
+    open: false,
+    proxy: {
+      '/api': {
+        target: process.env.VITE_API_URL || 'http://localhost:8080',
+        changeOrigin: true,
+        secure: false
+      }
+    }
   },
   define: {
     'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV || 'production')

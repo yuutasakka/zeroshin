@@ -408,7 +408,7 @@ const App: React.FC = () => {
   // 要件定義書に基づく新しいナビゲーション関数
   const handleStartDiagnosis = () => {
     // 診断フォームへのスムーズスクロール（新しいレイアウト対応）
-    const diagnosisSection = document.querySelector('.diagnosis-section');
+    const diagnosisSection = document.getElementById('diagnosis-form-section');
     if (diagnosisSection) {
       // ヘッダー分のオフセット
       const yOffset = -80;
@@ -595,7 +595,7 @@ const App: React.FC = () => {
           </div>
           
           {/* 2番目: 診断フォーム */}
-          <div className="diagnosis-section">
+          <div className="diagnosis-section" id="diagnosis-form-section">
             <div className="home-right-col">
               <OptimizedDiagnosisFlow
                 onComplete={(optimizedAnswers) => {
@@ -1049,7 +1049,7 @@ const App: React.FC = () => {
                   <PWAInstallPrompt />
                   <PWAUpdatePrompt />
                   <OfflineIndicator />
-                  <AccessibilitySettings />
+                  {currentPage !== 'results' && <AccessibilitySettings />}
                   {/* <AccessibilityAudit /> */}
                 </div>
               </TemplateStyleProvider>

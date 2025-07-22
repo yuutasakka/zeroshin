@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { measureTransition, PERF_TARGETS } from './PerformanceMonitor';
 
 // 最適化された診断データ構造
@@ -68,6 +68,21 @@ const OptimizedDiagnosisFlow: React.FC<OptimizedDiagnosisFlowProps> = ({ onCompl
   
   // アニメーション用
   const [isTransitioning, setIsTransitioning] = useState(false);
+  
+  // フォーカス管理用のref
+  const stepHeaderRef = useRef<HTMLHeadingElement>(null);
+  const phoneInputRef = useRef<HTMLInputElement>(null);
+
+  // ステップ変更時のフォーカス管理
+  useEffect(() => {
+    if (currentStep === 3 && phoneInputRef.current) {
+      // 電話番号入力ステップでは入力フィールドにフォーカス
+      setTimeout(() => phoneInputRef.current?.focus(), 300);
+    } else if (stepHeaderRef.current) {
+      // 他のステップではヘッダーにフォーカス
+      setTimeout(() => stepHeaderRef.current?.focus(), 300);
+    }
+  }, [currentStep]);
 
   // 電話番号の自動フォーマット
   const formatPhoneNumber = (value: string): string => {
@@ -290,7 +305,7 @@ const OptimizedDiagnosisFlow: React.FC<OptimizedDiagnosisFlowProps> = ({ onCompl
   const renderStep3 = () => (
     <div className="space-y-6 animate-fade-in">
       <div className="text-center mb-8">
-        <h3 className="text-2xl font-bold text-gray-800 mb-2">
+        <h3 ref={stepHeaderRef} className="text-2xl font-bold text-gray-800 mb-2" tabIndex={-1}>
           最後のステップ
         </h3>
         <p className="text-gray-600">
@@ -300,7 +315,10 @@ const OptimizedDiagnosisFlow: React.FC<OptimizedDiagnosisFlowProps> = ({ onCompl
       
       <div className="max-w-md mx-auto space-y-6">
         <div className="relative">
+          <label htmlFor="phone-input" className="sr-only">電話番号を入力</label>
           <input
+            id="phone-input"
+            ref={phoneInputRef}
             type="tel"
             value={phoneInput}
             onChange={(e) => handlePhoneNumberChange(e.target.value)}
@@ -309,6 +327,10 @@ const OptimizedDiagnosisFlow: React.FC<OptimizedDiagnosisFlowProps> = ({ onCompl
               phoneError ? 'border-red-300 bg-red-50' : 'border-gray-300 focus:border-blue-500'
             }`}
             maxLength={13}
+            aria-label="電話番号を入力してください"
+            aria-describedby={phoneError ? "phone-error" : "phone-help"}
+            aria-required="true"
+            aria-invalid={phoneError ? "true" : "false"}
           />
           {phoneInput.length > 0 && (
             <div className={`absolute right-4 top-1/2 -translate-y-1/2 ${
@@ -320,10 +342,10 @@ const OptimizedDiagnosisFlow: React.FC<OptimizedDiagnosisFlowProps> = ({ onCompl
         </div>
         
         {phoneError && (
-          <p className="text-red-600 text-sm text-center">{phoneError}</p>
+          <p id="phone-error" className="text-red-600 text-sm text-center" role="alert" aria-live="polite">{phoneError}</p>
         )}
         
-        <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
+        <div id="phone-help" className="bg-blue-50 border border-blue-200 rounded-xl p-4">
           <p className="text-sm text-blue-800 text-center">
             <span className="font-medium">セキュアな認証</span><br />
             SMS認証で本人確認を行い、安全に結果をお届けします
@@ -334,6 +356,8 @@ const OptimizedDiagnosisFlow: React.FC<OptimizedDiagnosisFlowProps> = ({ onCompl
           className="w-full py-4 bg-gradient-to-r from-green-500 to-emerald-500 text-white font-bold rounded-xl shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
           onClick={handleComplete}
           disabled={!validatePhoneNumber(phoneInput)}
+          aria-label="電話番号を確認して診断を完了する"
+          aria-describedby="phone-input"
         >
           診断を完了する
         </button>
