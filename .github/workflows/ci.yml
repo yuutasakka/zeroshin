@@ -1,4 +1,4 @@
-name: Minimal CI
+name: Simple CI
 
 on:
   push:
@@ -7,17 +7,23 @@ on:
     branches: [ main ]
 
 jobs:
-  # 最小限のチェック
-  basic-check:
-    name: Basic Check
+  build-test:
+    name: Build Test
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
       
-      - name: Basic validation
-        run: |
-          echo "✅ Code checkout successful"
-          echo "✅ Repository structure validated"
-          echo "✅ All checks passed"
-          echo "🚀 Ready for deployment!"
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18.x'
+          cache: 'npm'
+      
+      - name: Install dependencies
+        run: npm ci --legacy-peer-deps
+      
+      - name: Build application
+        run: npm run build
+        env:
+          NODE_ENV: production
