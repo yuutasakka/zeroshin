@@ -1,8 +1,17 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
-  // CORS設定
-  res.setHeader('Access-Control-Allow-Origin', '*');
+  // CORS設定 - 本番環境のドメインのみ許可
+  const allowedOrigins = [
+    'https://moneyticket01.vercel.app',
+    'https://moneyticket01-*.vercel.app',
+    process.env.NODE_ENV === 'development' ? 'http://localhost:8081' : ''
+  ].filter(Boolean);
+  
+  const origin = req.headers.origin || '';
+  if (allowedOrigins.some(allowed => origin.match(allowed))) {
+    res.setHeader('Access-Control-Allow-Origin', origin);
+  }
   res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
 

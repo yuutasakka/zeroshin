@@ -139,11 +139,9 @@ export class SMSAuthService {
         console.log('✅ OTPデータベース取得成功');
       } catch (dbError: any) {
         console.error('⚠️ OTPデータベース取得失敗:', dbError?.message);
-        // 開発環境では一時的に固定OTPを許可
-        if (otp === '123456') {
-          console.log('🔧 開発用固定OTP使用');
-          return { success: true };
-        }
+        // 開発環境でもOTPバイパスは無効化（セキュリティ上の理由）
+        // 固定OTPは絶対に使用しない
+        return { success: false, error: 'OTP verification failed' };
       }
       
       if (!storedOTP) {
@@ -155,7 +153,7 @@ export class SMSAuthService {
       
       // 本番環境では詳細ログを出力しない
       if (!isProduction) {
-        console.log(`🔍 OTP検証: 入力=${otp}, 保存済み=${storedOTP.otp}`);
+        console.log('🔍 OTP検証中...');
       }
 
       // 試行回数チェック（5回まで）
