@@ -93,13 +93,12 @@ const SecurityTrustSection: React.FC = () => {
     loadSecurityTrustData();
   }, []);
   return (
-    <section className="py-16 md:py-20 px-4" style={{ background: '#0f172a' }}>
+    <section className="py-16 md:py-20 px-4" style={{ background: '#ffffff' }}>
       <div className="container mx-auto px-4 max-w-7xl">
         <style>{`
           .luxury-card {
-            background: rgba(255, 255, 255, 0.05);
-            backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
+            background: #f8fafc;
+            border: 1px solid #e4e4e7;
             border: 1px solid rgba(255, 255, 255, 0.1);
             border-radius: 1.5rem;
             padding: 2rem;
@@ -110,7 +109,7 @@ const SecurityTrustSection: React.FC = () => {
             width: 4rem;
             height: 4rem;
             border-radius: 50%;
-            background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+            background: #ff6b35;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -122,8 +121,9 @@ const SecurityTrustSection: React.FC = () => {
           
           .security-badge-icon-container:hover {
             transform: scale(1.1);
-            background: linear-gradient(135deg, #8b5cf6 0%, #ec4899 100%);
-            box-shadow: 0 0 20px rgba(139, 92, 246, 0.5);
+            background: #f35627;
+            box-shadow: 0 0 20px rgba(255, 107, 53, 0.3);
+            transform: scale(1.1);
           }
           
           @media (max-width: 768px) {
@@ -151,12 +151,7 @@ const SecurityTrustSection: React.FC = () => {
           }
         `}</style>
         <div className="luxury-card">
-          <h3 className="text-2xl md:text-3xl lg:text-4xl text-center mb-12 font-bold leading-tight" style={{ 
-            background: 'linear-gradient(135deg, #60a5fa 0%, #c084fc 100%)',
-            WebkitBackgroundClip: 'text',
-            WebkitTextFillColor: 'transparent',
-            backgroundClip: 'text'
-          }}>
+          <h3 className="text-2xl md:text-3xl lg:text-4xl text-center mb-12 font-bold leading-tight" style={{ color: '#243b53' }}>
             安心・安全への取り組み
           </h3>
           
@@ -166,8 +161,8 @@ const SecurityTrustSection: React.FC = () => {
                 <div className="security-badge-icon-container" aria-hidden="true">
                   <i className={item.iconClass}></i>
                 </div>
-                <div className="security-badge mb-3" style={{ color: 'white', fontWeight: 'bold' }}>{item.title}</div>
-                <p className="text-sm" style={{ color: '#94a3b8' }}>{item.description}</p>
+                <div className="security-badge mb-3" style={{ color: '#243b53', fontWeight: 'bold' }}>{item.title}</div>
+                <p className="text-sm" style={{ color: '#627d98' }}>{item.description}</p>
               </div>
             ))}
           </div>

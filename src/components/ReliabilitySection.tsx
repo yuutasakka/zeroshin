@@ -184,7 +184,7 @@ const ReliabilitySection: React.FC = () => {
   };
 
   return (
-    <section id="reliability-section" className="py-16 md:py-20 px-4" style={{ background: '#0f172a' }}>
+    <section id="reliability-section" className="py-16 md:py-20 px-4" style={{ background: '#f8fafc' }}>
       <div className="container mx-auto px-4 max-w-7xl">
         <style>{`
           /* 確実なレイアウト保証 */
@@ -215,14 +215,12 @@ const ReliabilitySection: React.FC = () => {
           }
           
           .stats-card {
-            background: rgba(255, 255, 255, 0.05) !important;
-            backdrop-filter: blur(10px) !important;
-            -webkit-backdrop-filter: blur(10px) !important;
-            border: 1px solid rgba(255, 255, 255, 0.1) !important;
+            background: white !important;
+            border: 1px solid #e4e4e7 !important;
             border-radius: 1.5rem !important;
             padding: 2rem !important;
             text-align: center !important;
-            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.15) !important;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08) !important;
             transition: all 0.3s ease !important;
             width: 100% !important;
             display: block !important;
@@ -230,29 +228,23 @@ const ReliabilitySection: React.FC = () => {
           
           .stats-card:hover {
             transform: translateY(-4px);
-            background: rgba(255, 255, 255, 0.08) !important;
-            border-color: rgba(255, 255, 255, 0.2) !important;
-            box-shadow: 0 12px 40px 0 rgba(31, 38, 135, 0.25) !important;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12) !important;
+            border-color: #ff6b35 !important;
           }
           
           .stats-number {
             font-size: 2.5rem;
             font-weight: 800;
-            background: linear-gradient(135deg, #60a5fa 0%, #c084fc 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
+            color: #ff6b35;
             margin-bottom: 0.5rem;
           }
           
           .testimonial-card {
-            background: rgba(255, 255, 255, 0.05);
-            backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
+            background: white;
+            border: 1px solid #e4e4e7;
             border-radius: 1rem;
             padding: 1.5rem;
-            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.1);
+            box-shadow: 0 2px 15px rgba(0, 0, 0, 0.06);
             transition: all 0.3s ease;
           }
           
@@ -297,15 +289,10 @@ const ReliabilitySection: React.FC = () => {
           }
         `}</style>
         <div className="text-center mb-16">
-          <h3 className="text-3xl md:text-4xl lg:text-5xl mb-6 font-bold leading-tight text-gradient" style={{ 
-            background: 'linear-gradient(135deg, #60a5fa 0%, #c084fc 100%)',
-            WebkitBackgroundClip: 'text',
-            WebkitTextFillColor: 'transparent',
-            backgroundClip: 'text'
-          }}>
+          <h3 className="text-3xl md:text-4xl lg:text-5xl mb-6 font-bold leading-tight" style={{ color: '#243b53' }}>
             {reasonsData.title}
           </h3>
-          <p className="text-lg md:text-xl max-w-2xl mx-auto leading-relaxed" style={{ color: '#94a3b8' }}>
+          <p className="text-lg md:text-xl max-w-2xl mx-auto leading-relaxed" style={{ color: '#627d98' }}>
             {reasonsData.subtitle}
           </p>
         </div>
@@ -319,14 +306,14 @@ const ReliabilitySection: React.FC = () => {
           {reasonsData.reasons.map((reason, index) => (
             <div key={reason.title} className={`stats-card ${templateConfig?.styles.sections.layout === 'timeline' ? 'timeline-item' : ''}`} style={{ animationDelay: reason.animationDelay }}>
               <div className="stats-number">{reason.value}</div>
-              <h4 className="text-xl font-semibold mb-2" style={{ color: 'white'}}>{reason.title}</h4>
-              <p style={{ color: '#94a3b8' }}>{reason.description}</p>
+              <h4 className="text-xl font-semibold mb-2" style={{ color: '#243b53' }}>{reason.title}</h4>
+              <p style={{ color: '#627d98' }}>{reason.description}</p>
             </div>
           ))}
         </div>
         
         <div className="mb-16">
-          <h4 className="text-2xl md:text-3xl font-bold text-center mb-12" style={{ color: 'white' }}>お客様の声</h4>
+          <h4 className="text-2xl md:text-3xl font-bold text-center mb-12" style={{ color: '#243b53' }}>お客様の声</h4>
           {testimonials.length > 0 ? (
             <div className="grid md:grid-cols-2 gap-8" style={{ 
               display: 'grid', 
@@ -338,26 +325,26 @@ const ReliabilitySection: React.FC = () => {
                   <div className="flex items-center mb-4">
                     <div 
                       className="w-12 h-12 rounded-full flex items-center justify-center mr-4 text-xl"
-                      style={{ background: 'linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%)', color: 'white'}}
+                      style={{ background: '#ff6b35', color: 'white'}}
                       aria-hidden="true"
                     >
                       {testimonial.avatarEmoji}
                     </div>
                     <div>
-                      <p className="font-semibold" style={{color: 'white'}}>
+                      <p className="font-semibold" style={{color: '#243b53'}}>
                         {testimonial.nameAndRole}
                       </p>
-                      <div style={{color: '#60a5fa'}}>
+                      <div style={{color: '#ff6b35'}}>
                         {'★'.repeat(testimonial.ratingStars || 5)}{'☆'.repeat(5 - (testimonial.ratingStars || 5))}
                       </div>
                     </div>
                   </div>
-                  <p style={{ color: '#94a3b8' }}>{testimonial.text}</p>
+                  <p style={{ color: '#627d98' }}>{testimonial.text}</p>
                 </div>
               ))}
             </div>
           ) : (
-            <p className="text-center p-6 rounded-lg" style={{ color: '#94a3b8', background: 'rgba(255, 255, 255, 0.05)' }}>現在、お客様の声は登録されていません。</p>
+            <p className="text-center p-6 rounded-lg" style={{ color: '#627d98', background: '#f0f4f8' }}>現在、お客様の声は登録されていません。</p>
           )}
         </div>
       </div>

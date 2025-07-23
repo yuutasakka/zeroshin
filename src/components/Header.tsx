@@ -80,12 +80,13 @@ const Header: React.FC = () => {
       `}</style>
       <header 
         id="navigation"
-        className="app-header fixed top-0 left-0 right-0 z-50 glass-dark"
+        className="app-header fixed top-0 left-0 right-0 z-50"
         style={{
-          background: 'rgba(15, 23, 42, 0.8)',
+          background: 'rgba(255, 255, 255, 0.95)',
           backdropFilter: 'blur(20px)',
           WebkitBackdropFilter: 'blur(20px)',
-          borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
+          borderBottom: '1px solid #e4e4e7',
+          boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
           zIndex: 50
         }}
         role="banner"
@@ -94,10 +95,10 @@ const Header: React.FC = () => {
           <div className="flex items-center justify-between" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: '4rem' }}>
             <a href="#top" onClick={scrollToTop} className="flex items-center space-x-2 md:space-x-3 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-blue-500 rounded-lg p-2 hover:bg-gray-50 transition-all duration-200">
               <div className="flex flex-col">
-                <h1 className="text-lg sm:text-xl md:text-2xl font-bold text-white">
+                <h1 className="text-lg sm:text-xl md:text-2xl font-bold" style={{ color: '#243b53' }}>
                   {headerData.title}
                 </h1>
-                <span className="hidden sm:block text-xs text-gray-400 font-medium">
+                <span className="hidden sm:block text-xs font-medium" style={{ color: '#627d98' }}>
                   AI投資診断プラットフォーム
                 </span>
               </div>
@@ -105,13 +106,19 @@ const Header: React.FC = () => {
             
             {/* デスクトップナビゲーション */}
             <nav className="hidden md:flex items-center space-x-1">
-              <a href="#main-visual-section" onClick={(e) => scrollToSection(e, 'main-visual-section')} className="px-4 py-2 text-sm md:text-base text-gray-300 hover:text-white transition-all duration-200 font-medium">
+              <a href="#main-visual-section" onClick={(e) => scrollToSection(e, 'main-visual-section')} className="px-4 py-2 text-sm md:text-base transition-all duration-200 font-medium" style={{ color: '#486581' }} 
+                onMouseEnter={(e) => e.currentTarget.style.color = '#ff6b35'}
+                onMouseLeave={(e) => e.currentTarget.style.color = '#486581'}>
                 サービス
               </a>
-              <a href="#reliability-section" onClick={(e) => scrollToSection(e, 'reliability-section')} className="px-4 py-2 text-sm md:text-base text-gray-300 hover:text-white transition-all duration-200 font-medium">
+              <a href="#reliability-section" onClick={(e) => scrollToSection(e, 'reliability-section')} className="px-4 py-2 text-sm md:text-base transition-all duration-200 font-medium" style={{ color: '#486581' }}
+                onMouseEnter={(e) => e.currentTarget.style.color = '#ff6b35'}
+                onMouseLeave={(e) => e.currentTarget.style.color = '#486581'}>
                 選ばれる理由
               </a>
-              <a href="#cta-section" onClick={(e) => scrollToSection(e, 'cta-section')} className="px-4 py-2 text-sm md:text-base text-gray-300 hover:text-white transition-all duration-200 font-medium">
+              <a href="#cta-section" onClick={(e) => scrollToSection(e, 'cta-section')} className="px-4 py-2 text-sm md:text-base transition-all duration-200 font-medium" style={{ color: '#486581' }}
+                onMouseEnter={(e) => e.currentTarget.style.color = '#ff6b35'}
+                onMouseLeave={(e) => e.currentTarget.style.color = '#486581'}>
                 お問い合わせ
               </a>
               <div className="ml-4 pl-4 border-l border-blue-200/50">
@@ -131,10 +138,10 @@ const Header: React.FC = () => {
             {/* モバイルメニューボタン */}
             <button
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-              className="md:hidden p-2 rounded-lg hover:bg-white/10 focus:outline-none focus:ring-2 focus:ring-white/50 transition-all duration-200"
+              className="md:hidden p-2 rounded-lg hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-orange-500 transition-all duration-200"
               aria-label="メニューを開く"
             >
-              <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-6 h-6" style={{ color: '#243b53' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 {isMobileMenuOpen ? (
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                 ) : (
@@ -148,7 +155,7 @@ const Header: React.FC = () => {
         
         {/* モバイルメニュー */}
         <div className={`md:hidden ${isMobileMenuOpen ? 'block animate-slide-down' : 'hidden'}`}>
-          <nav className="glass-dark border-t border-white/10 px-4 py-4">
+          <nav className="bg-white border-t border-gray-200 px-4 py-4 shadow-lg">
             <div className="space-y-2">
               <a 
                 href="#main-visual-section" 
@@ -156,7 +163,10 @@ const Header: React.FC = () => {
                   scrollToSection(e, 'main-visual-section');
                   setIsMobileMenuOpen(false);
                 }} 
-                className="flex items-center py-3 px-4 text-base text-gray-300 hover:text-white rounded-lg transition-all duration-200"
+                className="flex items-center py-3 px-4 text-base rounded-lg transition-all duration-200"
+                style={{ color: '#486581' }}
+                onMouseEnter={(e) => e.currentTarget.style.color = '#ff6b35'}
+                onMouseLeave={(e) => e.currentTarget.style.color = '#486581'}
               >
                 サービス
               </a>
@@ -166,7 +176,10 @@ const Header: React.FC = () => {
                   scrollToSection(e, 'reliability-section');
                   setIsMobileMenuOpen(false);
                 }} 
-                className="flex items-center py-3 px-4 text-base text-gray-300 hover:text-white rounded-lg transition-all duration-200"
+                className="flex items-center py-3 px-4 text-base rounded-lg transition-all duration-200"
+                style={{ color: '#486581' }}
+                onMouseEnter={(e) => e.currentTarget.style.color = '#ff6b35'}
+                onMouseLeave={(e) => e.currentTarget.style.color = '#486581'}
               >
                 選ばれる理由
               </a>
@@ -176,11 +189,14 @@ const Header: React.FC = () => {
                   scrollToSection(e, 'cta-section');
                   setIsMobileMenuOpen(false);
                 }} 
-                className="flex items-center py-3 px-4 text-base text-gray-300 hover:text-white rounded-lg transition-all duration-200"
+                className="flex items-center py-3 px-4 text-base rounded-lg transition-all duration-200"
+                style={{ color: '#486581' }}
+                onMouseEnter={(e) => e.currentTarget.style.color = '#ff6b35'}
+                onMouseLeave={(e) => e.currentTarget.style.color = '#486581'}
               >
                 お問い合わせ
               </a>
-              <div className="pt-4 mt-4 border-t border-white/10">
+              <div className="pt-4 mt-4 border-t border-gray-200">
                 <button 
                   onClick={() => {
                     handleStartDiagnosis();

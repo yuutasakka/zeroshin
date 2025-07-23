@@ -109,8 +109,8 @@ const Footer: React.FC<FooterProps> = ({ onNavigateToAdminLogin }) => {
       id="footer"
       className="py-12 px-4"
       style={{
-        background: 'linear-gradient(180deg, #0f172a 0%, #020617 100%)',
-        borderTop: '1px solid rgba(255, 255, 255, 0.1)'
+        background: '#243b53',
+        borderTop: '1px solid #334e68'
       }}
       role="contentinfo"
     >
@@ -122,11 +122,11 @@ const Footer: React.FC<FooterProps> = ({ onNavigateToAdminLogin }) => {
         </div>
         
         <div className="text-center space-y-4">
-            <p className="text-sm sm:text-base md:text-lg text-gray-400 max-w-2xl mx-auto leading-relaxed">{footerData.description}</p>
+            <p className="text-sm sm:text-base md:text-lg max-w-2xl mx-auto leading-relaxed" style={{ color: '#d9e2ec' }}>{footerData.description}</p>
             
             <div className="space-y-3">
-                <p className="text-sm sm:text-base md:text-lg text-gray-300 font-medium">{footerData.companyInfo}</p>
-                <p className="text-sm sm:text-base md:text-lg text-gray-300">{footerData.contactInfo}</p>
+                <p className="text-sm sm:text-base md:text-lg font-medium" style={{ color: '#bcccdc' }}>{footerData.companyInfo}</p>
+                <p className="text-sm sm:text-base md:text-lg" style={{ color: '#bcccdc' }}>{footerData.contactInfo}</p>
                 <nav className="flex flex-wrap justify-center gap-2 sm:gap-4 md:gap-6 mt-6">
                     {legalLinks
                       .filter(link => link.is_active)
@@ -134,7 +134,10 @@ const Footer: React.FC<FooterProps> = ({ onNavigateToAdminLogin }) => {
                         <a 
                           key={link.id} 
                           href={sanitizeUrl(link.url)} 
-                          className="text-xs sm:text-sm md:text-base text-gray-400 hover:text-white transition-colors duration-200 hover:underline px-1"
+                          className="text-xs sm:text-sm md:text-base transition-colors duration-200 hover:underline px-1"
+                          style={{ color: '#9fb3c8' }}
+                          onMouseEnter={(e) => e.currentTarget.style.color = '#ff6b35'}
+                          onMouseLeave={(e) => e.currentTarget.style.color = '#9fb3c8'}
                           target={link.url.startsWith('http') ? '_blank' : undefined}
                           rel={link.url.startsWith('http') ? 'noopener noreferrer' : undefined}
                         >
@@ -148,12 +151,15 @@ const Footer: React.FC<FooterProps> = ({ onNavigateToAdminLogin }) => {
                         e.preventDefault(); 
                         onNavigateToAdminLogin(); 
                       }} 
-                      className="text-xs sm:text-sm md:text-base text-blue-600 hover:text-blue-800 transition-colors duration-200 hover:underline px-1"
+                      className="text-xs sm:text-sm md:text-base transition-colors duration-200 hover:underline px-1"
+                      style={{ color: '#9fb3c8' }}
+                      onMouseEnter={(e) => e.currentTarget.style.color = '#ff6b35'}
+                      onMouseLeave={(e) => e.currentTarget.style.color = '#9fb3c8'}
                     >
                       管理者ログイン
                     </a>
                 </nav>
-                <p className="mt-8 text-xs sm:text-sm md:text-base text-gray-500">{footerData.copyright || `© ${new Date().getFullYear()} AI ConnectX株式会社. All rights reserved.`}</p>
+                <p className="mt-8 text-xs sm:text-sm md:text-base" style={{ color: '#829ab1' }}>{footerData.copyright || `© ${new Date().getFullYear()} AI ConnectX株式会社. All rights reserved.`}</p>
             </div>
         </div>
       </div>

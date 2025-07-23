@@ -62,13 +62,13 @@ const AIConnectXHero: React.FC<AIConnectXHeroProps> = ({ onStartDiagnosis }) => 
   const heroStyles = {
     hero: {
       position: 'relative' as const,
-      minHeight: '100vh',
+      minHeight: '80vh',
       width: '100%',
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
       overflow: 'hidden',
-      background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #334155 100%)'
+      background: 'linear-gradient(135deg, #243b53 0%, #102a43 100%)'
     },
     content: {
       position: 'relative' as const,
@@ -83,23 +83,20 @@ const AIConnectXHero: React.FC<AIConnectXHeroProps> = ({ onStartDiagnosis }) => 
       animation: 'fadeIn 0.8s ease-out'
     },
     title: {
-      fontSize: 'clamp(3rem, 5vw, 5rem)',
+      fontSize: 'clamp(1.5rem, 3vw, 1.5rem)',
       fontWeight: 900,
-      lineHeight: 1.1,
-      letterSpacing: '-0.02em',
-      marginBottom: '1.5rem',
-      background: 'linear-gradient(135deg, #60a5fa 0%, #c084fc 50%, #f472b6 100%)',
-      WebkitBackgroundClip: 'text',
-      WebkitTextFillColor: 'transparent',
-      backgroundClip: 'text',
-      filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.1))'
+      lineHeight: 1.2,
+      marginBottom: '1rem',
+      color: 'white'
     },
     subtitle: {
-      fontSize: 'clamp(1.25rem, 2vw, 1.75rem)',
+      fontSize: 'clamp(0.875rem, 1.5vw, 1rem)',
       fontWeight: 400,
-      color: '#94a3b8',
-      marginBottom: '3rem',
-      lineHeight: 1.6
+      color: '#d9e2ec',
+      marginBottom: '2.5rem',
+      lineHeight: 1.6,
+      maxWidth: '600px',
+      margin: '0 auto 2.5rem'
     },
     buttonContainer: {
       display: 'flex',
@@ -114,18 +111,19 @@ const AIConnectXHero: React.FC<AIConnectXHeroProps> = ({ onStartDiagnosis }) => 
       alignItems: 'center',
       justifyContent: 'center',
       gap: '0.75rem',
-      padding: '1.25rem 3rem',
-      background: 'linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%)',
+      padding: '1.25rem 3.5rem',
+      background: 'linear-gradient(135deg, #ff6b35 0%, #f35627 100%)',
       border: 'none',
       borderRadius: '9999px',
       color: 'white',
       fontSize: '1.125rem',
-      fontWeight: 600,
+      fontWeight: 700,
       cursor: 'pointer',
       transition: 'all 0.3s ease',
-      boxShadow: '0 10px 40px rgba(59, 130, 246, 0.3)',
+      boxShadow: '0 10px 40px rgba(255, 107, 53, 0.3)',
       position: 'relative' as const,
-      overflow: 'hidden'
+      overflow: 'hidden',
+      minWidth: '280px'
     },
     secondaryButton: {
       display: 'inline-flex',
@@ -152,34 +150,34 @@ const AIConnectXHero: React.FC<AIConnectXHeroProps> = ({ onStartDiagnosis }) => 
       margin: '0 auto'
     },
     featureCard: {
-      padding: '2rem',
-      background: 'rgba(255, 255, 255, 0.05)',
+      padding: '1.5rem',
+      background: 'rgba(255, 255, 255, 0.1)',
       backdropFilter: 'blur(10px)',
       WebkitBackdropFilter: 'blur(10px)',
-      border: '1px solid rgba(255, 255, 255, 0.1)',
-      borderRadius: '1.5rem',
+      border: '1px solid rgba(255, 255, 255, 0.15)',
+      borderRadius: '1rem',
       transition: 'all 0.3s ease'
     },
     featureIcon: {
-      width: '3rem',
-      height: '3rem',
-      marginBottom: '1rem',
-      background: 'linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%)',
-      borderRadius: '1rem',
+      width: '2.5rem',
+      height: '2.5rem',
+      marginBottom: '0.75rem',
+      background: 'linear-gradient(135deg, #ff6b35 0%, #f35627 100%)',
+      borderRadius: '0.75rem',
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
-      fontSize: '1.5rem'
+      fontSize: '1.25rem'
     },
     featureTitle: {
-      fontSize: '1.25rem',
-      fontWeight: 600,
+      fontSize: '1rem',
+      fontWeight: 700,
       color: 'white',
       marginBottom: '0.5rem'
     },
     featureDescription: {
       fontSize: '0.875rem',
-      color: '#94a3b8',
+      color: '#d9e2ec',
       lineHeight: 1.6
     }
   };
@@ -243,7 +241,8 @@ const AIConnectXHero: React.FC<AIConnectXHeroProps> = ({ onStartDiagnosis }) => 
 
         .hero-primary-button:hover {
           transform: translateY(-3px);
-          box-shadow: 0 15px 50px rgba(59, 130, 246, 0.4);
+          box-shadow: 0 15px 50px rgba(255, 107, 53, 0.4);
+          background: linear-gradient(135deg, #ff8c42 0%, #ff6b35 100%);
         }
 
         .hero-secondary-button:hover {
@@ -291,7 +290,7 @@ const AIConnectXHero: React.FC<AIConnectXHeroProps> = ({ onStartDiagnosis }) => 
         .gradient-orb-1 {
           width: 300px;
           height: 300px;
-          background: radial-gradient(circle, rgba(59, 130, 246, 0.3) 0%, transparent 70%);
+          background: radial-gradient(circle, rgba(255, 107, 53, 0.2) 0%, transparent 70%);
           top: 10%;
           left: -5%;
           animation-delay: 0s;
@@ -300,7 +299,7 @@ const AIConnectXHero: React.FC<AIConnectXHeroProps> = ({ onStartDiagnosis }) => 
         .gradient-orb-2 {
           width: 400px;
           height: 400px;
-          background: radial-gradient(circle, rgba(139, 92, 246, 0.3) 0%, transparent 70%);
+          background: radial-gradient(circle, rgba(36, 59, 83, 0.2) 0%, transparent 70%);
           bottom: 10%;
           right: -5%;
           animation-delay: 2s;
@@ -309,7 +308,7 @@ const AIConnectXHero: React.FC<AIConnectXHeroProps> = ({ onStartDiagnosis }) => 
         .gradient-orb-3 {
           width: 250px;
           height: 250px;
-          background: radial-gradient(circle, rgba(236, 72, 153, 0.3) 0%, transparent 70%);
+          background: radial-gradient(circle, rgba(255, 140, 66, 0.2) 0%, transparent 70%);
           top: 50%;
           left: 50%;
           transform: translate(-50%, -50%);
@@ -365,7 +364,7 @@ const AIConnectXHero: React.FC<AIConnectXHeroProps> = ({ onStartDiagnosis }) => 
               onClick={onStartDiagnosis}
               aria-label="投資診断を開始する"
             >
-              <span>無料で診断を始める</span>
+              <span>さあ診断を始めよう！</span>
               <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
                 <path d="M7.5 5L12.5 10L7.5 15" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
               </svg>
@@ -386,23 +385,23 @@ const AIConnectXHero: React.FC<AIConnectXHeroProps> = ({ onStartDiagnosis }) => 
           <div style={heroStyles.features}>
             <div style={heroStyles.featureCard} className="hero-feature-card">
               <div style={heroStyles.featureIcon}>🔒</div>
-              <h3 style={heroStyles.featureTitle}>SMS認証で安全</h3>
+              <h3 style={heroStyles.featureTitle}>信頼の実績</h3>
               <p style={heroStyles.featureDescription}>
-                電話番号認証による高いセキュリティで、安心してご利用いただけます
+                10,000人以上の診断実績で安心
               </p>
             </div>
             <div style={heroStyles.featureCard} className="hero-feature-card">
               <div style={heroStyles.featureIcon}>📊</div>
-              <h3 style={heroStyles.featureTitle}>14種類の投資商品</h3>
+              <h3 style={heroStyles.featureTitle}>簡単３分診断</h3>
               <p style={heroStyles.featureDescription}>
-                あなたの目標やリスク許容度に合わせた最適な投資プランをご提案
+                スマホで手軽に最適プランがわかる
               </p>
             </div>
             <div style={heroStyles.featureCard} className="hero-feature-card">
               <div style={heroStyles.featureIcon}>👥</div>
-              <h3 style={heroStyles.featureTitle}>専門家のサポート</h3>
+              <h3 style={heroStyles.featureTitle}>完全無料</h3>
               <p style={heroStyles.featureDescription}>
-                診断結果に基づいて、経験豊富な専門家を無料でご紹介します
+                診断から相談まで一切費用はかかりません
               </p>
             </div>
           </div>

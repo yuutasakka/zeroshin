@@ -4,7 +4,7 @@ import Header from './src/components/Header';
 // 要件定義書に基づく新しいコンポーネント
 import AIConnectXHero from './src/components/AIConnectXHero';
 import EnhancedHero from './src/components/EnhancedHero';
-import OptimizedDiagnosisFlow from './src/components/OptimizedDiagnosisFlow';
+import DiagnosisForm from './src/components/DiagnosisForm';
 // DiagnosisAnswersは削除されたコンポーネントの型なので、OptimizedDiagnosisAnswersを使用
 type DiagnosisAnswers = {
   age: string;
@@ -19,6 +19,7 @@ import ReliabilitySection from './src/components/ReliabilitySection';
 import SecurityTrustSection from './src/components/SecurityTrustSection';
 import CallToActionSection from './src/components/CallToActionSection';
 import Footer from './src/components/Footer';
+import FixedCTA from './src/components/FixedCTA';
 
 // 動的インポート（Code Splitting）
 const PhoneVerificationPage = lazy(() => import('./src/components/PhoneVerificationPage'));
@@ -969,28 +970,33 @@ const App: React.FC = () => {
       );
     }
 
-    // 要件定義書に基づく新しいページフロー - OptimizedDiagnosisFlowを使用
+    // 診断フォームページ
     if (currentPage === 'diagnosis') {
       return (
-        <OptimizedDiagnosisFlow
-          onComplete={(optimizedAnswers) => {
-            // OptimizedDiagnosisAnswersからDiagnosisAnswersに変換
-            const [age, experience] = (optimizedAnswers.ageAndExperience || '-').split('-');
-            const [purpose, budget] = (optimizedAnswers.purposeAndBudget || '-').split('-');
-            
-            const convertedAnswers: DiagnosisAnswers = {
-              age: age || '',
-              experience: experience || '',
-              purpose: purpose || '',
-              amount: budget || '',
-              timing: 'now',
-              phone: optimizedAnswers.phoneNumber || ''
-            };
-            
-            handleDiagnosisComplete(convertedAnswers);
-          }}
-          onCancel={handleDiagnosisCancel}
-        />
+        <div style={{ 
+          minHeight: '100vh',
+          background: 'linear-gradient(135deg, #f0f4f8 0%, #ffffff 100%)',
+          paddingTop: '80px'
+        }}>
+          <Header />
+          <div style={{ paddingTop: '2rem' }}>
+            <DiagnosisForm
+              onComplete={(answers) => {
+                // 簡素化された回答を既存の形式に変換
+                const convertedAnswers: DiagnosisAnswers = {
+                  age: answers[1] || '',
+                  experience: answers[3] || '',
+                  purpose: answers[4] || '',
+                  amount: answers[2] || '',
+                  timing: 'now',
+                  phone: ''
+                };
+                
+                handleDiagnosisComplete(convertedAnswers);
+              }}
+            />
+          </div>
+        </div>
       );
     }
 
@@ -1015,6 +1021,7 @@ const App: React.FC = () => {
           <CallToActionSection />
         </main>
         <Footer onNavigateToAdminLogin={navigateToAdminLogin} />
+        <FixedCTA onStartDiagnosis={handleStartDiagnosis} />
       </>
     );
   };
@@ -1034,7 +1041,7 @@ const App: React.FC = () => {
           <DesignSettingsProvider>
             <ColorThemeProvider>
               <TemplateStyleProvider>
-                <div className="App min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
+                <div className="App min-h-screen" style={{ background: '#ffffff' }}>
                   <SEOHead />
                   <SkipLinks />
                   <AccessibilityAnnouncer />
