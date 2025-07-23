@@ -2261,7 +2261,7 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
               aria-modal="true"
               aria-labelledby="testimonial-modal-title"
             >
-                <div className="bg-white p-6 rounded-lg shadow-xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
+                <div className="bg-white p-6 rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
                     <h3 id="testimonial-modal-title" className="text-xl font-semibold mb-4">{editingTestimonial.id && editingTestimonial.id !== '' ? 'お客様の声を編集' : 'お客様の声を新規追加'}</h3>
                     <form onSubmit={handleSaveTestimonialForm} className="space-y-4">
                         <div>
@@ -3952,8 +3952,8 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
 
                 {/* プランナー編集モーダル */}
                 {showPlannerModal && editingPlanner && (
-                    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4 overflow-y-auto">
-                        <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full my-8 max-h-[85vh] flex flex-col">
+                    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+                        <div className="bg-white rounded-lg shadow-xl max-w-3xl w-full max-h-[90vh] flex flex-col">
                             <div className="p-6 flex-shrink-0 border-b">
                                 <h3 className="text-lg font-semibold text-gray-800">
                                     {editingPlanner.id ? 'ファイナンシャルプランナー編集' : '新規ファイナンシャルプランナー追加'}

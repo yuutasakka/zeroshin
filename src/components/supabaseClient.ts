@@ -882,7 +882,7 @@ export class RegistrationRequestManager {
   private async isSupabaseAvailable(): Promise<boolean> {
     try {
       const { error } = await this.supabase
-        .from('registration_requests')
+        .from('admin_registrations')
         .select('id')
         .limit(1);
       
@@ -919,7 +919,7 @@ export class RegistrationRequestManager {
       // Supabaseを試行
       if (await this.isSupabaseAvailable()) {
         const { data, error } = await this.supabase
-          .from('registration_requests')
+          .from('admin_registrations')
           .insert(request)
           .select()
           .single();
@@ -950,7 +950,7 @@ export class RegistrationRequestManager {
       // Supabaseを試行
       if (await this.isSupabaseAvailable()) {
         const { data, error } = await this.supabase
-          .from('registration_requests')
+          .from('admin_registrations')
           .select('id')
           .eq('email', normalizedEmail)
           .limit(1);
@@ -976,7 +976,7 @@ export class RegistrationRequestManager {
       // Supabaseを試行
       if (await this.isSupabaseAvailable()) {
         let query = this.supabase
-          .from('registration_requests')
+          .from('admin_registrations')
           .select('*')
           .order('created_at', { ascending: false });
 
@@ -1072,7 +1072,7 @@ export class RegistrationRequestManager {
 
       if (await this.isSupabaseAvailable()) {
         const { error } = await this.supabase
-          .from('registration_requests')
+          .from('admin_registrations')
           .update({
             status: action === 'approve' ? 'approved' : 'rejected',
             admin_notes: adminNotes || '',
@@ -1146,7 +1146,7 @@ export class RegistrationRequestManager {
       // Supabaseを試行
       if (await this.isSupabaseAvailable()) {
         const { data, error } = await this.supabase
-          .from('registration_requests')
+          .from('admin_registrations')
           .select('*')
           .eq('id', requestId)
           .single();
@@ -1178,7 +1178,7 @@ export class RegistrationRequestManager {
       for (const request of localRequests) {
         // Supabaseに既存かチェック
         const { data: existing } = await this.supabase
-          .from('registration_requests')
+          .from('admin_registrations')
           .select('id')
           .eq('id', request.id)
           .single();
@@ -1186,7 +1186,7 @@ export class RegistrationRequestManager {
         if (!existing) {
           // 存在しない場合は挿入
           await this.supabase
-            .from('registration_requests')
+            .from('admin_registrations')
             .insert(request);
         }
       }
