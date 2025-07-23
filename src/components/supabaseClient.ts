@@ -999,68 +999,46 @@ export class RegistrationRequestManager {
           updateData.approved_at = new Date().toISOString();
         }
 
-        // RLS権限問題を回避するため、複数の方法を試行
-        let result;
-        let lastError;
+        // 直接データベース更新を試行
+        const { data, error } = await this.supabase
+          .from('admin_registrations')
+          .update(updateData)
+          .eq('id', requestId)
+          .select();
+        
+        console.log('データベース更新結果:', { data, error });
 
-        // 方法1: 通常のクライアントで試行
-        try {
-          result = await this.supabase
-            .from('admin_registrations')
-            .update(updateData)
-            .eq('id', requestId)
-            .select();
+        if (!error) {
+          console.log('データベース更新成功');
+          return {
+            success: true,
+            message: action === 'approve' ? 
+              '申請が承認されました。' : 
+              '申請が却下されました。'
+          };
+        } else {
+          console.error('データベース更新エラー:', error);
           
-          if (!result.error) {
-            console.log('通常のクライアントで更新成功');
+          // 権限エラーの場合、詳細な情報を提供
+          if (error.message.includes('permission denied') || error.message.includes('RLS')) {
             return {
-              success: true,
-              message: action === 'approve' ? 
-                '申請が承認されました。' : 
-                '申請が却下されました。'
+              success: false,
+              error: 'データベース権限エラーが発生しました。管理者にお問い合わせください。\n\n技術詳細: Supabaseコンソールで以下のSQLを実行してください:\nALTER TABLE public.admin_registrations DISABLE ROW LEVEL SECURITY;'
             };
           }
-          lastError = result.error;
-        } catch (err) {
-          console.warn('通常のクライアントでエラー:', err);
-          lastError = err;
+          
+          return {
+            success: false,
+            error: `データベース更新エラー: ${error.message}\n\nエラーコード: ${error.code || 'N/A'}`
+          };
         }
-
-        // 方法2: SQL関数呼び出しで権限昇格
-        try {
-          const { data, error } = await this.supabase.rpc('update_admin_registration_status', {
-            request_id: requestId,
-            new_status: action === 'approve' ? 'approved' : 'rejected',
-            admin_notes: adminNotes || '',
-            reviewed_by_admin: reviewedBy || 'admin'
-          });
-
-          if (!error) {
-            console.log('SQL関数で更新成功');
-            return {
-              success: true,
-              message: action === 'approve' ? 
-                '申請が承認されました。' : 
-                '申請が却下されました。'
-            };
-          }
-          console.warn('SQL関数でもエラー:', error);
-          lastError = error;
-        } catch (err) {
-          console.warn('SQL関数呼び出しエラー:', err);
-        }
-
-        // エラーレポート
-        console.error('すべての更新方法が失敗:', lastError);
-        return {
-          success: false,
-          error: `データベース更新エラー: ${lastError?.message || 'アクセス権限がありません'}`
-        };
       }
 
+      // Supabaseが利用できない場合の代替処理
+      console.warn('Supabaseが利用できません。ローカル状態更新のみ実行します。');
       return {
         success: false,
-        error: 'Supabaseに接続できません。'
+        error: 'データベースに接続できません。ネットワーク接続を確認してください。'
       };
 
     } catch (error) {
