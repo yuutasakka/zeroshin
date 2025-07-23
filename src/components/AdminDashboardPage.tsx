@@ -1307,43 +1307,46 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
   const handleSavePlanner = async () => {
     if (!editingPlanner) return;
 
-    setPlannerStatus('保存中...');
+    console.log('🔧 FP保存関数が呼び出されました');
+    console.log('🔧 現在の編集中FPデータ:', editingPlanner);
+    setPlannerStatus('💾 FP情報を保存中...');
     try {
-      if (supabaseConfig.url && supabaseConfig.key && !supabaseConfig.url.includes('your-project')) {
-        const method = editingPlanner.id ? 'PATCH' : 'POST';
-        const url = editingPlanner.id 
-          ? `${supabaseConfig.url}/rest/v1/financial_planners?id.eq=${editingPlanner.id}`
-          : `${supabaseConfig.url}/rest/v1/financial_planners`;
-
-        const response = await fetch(url, {
-          method,
-          headers: {
-            'Authorization': `Bearer ${supabaseConfig.key}`,
-            'apikey': supabaseConfig.key,
-            'Content-Type': 'application/json',
-            'Prefer': 'return=representation'
-          },
-          body: JSON.stringify({
-            ...editingPlanner,
-            updated_at: new Date().toISOString()
-          })
-        });
-
-        if (response.ok) {
-          setPlannerStatus('✅ 保存されました');
-          await loadFinancialPlanners();
-          handleClosePlannerModal();
-        } else {
-          throw new Error('保存に失敗しました');
-        }
-      } else {
-        setPlannerStatus('❌ Supabaseが設定されていません');
+      // IDがない場合は新規作成
+      if (!editingPlanner.id) {
+        editingPlanner.id = Date.now();
       }
+
+      // ローカルの配列を更新
+      const updatedPlanners = editingPlanner.id && financialPlanners.find(p => p.id === editingPlanner.id)
+        ? financialPlanners.map(p => p.id === editingPlanner.id ? editingPlanner : p)
+        : [...financialPlanners, editingPlanner];
+
+      setFinancialPlanners(updatedPlanners);
+      
+      // ローカルストレージに保存
+      localStorage.setItem('financial_planners', JSON.stringify(updatedPlanners));
+      console.log('🔧 FPデータをローカルストレージに保存完了:', updatedPlanners);
+
+      // Supabaseにも保存を試行
+      try {
+        console.log('🔧 SupabaseにFPデータを保存中...');
+        const supabaseSuccess = await SupabaseAdminAPI.saveAdminSetting('financial_planners', updatedPlanners);
+        if (supabaseSuccess) {
+          console.log('🔧 SupabaseにもFPデータを保存完了');
+        } else {
+          console.log('🔧 Supabase保存に失敗しましたが、ローカル保存は成功');
+        }
+      } catch (supabaseError) {
+        console.error('🚨 Supabase保存でエラーが発生しましたが、ローカル保存は成功:', supabaseError);
+      }
+
+      setPlannerStatus('✅ FP情報が正常に保存されました');
+      handleClosePlannerModal();
       
       setTimeout(() => setPlannerStatus(''), 3000);
     } catch (error) {
-      secureLog('ファイナンシャルプランナーの保存エラー:', error);
-      setPlannerStatus('❌ 保存に失敗しました');
+      console.error('🚨 ファイナンシャルプランナーの保存エラー:', error);
+      setPlannerStatus(`❌ 保存に失敗しました: ${error}`);
       setTimeout(() => setPlannerStatus(''), 3000);
     }
   };
@@ -1742,6 +1745,10 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
   };
 
   const handleSaveHeaderAndVisualSettings = async () => {
+    console.log('🔧 ヘッダー・メインビジュアル・フッター設定保存関数が呼び出されました');
+    console.log('🔧 現在のヘッダーデータ:', headerData);
+    console.log('🔧 現在のメインビジュアルデータ:', mainVisualData);
+    console.log('🔧 現在のフッターデータ:', footerData);
     setHeaderVisualStatus('💾 ヘッダー・メインビジュアル・フッター設定を保存中...');
     
     try {
@@ -1752,39 +1759,54 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
         return;
       }
 
+      // まずローカルストレージに保存
+      localStorage.setItem('header_data', JSON.stringify(headerData));
+      localStorage.setItem('main_visual_data', JSON.stringify(mainVisualData));
+      localStorage.setItem('footer_data', JSON.stringify(footerData));
+      console.log('🔧 ローカルストレージに保存完了');
+
       let successCount = 0;
       
       // ヘッダーデータを保存
       try {
-        const headerSuccess = await saveHomepageContentToSupabase('header_data', headerData);
+        console.log('🔧 ヘッダーデータをSupabaseに保存中...');
+        const headerSuccess = await SupabaseAdminAPI.saveAdminSetting('header_data', headerData);
         if (headerSuccess) {
-          secureLog('ヘッダーデータをSupabaseに保存完了');
+          console.log('🔧 ヘッダーデータをSupabaseに保存完了');
           successCount++;
+        } else {
+          console.log('🔧 ヘッダーデータ保存失敗');
         }
       } catch (error) {
-        secureLog('ヘッダーデータの保存エラー:', error);
+        console.error('🚨 ヘッダーデータの保存エラー:', error);
       }
 
       // メインビジュアルデータを保存
       try {
-        const mainVisualSuccess = await saveHomepageContentToSupabase('main_visual_data', mainVisualData);
+        console.log('🔧 メインビジュアルデータをSupabaseに保存中...');
+        const mainVisualSuccess = await SupabaseAdminAPI.saveAdminSetting('main_visual_data', mainVisualData);
         if (mainVisualSuccess) {
-          secureLog('メインビジュアルデータをSupabaseに保存完了');
+          console.log('🔧 メインビジュアルデータをSupabaseに保存完了');
           successCount++;
+        } else {
+          console.log('🔧 メインビジュアルデータ保存失敗');
         }
       } catch (error) {
-        secureLog('メインビジュアルデータの保存エラー:', error);
+        console.error('🚨 メインビジュアルデータの保存エラー:', error);
       }
 
       // フッターデータを保存
       try {
-        const footerSuccess = await saveHomepageContentToSupabase('footer_data', footerData);
+        console.log('🔧 フッターデータをSupabaseに保存中...');
+        const footerSuccess = await SupabaseAdminAPI.saveAdminSetting('footer_data', footerData);
         if (footerSuccess) {
-          secureLog('フッターデータをSupabaseに保存完了');
+          console.log('🔧 フッターデータをSupabaseに保存完了');
           successCount++;
+        } else {
+          console.log('🔧 フッターデータ保存失敗');
         }
       } catch (error) {
-        secureLog('フッターデータの保存エラー:', error);
+        console.error('🚨 フッターデータの保存エラー:', error);
       }
 
       if (successCount === 3) {
@@ -1798,8 +1820,8 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
       setTimeout(() => setHeaderVisualStatus(''), 3000);
 
     } catch (error) {
-      secureLog('ヘッダー・メインビジュアル・フッター設定保存エラー:', error);
-      setHeaderVisualStatus('❌ 保存中にエラーが発生しました。');
+      console.error('🚨 ヘッダー・メインビジュアル・フッター設定保存エラー:', error);
+      setHeaderVisualStatus(`❌ 保存中にエラーが発生しました: ${error}`);
       setTimeout(() => setHeaderVisualStatus(''), 5000);
     }
   };
@@ -3040,7 +3062,7 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
                     <div className="flex justify-center">
                         <button
                             onClick={handleSaveHomepageContentSettings}
-                            className="bg-orange-600 hover:bg-orange-700 text-white font-semibold py-3 px-8 rounded-lg shadow-md hover:shadow-lg transition duration-150 ease-in-out flex items-center justify-center min-w-max"
+                            className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-8 rounded-lg shadow-md hover:shadow-lg transition duration-150 ease-in-out flex items-center justify-center min-w-max"
                         >
                             <i className="fas fa-save mr-2 text-white"></i>
                             <span className="text-white">ホームページコンテンツを保存</span>
