@@ -65,6 +65,7 @@ const OptimizedDiagnosisFlow: React.FC<OptimizedDiagnosisFlowProps> = ({ onCompl
   const [phoneError, setPhoneError] = useState('');
   const [showQuickDiagnosis, setShowQuickDiagnosis] = useState(true);
   const [selectedProfile, setSelectedProfile] = useState<string | null>(null);
+  const [termsAccepted, setTermsAccepted] = useState(false);
   
   // アニメーション用
   const [isTransitioning, setIsTransitioning] = useState(false);
@@ -355,12 +356,30 @@ const OptimizedDiagnosisFlow: React.FC<OptimizedDiagnosisFlowProps> = ({ onCompl
         <button
           className="w-full py-4 bg-gradient-to-r from-green-500 to-emerald-500 text-white font-bold rounded-xl shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
           onClick={handleComplete}
-          disabled={!validatePhoneNumber(phoneInput)}
+          disabled={!validatePhoneNumber(phoneInput) || !termsAccepted}
           aria-label="電話番号を確認して診断を完了する"
           aria-describedby="phone-input"
         >
           診断を完了する
         </button>
+        
+        <div className="mt-4">
+          <label className="flex items-start space-x-3 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={termsAccepted}
+              onChange={(e) => setTermsAccepted(e.target.checked)}
+              className="mt-1 w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+              aria-describedby="terms-description"
+            />
+            <span id="terms-description" className="text-sm text-gray-600">
+              <a href="/terms-of-service" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:text-blue-800 underline">利用規約</a>
+              および
+              <a href="/privacy-policy" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:text-blue-800 underline">プライバシーポリシー</a>
+              に同意する
+            </span>
+          </label>
+        </div>
       </div>
     </div>
   );
