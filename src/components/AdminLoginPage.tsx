@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { SupabaseAdminAuth, supabase } from './supabaseClient';
 import { secureLog, SecureStorage } from '../../security.config';
-import AdminDefaultAccount from './AdminDefaultAccount';
 
 // セキュリティ強化のための入力サニタイゼーション
 const sanitizeInput = (input: string): string => {
@@ -41,7 +40,6 @@ const AdminLoginPage: React.FC<AdminLoginPageProps> = ({ onLogin, onNavigateHome
   const [lockoutTime, setLockoutTime] = useState<number | null>(null);
   const [pendingAdminId, setPendingAdminId] = useState<number | null>(null);
   const [pendingPhoneNumber, setPendingPhoneNumber] = useState<string>('');
-  const [showDefaultAccount, setShowDefaultAccount] = useState(false);
 
   // セキュリティ設定
   const MAX_LOGIN_ATTEMPTS = 5;
@@ -228,7 +226,17 @@ const AdminLoginPage: React.FC<AdminLoginPageProps> = ({ onLogin, onNavigateHome
         .single();
 
       if (registrationError) {
-        throw registrationError;
+        console.error('Supabase登録エラー:', registrationError);
+        
+        // 409 エラーは通常、重複するメールアドレスを意味します
+        if (registrationError.code === '23505' || registrationError.message?.includes('duplicate')) {
+          setError('このメールアドレスは既に登録されています。');
+        } else if (registrationError.message?.includes('Failed to fetch') || registrationError.message?.includes('NetworkError')) {
+          setError('ネットワークエラーが発生しました。接続を確認してください。');
+        } else {
+          setError('データベースエラーが発生しました。管理者にお問い合わせください。');
+        }
+        return;
       }
 
       setSuccess('管理者登録申請が送信されました。承認されるまでお待ちください。');
@@ -260,8 +268,19 @@ const AdminLoginPage: React.FC<AdminLoginPageProps> = ({ onLogin, onNavigateHome
         setReason('');
       }, 3000);
     } catch (error) {
-      setError('メール認証処理中にエラーが発生しました。しばらく待ってから再試行してください。');
-      secureLog('管理者メール認証エラー:', error);
+      // エラーメッセージをより具体的に
+      if (error instanceof Error) {
+        if (error.message.includes('Failed to fetch') || error.message.includes('NetworkError')) {
+          setError('ネットワークエラーが発生しました。接続を確認してください。');
+        } else if (error.message.includes('400')) {
+          setError('データベース設定に問題があります。管理者にお問い合わせください。');
+        } else {
+          setError('登録処理中にエラーが発生しました。しばらく待ってから再試行してください。');
+        }
+      } else {
+        setError('予期しないエラーが発生しました。');
+      }
+      secureLog('管理者登録エラー:', error);
       
       // 監査ログに記録
       await SupabaseAdminAuth.recordAuditLog(
@@ -690,13 +709,6 @@ const AdminLoginPage: React.FC<AdminLoginPageProps> = ({ onLogin, onNavigateHome
                 <p className="text-gray-600 text-sm">
                   AI ConectX管理画面にアクセスするため、認証情報を入力してください。
                 </p>
-                <button
-                  type="button"
-                  onClick={() => setShowDefaultAccount(true)}
-                  className="mt-3 text-blue-600 hover:text-blue-800 text-sm font-medium underline"
-                >
-                  デフォルトアカウント情報を表示
-                </button>
               </>
             )}
             {mode === 'register' && (
@@ -1022,13 +1034,18 @@ const AdminLoginPage: React.FC<AdminLoginPageProps> = ({ onLogin, onNavigateHome
                     id="phoneNumber"
                     type="tel"
                     value={phoneNumber}
-                    onChange={(e) => setPhoneNumber(e.target.value)}
+                    onChange={(e) => {
+                      // 数字のみを抽出し、11桁に制限
+                      const cleanedValue = e.target.value.replace(/[^\d]/g, '').slice(0, 11);
+                      setPhoneNumber(cleanedValue);
+                    }}
                     className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 text-gray-900 placeholder-gray-400"
                     placeholder="09012345678"
                     disabled={loading}
                     autoComplete="tel"
+                    maxLength={11}
                   />
-                  <p className="text-xs text-gray-500 mt-1">ハイフンなしで入力してください</p>
+                  <p className="text-xs text-gray-500 mt-1">11桁の数字で自動入力されます（ハイフンなし）</p>
                 </div>
 
                 <div>
@@ -1246,10 +1263,6 @@ const AdminLoginPage: React.FC<AdminLoginPageProps> = ({ onLogin, onNavigateHome
         </div>
       </div>
       
-      {/* デフォルトアカウント情報モーダル */}
-      {showDefaultAccount && (
-        <AdminDefaultAccount onClose={() => setShowDefaultAccount(false)} />
-      )}
     </div>
   );
 };

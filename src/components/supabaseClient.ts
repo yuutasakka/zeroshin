@@ -843,40 +843,11 @@ export interface RegistrationRequest {
 // 新規登録申請管理クラス
 export class RegistrationRequestManager {
   private supabase: SupabaseClient;
-  private readonly STORAGE_KEY = 'registration_requests_backup';
 
   constructor() {
     this.supabase = supabase;
   }
 
-  // ローカルストレージから申請を取得
-  private getLocalRequests(): any[] {
-    try {
-      const stored = localStorage.getItem(this.STORAGE_KEY);
-      return stored ? JSON.parse(stored) : [];
-    } catch (error) {
-      console.error('ローカル申請データ読み込みエラー:', error);
-      return [];
-    }
-  }
-
-  // ローカルストレージに申請を保存
-  private saveToLocalStorage(request: any): void {
-    try {
-      const requests = this.getLocalRequests();
-      const existingIndex = requests.findIndex(r => r.id === request.id);
-      
-      if (existingIndex >= 0) {
-        requests[existingIndex] = request;
-      } else {
-        requests.push(request);
-      }
-      
-      localStorage.setItem(this.STORAGE_KEY, JSON.stringify(requests));
-    } catch (error) {
-      console.error('ローカル申請データ保存エラー:', error);
-    }
-  }
 
   // Supabaseの利用可能性をチェック
   private async isSupabaseAvailable(): Promise<boolean> {
@@ -916,25 +887,22 @@ export class RegistrationRequestManager {
         updated_at: new Date().toISOString()
       };
 
-      // Supabaseを試行
-      if (await this.isSupabaseAvailable()) {
-        const { data, error } = await this.supabase
-          .from('admin_registrations')
-          .insert(request)
-          .select()
-          .single();
+      // Supabaseに直接保存（フォールバックなし）
+      const { data, error } = await this.supabase
+        .from('admin_registrations')
+        .insert(request)
+        .select()
+        .single();
 
-        if (!error && data) {
-          // ローカルストレージにもバックアップ
-          this.saveToLocalStorage(data);
-          return { success: true, id: data.id };
+      if (error) {
+        console.error('Supabase登録エラー:', error);
+        if (error.code === '23505' || error.message?.includes('duplicate')) {
+          return { success: false, error: 'このメールアドレスは既に登録されています。' };
         }
+        return { success: false, error: 'データベースエラーが発生しました。管理者にお問い合わせください。' };
       }
 
-      // フォールバック: ローカルストレージのみ
-      console.warn('Supabase利用不可、ローカルストレージに保存');
-      this.saveToLocalStorage(request);
-      return { success: true, id: request.id };
+      return { success: true, id: data.id };
 
     } catch (error) {
       console.error('登録申請作成エラー:', error);
@@ -947,66 +915,50 @@ export class RegistrationRequestManager {
     try {
       const normalizedEmail = email.toLowerCase();
 
-      // Supabaseを試行
-      if (await this.isSupabaseAvailable()) {
-        const { data, error } = await this.supabase
-          .from('admin_registrations')
-          .select('id')
-          .eq('email', normalizedEmail)
-          .limit(1);
+      const { data, error } = await this.supabase
+        .from('admin_registrations')
+        .select('id')
+        .eq('email', normalizedEmail)
+        .limit(1);
 
-        if (!error && data && data.length > 0) {
-          return true;
-        }
+      if (error) {
+        console.error('メール重複チェックエラー:', error);
+        throw new Error('データベースエラーが発生しました。');
       }
 
-      // ローカルストレージからもチェック
-      const localRequests = this.getLocalRequests();
-      return localRequests.some(req => req.email === normalizedEmail);
+      return data && data.length > 0;
 
     } catch (error) {
       console.error('メール重複チェックエラー:', error);
-      return false;
+      throw error;
     }
   }
 
   // 申請一覧を取得（管理者用）
   async getRegistrationRequests(status?: 'pending' | 'approved' | 'rejected'): Promise<RegistrationRequest[]> {
     try {
-      // Supabaseを試行
-      if (await this.isSupabaseAvailable()) {
-        let query = this.supabase
-          .from('admin_registrations')
-          .select('*')
-          .order('created_at', { ascending: false });
+      let query = this.supabase
+        .from('admin_registrations')
+        .select('*')
+        .order('created_at', { ascending: false });
 
-        if (status) {
-          query = query.eq('status', status);
-        }
-
-        const { data, error } = await query;
-
-        if (!error && data) {
-          return data;
-        }
-      }
-
-      // フォールバック: ローカルストレージから取得
-      console.warn('Supabase利用不可、ローカルストレージから取得');
-      const localRequests = this.getLocalRequests();
-      
-      let filteredRequests = localRequests;
       if (status) {
-        filteredRequests = localRequests.filter(req => req.status === status);
+        query = query.eq('status', status);
       }
 
-      return filteredRequests.sort((a, b) => 
-        new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
-      );
+      const { data, error } = await query;
+
+      if (error) {
+        console.error('Supabase query error:', error);
+        throw new Error('データベースエラーが発生しました。');
+      }
+
+      console.log('Supabaseから取得した申請数:', data?.length || 0);
+      return data || [];
 
     } catch (error) {
       console.error('申請一覧取得エラー:', error);
-      return [];
+      throw error;
     }
   }
 
@@ -1036,9 +988,6 @@ export class RegistrationRequestManager {
       }
 
       if (data && data.success) {
-        // ローカルストレージも更新
-        await this.updateLocalRequestStatus(requestId, action, adminNotes, reviewedBy);
-        
         return {
           success: true,
           message: action === 'approve' ? 
@@ -1083,9 +1032,6 @@ export class RegistrationRequestManager {
           .eq('id', requestId);
 
         if (!error) {
-          // ローカルストレージも更新
-          await this.updateLocalRequestStatus(requestId, action, adminNotes, reviewedBy);
-          
           return {
             success: true,
             message: action === 'approve' ? 
@@ -1095,13 +1041,7 @@ export class RegistrationRequestManager {
         }
       }
 
-      // ローカルストレージのみ更新
-      await this.updateLocalRequestStatus(requestId, action, adminNotes, reviewedBy);
-      
-      return {
-        success: true,
-        message: `申請が${action === 'approve' ? '承認' : '却下'}されました（ローカル保存のみ）。`
-      };
+      throw new Error('データベースエラーが発生しました。');
 
     } catch (error) {
       console.error('直接データベース更新エラー:', error);
@@ -1112,90 +1052,29 @@ export class RegistrationRequestManager {
     }
   }
 
-  // ローカルストレージの申請状態を更新
-  private async updateLocalRequestStatus(
-    requestId: string,
-    action: 'approve' | 'reject',
-    adminNotes?: string,
-    reviewedBy?: string
-  ): Promise<void> {
-    try {
-      const requests = this.getLocalRequests();
-      const requestIndex = requests.findIndex(r => r.id === requestId);
-      
-      if (requestIndex >= 0) {
-        requests[requestIndex] = {
-          ...requests[requestIndex],
-          status: action === 'approve' ? 'approved' : 'rejected',
-          admin_notes: adminNotes || '',
-          reviewed_by: reviewedBy || 'admin',
-          reviewed_at: new Date().toISOString(),
-          updated_at: new Date().toISOString()
-        };
-        
-        localStorage.setItem(this.STORAGE_KEY, JSON.stringify(requests));
-      }
-    } catch (error) {
-      console.error('ローカル申請状態更新エラー:', error);
-    }
-  }
 
   // 申請の詳細を取得
   async getRequestById(requestId: string): Promise<RegistrationRequest | null> {
     try {
-      // Supabaseを試行
-      if (await this.isSupabaseAvailable()) {
-        const { data, error } = await this.supabase
-          .from('admin_registrations')
-          .select('*')
-          .eq('id', requestId)
-          .single();
+      const { data, error } = await this.supabase
+        .from('admin_registrations')
+        .select('*')
+        .eq('id', requestId)
+        .single();
 
-        if (!error && data) {
-          return data;
-        }
+      if (error) {
+        console.error('申請詳細取得エラー:', error);
+        throw new Error('データベースエラーが発生しました。');
       }
 
-      // フォールバック: ローカルストレージから取得
-      const localRequests = this.getLocalRequests();
-      return localRequests.find(req => req.id === requestId) || null;
+      return data;
 
     } catch (error) {
       console.error('申請詳細取得エラー:', error);
-      return null;
+      throw error;
     }
   }
 
-  // データ同期機能
-  async syncLocalDataToSupabase(): Promise<void> {
-    try {
-      if (!(await this.isSupabaseAvailable())) {
-        return;
-      }
-
-      const localRequests = this.getLocalRequests();
-      
-      for (const request of localRequests) {
-        // Supabaseに既存かチェック
-        const { data: existing } = await this.supabase
-          .from('admin_registrations')
-          .select('id')
-          .eq('id', request.id)
-          .single();
-
-        if (!existing) {
-          // 存在しない場合は挿入
-          await this.supabase
-            .from('admin_registrations')
-            .insert(request);
-        }
-      }
-      
-      console.log('申請データの同期完了');
-    } catch (error) {
-      console.error('申請データ同期エラー:', error);
-    }
-  }
 }
 
 // 診断セッション管理のインスタンスをエクスポート

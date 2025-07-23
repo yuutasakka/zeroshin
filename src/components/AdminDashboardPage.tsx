@@ -2261,7 +2261,7 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
               aria-modal="true"
               aria-labelledby="testimonial-modal-title"
             >
-                <div className="bg-white p-6 rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+                <div className="bg-white p-4 sm:p-6 rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto mx-4">
                     <h3 id="testimonial-modal-title" className="text-xl font-semibold mb-4">{editingTestimonial.id && editingTestimonial.id !== '' ? 'お客様の声を編集' : 'お客様の声を新規追加'}</h3>
                     <form onSubmit={handleSaveTestimonialForm} className="space-y-4">
                         <div>
@@ -2282,9 +2282,9 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
                             <label htmlFor="text" className="block text-sm font-medium text-gray-700">本文</label>
                             <textarea name="text" id="text" value={editingTestimonial.text || ''} onChange={handleTestimonialFormChange} rows={4} required className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"/>
                         </div>
-                        <div className="flex justify-end space-x-3 pt-2">
-                            <button type="button" onClick={handleCloseTestimonialModal} className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-200 hover:bg-gray-300 rounded-md">キャンセル</button>
-                            <button type="submit" className="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-md">フォームを保存</button>
+                        <div className="flex flex-col sm:flex-row justify-end space-y-2 sm:space-y-0 sm:space-x-3 pt-2">
+                            <button type="button" onClick={handleCloseTestimonialModal} className="w-full sm:w-auto px-4 py-2 text-sm font-medium text-gray-700 bg-gray-200 hover:bg-gray-300 rounded-md">キャンセル</button>
+                            <button type="submit" className="w-full sm:w-auto px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-md">フォームを保存</button>
                         </div>
                     </form>
                 </div>
@@ -3953,13 +3953,13 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
                 {/* プランナー編集モーダル */}
                 {showPlannerModal && editingPlanner && (
                     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-                        <div className="bg-white rounded-lg shadow-xl max-w-3xl w-full max-h-[90vh] flex flex-col">
-                            <div className="p-6 flex-shrink-0 border-b">
+                        <div className="bg-white rounded-lg shadow-xl max-w-3xl w-full max-h-[90vh] flex flex-col mx-4">
+                            <div className="p-4 sm:p-6 flex-shrink-0 border-b">
                                 <h3 className="text-lg font-semibold text-gray-800">
                                     {editingPlanner.id ? 'ファイナンシャルプランナー編集' : '新規ファイナンシャルプランナー追加'}
                                 </h3>
                             </div>
-                            <div className="p-6 overflow-y-auto flex-grow">
+                            <div className="p-4 sm:p-6 overflow-y-auto flex-grow">
                                 
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                     <div>
@@ -4108,17 +4108,17 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
                             </div>
                             
                             {/* 固定フッター */}
-                            <div className="p-6 border-t bg-gray-50 flex-shrink-0">
-                                <div className="flex justify-end space-x-3">
+                            <div className="p-4 sm:p-6 border-t bg-gray-50 flex-shrink-0">
+                                <div className="flex flex-col sm:flex-row justify-end space-y-2 sm:space-y-0 sm:space-x-3">
                                     <button
                                         onClick={handleClosePlannerModal}
-                                        className="px-4 py-2 text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300 transition-colors"
+                                        className="w-full sm:w-auto px-4 py-2 text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300 transition-colors"
                                     >
                                         キャンセル
                                     </button>
                                     <button
                                         onClick={handleSavePlanner}
-                                        className="px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 transition-colors"
+                                        className="w-full sm:w-auto px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 transition-colors"
                                     >
                                         <i className="fas fa-save mr-2"></i>保存
                                     </button>

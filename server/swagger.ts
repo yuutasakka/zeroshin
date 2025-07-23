@@ -22,7 +22,7 @@ const customCss = `
 // Swagger UIのオプション
 const options = {
   customCss,
-  customSiteTitle: "MoneyTicket API Documentation",
+  customSiteTitle: "AI ConectX API Documentation",
   customfavIcon: "/favicon.ico",
   swaggerOptions: {
     persistAuthorization: true,

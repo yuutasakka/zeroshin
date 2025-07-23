@@ -211,4 +211,4 @@ export class AIConectXAPIClient {
 }
 
 // シングルトンインスタンス
-export const apiClient = new MoneyTicketAPIClient();
+export const apiClient = new AIConectXAPIClient();

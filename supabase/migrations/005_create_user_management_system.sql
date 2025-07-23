@@ -196,7 +196,7 @@ CREATE POLICY "管理者は全てのアクティビティログを管理可能" 
 
 -- 初期データ挿入（テスト用）
 INSERT INTO registration_requests (full_name, email, phone_number, organization, purpose, status, created_at) VALUES
-('山田太郎', 'yamada@example.com', '09012345678', '株式会社テスト', 'MoneyTicketを使って資産運用の診断を行いたいと考えています。特に長期投資戦略について詳しく知りたいです。', 'pending', NOW() - INTERVAL '2 hours'),
+('山田太郎', 'yamada@example.com', '09012345678', '株式会社テスト', 'AI ConectXを使って資産運用の診断を行いたいと考えています。特に長期投資戦略について詳しく知りたいです。', 'pending', NOW() - INTERVAL '2 hours'),
 ('佐藤花子', 'sato@example.com', '08098765432', 'フリーランス', '個人事業主として資産形成を始めたいと思っています。税制優遇制度の活用方法についても相談したいです。', 'pending', NOW() - INTERVAL '1 hour')
 ON CONFLICT (email) DO NOTHING;
 
