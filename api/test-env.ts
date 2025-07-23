@@ -1,6 +1,7 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
+import { disableInProduction } from './middleware/productionOnly';
 
-export default async function handler(req: VercelRequest, res: VercelResponse) {
+async function handler(req: VercelRequest, res: VercelResponse) {
   // CORS設定 - 本番環境のドメインのみ許可
   const allowedOrigins = [
     'https://moneyticket01.vercel.app',
@@ -51,3 +52,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   res.status(200).json(envCheck);
 }
+
+// 本番環境では無効化
+export default disableInProduction(handler);

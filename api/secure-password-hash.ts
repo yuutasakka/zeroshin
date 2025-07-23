@@ -10,7 +10,15 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   // 内部APIのみアクセス可能
   const internalKey = req.headers['x-internal-api-key'];
-  if (internalKey !== process.env.INTERNAL_API_KEY) {
+  const expectedKey = process.env.INTERNAL_API_KEY;
+  
+  // 環境変数が設定されていない場合はエラー
+  if (!expectedKey) {
+    console.error('INTERNAL_API_KEY is not configured');
+    return res.status(500).json({ error: 'Server configuration error' });
+  }
+  
+  if (internalKey !== expectedKey) {
     return res.status(403).json({ error: 'Forbidden' });
   }
 

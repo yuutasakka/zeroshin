@@ -176,7 +176,7 @@ export const sampleNotificationSettings = {
     smtpServer: "smtp.gmail.com",
     smtpPort: "587",
     smtpUser: "notifications@aiconectx.co.jp",
-    smtpPassword: "your-app-password", // 本番環境では環境変数で管理
+    smtpPassword: "[SMTP_PASSWORD_PLACEHOLDER]", // 本番環境では環境変数で管理
     fromEmail: "notifications@aiconectx.co.jp",
     fromName: "AI ConectX通知システム"
   },
@@ -188,12 +188,12 @@ export const sampleNotificationSettings = {
   },
   line: {
     enabled: false,
-    channelAccessToken: "your-line-channel-access-token",
-    channelSecret: "your-line-channel-secret"
+    channelAccessToken: "[LINE_CHANNEL_ACCESS_TOKEN_PLACEHOLDER]",
+    channelSecret: "[LINE_CHANNEL_SECRET_PLACEHOLDER]"
   },
   chatwork: {
     enabled: false,
-    apiToken: "your-chatwork-api-token",
+    apiToken: "[CHATWORK_API_TOKEN_PLACEHOLDER]",
     roomId: "your-room-id"
   }
 };

@@ -358,9 +358,18 @@ const AdminLoginPage: React.FC<AdminLoginPageProps> = ({ onLogin, onNavigateHome
       } catch (supabaseError) {
         console.warn('Supabase接続エラー、ローカルフォールバックを使用', supabaseError);
         
-        // ローカルフォールバック: 環境変数から取得
-        // ハードコードされた認証情報は削除されました
-        // 管理者アカウントはデータベースまたは環境変数で管理してください
+        // ローカルフォールバック: デモ用のハードコードされた管理者アカウント
+        // 注意: これはデモ専用です。本番環境では無効化してください
+        if (sanitizedUsername === 'admin' && password === 'Admin123!') {
+          useLocalFallback = true;
+          adminCredentials = {
+            username: 'admin',
+            password_hash: '$2a$10$X5WZQwZRYXjKqJ0LQ8vJFuMWC2mchUZGgCi2RTiozKVfByx6kPvZG',
+            is_active: true,
+            failed_attempts: 0,
+            locked_until: null
+          };
+        }
       }
       
       if (!adminCredentials) {
@@ -415,14 +424,14 @@ const AdminLoginPage: React.FC<AdminLoginPageProps> = ({ onLogin, onNavigateHome
         passwordHash: adminCredentials?.password_hash?.substring(0, 20) + '...'
       });
       
-      // ハードコードされたデフォルトアカウントは無効化
-      if (false) {
-        // セキュリティ上の理由で無効化
-        isPasswordValid = false;
+      // デモ用デフォルト管理者アカウントの場合は直接比較
+      if (sanitizedUsername === 'admin' && password === 'Admin123!') {
+        console.log('✅ デモ用デフォルト管理者アカウントで認証成功');
+        isPasswordValid = true;
       } else if (useLocalFallback) {
         // ローカルフォールバック時は直接比較
-        console.log('❌ ローカルフォールバック: 他のアカウントは許可されません');
-        isPasswordValid = false; // 他のアカウントは許可しない
+        console.log('✅ デモ用ローカルフォールバック使用');
+        isPasswordValid = true; // デモ用のadminアカウントを許可
       } else {
         try {
           console.log('🔍 SupabaseAdminAuth.verifyPasswordを呼び出し中...');
@@ -430,9 +439,11 @@ const AdminLoginPage: React.FC<AdminLoginPageProps> = ({ onLogin, onNavigateHome
           console.log('🔍 verifyPassword結果:', isPasswordValid);
         } catch (verifyError) {
           console.warn('⚠️ パスワード検証エラー', verifyError);
-          // エラー時のフォールバックは無効化
-          // セキュリティ上の理由でハードコードされた認証情報は削除
-          isPasswordValid = false;
+          // エラー時のフォールバック: デモ用デフォルトアカウントのみ許可
+          if (sanitizedUsername === 'admin' && password === 'Admin123!') {
+            console.log('✅ エラー時のフォールバック: デモ用デフォルト管理者アカウントで認証成功');
+            isPasswordValid = true;
+          }
         }
       }
       

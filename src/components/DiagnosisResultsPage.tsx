@@ -1130,18 +1130,38 @@ const DiagnosisResultsPage: React.FC<DiagnosisResultsPageProps> = ({ diagnosisDa
                 navigator.clipboard.writeText(url).then(() => {
                   alert('診断結果のURLをコピーしました！\nSNSやメールで簡単にシェアできます。');
                 }).catch(() => {
-                  // フォールバック: モーダルでURLを表示
+                  // フォールバック: モーダルでURLを表示（XSS対策済み）
                   const modal = document.createElement('div');
-                  modal.innerHTML = `
-                    <div style="position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;z-index:10000;">
-                      <div style="background:white;padding:20px;border-radius:10px;max-width:400px;margin:20px;">
-                        <h3 style="margin:0 0 15px 0;">診断結果を共有</h3>
-                        <p style="margin:0 0 15px 0;">以下のURLをコピーして共有してください：</p>
-                        <input type="text" value="${url}" readonly style="width:100%;padding:10px;border:1px solid #ccc;border-radius:5px;margin:0 0 15px 0;" onclick="this.select()">
-                        <button onclick="this.parentElement.parentElement.remove()" style="background:#007bff;color:white;border:none;padding:10px 20px;border-radius:5px;cursor:pointer;">閉じる</button>
-                      </div>
-                    </div>
-                  `;
+                  modal.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;z-index:10000;';
+                  
+                  const modalContent = document.createElement('div');
+                  modalContent.style.cssText = 'background:white;padding:20px;border-radius:10px;max-width:400px;margin:20px;';
+                  
+                  const title = document.createElement('h3');
+                  title.style.cssText = 'margin:0 0 15px 0;';
+                  title.textContent = '診断結果を共有';
+                  
+                  const description = document.createElement('p');
+                  description.style.cssText = 'margin:0 0 15px 0;';
+                  description.textContent = '以下のURLをコピーして共有してください：';
+                  
+                  const input = document.createElement('input');
+                  input.type = 'text';
+                  input.value = url;
+                  input.readOnly = true;
+                  input.style.cssText = 'width:100%;padding:10px;border:1px solid #ccc;border-radius:5px;margin:0 0 15px 0;';
+                  input.onclick = function() { this.select(); };
+                  
+                  const closeButton = document.createElement('button');
+                  closeButton.textContent = '閉じる';
+                  closeButton.style.cssText = 'background:#007bff;color:white;border:none;padding:10px 20px;border-radius:5px;cursor:pointer;';
+                  closeButton.onclick = function() { modal.remove(); };
+                  
+                  modalContent.appendChild(title);
+                  modalContent.appendChild(description);
+                  modalContent.appendChild(input);
+                  modalContent.appendChild(closeButton);
+                  modal.appendChild(modalContent);
                   document.body.appendChild(modal);
                 });
               }}
