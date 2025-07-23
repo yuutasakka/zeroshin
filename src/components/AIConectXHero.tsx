@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import FloatingHeartsBackground from './FloatingHeartsBackground';
-import SparkleBackground from './SparkleBackground';
+// アニメーションコンポーネントは削除されました
 import { defaultMainVisualData } from '../../data/homepageContentData';
 
 interface AIConectXHeroProps {
@@ -288,10 +287,8 @@ const AIConectXHero: React.FC<AIConectXHeroProps> = ({ onStartDiagnosis }) => {
       `}</style>
       
       <section style={heroStyles.hero} className="hero-section">
-        {/* 背景アニメーション */}
+        {/* 背景（アニメーションなし） */}
         <div style={heroStyles.background}>
-          <SparkleBackground />
-          <FloatingHeartsBackground />
         </div>
         
         {/* メインコンテンツ */}

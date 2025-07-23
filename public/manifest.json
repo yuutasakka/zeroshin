@@ -1,6 +1,6 @@
 {
-  "name": "MoneyTicket - AI投資アドバイザー",
-  "short_name": "MoneyTicket",
+  "name": "AI ConectX - AI投資アドバイザー",
+  "short_name": "AI ConectX",
   "description": "あなたの資産運用を最適化するAI投資アドバイザー",
   "start_url": "/",
   "display": "standalone",
@@ -51,7 +51,7 @@
   "lang": "ja",
   "dir": "ltr",
   "scope": "/",
-  "id": "moneyticket-pwa",
+  "id": "aiconectx-pwa",
   "prefer_related_applications": false,
   "shortcuts": [
     {

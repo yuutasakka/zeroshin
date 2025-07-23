@@ -82,7 +82,7 @@ export interface Product {
 }
 
 // APIクライアントクラス
-export class MoneyTicketAPIClient {
+export class AIConectXAPIClient {
   private baseURL: string;
   private accessToken: string | null = null;
   

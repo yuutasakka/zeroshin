@@ -14,30 +14,30 @@ interface SEOHeadProps {
 }
 
 export const SEOHead: React.FC<SEOHeadProps> = ({
-  title = 'MoneyTicket - お金診断アプリ',
+  title = 'AI ConectX - お金診断アプリ',
   description = 'あなたに最適な金融商品を診断します。簡単な質問に答えるだけで、プロのファイナンシャルアドバイザーが厳選した金融商品をご提案。',
   keywords = '金融商品,資産運用,投資診断,お金診断,ファイナンシャルプランニング,資産形成,投資信託,NISA',
   image = '/pwa-512x512.png',
-  url = typeof window !== 'undefined' ? window.location.href : 'https://moneyticket.com',
+  url = typeof window !== 'undefined' ? window.location.href : 'https://aiconectx.com',
   type = 'website',
-  author = 'MoneyTicket Team',
+  author = 'AI ConectX Team',
   publishedTime,
   modifiedTime
 }) => {
-  const siteName = 'MoneyTicket';
-  const twitterHandle = '@moneyticket';
+  const siteName = 'AI ConectX';
+  const twitterHandle = '@aiconectx';
   
   // 構造化データ - Organization
   const organizationSchema = {
     '@context': 'https://schema.org',
     '@type': 'Organization',
     name: siteName,
-    url: 'https://moneyticket.com',
-    logo: 'https://moneyticket.com/pwa-512x512.png',
+    url: 'https://aiconectx.com',
+    logo: 'https://aiconectx.com/pwa-512x512.png',
     sameAs: [
-      'https://twitter.com/moneyticket',
-      'https://www.facebook.com/moneyticket',
-      'https://www.linkedin.com/company/moneyticket'
+      'https://twitter.com/aiconectx',
+      'https://www.facebook.com/aiconectx',
+      'https://www.linkedin.com/company/aiconectx'
     ]
   };
 
@@ -47,7 +47,7 @@ export const SEOHead: React.FC<SEOHeadProps> = ({
     '@type': 'WebApplication',
     name: siteName,
     description: description,
-    url: 'https://moneyticket.com',
+    url: 'https://aiconectx.com',
     applicationCategory: 'FinanceApplication',
     operatingSystem: 'Any',
     offers: {
@@ -69,10 +69,10 @@ export const SEOHead: React.FC<SEOHeadProps> = ({
     mainEntity: [
       {
         '@type': 'Question',
-        name: 'MoneyTicketは無料で利用できますか？',
+        name: 'AI ConectXは無料で利用できますか？',
         acceptedAnswer: {
           '@type': 'Answer',
-          text: 'はい、MoneyTicketは完全無料でご利用いただけます。診断から商品のご提案まで、一切費用はかかりません。'
+          text: 'はい、AI ConectXは完全無料でご利用いただけます。診断から商品のご提案まで、一切費用はかかりません。'
         }
       },
       {
@@ -103,13 +103,13 @@ export const SEOHead: React.FC<SEOHeadProps> = ({
         '@type': 'ListItem',
         position: 1,
         name: 'ホーム',
-        item: 'https://moneyticket.com'
+        item: 'https://aiconectx.com'
       },
       {
         '@type': 'ListItem',
         position: 2,
         name: '診断',
-        item: 'https://moneyticket.com/diagnosis'
+        item: 'https://aiconectx.com/diagnosis'
       }
     ]
   };

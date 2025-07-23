@@ -145,7 +145,7 @@ const PWAInstallPrompt: React.FC = () => {
         </div>
         <div className="flex-1">
           <h3 className="font-bold text-gray-900 mb-1">
-            MoneyTicketをインストール
+            AI ConectXをインストール
           </h3>
           <p className="text-sm text-gray-600 mb-3">
             アプリとしてインストールすると、より快適にご利用いただけます
