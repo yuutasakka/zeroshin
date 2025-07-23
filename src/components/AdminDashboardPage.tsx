@@ -37,7 +37,7 @@ interface AdminDashboardPageProps {
   onNavigateHome: () => void;
 }
 
-type AdminViewMode = 'userHistory' | 'productSettings' | 'testimonialSettings' | 'analyticsSettings' | 'notificationSettings' | 'legalLinksSettings' | 'adminSettings' | 'homepageContentSettings' | 'headerAndVisualSettings' | 'colorThemeSettings' | 'securitySettings' | 'expertContactSettings' | 'financialPlannersSettings' | 'approvalRequests';
+type AdminViewMode = 'userHistory' | 'productSettings' | 'testimonialSettings' | 'analyticsSettings' | 'notificationSettings' | 'legalLinksSettings' | 'adminSettings' | 'homepageContentSettings' | 'headerAndVisualSettings' | 'securitySettings' | 'expertContactSettings' | 'financialPlannersSettings' | 'approvalRequests';
 
 interface FinancialPlanner {
   id?: number;
@@ -1946,7 +1946,6 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
                     onClick={() => setViewMode('userHistory')}
                     className={`admin-nav-button px-4 py-2 rounded-md text-sm font-medium transition-colors flex items-center justify-center ${viewMode === 'userHistory' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}`}
                 >
-                    <i className="fas fa-users-cog mr-2"></i>
                     <span>ユーザー診断履歴</span>
                 </button>
 {/* 商品リンク設定ボタンを非表示
@@ -1954,7 +1953,6 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
                     onClick={() => setViewMode('productSettings')}
                     className={`admin-nav-button px-4 py-2 rounded-md text-sm font-medium transition-colors flex items-center justify-center ${viewMode === 'productSettings' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}`}
                 >
-                    <i className="fas fa-gifts mr-2"></i>
                     <span>商品リンク設定</span>
                 </button>
                 */}
@@ -1962,57 +1960,43 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
                     onClick={() => setViewMode('adminSettings')}
                     className={`admin-nav-button px-4 py-2 rounded-md text-sm font-medium transition-colors flex items-center justify-center ${viewMode === 'adminSettings' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}`}
                 >
-                    <i className="fas fa-user-cog mr-2"></i>
                     <span>管理者設定</span>
                 </button>
                  <button 
                     onClick={() => setViewMode('testimonialSettings')}
                     className={`admin-nav-button px-4 py-2 rounded-md text-sm font-medium transition-colors flex items-center justify-center ${viewMode === 'testimonialSettings' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}`}
                 >
-                    <i className="fas fa-comments mr-2"></i>
-                    <span>お客様の声 管理</span>
+                        <span>お客様の声 管理</span>
                 </button>
                 <button 
                     onClick={() => setViewMode('analyticsSettings')}
                     className={`admin-nav-button px-4 py-2 rounded-md text-sm font-medium transition-colors flex items-center justify-center ${viewMode === 'analyticsSettings' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}`}
                 >
-                    <i className="fas fa-chart-line mr-2"></i>
-                    <span>アナリティクス設定</span>
+                        <span>アナリティクス設定</span>
                 </button>
                  <button 
                     onClick={() => setViewMode('notificationSettings')}
                     className={`admin-nav-button px-4 py-2 rounded-md text-sm font-medium transition-colors flex items-center justify-center ${viewMode === 'notificationSettings' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}`}
                 >
-                    <i className="fas fa-bell mr-2"></i>
-                    <span>通知設定</span>
+                        <span>通知設定</span>
                 </button>
                 <button 
                     onClick={() => setViewMode('legalLinksSettings')}
                     className={`admin-nav-button px-4 py-2 rounded-md text-sm font-medium transition-colors flex items-center justify-center ${viewMode === 'legalLinksSettings' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}`}
                 >
-                    <i className="fas fa-gavel mr-2"></i>
-                    <span>リーガルリンク設定</span>
+                        <span>リーガルリンク設定</span>
                 </button>
                 <button 
                     onClick={() => setViewMode('homepageContentSettings')}
                     className={`admin-nav-button px-4 py-2 rounded-md text-sm font-medium transition-colors flex items-center justify-center ${viewMode === 'homepageContentSettings' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}`}
                 >
-                    <i className="fas fa-home mr-2"></i>
-                    <span>ホームページコンテンツ設定</span>
+                        <span>ホームページコンテンツ設定</span>
                 </button>
                                  <button 
                      onClick={() => setViewMode('headerAndVisualSettings')}
                      className={`admin-nav-button px-4 py-2 rounded-md text-sm font-medium transition-colors flex items-center justify-center ${viewMode === 'headerAndVisualSettings' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}`}
                  >
-                     <i className="fas fa-heading mr-2"></i>
                      <span>ヘッダー・メインビジュアル・フッター設定</span>
-                 </button>
-                 <button 
-                     onClick={() => setViewMode('colorThemeSettings')}
-                     className={`admin-nav-button px-4 py-2 rounded-md text-sm font-medium transition-colors flex items-center justify-center ${viewMode === 'colorThemeSettings' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}`}
-                 >
-                     <i className="fas fa-palette mr-2"></i>
-                     <span>カラーテーマ設定</span>
                  </button>
 {/* デザインテンプレート設定ボタンを削除
                  <button 
@@ -2027,28 +2011,24 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
                      onClick={() => setViewMode('securitySettings')}
                      className={`admin-nav-button px-4 py-2 rounded-md text-sm font-medium transition-colors flex items-center justify-center ${viewMode === 'securitySettings' ? 'bg-red-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}`}
                  >
-                     <i className="fas fa-shield-alt mr-2"></i>
                      <span>セキュリティ設定</span>
                  </button>
                  <button 
                      onClick={() => setViewMode('financialPlannersSettings')}
                      className={`admin-nav-button px-4 py-2 rounded-md text-sm font-medium transition-colors flex items-center justify-center ${viewMode === 'financialPlannersSettings' ? 'bg-purple-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}`}
                  >
-                     <i className="fas fa-user-tie mr-2"></i>
                      <span>FP管理</span>
                  </button>
                  <button 
                      onClick={() => setViewMode('expertContactSettings')}
                      className={`admin-nav-button px-4 py-2 rounded-md text-sm font-medium transition-colors flex items-center justify-center ${viewMode === 'expertContactSettings' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}`}
                  >
-                     <i className="fas fa-phone mr-2"></i>
                      <span>専門家設定</span>
                  </button>
                  <button 
                      onClick={() => setViewMode('approvalRequests')}
                      className={`admin-nav-button px-4 py-2 rounded-md text-sm font-medium transition-colors flex items-center justify-center ${viewMode === 'approvalRequests' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}`}
                  >
-                     <i className="fas fa-user-check mr-2"></i>
                      <span>承認申請一覧</span>
                  </button>
             </div>
