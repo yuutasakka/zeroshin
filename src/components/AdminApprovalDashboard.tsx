@@ -14,10 +14,10 @@ const AdminApprovalDashboard: React.FC<AdminApprovalDashboardProps> = ({
 }) => {
   const [approvals, setApprovals] = useState<RegistrationRequest[]>([]);
   const [loading, setLoading] = useState(true);
-  const [processing, setProcessing] = useState<number | null>(null);
+  const [processing, setProcessing] = useState<string | null>(null);
   const [error, setError] = useState('');
   const [rejectionReason, setRejectionReason] = useState('');
-  const [showRejectModal, setShowRejectModal] = useState<number | null>(null);
+  const [showRejectModal, setShowRejectModal] = useState<string | null>(null);
 
   // 承認待ち一覧を取得
   const loadPendingApprovals = async () => {
@@ -40,7 +40,7 @@ const AdminApprovalDashboard: React.FC<AdminApprovalDashboardProps> = ({
   };
 
   // 申請を承認
-  const handleApprove = async (approvalId: number) => {
+  const handleApprove = async (approvalId: string) => {
     try {
       setProcessing(approvalId);
       setError('');
@@ -48,7 +48,7 @@ const AdminApprovalDashboard: React.FC<AdminApprovalDashboardProps> = ({
       console.log('承認処理開始:', approvalId);
       
       const result = await registrationManager.approveOrRejectRequest(
-        approvalId.toString(),
+        approvalId,
         'approve',
         '管理者による承認',
         `admin_${currentAdminId}`
@@ -75,7 +75,7 @@ const AdminApprovalDashboard: React.FC<AdminApprovalDashboardProps> = ({
   };
 
   // 申請を拒否
-  const handleReject = async (approvalId: number) => {
+  const handleReject = async (approvalId: string) => {
     if (!rejectionReason.trim()) {
       setError('拒否理由を入力してください。');
       return;
@@ -88,7 +88,7 @@ const AdminApprovalDashboard: React.FC<AdminApprovalDashboardProps> = ({
       console.log('拒否処理開始:', approvalId, rejectionReason.trim());
       
       const result = await registrationManager.approveOrRejectRequest(
-        approvalId.toString(),
+        approvalId,
         'reject',
         rejectionReason.trim(),
         `admin_${currentAdminId}`

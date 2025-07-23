@@ -826,7 +826,7 @@ export class DiagnosisSessionManager {
 
 // 新規登録申請の型定義
 export interface RegistrationRequest {
-  id: number;
+  id: string; // UUID文字列
   full_name: string;
   email: string;
   phone_number: string;
@@ -1018,9 +1018,10 @@ export class RegistrationRequestManager {
   ): Promise<{ success: boolean; error?: string; message?: string }> {
     try {
       console.warn('Edge Function利用不可、直接データベース更新を実行');
+      console.log('更新対象ID:', requestId, 'アクション:', action);
 
       if (await this.isSupabaseAvailable()) {
-        const { error } = await this.supabase
+        const { data, error } = await this.supabase
           .from('admin_registrations')
           .update({
             status: action === 'approve' ? 'approved' : 'rejected',
@@ -1029,7 +1030,10 @@ export class RegistrationRequestManager {
             reviewed_at: new Date().toISOString(),
             updated_at: new Date().toISOString()
           })
-          .eq('id', requestId);
+          .eq('id', requestId)
+          .select();
+
+        console.log('データベース更新結果:', { data, error });
 
         if (!error) {
           return {
@@ -1038,10 +1042,19 @@ export class RegistrationRequestManager {
               '申請が承認されました（ユーザーアカウント作成は手動で行ってください）。' : 
               '申請が却下されました。'
           };
+        } else {
+          console.error('データベース更新エラー:', error);
+          return {
+            success: false,
+            error: `データベース更新エラー: ${error.message}`
+          };
         }
       }
 
-      throw new Error('データベースエラーが発生しました。');
+      return {
+        success: false,
+        error: 'Supabaseに接続できません。'
+      };
 
     } catch (error) {
       console.error('直接データベース更新エラー:', error);
