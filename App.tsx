@@ -44,7 +44,6 @@ import ProductionSecurityValidator from './src/components/ProductionSecurityVali
 import { measurePageLoad } from './src/components/PerformanceMonitor';
 import PWAInstallPrompt from './src/components/PWAInstallPrompt';
 import PWAUpdatePrompt from './src/components/PWAUpdatePrompt';
-import OfflineIndicator from './src/components/OfflineIndicator';
 import SEOHead from './src/components/SEOHead';
 import { HelmetProvider } from 'react-helmet-async';
 import { AccessibilityProvider } from './src/components/AccessibilityProvider';
@@ -1048,7 +1047,6 @@ const App: React.FC = () => {
                   {usageNotice}
                   <PWAInstallPrompt />
                   <PWAUpdatePrompt />
-                  <OfflineIndicator />
                   {currentPage !== 'results' && <AccessibilitySettings />}
                   {/* <AccessibilityAudit /> */}
                 </div>

@@ -9,7 +9,6 @@ export const PWAUpdatePrompt: React.FC<PWAUpdatePromptProps> = ({ className = ''
   const [showPrompt, setShowPrompt] = useState(false);
   
   const {
-    offlineReady: [offlineReady, setOfflineReady],
     needRefresh: [needRefresh, setNeedRefresh],
     updateServiceWorker,
   } = useRegisterSW({
@@ -37,45 +36,12 @@ export const PWAUpdatePrompt: React.FC<PWAUpdatePromptProps> = ({ className = ''
     setNeedRefresh(false);
   };
 
-  if (!showPrompt && !offlineReady) {
+  if (!showPrompt) {
     return null;
   }
 
   return (
     <>
-      {offlineReady && (
-        <div style={{
-          position: 'fixed',
-          bottom: '20px',
-          left: '20px',
-          right: '20px',
-          backgroundColor: '#10b981',
-          color: 'white',
-          padding: '16px',
-          borderRadius: '8px',
-          boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
-          zIndex: 9999,
-          textAlign: 'center'
-        }}>
-          <div style={{ marginBottom: '8px' }}>
-            📱 アプリがオフラインで利用可能になりました！
-          </div>
-          <button
-            onClick={() => setOfflineReady(false)}
-            style={{
-              backgroundColor: 'rgba(255, 255, 255, 0.2)',
-              color: 'white',
-              border: 'none',
-              padding: '8px 16px',
-              borderRadius: '4px',
-              cursor: 'pointer'
-            }}
-          >
-            OK
-          </button>
-        </div>
-      )}
-
       {showPrompt && (
         <div style={{
           position: 'fixed',
