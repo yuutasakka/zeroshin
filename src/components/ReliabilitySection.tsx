@@ -54,6 +54,7 @@ const createSupabaseHelper = () => {
 
 const ReliabilitySection: React.FC = () => {
   const [testimonials, setTestimonials] = useState<Testimonial[]>([]);
+  const [isClient, setIsClient] = useState(false);
   const reasonsDataFromContext = useReasonsToChoose();
   const originalReasonsData = reasonsDataFromContext || defaultReasonsToChooseData;
   
@@ -63,6 +64,10 @@ const ReliabilitySection: React.FC = () => {
     reasons: originalReasonsData.reasons.filter(reason => reason.iconClass !== 'fas fa-users')
   };
   const { templateConfig } = useDesignTemplate();
+  
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
 
   useEffect(() => {
     const loadTestimonials = async () => {
@@ -182,14 +187,43 @@ const ReliabilitySection: React.FC = () => {
     <section id="reliability-section" className="py-16 md:py-20 px-4 bg-white">
       <div className="container mx-auto px-4 max-w-7xl">
         <style>{`
+          /* 確実なレイアウト保証 */
+          .grid {
+            display: grid !important;
+          }
+          
+          .md\\:grid-cols-3 {
+            grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+          }
+          
+          .gap-8 {
+            gap: 2rem !important;
+          }
+          
+          .mb-16 {
+            margin-bottom: 4rem !important;
+          }
+          
+          .text-center {
+            text-align: center !important;
+          }
+          
+          .container {
+            max-width: 80rem !important;
+            margin: 0 auto !important;
+            padding: 0 1rem !important;
+          }
+          
           .stats-card {
-            background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
-            border: 1px solid #e0e7ff;
-            border-radius: 1rem;
-            padding: 2rem;
-            text-align: center;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-            transition: all 0.3s ease;
+            background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%) !important;
+            border: 1px solid #e0e7ff !important;
+            border-radius: 1rem !important;
+            padding: 2rem !important;
+            text-align: center !important;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1) !important;
+            transition: all 0.3s ease !important;
+            width: 100% !important;
+            display: block !important;
           }
           
           .stats-card:hover {
@@ -241,6 +275,17 @@ const ReliabilitySection: React.FC = () => {
               font-size: 1.75rem;
             }
           }
+          
+          /* 確実なレスポンシブ対応 */
+          @media (max-width: 768px) {
+            .md\\:grid-cols-3 {
+              grid-template-columns: 1fr !important;
+            }
+            
+            .grid {
+              gap: 1rem !important;
+            }
+          }
         `}</style>
         <div className="text-center mb-16">
           <h3 className="text-3xl md:text-4xl lg:text-5xl mb-6 font-bold leading-tight" style={{ color: '#1e40af' }}>
@@ -251,7 +296,12 @@ const ReliabilitySection: React.FC = () => {
           </p>
         </div>
         
-        <div className={`${templateConfig?.styles.sections.layout === 'list' ? 'space-y-8' : templateConfig?.styles.sections.layout === 'timeline' ? 'relative timeline-container' : 'grid md:grid-cols-3 gap-8'} mb-16`}>
+        <div className="grid md:grid-cols-3 gap-8 mb-16" style={{ 
+          display: 'grid', 
+          gridTemplateColumns: isClient && window.innerWidth > 768 ? 'repeat(3, minmax(0, 1fr))' : '1fr', 
+          gap: '2rem', 
+          marginBottom: '4rem' 
+        }}>
           {reasonsData.reasons.map((reason, index) => (
             <div key={reason.title} className={`stats-card ${templateConfig?.styles.sections.layout === 'timeline' ? 'timeline-item' : ''}`} style={{ animationDelay: reason.animationDelay }}>
               <div className="stats-number">{reason.value}</div>
@@ -264,7 +314,11 @@ const ReliabilitySection: React.FC = () => {
         <div className="mb-16">
           <h4 className="text-2xl md:text-3xl font-bold text-center mb-12" style={{ color: '#1e40af' }}>お客様の声</h4>
           {testimonials.length > 0 ? (
-            <div className="grid md:grid-cols-2 gap-8">
+            <div className="grid md:grid-cols-2 gap-8" style={{ 
+              display: 'grid', 
+              gridTemplateColumns: isClient && window.innerWidth > 768 ? 'repeat(2, minmax(0, 1fr))' : '1fr',
+              gap: '2rem' 
+            }}>
               {testimonials.map(testimonial => (
                 <div key={testimonial.id} className="testimonial-card">
                   <div className="flex items-center mb-4">

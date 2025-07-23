@@ -28,6 +28,108 @@
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content="AI ConnectX - お金診断アプリ" />
     <meta name="twitter:description" content="あなたに最適な金融商品を診断します" />
+    <!-- 直接スタイル読み込み - CDN不要 -->
+    <style>
+        /* === 完全リセット CSS === */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        html, body {
+            width: 100%;
+            height: 100%;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            overflow-x: hidden;
+        }
+        
+        /* === 確実なユーティリティクラス === */
+        .container {
+            max-width: 1200px !important;
+            margin: 0 auto !important;
+            padding: 0 1rem !important;
+        }
+        
+        .flex {
+            display: flex !important;
+        }
+        
+        .items-center {
+            align-items: center !important;
+        }
+        
+        .justify-center {
+            justify-content: center !important;
+        }
+        
+        .justify-between {
+            justify-content: space-between !important;
+        }
+        
+        .grid {
+            display: grid !important;
+        }
+        
+        .grid-cols-2 {
+            grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+        }
+        
+        .grid-cols-3 {
+            grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+        }
+        
+        .gap-8 {
+            gap: 2rem !important;
+        }
+        
+        .w-full {
+            width: 100% !important;
+        }
+        
+        .text-center {
+            text-align: center !important;
+        }
+        
+        .bg-white {
+            background-color: #ffffff !important;
+        }
+        
+        .py-16 {
+            padding-top: 4rem !important;
+            padding-bottom: 4rem !important;
+        }
+        
+        .px-4 {
+            padding-left: 1rem !important;
+            padding-right: 1rem !important;
+        }
+        
+        .mb-16 {
+            margin-bottom: 4rem !important;
+        }
+        
+        .mx-auto {
+            margin-left: auto !important;
+            margin-right: auto !important;
+        }
+        
+        /* === 確実なレスポンシブ対応 === */
+        @media (max-width: 768px) {
+            .grid-cols-2,
+            .grid-cols-3 {
+                grid-template-columns: 1fr !important;
+            }
+            
+            .container {
+                padding: 0 0.5rem !important;
+            }
+        }
+    </style>
+    
+    <!-- フォールバック用Tailwind -->
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@3.4.0/dist/tailwind.min.css" rel="stylesheet" crossorigin="anonymous">
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -1204,23 +1306,10 @@
         
         // Tailwind CSS読み込み確認とフォールバック処理
         function checkTailwindCSS() {
-            // テスト用要素を作成
-            const testEl = document.createElement('div');
-            testEl.className = 'flex';
-            testEl.style.visibility = 'hidden';
-            testEl.style.position = 'absolute';
-            document.body.appendChild(testEl);
-            
-            // flexプロパティが適用されているかチェック
-            const isFlexApplied = window.getComputedStyle(testEl).display === 'flex';
-            document.body.removeChild(testEl);
-            
-            if (!isFlexApplied) {
-                console.warn('Tailwind CSS の読み込みに問題が発生。フォールバックCSSを読み込み中...');
+            // 強制的にフォールバックCSSを読み込み（確実性重視）
+            setTimeout(() => {
                 loadFallbackCSS();
-            } else {
-                console.log('Tailwind CSS の読み込み完了');
-            }
+            }, 100);
         }
         
         // フォールバックCSS読み込み

@@ -80,11 +80,17 @@ const Header: React.FC = () => {
       `}</style>
       <header 
         id="navigation"
-        className={`app-header fixed top-0 left-0 right-0 bg-gradient-to-r from-blue-50/95 via-white/95 to-purple-50/95 backdrop-blur-lg border-b border-blue-100/50 shadow-lg z-50 ${templateConfig ? `layout-${templateConfig.styles.header.layout}` : ''}`}
+        className="app-header fixed top-0 left-0 right-0 backdrop-blur-lg border-b shadow-lg z-50"
+        style={{
+          background: 'linear-gradient(to right, rgba(239, 246, 255, 0.95), rgba(255, 255, 255, 0.95), rgba(250, 245, 255, 0.95))',
+          borderBottomColor: 'rgba(219, 234, 254, 0.5)',
+          boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)',
+          zIndex: 50
+        }}
         role="banner"
       >
-        <div className="container mx-auto px-4 lg:px-8">
-          <div className={`flex items-center ${templateConfig?.styles.header.layout === 'centered' ? 'justify-center' : 'justify-between'} ${templateConfig?.styles.header.layout === 'vertical' ? 'flex-col py-4' : ''} h-16 md:h-20`}>
+        <div className="container mx-auto px-4 lg:px-8" style={{ maxWidth: '1200px', margin: '0 auto', padding: '0 1rem' }}>
+          <div className="flex items-center justify-between" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: '4rem' }}>
             <a href="#top" onClick={scrollToTop} className="flex items-center space-x-2 md:space-x-3 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-blue-500 rounded-lg p-2 hover:bg-gray-50 transition-all duration-200">
               <div className="flex flex-col">
                 <h1 className="text-lg sm:text-xl md:text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent leading-tight">
