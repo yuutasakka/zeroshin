@@ -1037,7 +1037,7 @@ const DiagnosisResultsPage: React.FC<DiagnosisResultsPageProps> = ({ diagnosisDa
                     ))}
                   </div>
                   
-                  {/* ボタンセクション */}
+{/* 商品リンクボタンセクションを非表示
                   <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 mt-3 sm:mt-4">
                     {(product as any).url && (
                       <a 
@@ -1068,6 +1068,7 @@ const DiagnosisResultsPage: React.FC<DiagnosisResultsPageProps> = ({ diagnosisDa
                       </div>
                     )}
                   </div>
+                  */}
                 </div>
               ))}
               </div>

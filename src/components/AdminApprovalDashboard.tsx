@@ -1,32 +1,23 @@
 import React, { useState, useEffect } from 'react';
-import { AdminApprovalSystem } from './supabaseClient';
+import { registrationManager, RegistrationRequest } from './supabaseClient';
 
 interface AdminApprovalDashboardProps {
   currentAdminId: number;
   onApprovalUpdate?: () => void;
 }
 
-interface PendingApproval {
-  id: string;
-  email: string;
-  phone_number: string;
-  full_name?: string;
-  department?: string;
-  reason?: string;
-  created_at: string;
-  requested_by: string;
-}
+// RegistrationRequest 型を使用
 
 const AdminApprovalDashboard: React.FC<AdminApprovalDashboardProps> = ({
   currentAdminId,
   onApprovalUpdate
 }) => {
-  const [approvals, setApprovals] = useState<PendingApproval[]>([]);
+  const [approvals, setApprovals] = useState<RegistrationRequest[]>([]);
   const [loading, setLoading] = useState(true);
-  const [processing, setProcessing] = useState<string | null>(null);
+  const [processing, setProcessing] = useState<number | null>(null);
   const [error, setError] = useState('');
   const [rejectionReason, setRejectionReason] = useState('');
-  const [showRejectModal, setShowRejectModal] = useState<string | null>(null);
+  const [showRejectModal, setShowRejectModal] = useState<number | null>(null);
 
   // 承認待ち一覧を取得
   const loadPendingApprovals = async () => {
@@ -34,50 +25,57 @@ const AdminApprovalDashboard: React.FC<AdminApprovalDashboardProps> = ({
       setLoading(true);
       setError('');
       
-      const result = await AdminApprovalSystem.getPendingApprovals();
-      
-      if (result.success) {
-        setApprovals(result.approvals || []);
-      } else {
-        setError(result.error || '承認待ち一覧の取得に失敗しました。');
-      }
+      // admin_registrations テーブルから pending 状態の申請を取得
+      const pendingRequests = await registrationManager.getRegistrationRequests('pending');
+      setApprovals(pendingRequests);
+      console.log('承認待ち申請を取得しました:', pendingRequests.length);
     } catch (err) {
       console.error('承認待ち一覧取得エラー:', err);
-      setError('承認待ち一覧の取得中にエラーが発生しました。');
+      const errorMessage = err instanceof Error ? err.message : '承認待ち一覧の取得中にエラーが発生しました。';
+      setError(errorMessage);
+      setApprovals([]); // エラー時は空配列を設定
     } finally {
       setLoading(false);
     }
   };
 
   // 申請を承認
-  const handleApprove = async (approvalId: string) => {
+  const handleApprove = async (approvalId: number) => {
     try {
       setProcessing(approvalId);
       setError('');
       
-      const result = await AdminApprovalSystem.approveAdminRequest(
-        approvalId,
-        currentAdminId,
-        '管理者による承認'
+      console.log('承認処理開始:', approvalId);
+      
+      const result = await registrationManager.approveOrRejectRequest(
+        approvalId.toString(),
+        'approve',
+        '管理者による承認',
+        `admin_${currentAdminId}`
       );
       
+      console.log('承認処理結果:', result);
+      
       if (result.success) {
-        alert('管理者申請を承認しました。');
+        alert(result.message || '管理者申請を承認しました。');
         await loadPendingApprovals();
         onApprovalUpdate?.();
       } else {
-        setError(result.error || '承認処理に失敗しました。');
+        const errorMessage = result.error || '承認処理に失敗しました。';
+        setError(errorMessage);
+        console.error('承認処理失敗:', errorMessage);
       }
     } catch (err) {
       console.error('承認処理エラー:', err);
-      setError('承認処理中にエラーが発生しました。');
+      const errorMessage = err instanceof Error ? err.message : '承認処理中にエラーが発生しました。';
+      setError(errorMessage);
     } finally {
       setProcessing(null);
     }
   };
 
   // 申請を拒否
-  const handleReject = async (approvalId: string) => {
+  const handleReject = async (approvalId: number) => {
     if (!rejectionReason.trim()) {
       setError('拒否理由を入力してください。');
       return;
@@ -87,24 +85,32 @@ const AdminApprovalDashboard: React.FC<AdminApprovalDashboardProps> = ({
       setProcessing(approvalId);
       setError('');
       
-      const result = await AdminApprovalSystem.rejectAdminRequest(
-        approvalId,
-        currentAdminId,
-        rejectionReason.trim()
+      console.log('拒否処理開始:', approvalId, rejectionReason.trim());
+      
+      const result = await registrationManager.approveOrRejectRequest(
+        approvalId.toString(),
+        'reject',
+        rejectionReason.trim(),
+        `admin_${currentAdminId}`
       );
       
+      console.log('拒否処理結果:', result);
+      
       if (result.success) {
-        alert('管理者申請を拒否しました。');
+        alert(result.message || '管理者申請を拒否しました。');
         await loadPendingApprovals();
         setShowRejectModal(null);
         setRejectionReason('');
         onApprovalUpdate?.();
       } else {
-        setError(result.error || '拒否処理に失敗しました。');
+        const errorMessage = result.error || '拒否処理に失敗しました。';
+        setError(errorMessage);
+        console.error('拒否処理失敗:', errorMessage);
       }
     } catch (err) {
       console.error('拒否処理エラー:', err);
-      setError('拒否処理中にエラーが発生しました。');
+      const errorMessage = err instanceof Error ? err.message : '拒否処理中にエラーが発生しました。';
+      setError(errorMessage);
     } finally {
       setProcessing(null);
     }
@@ -183,18 +189,18 @@ const AdminApprovalDashboard: React.FC<AdminApprovalDashboardProps> = ({
                       <label className="block text-sm font-medium text-gray-700 mb-1">電話番号</label>
                       <p className="text-gray-900">{approval.phone_number}</p>
                     </div>
-                    {approval.department && (
+                    {approval.organization && (
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">所属部署</label>
-                        <p className="text-gray-900">{approval.department}</p>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">組織</label>
+                        <p className="text-gray-900">{approval.organization}</p>
                       </div>
                     )}
                   </div>
 
-                  {approval.reason && (
+                  {approval.purpose && (
                     <div className="mb-4">
-                      <label className="block text-sm font-medium text-gray-700 mb-1">申請理由</label>
-                      <p className="text-gray-900 bg-gray-50 p-3 rounded-lg">{approval.reason}</p>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">申請目的</label>
+                      <p className="text-gray-900 bg-gray-50 p-3 rounded-lg">{approval.purpose}</p>
                     </div>
                   )}
 
@@ -248,7 +254,7 @@ const AdminApprovalDashboard: React.FC<AdminApprovalDashboardProps> = ({
                 キャンセル
               </button>
               <button
-                onClick={() => handleReject(showRejectModal)}
+                onClick={() => showRejectModal && handleReject(showRejectModal)}
                 disabled={!rejectionReason.trim() || processing === showRejectModal}
                 className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
               >

@@ -37,7 +37,7 @@ interface AdminDashboardPageProps {
   onNavigateHome: () => void;
 }
 
-type AdminViewMode = 'userHistory' | 'productSettings' | 'testimonialSettings' | 'analyticsSettings' | 'notificationSettings' | 'legalLinksSettings' | 'adminSettings' | 'homepageContentSettings' | 'headerAndVisualSettings' | 'colorThemeSettings' | 'designTemplateSettings' | 'securitySettings' | 'expertContactSettings' | 'financialPlannersSettings' | 'approvalRequests';
+type AdminViewMode = 'userHistory' | 'productSettings' | 'testimonialSettings' | 'analyticsSettings' | 'notificationSettings' | 'legalLinksSettings' | 'adminSettings' | 'homepageContentSettings' | 'headerAndVisualSettings' | 'colorThemeSettings' | 'securitySettings' | 'expertContactSettings' | 'financialPlannersSettings' | 'approvalRequests';
 
 interface FinancialPlanner {
   id?: number;
@@ -1921,6 +1921,7 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
                     <i className="fas fa-users-cog mr-2"></i>
                     <span>ユーザー診断履歴</span>
                 </button>
+{/* 商品リンク設定ボタンを非表示
                 <button 
                     onClick={() => setViewMode('productSettings')}
                     className={`admin-nav-button px-4 py-2 rounded-md text-sm font-medium transition-colors flex items-center justify-center ${viewMode === 'productSettings' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}`}
@@ -1928,6 +1929,7 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
                     <i className="fas fa-gifts mr-2"></i>
                     <span>商品リンク設定</span>
                 </button>
+                */}
                 <button 
                     onClick={() => setViewMode('adminSettings')}
                     className={`admin-nav-button px-4 py-2 rounded-md text-sm font-medium transition-colors flex items-center justify-center ${viewMode === 'adminSettings' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}`}
@@ -1984,6 +1986,7 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
                      <i className="fas fa-palette mr-2"></i>
                      <span>カラーテーマ設定</span>
                  </button>
+{/* デザインテンプレート設定ボタンを削除
                  <button 
                      onClick={() => setViewMode('designTemplateSettings')}
                      className={`admin-nav-button px-4 py-2 rounded-md text-sm font-medium transition-colors flex items-center justify-center ${viewMode === 'designTemplateSettings' ? 'bg-purple-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}`}
@@ -1991,6 +1994,7 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
                      <i className="fas fa-layer-group mr-2"></i>
                      <span>デザインテンプレート設定</span>
                  </button>
+                 */}
                  <button 
                      onClick={() => setViewMode('securitySettings')}
                      className={`admin-nav-button px-4 py-2 rounded-md text-sm font-medium transition-colors flex items-center justify-center ${viewMode === 'securitySettings' ? 'bg-red-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}`}
@@ -2122,6 +2126,7 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
             </div>
         )}
 
+{/* 商品リンク設定画面を非表示
         {viewMode === 'productSettings' && (
             <div className="bg-white p-6 md:p-8 rounded-xl shadow-2xl">
                 <h2 className="text-2xl font-bold text-gray-800 mb-6 flex items-center">
@@ -2198,6 +2203,7 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
 
             </div>
         )}
+        */}
 
         {viewMode === 'testimonialSettings' && (
              <div className="bg-white p-6 md:p-8 rounded-xl shadow-2xl">
@@ -3424,130 +3430,7 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
             </div>
         )}
 
-        {viewMode === 'designTemplateSettings' && (
-            <div className="bg-white p-6 md:p-8 rounded-xl shadow-2xl">
-                <h2 className="text-2xl font-bold text-gray-800 mb-6 flex items-center">
-                    <i className="fas fa-layer-group mr-3 text-purple-600"></i>デザインテンプレート設定
-                </h2>
-                
-                {designTemplateStatus && (
-                    <div className={`p-3 mb-4 rounded-md text-sm ${designTemplateStatus.includes('エラー') ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'}`}>
-                        {designTemplateStatus}
-                    </div>
-                )}
-                
-                <div className="mb-6">
-                    <p className="text-gray-600 mb-4">
-                        サイト全体のデザインテンプレートを選択してください。レイアウト、コンポーネントスタイル、タイポグラフィなどが一括で変更されます。
-                    </p>
-                    
-                    <div className="space-y-4">
-                        <h3 className="text-lg font-semibold text-gray-700 mb-3">
-                            現在のテンプレート: <span className="text-purple-600">{currentTemplate ? designTemplates[currentTemplate].name : '未設定'}</span>
-                        </h3>
-                        
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            {Object.entries(designTemplates).map(([templateId, template]) => (
-                                <div
-                                    key={templateId}
-                                    className={`p-6 rounded-lg border-2 cursor-pointer transition-all duration-200 ${
-                                        currentTemplate === templateId
-                                            ? 'border-purple-500 bg-purple-50 shadow-md'
-                                            : 'border-gray-200 bg-white hover:border-purple-300 hover:shadow-sm'
-                                    }`}
-                                    onClick={() => handleDesignTemplateChange(templateId as DesignTemplate)}
-                                >
-                                    <div className="mb-4">
-                                        <h4 className="text-xl font-bold text-gray-800 mb-2">
-                                            {template.name}
-                                        </h4>
-                                        <p className="text-sm text-gray-600">
-                                            {template.description}
-                                        </p>
-                                    </div>
-                                    
-                                    {/* テンプレート詳細 */}
-                                    <div className="space-y-3 text-sm">
-                                        <div className="flex items-center text-gray-700">
-                                            <i className="fas fa-bars mr-2 text-gray-400"></i>
-                                            <span>ヘッダー: {template.styles.header.layout === 'horizontal' ? '横型' : template.styles.header.layout === 'vertical' ? '縦型' : '中央配置'}</span>
-                                        </div>
-                                        <div className="flex items-center text-gray-700">
-                                            <i className="fas fa-image mr-2 text-gray-400"></i>
-                                            <span>メインビジュアル: {
-                                                template.styles.mainVisual.layout === 'hero' ? 'ヒーロー' : 
-                                                template.styles.mainVisual.layout === 'split' ? '分割' : 
-                                                template.styles.mainVisual.layout === 'fullscreen' ? 'フルスクリーン' : 
-                                                'カルーセル'
-                                            }</span>
-                                        </div>
-                                        <div className="flex items-center text-gray-700">
-                                            <i className="fas fa-th mr-2 text-gray-400"></i>
-                                            <span>セクション: {
-                                                template.styles.sections.layout === 'cards' ? 'カード' :
-                                                template.styles.sections.layout === 'list' ? 'リスト' :
-                                                template.styles.sections.layout === 'grid' ? 'グリッド' :
-                                                'タイムライン'
-                                            }</span>
-                                        </div>
-                                        <div className="flex items-center text-gray-700">
-                                            <i className="fas fa-font mr-2 text-gray-400"></i>
-                                            <span>フォント: {template.styles.typography.headingFont}</span>
-                                        </div>
-                                    </div>
-                                    
-                                    {/* カラーパレット表示 */}
-                                    <div className="flex space-x-1 mt-4">
-                                        <div
-                                            className="w-8 h-8 rounded border border-gray-300"
-                                            style={{ backgroundColor: template.styles.colors.primary }}
-                                            title="Primary"
-                                        ></div>
-                                        <div
-                                            className="w-8 h-8 rounded border border-gray-300"
-                                            style={{ backgroundColor: template.styles.colors.secondary }}
-                                            title="Secondary"
-                                        ></div>
-                                        <div
-                                            className="w-8 h-8 rounded border border-gray-300"
-                                            style={{ backgroundColor: template.styles.colors.accent }}
-                                            title="Accent"
-                                        ></div>
-                                        <div
-                                            className="w-8 h-8 rounded border border-gray-300"
-                                            style={{ backgroundColor: template.styles.colors.background }}
-                                            title="Background"
-                                        ></div>
-                                    </div>
-                                    
-                                    {/* 選択状態表示 */}
-                                    {currentTemplate === templateId && (
-                                        <div className="flex items-center text-purple-600 text-sm font-medium mt-4">
-                                            <i className="fas fa-check-circle mr-2"></i>
-                                            現在選択中
-                                        </div>
-                                    )}
-                                </div>
-                            ))}
-                        </div>
-                    </div>
-                    
-                    <div className="mt-8 p-4 bg-amber-50 border border-amber-200 rounded-lg">
-                        <div className="flex items-start space-x-3">
-                            <i className="fas fa-exclamation-triangle text-amber-500 mt-1"></i>
-                            <div>
-                                <h4 className="font-medium text-gray-800">デザインテンプレート変更時の注意</h4>
-                                <p className="text-sm text-gray-600 mt-1">
-                                    • テンプレートの変更は、サイト全体のレイアウトとスタイルに影響します<br/>
-                                    • 個別に設定したカラーテーマは、テンプレートのデフォルトカラーで上書きされます<br/>
-                                    • 変更前に現在の設定をバックアップすることをお勧めします
-                                </p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        )}
+        {/* デザインテンプレート設定は削除されました */}
 
         {viewMode === 'adminSettings' && (
             <div className="bg-white p-6 md:p-8 rounded-xl shadow-2xl">
@@ -4041,56 +3924,58 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
                                     </div>
                                 </div>
 
-                                <div className="mt-4">
-                                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                                        <i className="fas fa-image mr-2"></i>プロフィール画像URL
-                                    </label>
-                                    <input
-                                        type="url"
-                                        value={editingPlanner.profile_image_url}
-                                        onChange={(e) => handlePlannerFormChange('profile_image_url', e.target.value)}
-                                        placeholder="https://images.unsplash.com/photo-..."
-                                        className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-purple-500 focus:border-purple-500"
-                                    />
-                                </div>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                                    <div className="md:col-span-2">
+                                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                                            <i className="fas fa-image mr-2"></i>プロフィール画像URL
+                                        </label>
+                                        <input
+                                            type="url"
+                                            value={editingPlanner.profile_image_url}
+                                            onChange={(e) => handlePlannerFormChange('profile_image_url', e.target.value)}
+                                            placeholder="https://images.unsplash.com/photo-..."
+                                            className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-purple-500 focus:border-purple-500"
+                                        />
+                                    </div>
 
-                                <div className="mt-4">
-                                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                                        <i className="fas fa-user-edit mr-2"></i>経歴・紹介文 <span className="text-red-500">*</span>
-                                    </label>
-                                    <textarea
-                                        value={editingPlanner.bio}
-                                        onChange={(e) => handlePlannerFormChange('bio', e.target.value)}
-                                        placeholder="12年の経験を持つ資産運用のスペシャリストです..."
-                                        rows={3}
-                                        className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-purple-500 focus:border-purple-500"
-                                    />
-                                </div>
+                                    <div className="md:col-span-2">
+                                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                                            <i className="fas fa-user-edit mr-2"></i>経歴・紹介文 <span className="text-red-500">*</span>
+                                        </label>
+                                        <textarea
+                                            value={editingPlanner.bio}
+                                            onChange={(e) => handlePlannerFormChange('bio', e.target.value)}
+                                            placeholder="12年の経験を持つ資産運用のスペシャリストです..."
+                                            rows={3}
+                                            className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-purple-500 focus:border-purple-500"
+                                        />
+                                    </div>
 
-                                <div className="mt-4">
-                                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                                        <i className="fas fa-tags mr-2"></i>専門分野（カンマ区切り）
-                                    </label>
-                                    <input
-                                        type="text"
-                                        value={editingPlanner.specialties ? editingPlanner.specialties.join(', ') : ''}
-                                        onChange={(e) => handlePlannerFormChange('specialties', e.target.value.split(',').map(s => s.trim()).filter(s => s))}
-                                        placeholder="資産運用, 保険プランニング, 税務相談"
-                                        className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-purple-500 focus:border-purple-500"
-                                    />
-                                </div>
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                                            <i className="fas fa-tags mr-2"></i>専門分野（カンマ区切り）
+                                        </label>
+                                        <input
+                                            type="text"
+                                            value={editingPlanner.specialties ? editingPlanner.specialties.join(', ') : ''}
+                                            onChange={(e) => handlePlannerFormChange('specialties', e.target.value.split(',').map(s => s.trim()).filter(s => s))}
+                                            placeholder="資産運用, 保険プランニング, 税務相談"
+                                            className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-purple-500 focus:border-purple-500"
+                                        />
+                                    </div>
 
-                                <div className="mt-4">
-                                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                                        <i className="fas fa-certificate mr-2"></i>保有資格（カンマ区切り）
-                                    </label>
-                                    <input
-                                        type="text"
-                                        value={editingPlanner.certifications ? editingPlanner.certifications.join(', ') : ''}
-                                        onChange={(e) => handlePlannerFormChange('certifications', e.target.value.split(',').map(s => s.trim()).filter(s => s))}
-                                        placeholder="CFP®, FP1級, 証券外務員1種"
-                                        className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-purple-500 focus:border-purple-500"
-                                    />
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                                            <i className="fas fa-certificate mr-2"></i>保有資格（カンマ区切り）
+                                        </label>
+                                        <input
+                                            type="text"
+                                            value={editingPlanner.certifications ? editingPlanner.certifications.join(', ') : ''}
+                                            onChange={(e) => handlePlannerFormChange('certifications', e.target.value.split(',').map(s => s.trim()).filter(s => s))}
+                                            placeholder="CFP®, FP1級, 証券外務員1種"
+                                            className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-purple-500 focus:border-purple-500"
+                                        />
+                                    </div>
                                 </div>
 
                                 <div className="mt-4">
