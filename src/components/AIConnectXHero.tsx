@@ -62,122 +62,125 @@ const AIConnectXHero: React.FC<AIConnectXHeroProps> = ({ onStartDiagnosis }) => 
   const heroStyles = {
     hero: {
       position: 'relative' as const,
-      minHeight: '60vh',
+      minHeight: '100vh',
       width: '100%',
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
       overflow: 'hidden',
-      paddingTop: '40px',
-      paddingBottom: '40px'
-    },
-    background: {
-      position: 'absolute' as const,
-      top: 0,
-      left: 0,
-      width: '100%',
-      height: '100%',
-      background: 'linear-gradient(135deg, #f0f4ff 0%, #e6f1ff 50%, #f0f4ff 100%)',
-      zIndex: -1
+      background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #334155 100%)'
     },
     content: {
       position: 'relative' as const,
-      zIndex: 1,
+      zIndex: 10,
       width: '100%',
-      maxWidth: '800px',
-      padding: '1rem' // iPhone対応: パディングを小さく
+      maxWidth: '1200px',
+      padding: '2rem',
+      textAlign: 'center' as const
     },
-    container: {
-      textAlign: 'center' as const,
-      display: 'flex',
-      flexDirection: 'column' as const,
-      alignItems: 'center',
-      gap: '1rem' // iPhone対応: ギャップを小さく
+    titleContainer: {
+      marginBottom: '3rem',
+      animation: 'fadeIn 0.8s ease-out'
     },
     title: {
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      gap: '0.5rem', // iPhone対応: ギャップを小さく
-      marginBottom: '0.5rem' // iPhone対応: マージンを小さく
-    },
-    titleEmoji: {
-      fontSize: '2rem' // iPhone対応: サイズを小さく
-    },
-    titleText: {
-      fontSize: '2.5rem',
-      fontWeight: 800,
-      color: '#1a1a1a',
-      margin: 0,
-      textShadow: '2px 2px 8px rgba(0,0,0,0.05)',
-      lineHeight: 1.2
+      fontSize: 'clamp(3rem, 5vw, 5rem)',
+      fontWeight: 900,
+      lineHeight: 1.1,
+      letterSpacing: '-0.02em',
+      marginBottom: '1.5rem',
+      background: 'linear-gradient(135deg, #60a5fa 0%, #c084fc 50%, #f472b6 100%)',
+      WebkitBackgroundClip: 'text',
+      WebkitTextFillColor: 'transparent',
+      backgroundClip: 'text',
+      filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.1))'
     },
     subtitle: {
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      gap: '0.5rem', // iPhone対応: ギャップを小さく
-      marginBottom: '1rem' // iPhone対応: マージンを小さく
-    },
-    subtitleEmoji: {
-      fontSize: '1.2rem' // iPhone対応: サイズを小さく
-    },
-    subtitleText: {
-      fontSize: '1.25rem',
-      fontWeight: 600,
-      color: '#f59e0b',
-      margin: 0,
-      textShadow: '1px 1px 3px rgba(0,0,0,0.05)'
+      fontSize: 'clamp(1.25rem, 2vw, 1.75rem)',
+      fontWeight: 400,
+      color: '#94a3b8',
+      marginBottom: '3rem',
+      lineHeight: 1.6
     },
     buttonContainer: {
-      margin: '1rem 0' // iPhone対応: マージンを小さく
+      display: 'flex',
+      gap: '1.5rem',
+      justifyContent: 'center',
+      alignItems: 'center',
+      flexWrap: 'wrap' as const,
+      marginBottom: '4rem'
     },
-    button: {
+    primaryButton: {
       display: 'inline-flex',
       alignItems: 'center',
       justifyContent: 'center',
       gap: '0.75rem',
-      width: '280px',
-      height: '60px',
-      padding: '0 2rem',
-      background: 'linear-gradient(135deg, #3b82f6 0%, #6366f1 100%)',
+      padding: '1.25rem 3rem',
+      background: 'linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%)',
       border: 'none',
-      borderRadius: '50px',
+      borderRadius: '9999px',
       color: 'white',
-      fontSize: '18px',
-      fontWeight: 700,
-      textDecoration: 'none',
+      fontSize: '1.125rem',
+      fontWeight: 600,
       cursor: 'pointer',
       transition: 'all 0.3s ease',
-      boxShadow: '0 6px 25px rgba(59, 130, 246, 0.35)',
-      transform: 'translateY(0)'
+      boxShadow: '0 10px 40px rgba(59, 130, 246, 0.3)',
+      position: 'relative' as const,
+      overflow: 'hidden'
+    },
+    secondaryButton: {
+      display: 'inline-flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: '0.75rem',
+      padding: '1.25rem 3rem',
+      background: 'rgba(255, 255, 255, 0.1)',
+      backdropFilter: 'blur(10px)',
+      WebkitBackdropFilter: 'blur(10px)',
+      border: '1px solid rgba(255, 255, 255, 0.2)',
+      borderRadius: '9999px',
+      color: 'white',
+      fontSize: '1.125rem',
+      fontWeight: 600,
+      cursor: 'pointer',
+      transition: 'all 0.3s ease'
     },
     features: {
-      display: 'flex',
-      flexDirection: 'column' as const,
-      gap: '0.5rem', // iPhone対応: ギャップを小さく
-      maxWidth: '400px', // iPhone対応: 最大幅を小さく
+      display: 'grid',
+      gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
+      gap: '2rem',
+      maxWidth: '800px',
       margin: '0 auto'
     },
-    feature: {
+    featureCard: {
+      padding: '2rem',
+      background: 'rgba(255, 255, 255, 0.05)',
+      backdropFilter: 'blur(10px)',
+      WebkitBackdropFilter: 'blur(10px)',
+      border: '1px solid rgba(255, 255, 255, 0.1)',
+      borderRadius: '1.5rem',
+      transition: 'all 0.3s ease'
+    },
+    featureIcon: {
+      width: '3rem',
+      height: '3rem',
+      marginBottom: '1rem',
+      background: 'linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%)',
+      borderRadius: '1rem',
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
-      gap: '0.5rem', // iPhone対応: ギャップを小さく
-      padding: '0.5rem 1rem', // iPhone対応: パディングを小さく
-      background: 'rgba(255, 255, 255, 0.8)',
-      borderRadius: '20px', // iPhone対応: 角丸を小さく
-      boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)', // iPhone対応: シャドウを小さく
-      backdropFilter: 'blur(10px)'
+      fontSize: '1.5rem'
     },
-    featureEmoji: {
-      fontSize: '1rem' // iPhone対応: サイズを小さく
-    },
-    featureText: {
-      fontSize: '0.85rem', // iPhone対応: フォントサイズを小さく
+    featureTitle: {
+      fontSize: '1.25rem',
       fontWeight: 600,
-      color: '#374151',
-      fontFamily: '"Noto Sans JP", "Hiragino Sans", "Yu Gothic", sans-serif'
+      color: 'white',
+      marginBottom: '0.5rem'
+    },
+    featureDescription: {
+      fontSize: '0.875rem',
+      color: '#94a3b8',
+      lineHeight: 1.6
     }
   };
 
@@ -185,195 +188,226 @@ const AIConnectXHero: React.FC<AIConnectXHeroProps> = ({ onStartDiagnosis }) => 
     <>
       {/* スタイル定義 */}
       <style>{`
-        /* ボタンホバーエフェクト */
-        .hero-button:hover {
-          transform: translateY(-2px) !important;
-          box-shadow: 0 8px 30px rgba(59, 130, 246, 0.45) !important;
-          background: linear-gradient(135deg, #2563eb 0%, #5b21b6 100%) !important;
+        @keyframes fadeIn {
+          from {
+            opacity: 0;
+            transform: translateY(30px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
         }
-        
-        .hero-button:active {
-          transform: translateY(0) !important;
-          box-shadow: 0 4px 20px rgba(59, 130, 246, 0.3) !important;
+
+        @keyframes float {
+          0%, 100% {
+            transform: translateY(0);
+          }
+          50% {
+            transform: translateY(-20px);
+          }
         }
-        
-        /* 特徴アイテムのホバーエフェクト */
-        .hero-feature:hover {
+
+        @keyframes pulse {
+          0%, 100% {
+            opacity: 0.5;
+          }
+          50% {
+            opacity: 0.8;
+          }
+        }
+
+        .hero-section {
+          position: relative;
+        }
+
+        .hero-primary-button {
+          position: relative;
+          overflow: hidden;
+        }
+
+        .hero-primary-button::before {
+          content: '';
+          position: absolute;
+          top: 0;
+          left: -100%;
+          width: 100%;
+          height: 100%;
+          background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+          transition: left 0.6s ease;
+        }
+
+        .hero-primary-button:hover::before {
+          left: 100%;
+        }
+
+        .hero-primary-button:hover {
+          transform: translateY(-3px);
+          box-shadow: 0 15px 50px rgba(59, 130, 246, 0.4);
+        }
+
+        .hero-secondary-button:hover {
+          background: rgba(255, 255, 255, 0.15);
+          border-color: rgba(255, 255, 255, 0.3);
           transform: translateY(-2px);
-          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
         }
-        
-        /* タブレット対応 */
-        @media (max-width: 1024px) {
-          .hero-title-text {
-            font-size: 2.2rem !important;
-          }
-          .hero-subtitle-text {
-            font-size: 1.1rem !important;
-          }
-          .hero-button {
-            width: 260px !important;
-            height: 56px !important;
-            font-size: 17px !important;
-          }
+
+        .hero-feature-card {
+          position: relative;
+          overflow: hidden;
         }
-        
-        /* スマートフォン対応 */
+
+        .hero-feature-card::before {
+          content: '';
+          position: absolute;
+          top: -2px;
+          left: -2px;
+          right: -2px;
+          bottom: -2px;
+          background: linear-gradient(135deg, #3b82f6, #8b5cf6, #ec4899);
+          border-radius: 1.5rem;
+          opacity: 0;
+          transition: opacity 0.3s ease;
+          z-index: -1;
+        }
+
+        .hero-feature-card:hover::before {
+          opacity: 1;
+        }
+
+        .hero-feature-card:hover {
+          transform: translateY(-5px);
+          background: rgba(255, 255, 255, 0.08);
+        }
+
+        .floating-orb {
+          position: absolute;
+          border-radius: 50%;
+          filter: blur(40px);
+          opacity: 0.5;
+          animation: float 6s ease-in-out infinite;
+        }
+
+        .gradient-orb-1 {
+          width: 300px;
+          height: 300px;
+          background: radial-gradient(circle, rgba(59, 130, 246, 0.3) 0%, transparent 70%);
+          top: 10%;
+          left: -5%;
+          animation-delay: 0s;
+        }
+
+        .gradient-orb-2 {
+          width: 400px;
+          height: 400px;
+          background: radial-gradient(circle, rgba(139, 92, 246, 0.3) 0%, transparent 70%);
+          bottom: 10%;
+          right: -5%;
+          animation-delay: 2s;
+        }
+
+        .gradient-orb-3 {
+          width: 250px;
+          height: 250px;
+          background: radial-gradient(circle, rgba(236, 72, 153, 0.3) 0%, transparent 70%);
+          top: 50%;
+          left: 50%;
+          transform: translate(-50%, -50%);
+          animation-delay: 4s;
+        }
+
         @media (max-width: 768px) {
           .hero-section {
-            min-height: 50vh !important;
-            padding-top: 90px !important;
-            padding-bottom: 30px !important;
+            min-height: 100vh;
           }
-          .hero-title-text {
-            font-size: 1.8rem !important;
-            line-height: 1.3 !important;
-          }
-          .hero-subtitle-text {
-            font-size: 1rem !important;
-          }
-          .hero-button {
-            width: 240px !important;
-            height: 52px !important;
-            font-size: 16px !important;
-          }
-          .hero-feature-text {
-            font-size: 0.85rem !important;
-          }
-        }
-        
-        /* 小型スマートフォン対応 */
-        @media (max-width: 480px) {
-          .hero-title-text {
-            font-size: 1.5rem !important;
-          }
-          .hero-subtitle-text {
-            font-size: 0.95rem !important;
-          }
-          .hero-button {
-            width: 220px !important;
-            height: 48px !important;
-            font-size: 15px !important;
-          }
-          .hero-container {
-            gap: 0.75rem !important;
-          }
-          .hero-content {
-            padding: 0.75rem !important;
-          }
-        }
-        
-        /* 極小画面対応（iPhone SE等） */
-        @media (max-width: 375px) {
-          .hero-section {
-            min-height: 45vh !important;
-            padding-top: 80px !important;
-          }
-          .hero-title-text {
-            font-size: 1.3rem !important;
-          }
-          .hero-subtitle-text {
-            font-size: 0.9rem !important;
-          }
-          .hero-button {
-            width: 200px !important;
-            height: 44px !important;
-            font-size: 14px !important;
-          }
-          .hero-feature-text {
-            font-size: 0.8rem !important;
+          .hero-primary-button,
+          .hero-secondary-button {
+            width: 100%;
+            max-width: 300px;
           }
         }
       `}</style>
       
-      <section style={{
-        ...heroStyles.hero,
-        background: 'linear-gradient(135deg, #f0f4ff 0%, #e6f1ff 50%, #f0f4ff 100%)'
-      }} className="hero-section">
-        {/* 背景レイヤー */}
-        <div style={{
-          ...heroStyles.background,
-          background: 'linear-gradient(135deg, rgba(59, 130, 246, 0.05) 0%, rgba(147, 51, 234, 0.05) 100%)'
-        }}>
-        </div>
+      <section style={heroStyles.hero} className="hero-section">
+        {/* アニメーション背景 */}
+        <div className="floating-orb gradient-orb-1"></div>
+        <div className="floating-orb gradient-orb-2"></div>
+        <div className="floating-orb gradient-orb-3"></div>
         
-        {/* 装飾的な円形要素 */}
+        {/* グリッド背景 */}
         <div style={{
           position: 'absolute',
-          top: '10%',
-          left: '5%',
-          width: '150px',
-          height: '150px',
-          background: 'radial-gradient(circle, rgba(59, 130, 246, 0.1) 0%, transparent 70%)',
-          borderRadius: '50%',
-          filter: 'blur(40px)',
-          zIndex: 0
-        }}></div>
-        <div style={{
-          position: 'absolute',
-          bottom: '10%',
-          right: '5%',
-          width: '200px',
-          height: '200px',
-          background: 'radial-gradient(circle, rgba(147, 51, 234, 0.1) 0%, transparent 70%)',
-          borderRadius: '50%',
-          filter: 'blur(40px)',
-          zIndex: 0
+          inset: 0,
+          backgroundImage: `
+            linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px)
+          `,
+          backgroundSize: '50px 50px',
+          zIndex: 1
         }}></div>
         
         {/* メインコンテンツ */}
-        <div style={heroStyles.content} className="hero-content">
-          <div style={heroStyles.container} className="hero-container">
-          
-          {/* メインタイトル */}
-          <div style={heroStyles.title}>
-            <h1 style={heroStyles.titleText} className="hero-title-text">{mainVisualData.title}</h1>
+        <div style={heroStyles.content}>
+          <div style={heroStyles.titleContainer}>
+            <h1 style={heroStyles.title}>
+              {mainVisualData.title}
+            </h1>
+            <p style={heroStyles.subtitle}>
+              {mainVisualData.subtitle}
+            </p>
           </div>
           
-          {/* サブタイトル */}
-          <div style={heroStyles.subtitle}>
-            <h2 style={heroStyles.subtitleText} className="hero-subtitle-text">{mainVisualData.subtitle}</h2>
-          </div>
-          
-          {/* 診断開始ボタン */}
+          {/* CTAボタン */}
           <div style={heroStyles.buttonContainer}>
             <button 
-              style={heroStyles.button}
-              className="hero-button"
+              style={heroStyles.primaryButton}
+              className="hero-primary-button"
               onClick={onStartDiagnosis}
               aria-label="投資診断を開始する"
-              onMouseEnter={(e) => {
-                e.currentTarget.style.transform = 'translateY(-2px)';
-                e.currentTarget.style.boxShadow = '0 6px 20px rgba(59, 130, 246, 0.4)';
-                e.currentTarget.style.background = 'linear-gradient(135deg, #2563eb 0%, #7c3aed 100%)';
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.transform = 'translateY(0)';
-                e.currentTarget.style.boxShadow = '0 4px 15px rgba(59, 130, 246, 0.3)';
-                e.currentTarget.style.background = 'linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%)';
+            >
+              <span>無料で診断を始める</span>
+              <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                <path d="M7.5 5L12.5 10L7.5 15" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+            </button>
+            <button 
+              style={heroStyles.secondaryButton}
+              className="hero-secondary-button"
+              onClick={() => {
+                const section = document.getElementById('features-section');
+                if (section) section.scrollIntoView({ behavior: 'smooth' });
               }}
             >
-              <span>診断を始める</span>
+              <span>サービスを詳しく見る</span>
             </button>
           </div>
           
-          {/* 安心・安全メッセージ */}
+          {/* 特徴カード */}
           <div style={heroStyles.features}>
-            <div style={heroStyles.feature}>
-              <span style={heroStyles.featureText} className="hero-feature-text">SMS認証で安心・安全</span>
+            <div style={heroStyles.featureCard} className="hero-feature-card">
+              <div style={heroStyles.featureIcon}>🔒</div>
+              <h3 style={heroStyles.featureTitle}>SMS認証で安全</h3>
+              <p style={heroStyles.featureDescription}>
+                電話番号認証による高いセキュリティで、安心してご利用いただけます
+              </p>
             </div>
-            <div style={heroStyles.feature}>
-              <span style={heroStyles.featureText} className="hero-feature-text">14種類の投資商品から最適提案</span>
+            <div style={heroStyles.featureCard} className="hero-feature-card">
+              <div style={heroStyles.featureIcon}>📊</div>
+              <h3 style={heroStyles.featureTitle}>14種類の投資商品</h3>
+              <p style={heroStyles.featureDescription}>
+                あなたの目標やリスク許容度に合わせた最適な投資プランをご提案
+              </p>
             </div>
-            <div style={heroStyles.feature}>
-              <span style={heroStyles.featureText} className="hero-feature-text">専門家の紹介まで無料</span>
+            <div style={heroStyles.featureCard} className="hero-feature-card">
+              <div style={heroStyles.featureIcon}>👥</div>
+              <h3 style={heroStyles.featureTitle}>専門家のサポート</h3>
+              <p style={heroStyles.featureDescription}>
+                診断結果に基づいて、経験豊富な専門家を無料でご紹介します
+              </p>
             </div>
           </div>
-          
         </div>
-      </div>
-
-    </section>
+      </section>
     </>
   );
 };

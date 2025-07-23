@@ -36,24 +36,25 @@ const CallToActionSection: React.FC = () => {
   };
 
   return (
-    <section id="cta-section" className="py-16 px-4 text-center bg-white">
+    <section id="cta-section" className="py-16 px-4 text-center" style={{ background: 'linear-gradient(180deg, #0f172a 0%, #1e293b 100%)' }}>
       <div className="max-w-4xl mx-auto">
         <h3 
           className="text-2xl md:text-4xl lg:text-5xl mb-6 font-bold leading-tight"
           style={{
-            color: '#1e40af',
-            letterSpacing: '0.02em'
+            letterSpacing: '-0.02em'
           }}
         >
-            あなたの理想的な未来を<br />
-            <span style={{ 
-              color: '#3b82f6', 
-              fontWeight: '800'
+            <span style={{
+              background: 'linear-gradient(135deg, #60a5fa 0%, #c084fc 100%)',
+              WebkitBackgroundClip: 'text',
+              WebkitTextFillColor: 'transparent',
+              backgroundClip: 'text'
             }}>
+              あなたの理想的な未来を<br />
               今日から始めませんか？
             </span>
         </h3>
-        <p className="text-lg md:text-xl mb-8 text-gray-600 leading-relaxed">
+        <p className="text-lg md:text-xl mb-8 leading-relaxed" style={{ color: '#94a3b8' }}>
             経験豊富なプロフェッショナルが、あなたの人生設計に合わせた<br />
             最適な資産運用プランを無料でご提案いたします。
         </p>
@@ -62,33 +63,32 @@ const CallToActionSection: React.FC = () => {
           <button
             type="button"
             onClick={handleCTAButtonClick}
-            className={`bg-gradient-to-r hover:opacity-90 font-bold py-4 px-8 rounded-lg text-lg transition-all duration-300 transform hover:scale-105 shadow-lg`}
+            className="btn btn-gradient text-lg"
             style={{
-              backgroundColor: ctaButtonConfig.button_style.bg_color,
-              color: ctaButtonConfig.button_style.text_color
+              padding: '1rem 3rem',
+              fontSize: '1.125rem',
+              background: 'linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%)'
             }}
           >
-            <i className="fas fa-rocket mr-3"></i>
             {ctaButtonConfig.button_text}
           </button>
           
-          <p className="text-sm text-gray-500">
-            <i className="fas fa-phone mr-2"></i>
+          <p className="text-sm" style={{ color: '#64748b' }}>
             お電話でのご相談：{ctaButtonConfig.phone_number || '0120-XXX-XXX'}（平日 9:00-18:00）
           </p>
         </div>
         
         <div 
-          className="mt-10 p-6 md:p-8 rounded-2xl border-2 border-blue-200"
+          className="mt-10 p-6 md:p-8 rounded-2xl glass-dark"
           style={{ 
-            background: 'linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%)'
+            background: 'rgba(255, 255, 255, 0.05)',
+            border: '1px solid rgba(255, 255, 255, 0.1)'
           }}
         >
-            <h4 className="font-bold text-blue-800 mb-3 text-lg md:text-xl">
-                <i className="fas fa-gift mr-2"></i>
+            <h4 className="font-bold mb-3 text-lg md:text-xl" style={{ color: 'white' }}>
                 {consultationOffer.title}
             </h4>
-            <p className="text-blue-700">
+            <p style={{ color: '#94a3b8' }}>
                 {consultationOffer.description}
             </p>
         </div>

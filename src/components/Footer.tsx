@@ -107,32 +107,26 @@ const Footer: React.FC<FooterProps> = ({ onNavigateToAdminLogin }) => {
   return (
     <footer 
       id="footer"
-      className="bg-white py-12 px-4 border-t border-gray-200"
+      className="py-12 px-4"
       style={{
-        backgroundColor: '#ffffff',
-        paddingTop: '3rem',
-        paddingBottom: '3rem',
-        paddingLeft: '1rem',
-        paddingRight: '1rem',
-        borderTopWidth: '1px',
-        borderTopColor: '#e5e7eb',
-        borderTopStyle: 'solid'
+        background: 'linear-gradient(180deg, #0f172a 0%, #020617 100%)',
+        borderTop: '1px solid rgba(255, 255, 255, 0.1)'
       }}
       role="contentinfo"
     >
       <div className="container mx-auto px-3 sm:px-4 md:px-6 lg:px-8 max-w-7xl">
         <div className="flex items-center justify-center mb-8">
-            <h5 className="text-xl md:text-2xl lg:text-3xl font-bold text-blue-800">
+            <h5 className="text-xl md:text-2xl lg:text-3xl font-bold text-white">
               {footerData.siteName || 'AI ConnectX'}
             </h5>
         </div>
         
         <div className="text-center space-y-4">
-            <p className="text-sm sm:text-base md:text-lg text-gray-600 max-w-2xl mx-auto leading-relaxed">{footerData.description}</p>
+            <p className="text-sm sm:text-base md:text-lg text-gray-400 max-w-2xl mx-auto leading-relaxed">{footerData.description}</p>
             
             <div className="space-y-3">
-                <p className="text-sm sm:text-base md:text-lg text-gray-700 font-medium">{footerData.companyInfo}</p>
-                <p className="text-sm sm:text-base md:text-lg text-gray-700">{footerData.contactInfo}</p>
+                <p className="text-sm sm:text-base md:text-lg text-gray-300 font-medium">{footerData.companyInfo}</p>
+                <p className="text-sm sm:text-base md:text-lg text-gray-300">{footerData.contactInfo}</p>
                 <nav className="flex flex-wrap justify-center gap-2 sm:gap-4 md:gap-6 mt-6">
                     {legalLinks
                       .filter(link => link.is_active)
@@ -140,7 +134,7 @@ const Footer: React.FC<FooterProps> = ({ onNavigateToAdminLogin }) => {
                         <a 
                           key={link.id} 
                           href={sanitizeUrl(link.url)} 
-                          className="text-xs sm:text-sm md:text-base text-blue-600 hover:text-blue-800 transition-colors duration-200 hover:underline px-1"
+                          className="text-xs sm:text-sm md:text-base text-gray-400 hover:text-white transition-colors duration-200 hover:underline px-1"
                           target={link.url.startsWith('http') ? '_blank' : undefined}
                           rel={link.url.startsWith('http') ? 'noopener noreferrer' : undefined}
                         >
