@@ -1912,8 +1912,8 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
       <main className="flex-grow container mx-auto px-6 py-8">
         {/* Navigation between admin sections */}
         <div className="mb-8 p-4 bg-white rounded-lg shadow-md">
-            <h2 className="text-xl font-semibold text-gray-700 mb-3">管理メニュー</h2>
-            <div className="flex flex-wrap gap-2">
+            <h2 className="text-xl font-semibold text-gray-700 mb-3 text-center">管理メニュー</h2>
+            <div className="flex flex-wrap gap-2 justify-center">
                 <button 
                     onClick={() => setViewMode('userHistory')}
                     className={`admin-nav-button px-4 py-2 rounded-md text-sm font-medium transition-colors flex items-center justify-center ${viewMode === 'userHistory' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}`}
