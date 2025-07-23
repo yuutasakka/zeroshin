@@ -82,7 +82,7 @@ export const OneTimeUsageNotice: React.FC<OneTimeUsageNoticeProps> = ({ onDismis
             
             <a
               href="tel:0120-123-456"
-              className="w-full bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white font-semibold py-3 px-6 rounded-lg transition-all duration-200 transform hover:scale-105 inline-block text-center"
+              className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold py-3 px-6 rounded-lg transition-all duration-200 transform hover:scale-105 inline-block text-center"
             >
               <i className="fas fa-phone mr-2"></i>
               専門家に相談する

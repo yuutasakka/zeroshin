@@ -82,10 +82,10 @@ const ContentManagementPanel: React.FC<ContentManagementPanelProps> = ({ message
     try {
       setIsLoading(true);
       
-      // LocalStorageから既存のコンテンツデータを読み込み
-      const savedMainVisual = localStorage.getItem('homepage_main_visual');
-      const savedHeader = localStorage.getItem('homepage_header');
-      const savedFooter = localStorage.getItem('homepage_footer');
+      // sessionStorageから既存のコンテンツデータを読み込み
+      const savedMainVisual = sessionStorage.getItem('homepage_main_visual');
+      const savedHeader = sessionStorage.getItem('homepage_header');
+      const savedFooter = sessionStorage.getItem('homepage_footer');
 
       if (savedMainVisual || savedHeader || savedFooter) {
         setContentData({
@@ -105,10 +105,10 @@ const ContentManagementPanel: React.FC<ContentManagementPanelProps> = ({ message
     try {
       setIsLoading(true);
       
-      // LocalStorageに保存
-      localStorage.setItem('homepage_main_visual', JSON.stringify(contentData.mainVisual));
-      localStorage.setItem('homepage_header', JSON.stringify(contentData.header));
-      localStorage.setItem('homepage_footer', JSON.stringify(contentData.footer));
+      // sessionStorageに保存
+      sessionStorage.setItem('homepage_main_visual', JSON.stringify(contentData.mainVisual));
+      sessionStorage.setItem('homepage_header', JSON.stringify(contentData.header));
+      sessionStorage.setItem('homepage_footer', JSON.stringify(contentData.footer));
       
       messageHandlers.showSuccess('コンテンツが保存されました');
     } catch (error) {

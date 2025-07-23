@@ -60,10 +60,12 @@ const supabaseAnonKey = (() => {
   return key;
 })();
 
-console.log(' Supabaseクライアント初期化', { 
-  url: supabaseUrl, 
-  keyPrefix: supabaseAnonKey.substring(0, 10) + '...'
-});
+if (process.env.NODE_ENV !== 'production') {
+  console.log(' Supabaseクライアント初期化', { 
+    url: supabaseUrl, 
+    keyLength: supabaseAnonKey.length
+  });
+}
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
@@ -362,13 +364,8 @@ export class SupabaseAdminAuth {
       
       // bcryptハッシュかどうかを判定
       if (hash.startsWith('$2a$') || hash.startsWith('$2b$') || hash.startsWith('$2y$')) {
-        // ブラウザ環境ではbcryptを使用できないため、
-        // デフォルトパスワードのみ許可
-        if (password === 'Admin123!') {
-          // ハードコードされたbcryptハッシュと比較
-          const adminHash = '$2a$10$X5WZQwZRYXjKqJ0LQ8vJFuMWC2mchUZGgCi2RTiozKVfByx6kPvZG';
-          return hash === adminHash;
-        }
+        // ブラウザ環境ではbcryptを使用できないため、検証不可
+        console.error('bcryptハッシュの検証はサーバーサイドで実行する必要があります');
         return false;
       } 
       // 強化SHA-256（ソルト付き）の検証
@@ -438,13 +435,13 @@ export class DiagnosisSessionManager {
     this.supabase = supabase;
   }
 
-  // ローカルストレージのバックアップ機能
+  // セッションストレージのバックアップ機能
   private getLocalSessions(): any[] {
     try {
-      const stored = localStorage.getItem(this.STORAGE_KEY);
+      const stored = sessionStorage.getItem(this.STORAGE_KEY);
       return stored ? JSON.parse(stored) : [];
     } catch (error) {
-      console.error('ローカルセッション取得エラー:', error);
+      console.error('セッション取得エラー:', error);
       return [];
     }
   }
@@ -460,9 +457,9 @@ export class DiagnosisSessionManager {
         sessions.push(session);
       }
       
-      localStorage.setItem(this.STORAGE_KEY, JSON.stringify(sessions));
+      sessionStorage.setItem(this.STORAGE_KEY, JSON.stringify(sessions));
     } catch (error) {
-      console.error('ローカルセッション保存エラー:', error);
+      console.error('セッション保存エラー:', error);
     }
   }
 
@@ -476,7 +473,7 @@ export class DiagnosisSessionManager {
       
       return !error;
     } catch (error) {
-      console.warn('Supabase接続不可、ローカルストレージを使用:', error);
+      console.warn('Supabase接続不可、セッションストレージを使用:', error);
       return false;
     }
   }
@@ -500,7 +497,7 @@ export class DiagnosisSessionManager {
         }
       }
       
-      // フォールバック: ローカルストレージをチェック
+      // フォールバック: セッションストレージをチェック
       const localSessions = this.getLocalSessions();
       return localSessions.some(session => 
         session.phone_number === phoneNumber && session.sms_verified === true // +81形式で比較
@@ -508,7 +505,7 @@ export class DiagnosisSessionManager {
     } catch (error) {
       console.error('電話番号重複チェック例外:', error);
       
-      // ローカルストレージのフォールバック
+      // セッションストレージのフォールバック
       const localSessions = this.getLocalSessions();
       return localSessions.some(session => 
         session.phone_number === phoneNumber && session.sms_verified === true // +81形式で比較
@@ -539,20 +536,20 @@ export class DiagnosisSessionManager {
           .single();
 
         if (!error && data) {
-          // ローカルストレージにもバックアップ
+          // セッションストレージにもバックアップ
           this.saveToLocalStorage(sessionData);
           return data.session_id;
         }
       }
       
-      // フォールバック: ローカルストレージのみ
-      console.warn('Supabase利用不可、ローカルストレージに保存');
+      // フォールバック: セッションストレージのみ
+      console.warn('Supabase利用不可、セッションストレージに保存');
       this.saveToLocalStorage(sessionData);
       return sessionId;
     } catch (error) {
       console.error('診断セッション作成例外:', error);
       
-      // エラー時もローカルストレージにフォールバック
+      // エラー時もセッションストレージにフォールバック
       const sessionId = `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
       const sessionData = {
         phone_number: phoneNumber, // +81形式のまま保存
@@ -590,20 +587,20 @@ export class DiagnosisSessionManager {
           const sessionIndex = sessions.findIndex(s => s.session_id === sessionId);
           if (sessionIndex >= 0) {
             sessions[sessionIndex] = { ...sessions[sessionIndex], ...updateData };
-            localStorage.setItem(this.STORAGE_KEY, JSON.stringify(sessions));
+            sessionStorage.setItem(this.STORAGE_KEY, JSON.stringify(sessions));
           }
           return true;
         }
       }
       
-      // フォールバック: ローカルストレージのみ更新
-      console.warn('Supabase利用不可、ローカルストレージを更新');
+      // フォールバック: セッションストレージのみ更新
+      console.warn('Supabase利用不可、セッションストレージを更新');
       const sessions = this.getLocalSessions();
       const sessionIndex = sessions.findIndex(s => s.session_id === sessionId);
       
       if (sessionIndex >= 0) {
         sessions[sessionIndex] = { ...sessions[sessionIndex], ...updateData };
-        localStorage.setItem(this.STORAGE_KEY, JSON.stringify(sessions));
+        sessionStorage.setItem(this.STORAGE_KEY, JSON.stringify(sessions));
         return true;
       }
       
@@ -611,14 +608,14 @@ export class DiagnosisSessionManager {
     } catch (error) {
       console.error('セッション認証更新例外:', error);
       
-      // エラー時もローカルストレージで試行
+      // エラー時もセッションストレージで試行
       const sessions = this.getLocalSessions();
       const sessionIndex = sessions.findIndex(s => s.session_id === sessionId);
       
       if (sessionIndex >= 0) {
         sessions[sessionIndex].sms_verified = true;
         sessions[sessionIndex].verification_timestamp = new Date().toISOString();
-        localStorage.setItem(this.STORAGE_KEY, JSON.stringify(sessions));
+        sessionStorage.setItem(this.STORAGE_KEY, JSON.stringify(sessions));
         return true;
       }
       
@@ -803,7 +800,7 @@ export class DiagnosisSessionManager {
       
       return {
         database: session,
-        localStorage: localSession,
+        sessionStorage: localSession,
         isSupabaseAvailable: await this.isSupabaseAvailable(),
         comparison: {
           bothExist: !!session && !!localSession,
@@ -816,7 +813,7 @@ export class DiagnosisSessionManager {
       return {
         error: error instanceof Error ? error.message : 'Unknown error',
         database: null,
-        localStorage: null,
+        sessionStorage: null,
         isSupabaseAvailable: false
       };
     }
@@ -1201,7 +1198,7 @@ export class AdminPasswordReset {
       const { data: { user } } = await supabase.auth.getUser();
       if (user) {
         // admin_credentialsテーブルのパスワードハッシュも更新
-        const passwordHash = CryptoJS.PBKDF2(newPassword, 'ai-conectx-salt-2024', {
+        const passwordHash = CryptoJS.PBKDF2(newPassword, 'ai-connectx-salt-2024', {
           keySize: 256/32,
           iterations: 10000
         }).toString();
@@ -1517,7 +1514,7 @@ export class AdminEmailAuth {
       /123/,
       /qwerty/i,
       /abc/i,
-      /ai.conectx/i // アプリ名を含むパスワードを禁止
+      /ai.connectx/i // アプリ名を含むパスワードを禁止
     ];
     
     const hasWeakPattern = weakPatterns.some(pattern => pattern.test(password));
@@ -1740,7 +1737,7 @@ export class AdminSMSAuth {
       console.log(' SMS認証コード送信', {
         to: phoneNumber,
         code: smsCode,
-        message: `AI ConectX管理者認証コード: ${smsCode} (10分間有効)`
+        message: `AI ConnectX管理者認証コード: ${smsCode} (10分間有効)`
       });
 
       return { success: true };

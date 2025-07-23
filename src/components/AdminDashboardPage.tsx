@@ -37,7 +37,7 @@ interface AdminDashboardPageProps {
   onNavigateHome: () => void;
 }
 
-type AdminViewMode = 'userHistory' | 'productSettings' | 'testimonialSettings' | 'analyticsSettings' | 'notificationSettings' | 'legalLinksSettings' | 'adminSettings' | 'homepageContentSettings' | 'headerAndVisualSettings' | 'securitySettings' | 'expertContactSettings' | 'financialPlannersSettings' | 'approvalRequests';
+type AdminViewMode = 'userHistory' | 'productSettings' | 'testimonialSettings' | 'analyticsSettings' | 'notificationSettings' | 'legalLinksSettings' | 'adminSettings' | 'homepageContentSettings' | 'headerAndVisualSettings' | 'securitySettings' | 'expertContactSettings' | 'financialPlannersSettings' | 'approvalRequests' | 'securityTrustSettings';
 
 interface FinancialPlanner {
   id?: number;
@@ -118,20 +118,31 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
 
   // 専門家設定のstate
   const [expertContact, setExpertContact] = useState({
-    expert_name: 'AI ConectX専門アドバイザー',
+    expert_name: 'AI ConnectX専門アドバイザー',
     phone_number: '0120-123-456',
     email: 'advisor@aiconectx.co.jp',
     line_url: '',
     business_hours: '平日 9:00-18:00',
-    description: 'AI ConectXの認定ファイナンシャルプランナーが、お客様の資産運用に関するご相談を承ります。'
+    description: 'AI ConnectXの認定ファイナンシャルプランナーが、お客様の資産運用に関するご相談を承ります。'
   });
   const [expertContactStatus, setExpertContactStatus] = useState<string>('');
 
   // ファイナンシャルプランナー設定のstate
   const [financialPlanners, setFinancialPlanners] = useState<FinancialPlanner[]>([]);
+  
+  // 安心・安全への取り組み設定
+  const [securityTrustItems, setSecurityTrustItems] = useState<Array<{
+    id?: string;
+    iconClass: string;
+    title: string;
+    description: string;
+    display_order: number;
+    is_active: boolean;
+  }>>([]);
   const [editingPlanner, setEditingPlanner] = useState<FinancialPlanner | null>(null);
   const [showPlannerModal, setShowPlannerModal] = useState<boolean>(false);
   const [plannerStatus, setPlannerStatus] = useState<string>('');
+  const [securityTrustStatus, setSecurityTrustStatus] = useState<string>('');
   
   // 画像アップロード関連のstate
   const [isUploadingImage, setIsUploadingImage] = useState<boolean>(false);
@@ -239,12 +250,12 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
       
       // デフォルト値を使用
       const defaultExpertContact = {
-        expert_name: 'AI ConectX専門アドバイザー',
+        expert_name: 'AI ConnectX専門アドバイザー',
         phone_number: '0120-123-456',
         email: 'advisor@aiconectx.co.jp',
         line_url: '',
         business_hours: '平日 9:00-18:00',
-        description: 'AI ConectXの認定ファイナンシャルプランナーが、お客様の資産運用に関するご相談を承ります。'
+        description: 'AI ConnectXの認定ファイナンシャルプランナーが、お客様の資産運用に関するご相談を承ります。'
       };
       setExpertContact(defaultExpertContact);
       secureLog('デフォルト専門家連絡先を使用');
@@ -253,12 +264,12 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
       
       // エラー時はデフォルト値を使用
       setExpertContact({
-        expert_name: 'AI ConectX専門アドバイザー',
+        expert_name: 'AI ConnectX専門アドバイザー',
         phone_number: '0120-123-456',
         email: 'advisor@aiconectx.co.jp',
         line_url: '',
         business_hours: '平日 9:00-18:00',
-        description: 'AI ConectXの認定ファイナンシャルプランナーが、お客様の資産運用に関するご相談を承ります。'
+        description: 'AI ConnectXの認定ファイナンシャルプランナーが、お客様の資産運用に関するご相談を承ります。'
       });
     }
   };
@@ -288,6 +299,61 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
     } catch (error) {
       secureLog('ファイナンシャルプランナーの読み込みエラー:', error);
       setFinancialPlanners([]);
+    }
+  };
+
+  // 安心・安全への取り組みデータを読み込む
+  const loadSecurityTrustItems = async () => {
+    try {
+      if (supabaseConfig.url && supabaseConfig.key && !supabaseConfig.url.includes('your-project')) {
+        const response = await fetch(`${supabaseConfig.url}/rest/v1/security_trust_settings?order=display_order.asc`, {
+          headers: {
+            'Authorization': `Bearer ${supabaseConfig.key}`,
+            'apikey': supabaseConfig.key,
+            'Content-Type': 'application/json'
+          }
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          const formattedData = data.map((item: any) => ({
+            id: item.id,
+            iconClass: item.icon_class,
+            title: item.title,
+            description: item.description,
+            display_order: item.display_order || 0,
+            is_active: item.is_active !== false
+          }));
+          setSecurityTrustItems(formattedData);
+          secureLog('安心・安全への取り組みデータを読み込み:', formattedData.length);
+        } else {
+          secureLog('安心・安全への取り組みデータの読み込みに失敗');
+          // デフォルトデータを設定
+          setSecurityTrustItems([
+            { iconClass: 'fas fa-lock', title: 'SSL暗号化', description: '最高水準のセキュリティでお客様の情報を保護', display_order: 1, is_active: true },
+            { iconClass: 'fas fa-university', title: '金融庁登録', description: '関東財務局長（金商）登録済み', display_order: 2, is_active: true },
+            { iconClass: 'fas fa-certificate', title: 'プライバシーマーク', description: '個人情報保護の第三者認証取得', display_order: 3, is_active: true },
+            { iconClass: 'fas fa-comment-slash', title: '営業電話なし', description: 'お客様からのご依頼がない限り連絡いたしません', display_order: 4, is_active: true }
+          ]);
+        }
+      } else {
+        // デフォルトデータを設定
+        setSecurityTrustItems([
+          { iconClass: 'fas fa-lock', title: 'SSL暗号化', description: '最高水準のセキュリティでお客様の情報を保護', display_order: 1, is_active: true },
+          { iconClass: 'fas fa-university', title: '金融庁登録', description: '関東財務局長（金商）登録済み', display_order: 2, is_active: true },
+          { iconClass: 'fas fa-certificate', title: 'プライバシーマーク', description: '個人情報保護の第三者認証取得', display_order: 3, is_active: true },
+          { iconClass: 'fas fa-comment-slash', title: '営業電話なし', description: 'お客様からのご依頼がない限り連絡いたしません', display_order: 4, is_active: true }
+        ]);
+      }
+    } catch (error) {
+      secureLog('安心・安全への取り組みデータの読み込みエラー:', error);
+      // デフォルトデータを設定
+      setSecurityTrustItems([
+        { iconClass: 'fas fa-lock', title: 'SSL暗号化', description: '最高水準のセキュリティでお客様の情報を保護', display_order: 1, is_active: true },
+        { iconClass: 'fas fa-university', title: '金融庁登録', description: '関東財務局長（金商）登録済み', display_order: 2, is_active: true },
+        { iconClass: 'fas fa-certificate', title: 'プライバシーマーク', description: '個人情報保護の第三者認証取得', display_order: 3, is_active: true },
+        { iconClass: 'fas fa-comment-slash', title: '営業電話なし', description: 'お客様からのご依頼がない限り連絡いたしません', display_order: 4, is_active: true }
+      ]);
     }
   };
 
@@ -370,7 +436,7 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
       // 複数の認証状態を確認
       const session = SecureStorage.getSecureItem('admin_session');
       const sessionAuth = sessionStorage.getItem('admin_authenticated');
-      const forceAuth = localStorage.getItem('force_admin_logged_in');
+      const forceAuth = sessionStorage.getItem('force_admin_logged_in');
       
       // セッション情報が全くない場合
       if (!session && sessionAuth !== 'true' && forceAuth !== 'true') {
@@ -386,9 +452,9 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
         if (session.expires && now > session.expires) {
           secureLog('セッションの有効期限が切れています');
           setSessionValid(false);
-          localStorage.removeItem('admin_session');
+          sessionStorage.removeItem('admin_session');
           sessionStorage.removeItem('admin_authenticated');
-          localStorage.removeItem('force_admin_logged_in');
+          sessionStorage.removeItem('force_admin_logged_in');
           return false;
         }
 
@@ -407,9 +473,9 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
       secureLog('セッションデータの解析エラー:', error);
       setSessionValid(false);
       // エラー時は全認証情報をクリア
-      localStorage.removeItem('admin_session');
+      sessionStorage.removeItem('admin_session');
       sessionStorage.removeItem('admin_authenticated');
-      localStorage.removeItem('force_admin_logged_in');
+      sessionStorage.removeItem('force_admin_logged_in');
       return false;
     }
   };
@@ -483,7 +549,7 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
         }
 
         // 2. ローカルストレージから従来のセッションデータを取得（後方互換性）
-        const storedSessionsString = localStorage.getItem('userSessions');
+        const storedSessionsString = sessionStorage.getItem('userSessions');
         if (storedSessionsString) {
           try {
             const storedSessions: UserSessionData[] = JSON.parse(storedSessionsString);
@@ -492,7 +558,7 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
             const newStoredSessions = storedSessions.filter(s => !existingIds.has(s.id));
             allSessions = [...allSessions, ...newStoredSessions];
           } catch (e) {
-            secureLog("Error parsing user sessions from localStorage:", e);
+            secureLog("Error parsing user sessions from sessionStorage:", e);
           }
         }
 
@@ -508,7 +574,7 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
         
         // エラー時はローカルストレージのみ使用
         try {
-          const storedSessionsString = localStorage.getItem('userSessions');
+          const storedSessionsString = sessionStorage.getItem('userSessions');
           if (storedSessionsString) {
             const storedSessions: UserSessionData[] = JSON.parse(storedSessionsString);
             setUserSessions(storedSessions);
@@ -727,6 +793,7 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
 
       // Load financial planners
       await loadFinancialPlanners();
+      await loadSecurityTrustItems();
     };
 
     loadAllSettings();
@@ -1282,6 +1349,7 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
           setPlannerStatus(' 削除されました');
           console.log('プランナー削除成功:', plannerId);
           await loadFinancialPlanners();
+      await loadSecurityTrustItems();
         } else {
           const errorText = await response.text();
           console.error('削除エラー:', response.status, errorText);
@@ -1310,6 +1378,113 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
       }
       
       setTimeout(() => setPlannerStatus(''), 3000);
+    }
+  };
+
+  // 安心・安全への取り組み保存機能
+  const handleSaveSecurityTrustItems = async () => {
+    console.log('安心・安全への取り組み保存開始');
+    setSecurityTrustStatus('保存中...');
+    
+    try {
+      // SupabaseAdminAPIを使用して保存
+      const success = await SupabaseAdminAPI.saveAdminSetting('security_trust_items', {
+        items: securityTrustItems
+      });
+
+      if (success) {
+        // Supabase直接アクセスも試行
+        if (supabaseConfig.url && supabaseConfig.key && !supabaseConfig.url.includes('your-project')) {
+          for (const item of securityTrustItems) {
+            const payload = {
+              icon_class: item.iconClass,
+              title: item.title,
+              description: item.description,
+              display_order: item.display_order,
+              is_active: item.is_active
+            };
+
+            try {
+              if (item.id) {
+                // 更新
+                const response = await fetch(`${supabaseConfig.url}/rest/v1/security_trust_settings?id=eq.${item.id}`, {
+                  method: 'PATCH',
+                  headers: {
+                    'Authorization': `Bearer ${supabaseConfig.key}`,
+                    'apikey': supabaseConfig.key,
+                    'Content-Type': 'application/json',
+                    'Prefer': 'return=representation'
+                  },
+                  body: JSON.stringify(payload)
+                });
+
+                if (!response.ok) {
+                  console.error(`更新エラー: ${response.status}`);
+                }
+              } else {
+                // 新規作成
+                const response = await fetch(`${supabaseConfig.url}/rest/v1/security_trust_settings`, {
+                  method: 'POST',
+                  headers: {
+                    'Authorization': `Bearer ${supabaseConfig.key}`,
+                    'apikey': supabaseConfig.key,
+                    'Content-Type': 'application/json',
+                    'Prefer': 'return=representation'
+                  },
+                  body: JSON.stringify(payload)
+                });
+
+                if (!response.ok) {
+                  console.error(`作成エラー: ${response.status}`);
+                }
+              }
+            } catch (error) {
+              console.error('個別アイテムの保存エラー:', error);
+            }
+          }
+        }
+
+        setSecurityTrustStatus('保存されました');
+        setTimeout(() => setSecurityTrustStatus(''), 3000);
+        await loadSecurityTrustItems();
+      } else {
+        setSecurityTrustStatus('保存に失敗しました');
+        setTimeout(() => setSecurityTrustStatus(''), 3000);
+      }
+    } catch (error) {
+      console.error('安心・安全への取り組み保存エラー:', error);
+      setSecurityTrustStatus('保存に失敗しました');
+      setTimeout(() => setSecurityTrustStatus(''), 3000);
+    }
+  };
+
+  // 安心・安全への取り組みアイテム削除
+  const handleDeleteSecurityTrustItem = async (itemId: string) => {
+    if (!confirm('このアイテムを削除しますか？')) return;
+
+    try {
+      if (supabaseConfig.url && supabaseConfig.key && !supabaseConfig.url.includes('your-project') && itemId) {
+        const response = await fetch(`${supabaseConfig.url}/rest/v1/security_trust_settings?id=eq.${itemId}`, {
+          method: 'DELETE',
+          headers: {
+            'Authorization': `Bearer ${supabaseConfig.key}`,
+            'apikey': supabaseConfig.key
+          }
+        });
+
+        if (response.ok) {
+          await loadSecurityTrustItems();
+          alert('削除されました');
+        } else {
+          throw new Error('削除に失敗しました');
+        }
+      } else {
+        // ローカルで削除
+        setSecurityTrustItems(prev => prev.filter(item => item.id !== itemId));
+      }
+    } catch (error) {
+      console.error('削除エラー:', error);
+      alert('削除に失敗しました');
     }
   };
 
@@ -1482,6 +1657,7 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
   };
 
   const handleSaveHomepageContentSettings = async () => {
+    console.log('ホームページコンテンツ保存開始');
     setHomepageContentStatus(' ホームページコンテンツを保存中...');
     
     try {
@@ -1549,7 +1725,7 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
       
       // Basic validation for the channel
       const config = notificationSettings[channel];
-      const testMessage = 'AI ConectX管理システムからのテスト通知です。';
+      const testMessage = 'AI ConnectX管理システムからのテスト通知です。';
       
       switch (channel) {
         case 'email': {
@@ -1900,6 +2076,12 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
                     className={`admin-nav-button px-4 py-2 rounded-md text-sm font-medium transition-colors flex items-center justify-center ${viewMode === 'homepageContentSettings' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}`}
                 >
                         <span>ホームページコンテンツ設定</span>
+                </button>
+                <button 
+                    onClick={() => setViewMode('securityTrustSettings')}
+                    className={`admin-nav-button px-4 py-2 rounded-md text-sm font-medium transition-colors flex items-center justify-center ${viewMode === 'securityTrustSettings' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}`}
+                >
+                        <span>安心・安全への取り組み</span>
                 </button>
                                  <button 
                      onClick={() => setViewMode('headerAndVisualSettings')}
@@ -2984,7 +3166,7 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
                                     value={headerData.title}
                                     onChange={(e) => handleHeaderDataChange('title', e.target.value)}
                                     className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                                    placeholder="例: AI ConectX"
+                                    placeholder="例: AI ConnectX"
                                 />
                             </div>
                             
@@ -3082,7 +3264,7 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
                                         value={footerData.siteName}
                                         onChange={(e) => handleFooterDataChange('siteName', e.target.value)}
                                         className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
-                                        placeholder="例: AI ConectX"
+                                        placeholder="例: AI ConnectX"
                                     />
                                 </div>
                                 
@@ -3135,7 +3317,7 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
                                     value={footerData.copyright}
                                     onChange={(e) => handleFooterDataChange('copyright', e.target.value)}
                                     className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
-                                    placeholder="例: AI ConectX. All rights reserved."
+                                    placeholder="例: AI ConnectX. All rights reserved."
                                 />
                                 <p className="text-xs text-gray-500 mt-1">
                                     年号は自動で挿入されます（© 2024 の部分）
@@ -3522,7 +3704,7 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
                 </div>
 
                 {/* セキュリティAPI統合（新機能） - 非表示
-                <div className="bg-gradient-to-br from-green-50 to-emerald-100 p-6 rounded-xl shadow-md border border-green-200 mt-6">
+                <div className="bg-gradient-to-br from-blue-50 to-purple-100 p-6 rounded-xl shadow-md border border-blue-200 mt-6">
                     <div className="flex items-center justify-center w-12 h-12 bg-green-500 rounded-lg mb-4 mx-auto">
                         <i className="fas fa-plug text-white text-xl"></i>
                     </div>
@@ -4004,7 +4186,7 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
                             type="text"
                             value={expertContact.expert_name}
                             onChange={(e) => handleExpertContactChange('expert_name', e.target.value)}
-                            placeholder="AI ConectX専門アドバイザー"
+                            placeholder="AI ConnectX専門アドバイザー"
                             className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
                         />
                     </div>
@@ -4072,7 +4254,7 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
                     <textarea
                         value={expertContact.description}
                         onChange={(e) => handleExpertContactChange('description', e.target.value)}
-                        placeholder="AI ConectXの認定ファイナンシャルプランナーが、お客様の資産運用に関するご相談を承ります。"
+                        placeholder="AI ConnectXの認定ファイナンシャルプランナーが、お客様の資産運用に関するご相談を承ります。"
                         rows={3}
                         className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
                     />
@@ -4085,14 +4267,14 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
                     <div className="bg-white border border-gray-200 rounded-lg p-4">
                         <h4 className="font-semibold text-gray-800 mb-2">📞 専門家による個別相談をご利用ください</h4>
                         <div className="text-sm text-gray-600 space-y-1">
-                            <p><strong>担当者:</strong> {expertContact.expert_name || 'AI ConectX専門アドバイザー'}</p>
+                            <p><strong>担当者:</strong> {expertContact.expert_name || 'AI ConnectX専門アドバイザー'}</p>
                             <p><strong>電話番号:</strong> {expertContact.phone_number || '0120-123-456'}</p>
                             {expertContact.line_url && <p><strong>LINE:</strong> 公式アカウントで相談可能</p>}
                             <p><strong>受付時間:</strong> {expertContact.business_hours || '平日 9:00-18:00'}</p>
                             {expertContact.email && <p><strong>メール:</strong> {expertContact.email}</p>}
                         </div>
                         <p className="text-sm text-gray-600 mt-2">
-                            {expertContact.description || 'AI ConectXの認定ファイナンシャルプランナーが、お客様の資産運用に関するご相談を承ります。'}
+                            {expertContact.description || 'AI ConnectXの認定ファイナンシャルプランナーが、お客様の資産運用に関するご相談を承ります。'}
                         </p>
                     </div>
                 </div>
@@ -4102,6 +4284,159 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
                     className="mt-6 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-6 rounded-lg shadow-md transition duration-150 ease-in-out flex items-center justify-center"
                 >
                     <i className="fas fa-save mr-2"></i>専門家設定を保存
+                </button>
+            </div>
+        )}
+
+        {viewMode === 'securityTrustSettings' && (
+            <div className="bg-white p-6 md:p-8 rounded-xl shadow-2xl">
+                <h2 className="text-2xl font-bold text-gray-800 mb-6 flex items-center">
+                    <i className="fas fa-shield-alt mr-3 text-green-600"></i>安心・安全への取り組み設定
+                </h2>
+
+                <div className="mb-6">
+                    <button
+                        onClick={() => {
+                            const newItem = {
+                                iconClass: 'fas fa-check',
+                                title: '新しい項目',
+                                description: '説明を入力してください',
+                                display_order: securityTrustItems.length + 1,
+                                is_active: true
+                            };
+                            setSecurityTrustItems([...securityTrustItems, newItem]);
+                        }}
+                        className="bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-4 rounded-lg shadow-md transition duration-150 ease-in-out flex items-center"
+                    >
+                        <i className="fas fa-plus mr-2"></i>新規項目を追加
+                    </button>
+                </div>
+
+                <div className="space-y-4">
+                    {securityTrustItems.map((item, index) => (
+                        <div key={item.id || index} className="bg-gray-50 p-4 rounded-lg border border-gray-200">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                                        アイコンクラス
+                                    </label>
+                                    <input
+                                        type="text"
+                                        value={item.iconClass}
+                                        onChange={(e) => {
+                                            const updatedItems = [...securityTrustItems];
+                                            updatedItems[index].iconClass = e.target.value;
+                                            setSecurityTrustItems(updatedItems);
+                                        }}
+                                        placeholder="fas fa-lock"
+                                        className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500"
+                                    />
+                                </div>
+
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                                        タイトル
+                                    </label>
+                                    <input
+                                        type="text"
+                                        value={item.title}
+                                        onChange={(e) => {
+                                            const updatedItems = [...securityTrustItems];
+                                            updatedItems[index].title = e.target.value;
+                                            setSecurityTrustItems(updatedItems);
+                                        }}
+                                        placeholder="SSL暗号化"
+                                        className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500"
+                                    />
+                                </div>
+
+                                <div className="md:col-span-2">
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                                        説明
+                                    </label>
+                                    <textarea
+                                        value={item.description}
+                                        onChange={(e) => {
+                                            const updatedItems = [...securityTrustItems];
+                                            updatedItems[index].description = e.target.value;
+                                            setSecurityTrustItems(updatedItems);
+                                        }}
+                                        placeholder="最高水準のセキュリティでお客様の情報を保護"
+                                        rows={2}
+                                        className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500"
+                                    />
+                                </div>
+
+                                <div className="flex items-center gap-4">
+                                    <div className="flex-1">
+                                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                                            表示順
+                                        </label>
+                                        <input
+                                            type="number"
+                                            value={item.display_order}
+                                            onChange={(e) => {
+                                                const updatedItems = [...securityTrustItems];
+                                                updatedItems[index].display_order = parseInt(e.target.value) || 0;
+                                                setSecurityTrustItems(updatedItems);
+                                            }}
+                                            min="1"
+                                            className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500"
+                                        />
+                                    </div>
+
+                                    <div className="flex items-center">
+                                        <label className="flex items-center cursor-pointer">
+                                            <input
+                                                type="checkbox"
+                                                checked={item.is_active}
+                                                onChange={(e) => {
+                                                    const updatedItems = [...securityTrustItems];
+                                                    updatedItems[index].is_active = e.target.checked;
+                                                    setSecurityTrustItems(updatedItems);
+                                                }}
+                                                className="mr-2 h-4 w-4 text-green-600 focus:ring-green-500 border-gray-300 rounded"
+                                            />
+                                            <span className="text-sm font-medium text-gray-700">有効</span>
+                                        </label>
+                                    </div>
+
+                                    <button
+                                        onClick={() => {
+                                            if (item.id) {
+                                                handleDeleteSecurityTrustItem(item.id);
+                                            } else {
+                                                const updatedItems = securityTrustItems.filter((_, i) => i !== index);
+                                                setSecurityTrustItems(updatedItems);
+                                            }
+                                        }}
+                                        className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg text-sm flex items-center gap-2"
+                                    >
+                                        <i className="fas fa-trash"></i>
+                                        削除
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div className="mt-3 flex items-center gap-2 text-sm text-gray-600">
+                                <i className={item.iconClass}></i>
+                                <span>プレビュー: {item.title}</span>
+                            </div>
+                        </div>
+                    ))}
+                </div>
+
+                {securityTrustStatus && (
+                    <div className="mt-4 mb-4 p-3 bg-blue-100 border border-blue-400 text-blue-700 rounded-lg">
+                        {securityTrustStatus}
+                    </div>
+                )}
+
+                <button
+                    onClick={handleSaveSecurityTrustItems}
+                    className="mt-6 bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-6 rounded-lg shadow-md transition duration-150 ease-in-out flex items-center justify-center"
+                >
+                    <i className="fas fa-save mr-2"></i>安心・安全への取り組みを保存
                 </button>
             </div>
         )}
@@ -4153,7 +4488,7 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
 
       <footer className="bg-gray-200 text-center py-4 mt-auto">
         <p className="text-xs text-gray-600">
-          &copy; {new Date().getFullYear()} AI ConectX Admin Dashboard.
+          &copy; {new Date().getFullYear()} AI ConnectX Admin Dashboard.
         </p>
       </footer>
     </div>

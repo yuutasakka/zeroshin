@@ -2,7 +2,7 @@
 
 /**
  * セキュアな環境変数キー生成ツール
- * AI ConectX プロジェクト用
+ * AI ConnectX プロジェクト用
  * 
  * 使用方法:
  * node scripts/generate-env-keys.js
@@ -10,7 +10,7 @@
 
 import crypto from 'crypto';
 
-console.log('🔐 AI ConectX - セキュアキー生成ツール');
+console.log('🔐 AI ConnectX - セキュアキー生成ツール');
 console.log('=====================================\n');
 
 // 32文字の安全なランダム文字列を生成

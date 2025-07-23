@@ -170,22 +170,15 @@ export function hasCryptoJS(): boolean {
          window.CryptoJS !== undefined;
 }
 
-// localStorage/sessionStorage型安全アクセス
+// localStorage機能を無効化（セキュリティのため）
 export function safeGetLocalStorage(key: string): string | null {
-  try {
-    return localStorage.getItem(key);
-  } catch {
-    return null;
-  }
+  console.warn('localStorage機能は無効化されています（セキュリティのため）');
+  return null;
 }
 
 export function safeSetLocalStorage(key: string, value: string): boolean {
-  try {
-    localStorage.setItem(key, value);
-    return true;
-  } catch {
-    return false;
-  }
+  console.warn('localStorage機能は無効化されています（セキュリティのため）');
+  return false;
 }
 
 export function safeParseJSON<T>(

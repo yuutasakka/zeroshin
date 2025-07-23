@@ -134,7 +134,8 @@
             
             console.log('送信データ:', formData);
             
-            messageDiv.innerHTML = '<div class="success">送信中...</div>';
+            messageDiv.textContent = '送信中...';
+            messageDiv.className = 'success';
             resultDiv.style.display = 'none';
             
             try {
@@ -151,20 +152,31 @@
                 console.log('APIレスポンス:', data);
                 
                 if (response.ok && data.success) {
-                    messageDiv.innerHTML = '<div class="success">✅ SMS送信成功！認証コードが送信されました。</div>';
+                    messageDiv.textContent = '✅ SMS送信成功！認証コードが送信されました。';
+                    messageDiv.className = 'success';
                     resultDiv.style.display = 'block';
-                    resultDiv.innerHTML = `
-                        <h3>送信完了</h3>
-                        <p>メッセージID: ${data.debug.messageSid}</p>
-                        <p>ステータス: ${data.debug.status}</p>
-                        <p>電話番号 ${formData.phoneNumber} に認証コードを送信しました。</p>
-                    `;
+                    // 安全なDOM操作
+                    resultDiv.textContent = '';
+                    const h3 = document.createElement('h3');
+                    h3.textContent = '送信完了';
+                    const p1 = document.createElement('p');
+                    p1.textContent = `メッセージID: ${data.debug.messageSid}`;
+                    const p2 = document.createElement('p');
+                    p2.textContent = `ステータス: ${data.debug.status}`;
+                    const p3 = document.createElement('p');
+                    p3.textContent = `電話番号 ${formData.phoneNumber} に認証コードを送信しました。`;
+                    resultDiv.appendChild(h3);
+                    resultDiv.appendChild(p1);
+                    resultDiv.appendChild(p2);
+                    resultDiv.appendChild(p3);
                 } else {
-                    messageDiv.innerHTML = `<div class="error">❌ エラー: ${data.error || 'SMS送信に失敗しました'}</div>`;
+                    messageDiv.textContent = `❌ エラー: ${data.error || 'SMS送信に失敗しました'}`;
+                    messageDiv.className = 'error';
                 }
             } catch (error) {
                 console.error('エラー:', error);
-                messageDiv.innerHTML = `<div class="error">❌ 通信エラー: ${error.message}</div>`;
+                messageDiv.textContent = `❌ 通信エラー: ${error.message}`;
+                messageDiv.className = 'error';
             }
         });
     </script>

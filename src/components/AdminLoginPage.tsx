@@ -48,7 +48,7 @@ const AdminLoginPage: React.FC<AdminLoginPageProps> = ({ onLogin, onNavigateHome
   // ロックアウト状態チェック
   useEffect(() => {
     const checkLockout = () => {
-      const lockoutData = localStorage.getItem('admin_lockout');
+      const lockoutData = sessionStorage.getItem('admin_lockout');
       if (lockoutData) {
         const { until, attempts } = JSON.parse(lockoutData);
         const now = Date.now();
@@ -59,7 +59,7 @@ const AdminLoginPage: React.FC<AdminLoginPageProps> = ({ onLogin, onNavigateHome
           setLoginAttempts(attempts);
         } else {
           // ロックアウト期間終了
-          localStorage.removeItem('admin_lockout');
+          sessionStorage.removeItem('admin_lockout');
           setIsLocked(false);
           setLockoutTime(null);
           setLoginAttempts(0);
@@ -75,7 +75,7 @@ const AdminLoginPage: React.FC<AdminLoginPageProps> = ({ onLogin, onNavigateHome
   // ロックアウト設定
   const setLockout = (attempts: number) => {
     const lockoutUntil = Date.now() + LOCKOUT_DURATION;
-    localStorage.setItem('admin_lockout', JSON.stringify({
+    sessionStorage.setItem('admin_lockout', JSON.stringify({
       until: lockoutUntil,
       attempts: attempts
     }));
@@ -300,7 +300,7 @@ const AdminLoginPage: React.FC<AdminLoginPageProps> = ({ onLogin, onNavigateHome
     e.preventDefault();
     
     // ロックアウト状態を再チェック
-    const lockoutData = localStorage.getItem('admin_lockout');
+    const lockoutData = sessionStorage.getItem('admin_lockout');
     if (lockoutData) {
       const { until } = JSON.parse(lockoutData);
       if (Date.now() < until) {
@@ -309,7 +309,7 @@ const AdminLoginPage: React.FC<AdminLoginPageProps> = ({ onLogin, onNavigateHome
         return;
       } else {
         // ロックアウト期間が終了していたらクリア
-        localStorage.removeItem('admin_lockout');
+        sessionStorage.removeItem('admin_lockout');
         setIsLocked(false);
         setLockoutTime(null);
         setLoginAttempts(0);
@@ -377,17 +377,9 @@ const AdminLoginPage: React.FC<AdminLoginPageProps> = ({ onLogin, onNavigateHome
       } catch (supabaseError) {
         console.warn('Supabase接続エラー、ローカルフォールバックを使用', supabaseError);
         
-        // ローカルフォールバック: デモ用のハードコードされた管理者アカウント
-        // 注意: これはデモ専用です。本番環境では無効化してください
-        if (sanitizedUsername === 'admin' && password === 'Admin123!') {
-          useLocalFallback = true;
-          adminCredentials = {
-            username: 'admin',
-            password_hash: '$2a$10$X5WZQwZRYXjKqJ0LQ8vJFuMWC2mchUZGgCi2RTiozKVfByx6kPvZG',
-            is_active: true,
-            failed_attempts: 0,
-            locked_until: null
-          };
+        // ローカルフォールバックは本番環境では無効化
+        if (process.env.NODE_ENV === 'development') {
+          console.warn('開発環境のため、ローカル認証は無効です');
         }
       }
       
@@ -443,14 +435,11 @@ const AdminLoginPage: React.FC<AdminLoginPageProps> = ({ onLogin, onNavigateHome
         passwordHash: adminCredentials?.password_hash?.substring(0, 20) + '...'
       });
       
-      // デモ用デフォルト管理者アカウントの場合は直接比較
-      if (sanitizedUsername === 'admin' && password === 'Admin123!') {
-        console.log('✅ デモ用デフォルト管理者アカウントで認証成功');
-        isPasswordValid = true;
-      } else if (useLocalFallback) {
-        // ローカルフォールバック時は直接比較
-        console.log('✅ デモ用ローカルフォールバック使用');
-        isPasswordValid = true; // デモ用のadminアカウントを許可
+      // パスワード検証
+      if (useLocalFallback) {
+        // ローカルフォールバック時はエラー
+        console.log('❌ ローカルフォールバックはサポートされていません');
+        isPasswordValid = false;
       } else {
         try {
           console.log('🔍 SupabaseAdminAuth.verifyPasswordを呼び出し中...');
@@ -458,11 +447,7 @@ const AdminLoginPage: React.FC<AdminLoginPageProps> = ({ onLogin, onNavigateHome
           console.log('🔍 verifyPassword結果:', isPasswordValid);
         } catch (verifyError) {
           console.warn('⚠️ パスワード検証エラー', verifyError);
-          // エラー時のフォールバック: デモ用デフォルトアカウントのみ許可
-          if (sanitizedUsername === 'admin' && password === 'Admin123!') {
-            console.log('✅ エラー時のフォールバック: デモ用デフォルト管理者アカウントで認証成功');
-            isPasswordValid = true;
-          }
+          isPasswordValid = false;
         }
       }
       
@@ -499,9 +484,9 @@ const AdminLoginPage: React.FC<AdminLoginPageProps> = ({ onLogin, onNavigateHome
         expires: Date.now() + (2 * 60 * 60 * 1000) // 2時間有効
       };
       
-      localStorage.setItem('admin_session', JSON.stringify(sessionData));
+      sessionStorage.setItem('admin_session', JSON.stringify(sessionData));
       sessionStorage.setItem('admin_authenticated', 'true');
-      localStorage.removeItem('admin_lockout');
+      sessionStorage.removeItem('admin_lockout');
       
       // 試行回数をリセット
       setLoginAttempts(0);
@@ -565,12 +550,11 @@ const AdminLoginPage: React.FC<AdminLoginPageProps> = ({ onLogin, onNavigateHome
           lastActivity: new Date().toISOString()
         };
         
-        localStorage.setItem('admin_session', JSON.stringify(sessionData));
+        sessionStorage.setItem('admin_session', JSON.stringify(sessionData));
         sessionStorage.setItem('admin_authenticated', 'true');
         
         // セッション期限の監視を開始
         // const sessionExpiry = setTimeout(() => {
-        //   localStorage.removeItem('admin_session');
         //   sessionStorage.removeItem('admin_authenticated');
         //   window.location.reload(); // セッション期限切れ時の自動ログアウト
         // }, 30 * 60 * 1000); // 30分
@@ -628,8 +612,8 @@ const AdminLoginPage: React.FC<AdminLoginPageProps> = ({ onLogin, onNavigateHome
       return;
     }
 
-    // 再送信制限チェック（60秒間隔）
-    const lastResendTime = localStorage.getItem('last_sms_resend');
+    // 再送信制限チェック（セッションストレージ使用）
+    const lastResendTime = sessionStorage.getItem('last_sms_resend');
     if (lastResendTime) {
       const timeSinceLastResend = Date.now() - parseInt(lastResendTime);
       const waitTime = 60000; // 60秒
@@ -650,7 +634,7 @@ const AdminLoginPage: React.FC<AdminLoginPageProps> = ({ onLogin, onNavigateHome
       
       if (result.success) {
         // 再送信時刻を記録
-        localStorage.setItem('last_sms_resend', Date.now().toString());
+        sessionStorage.setItem('last_sms_resend', Date.now().toString());
         setSuccess('SMS認証コードを再送信しました。');
         
         // 監査ログに記録
@@ -707,7 +691,7 @@ const AdminLoginPage: React.FC<AdminLoginPageProps> = ({ onLogin, onNavigateHome
             {mode === 'login' && (
               <>
                 <p className="text-gray-600 text-sm">
-                  AI ConectX管理画面にアクセスするため、認証情報を入力してください。
+                  AI ConnectX管理画面にアクセスするため、認証情報を入力してください。
                 </p>
               </>
             )}

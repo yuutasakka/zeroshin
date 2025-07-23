@@ -1,6 +1,6 @@
 {
-  "name": "AI ConectX - AI投資アドバイザー",
-  "short_name": "AI ConectX",
+  "name": "AI ConnectX - AI投資アドバイザー",
+  "short_name": "AI ConnectX",
   "description": "あなたの資産運用を最適化するAI投資アドバイザー",
   "start_url": "/",
   "display": "standalone",
@@ -9,42 +9,28 @@
   "background_color": "#ffffff",
   "icons": [
     {
-      "src": "/icon-192x192.png",
+      "src": "/pwa-192x192.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "/icon-512x512.png",
+      "src": "/pwa-512x512.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "/icon-maskable-192x192.png",
+      "src": "/pwa-192x192.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "maskable"
     },
     {
-      "src": "/icon-maskable-512x512.png",
+      "src": "/pwa-512x512.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "maskable"
-    }
-  ],
-  "screenshots": [
-    {
-      "src": "/screenshot-desktop.png",
-      "sizes": "1920x1080",
-      "type": "image/png",
-      "label": "デスクトップ版のホーム画面"
-    },
-    {
-      "src": "/screenshot-mobile.png",
-      "sizes": "1080x1920",
-      "type": "image/png",
-      "label": "モバイル版の診断画面"
     }
   ],
   "categories": ["finance", "business", "productivity"],
@@ -59,14 +45,14 @@
       "short_name": "診断開始",
       "description": "AI投資診断を今すぐ開始",
       "url": "/",
-      "icons": [{ "src": "/icon-96x96.png", "sizes": "96x96" }]
+      "icons": [{ "src": "/pwa-192x192.png", "sizes": "192x192" }]
     },
     {
       "name": "管理画面",
       "short_name": "管理",
       "description": "管理者ダッシュボード",
       "url": "/admin",
-      "icons": [{ "src": "/icon-96x96.png", "sizes": "96x96" }]
+      "icons": [{ "src": "/pwa-192x192.png", "sizes": "192x192" }]
     }
   ],
   "features": [

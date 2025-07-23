@@ -136,16 +136,16 @@ export const DesignSettingsProvider: React.FC<{ children: ReactNode }> = ({ chil
         isLoading: false
       }));
 
-      // ローカルストレージにバックアップ
-      localStorage.setItem('designSettings', JSON.stringify(newSettings));
+      // セッションストレージにバックアップ
+      sessionStorage.setItem('designSettings', JSON.stringify(newSettings));
       ProductionLogger.info('デザイン設定を取得・更新しました');
 
     } catch (error) {
       ProductionLogger.error('デザイン設定の取得エラー:', error as Error);
       
-      // エラー時はローカルストレージから復元を試みる
+      // エラー時はセッションストレージから復元を試みる
       try {
-        const cachedSettings = localStorage.getItem('designSettings');
+        const cachedSettings = sessionStorage.getItem('designSettings');
         if (cachedSettings) {
           const parsed = JSON.parse(cachedSettings);
           setSettings(prev => ({
@@ -228,9 +228,9 @@ export const DesignSettingsProvider: React.FC<{ children: ReactNode }> = ({ chil
                   break;
               }
 
-              // 更新されたデータをローカルストレージにも保存
+              // 更新されたデータをセッションストレージにも保存
               const { isLoading, error, ...dataToCache } = updated;
-              localStorage.setItem('designSettings', JSON.stringify(dataToCache));
+              sessionStorage.setItem('designSettings', JSON.stringify(dataToCache));
               
               return updated;
             });
@@ -326,7 +326,7 @@ export const useReasonsToChoose = () => {
   
   // デフォルトデータをインポート（フォールバック用）
   const defaultReasonsToChooseData = {
-    title: "AI ConectXが選ばれる理由",
+    title: "AI ConnectXが選ばれる理由",
     subtitle: "多くのお客様から信頼をいただいている、確かな実績をご紹介します",
     reasons: [
       {
@@ -335,13 +335,6 @@ export const useReasonsToChoose = () => {
         value: "98.8%",
         description: "継続的なサポートによる高い満足度を実現",
         animationDelay: "0s"
-      },
-      {
-        iconClass: "fas fa-users",
-        title: "提携FP数",
-        value: "1,500+",
-        description: "全国の優秀な専門家ネットワーク",
-        animationDelay: "0.5s"
       },
       {
         iconClass: "fas fa-trophy",

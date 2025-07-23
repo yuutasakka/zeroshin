@@ -1,8 +1,8 @@
-# AI ConectX MCP (Model Context Protocol) 統合ガイド
+# AI ConnectX MCP (Model Context Protocol) 統合ガイド
 
 ## 🤖 概要
 
-AI ConectXアプリケーションは、最新のMCP (Model Context Protocol) 技術を統合し、高度な財務分析とAIアドバイス機能を提供します。
+AI ConnectXアプリケーションは、最新のMCP (Model Context Protocol) 技術を統合し、高度な財務分析とAIアドバイス機能を提供します。
 
 ## 🌟 機能概要
 
@@ -207,4 +207,4 @@ server.tool(
 
 ---
 
-**AI ConectX MCP Integration - Empowering Financial Intelligence with AI** 🚀 
+**AI ConnectX MCP Integration - Empowering Financial Intelligence with AI** 🚀 

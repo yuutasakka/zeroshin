@@ -24,9 +24,9 @@ const ProductSettingsPanel: React.FC<ProductSettingsPanelProps> = ({ messageHand
     try {
       setIsLoading(true);
       
-      // LocalStorageから商品・会社データを読み込み
-      const savedProducts = localStorage.getItem('financial_products');
-      const savedCompanies = localStorage.getItem('companies');
+      // sessionStorageから商品・会社データを読み込み
+      const savedProducts = sessionStorage.getItem('financial_products');
+      const savedCompanies = sessionStorage.getItem('companies');
       
       if (savedProducts) {
         setProducts(JSON.parse(savedProducts));
@@ -45,7 +45,7 @@ const ProductSettingsPanel: React.FC<ProductSettingsPanelProps> = ({ messageHand
   const saveProducts = async () => {
     try {
       setIsLoading(true);
-      localStorage.setItem('financial_products', JSON.stringify(products));
+      sessionStorage.setItem('financial_products', JSON.stringify(products));
       messageHandlers.showSuccess('商品データが保存されました');
     } catch (error) {
       messageHandlers.handleError(error, '商品データの保存に失敗しました');
@@ -57,7 +57,7 @@ const ProductSettingsPanel: React.FC<ProductSettingsPanelProps> = ({ messageHand
   const saveCompanies = async () => {
     try {
       setIsLoading(true);
-      localStorage.setItem('companies', JSON.stringify(companies));
+      sessionStorage.setItem('companies', JSON.stringify(companies));
       messageHandlers.showSuccess('会社データが保存されました');
     } catch (error) {
       messageHandlers.handleError(error, '会社データの保存に失敗しました');

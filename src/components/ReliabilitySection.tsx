@@ -55,7 +55,13 @@ const createSupabaseHelper = () => {
 const ReliabilitySection: React.FC = () => {
   const [testimonials, setTestimonials] = useState<Testimonial[]>([]);
   const reasonsDataFromContext = useReasonsToChoose();
-  const reasonsData = reasonsDataFromContext || defaultReasonsToChooseData;
+  const originalReasonsData = reasonsDataFromContext || defaultReasonsToChooseData;
+  
+  // fas fa-usersアイコンを持つ項目を除外
+  const reasonsData = {
+    ...originalReasonsData,
+    reasons: originalReasonsData.reasons.filter(reason => reason.iconClass !== 'fas fa-users')
+  };
   const { templateConfig } = useDesignTemplate();
 
   useEffect(() => {
@@ -65,13 +71,13 @@ const ReliabilitySection: React.FC = () => {
         if (supabaseTestimonials && supabaseTestimonials.length > 0) {
           setTestimonials(supabaseTestimonials);
         } else {
-          // 新しいサンプルデータを優先的に使用
-          const sampleTestimonials = localStorage.getItem('testimonials');
+          // セッションストレージからデータを取得
+          const sampleTestimonials = sessionStorage.getItem('testimonials');
           if (sampleTestimonials) {
             const parsedSampleTestimonials = JSON.parse(sampleTestimonials);
             setTestimonials(parsedSampleTestimonials);
           } else {
-            const storedTestimonials = localStorage.getItem('customTestimonials');
+            const storedTestimonials = sessionStorage.getItem('customTestimonials');
             if (storedTestimonials) {
               const parsedTestimonials = JSON.parse(storedTestimonials);
               setTestimonials(parsedTestimonials);
@@ -122,7 +128,7 @@ const ReliabilitySection: React.FC = () => {
       secureLog('ローカルストレージからお客様の声を取得を試行');
       
       // 1. 管理画面で保存されたカスタムデータ
-      const customTestimonials = localStorage.getItem('customTestimonials');
+      const customTestimonials = sessionStorage.getItem('customTestimonials');
       if (customTestimonials) {
         try {
           const parsedCustom = JSON.parse(customTestimonials);
@@ -136,7 +142,7 @@ const ReliabilitySection: React.FC = () => {
       }
 
       // 2. サンプルデータ
-      const sampleTestimonials = localStorage.getItem('testimonials');
+      const sampleTestimonials = sessionStorage.getItem('testimonials');
       if (sampleTestimonials) {
         try {
           const parsedSample = JSON.parse(sampleTestimonials);
@@ -156,7 +162,7 @@ const ReliabilitySection: React.FC = () => {
       
       // エラー時でもローカルストレージから取得を試行
       try {
-        const customTestimonials = localStorage.getItem('customTestimonials');
+        const customTestimonials = sessionStorage.getItem('customTestimonials');
         if (customTestimonials) {
           const parsedCustom = JSON.parse(customTestimonials);
           if (parsedCustom && parsedCustom.length > 0) {
@@ -248,9 +254,6 @@ const ReliabilitySection: React.FC = () => {
         <div className={`${templateConfig?.styles.sections.layout === 'list' ? 'space-y-8' : templateConfig?.styles.sections.layout === 'timeline' ? 'relative timeline-container' : 'grid md:grid-cols-3 gap-8'} mb-16`}>
           {reasonsData.reasons.map((reason, index) => (
             <div key={reason.title} className={`stats-card ${templateConfig?.styles.sections.layout === 'timeline' ? 'timeline-item' : ''}`} style={{ animationDelay: reason.animationDelay }}>
-              <div className="text-4xl mb-4" style={{ color: '#3b82f6'}} aria-hidden="true">
-                <i className={reason.iconClass}></i>
-              </div>
               <div className="stats-number">{reason.value}</div>
               <h4 className="text-xl font-semibold mb-2" style={{ color: '#1e40af'}}>{reason.title}</h4>
               <p className="text-gray-600">{reason.description}</p>
@@ -270,9 +273,7 @@ const ReliabilitySection: React.FC = () => {
                       style={{ background: '#eff6ff', color: '#3b82f6'}}
                       aria-hidden="true"
                     >
-                      {testimonial.avatarEmoji.includes('👩') || testimonial.avatarEmoji.includes('女性') ? <i className="fas fa-female"></i> : 
-                       testimonial.avatarEmoji.includes('👨') || testimonial.avatarEmoji.includes('男性') ? <i className="fas fa-male"></i> : 
-                       <i className="fas fa-user"></i>}
+                      {testimonial.avatarEmoji}
                     </div>
                     <div>
                       <p className="font-semibold" style={{color: '#1e40af'}}>

@@ -1,4 +1,4 @@
--- AI ConectX トリガー関数エラー修正
+-- AI ConnectX トリガー関数エラー修正
 
 -- 1. 既存のトリガーを削除
 DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;

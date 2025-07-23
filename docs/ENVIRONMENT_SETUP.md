@@ -1,4 +1,4 @@
-# AI ConectX 環境変数設定ガイド
+# AI ConnectX 環境変数設定ガイド
 
 ## 🚨 重要: Supabase 400/404エラーの解決
 
@@ -15,7 +15,7 @@ VITE_SUPABASE_URL=https://eqirzbuqgymrtnfmvwhq.supabase.co
 VITE_SUPABASE_ANON_KEY=【Supabaseの匿名キーを設定】
 
 # アプリケーション設定
-VITE_APP_NAME=AI ConectX
+VITE_APP_NAME=AI ConnectX
 VITE_APP_URL=https://moneyticket-chi.vercel.app
 
 # セキュリティ設定

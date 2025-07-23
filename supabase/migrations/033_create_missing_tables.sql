@@ -26,8 +26,8 @@ CREATE POLICY "Service role write access" ON homepage_content_settings
 
 -- 初期データ挿入
 INSERT INTO homepage_content_settings (setting_key, setting_data) VALUES
-  ('header_data', '{"title": "AI ConectX", "subtitle": "あなたの資産運用をAIが最適化"}'),
-  ('footer_data', '{"copyright": "© 2024 AI ConectX", "company": "AI ConectX Inc."}'),
+  ('header_data', '{"title": "AI ConnectX", "subtitle": "あなたの資産運用をAIが最適化"}'),
+  ('footer_data', '{"copyright": "© 2024 AI ConnectX", "company": "AI ConnectX Inc."}'),
   ('main_visual_data', '{"title": "あなたの未来の資産を診断！", "subtitle": "14種類の投資商品からあなたに最適なプランをご提案"}'),
   ('first_consultation_offer', '{"enabled": true, "text": "初回相談無料"}'),
   ('reasons_to_choose', '{"reasons": ["AI分析", "専門家サポート", "安心保証"]}'),

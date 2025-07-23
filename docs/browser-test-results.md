@@ -10,7 +10,7 @@
 
 ### ✅ 変更済みコンポーネント
 1. **DiagnosisResultsPage** - 金融商品データのSupabase専用読み込み
-2. **AIConectXHero** - メインビジュアルデータのSupabase専用読み込み  
+2. **AIConnectXHero** - メインビジュアルデータのSupabase専用読み込み  
 3. **MCPFinancialAssistant** - エキスパートコンタクトデータのSupabase専用読み込み
 4. **Footer** - フッターデータとリーガルリンクのSupabase専用読み込み
 5. **AdminDashboardPage** - customFinancialProducts localStorage完全除去
@@ -23,17 +23,17 @@
 
 #### ✅ 確認済み項目
 - [x] ページ読み込み: 正常
-- [x] タイトル表示: "AI ConectX - あなたの未来を一緒に描こう♪"
+- [x] タイトル表示: "AI ConnectX - あなたの未来を一緒に描こう♪"
 - [x] HTML構造: 正常生成
 
 #### 🔍 次に確認必要な項目  
-- [ ] **AIConectXHero**: メインビジュアルセクション表示
+- [ ] **AIConnectXHero**: メインビジュアルセクション表示
 - [ ] **Footer**: フッター情報とリーガルリンク表示
 - [ ] **Console Logs**: Supabase設定無効時のログ確認
 
 ### 2️⃣ 期待されるConsoleログ
 ```
-// AIConectXHero
+// AIConnectXHero
 Supabase設定が無効、デフォルトメインビジュアルデータを使用
 
 // Footer  

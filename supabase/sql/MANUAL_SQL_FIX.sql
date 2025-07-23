@@ -32,8 +32,8 @@ CREATE POLICY "admin_settings_read_policy" ON admin_settings FOR SELECT USING (t
 -- 6. 必要データ挿入
 INSERT INTO homepage_content_settings (setting_key, setting_data) VALUES 
 ('first_consultation_offer', '{"title": "初回相談無料キャンペーン", "description": "資産運用のプロが最適なプランをご提案します"}'),
-('footer_data', '{"companyName": "AI ConectX", "contact": {"phone": "0120-123-456", "email": "info@aiconectx.com"}}'),
-('reasons_to_choose', '{"title": "AI ConectXが選ばれる理由", "reasons": [{"title": "安心・安全", "description": "銀行レベルのセキュリティ"}]}');
+('footer_data', '{"companyName": "AI ConnectX", "contact": {"phone": "0120-123-456", "email": "info@aiconectx.com"}}'),
+('reasons_to_choose', '{"title": "AI ConnectXが選ばれる理由", "reasons": [{"title": "安心・安全", "description": "銀行レベルのセキュリティ"}]}');
 
 INSERT INTO admin_settings (setting_key, setting_value) VALUES 
 ('testimonials', '{"title": "お客様の声", "testimonials": [{"name": "田中様", "comment": "丁寧なサポートで安心して投資を始められました", "rating": 5}]}');

@@ -333,7 +333,7 @@ const SMSAuthFlow: React.FC<SMSAuthFlowProps> = ({
                 disabled={otpInput.length !== 6 || isLoading}
                 className={`w-full py-4 px-6 rounded-xl font-bold text-lg transition-all duration-200 focus:ring-2 focus:ring-offset-2 focus:outline-none min-h-[56px] ${
                   otpInput.length === 6 && !isLoading
-                    ? 'bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 focus:ring-green-500'
+                    ? 'bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 focus:ring-blue-500'
                     : 'bg-gray-200 text-gray-400 cursor-not-allowed'
                 }`}
               >

@@ -1,4 +1,4 @@
-// AI ConectX サンプルデータ
+// AI ConnectX サンプルデータ
 // 管理画面で変更可能な項目の初期データ
 
 import { Testimonial, LegalLink } from '../types';
@@ -12,35 +12,35 @@ export const sampleTestimonials: Testimonial[] = [
     nameAndRole: "山田さん（30代・IT企業勤務）",
     avatarEmoji: "👨",
     ratingStars: 5,
-    text: "AI ConectXを使って初めて資産運用を始めました。診断結果が非常に分かりやすく、自分に最適な投資商品を見つけることができました。特にリスク許容度の診断が的確で、安心して投資を続けています。毎月の積立投資も順調に増えており、将来への不安が大幅に軽減されました。"
+    text: "AI ConnectXを使って初めて資産運用を始めました。診断結果が非常に分かりやすく、自分に最適な投資商品を見つけることができました。特にリスク許容度の診断が的確で、安心して投資を続けています。毎月の積立投資も順調に増えており、将来への不安が大幅に軽減されました。"
   },
   {
     id: 'testimonial_002',
     nameAndRole: "佐藤さん（20代・公務員）",
     avatarEmoji: "👩",
     ratingStars: 5,
-    text: "お金の知識がほとんどなかった私でも、AI ConectXの診断を受けることで将来の資産形成への道筋が見えました。アドバイザーの方も親切で、定期的な相談ができるのが心強いです。特にNISAの活用方法を教えてもらったおかげで、税制優遇を最大限活用できています。"
+    text: "お金の知識がほとんどなかった私でも、AI ConnectXの診断を受けることで将来の資産形成への道筋が見えました。アドバイザーの方も親切で、定期的な相談ができるのが心強いです。特にNISAの活用方法を教えてもらったおかげで、税制優遇を最大限活用できています。"
   },
   {
     id: 'testimonial_003',
     nameAndRole: "田中さん（40代・商社勤務）",
     avatarEmoji: "👨",
     ratingStars: 4,
-    text: "複数の金融機関を比較検討するのが大変でしたが、AI ConectXで一括診断できるのが便利でした。手数料の比較も分かりやすく、コストを抑えて投資を始めることができました。おかげで年間20万円以上の手数料を節約できています。"
+    text: "複数の金融機関を比較検討するのが大変でしたが、AI ConnectXで一括診断できるのが便利でした。手数料の比較も分かりやすく、コストを抑えて投資を始めることができました。おかげで年間20万円以上の手数料を節約できています。"
   },
   {
     id: 'testimonial_004',
     nameAndRole: "鈴木さん（30代・フリーランス）",
     avatarEmoji: "👩",
     ratingStars: 5,
-    text: "不安定な収入の中でも、AI ConectXの診断で自分に合った投資方法を見つけられました。少額から始められる商品を紹介してもらい、無理なく資産形成を続けています。収入の変動に合わせて投資額を調整できるのも助かっています。"
+    text: "不安定な収入の中でも、AI ConnectXの診断で自分に合った投資方法を見つけられました。少額から始められる商品を紹介してもらい、無理なく資産形成を続けています。収入の変動に合わせて投資額を調整できるのも助かっています。"
   },
   {
     id: 'testimonial_005',
     nameAndRole: "高橋さん（30代・製造業）",
     avatarEmoji: "👨",
     ratingStars: 4,
-    text: "老後の資産形成に不安を感じていましたが、AI ConectXの診断で具体的な目標設定ができました。iDeCoやNISAの活用方法も詳しく教えてもらい、税制優遇を最大限活用できています。65歳までに3000万円の目標が現実的に見えてきました。"
+    text: "老後の資産形成に不安を感じていましたが、AI ConnectXの診断で具体的な目標設定ができました。iDeCoやNISAの活用方法も詳しく教えてもらい、税制優遇を最大限活用できています。65歳までに3000万円の目標が現実的に見えてきました。"
   },
   {
     id: 'testimonial_006',
@@ -109,9 +109,9 @@ export const sampleLegalLinks: LegalLink[] = [
   }
 ];
 
-// AI ConectXを選ぶ理由のサンプルデータ
+// AI ConnectXを選ぶ理由のサンプルデータ
 export const sampleReasonsToChoose: ReasonsToChooseData = {
-  title: "AI ConectXが選ばれる理由",
+  title: "AI ConnectXが選ばれる理由",
   subtitle: "あなたに最適な資産運用をサポートする3つの強み",
   reasons: [
     {
@@ -141,7 +141,7 @@ export const sampleReasonsToChoose: ReasonsToChooseData = {
 // 初回相談特典のサンプルデータ
 export const sampleFirstConsultationOffer: FirstConsultationOffer = {
   title: "初回相談無料キャンペーン",
-  description: "AI ConectXの専門アドバイザーが、あなたの診断結果を詳しく解説し、最適な投資戦略をご提案します。詳細な診断結果の解説（30分）、個別投資戦略の提案、リスク管理アドバイス、税制優遇制度の活用方法、継続サポートプランのご案内を無料で行います。",
+  description: "AI ConnectXの専門アドバイザーが、あなたの診断結果を詳しく解説し、最適な投資戦略をご提案します。詳細な診断結果の解説（30分）、個別投資戦略の提案、リスク管理アドバイス、税制優遇制度の活用方法、継続サポートプランのご案内を無料で行います。",
   icon: "fas fa-gift",
   backgroundColor: "rgba(34, 197, 94, 0.1)",
   borderColor: "var(--accent-gold)"
@@ -149,7 +149,7 @@ export const sampleFirstConsultationOffer: FirstConsultationOffer = {
 
 // ヘッダーデータのサンプル
 export const sampleHeaderData: HeaderData = {
-  title: "AI ConectX",
+  title: "AI ConnectX",
   subtitle: "あなたの資産運用パートナー"
 };
 
@@ -162,11 +162,11 @@ export const sampleMainVisualData: MainVisualData = {
 
 // フッターデータのサンプル
 export const sampleFooterData: FooterData = {
-  siteName: "AI ConectX",
+  siteName: "AI ConnectX",
   description: "AI技術と金融の専門知識を組み合わせ、あなたの資産運用を成功に導く信頼できるパートナーです。一人ひとりに最適な投資戦略をご提案し、安心できる資産形成をサポートいたします。",
   contactInfo: "電話: 0120-123-456 | メール: info@aiconectx.co.jp",
   companyInfo: "〒100-0001 東京都千代田区千代田1-1-1 | 平日 9:00-18:00",
-  copyright: "© 2024 AI ConectX株式会社. All rights reserved."
+  copyright: "© 2024 AI ConnectX株式会社. All rights reserved."
 };
 
 // 通知設定のサンプルデータ
@@ -178,13 +178,13 @@ export const sampleNotificationSettings = {
     smtpUser: "notifications@aiconectx.co.jp",
     smtpPassword: "[SMTP_PASSWORD_PLACEHOLDER]", // 本番環境では環境変数で管理
     fromEmail: "notifications@aiconectx.co.jp",
-    fromName: "AI ConectX通知システム"
+    fromName: "AI ConnectX通知システム"
   },
   slack: {
     enabled: false,
     webhookUrl: "https://hooks.slack.com/services/YOUR/SLACK/WEBHOOK",
     channel: "#notifications",
-    username: "AI ConectX Bot"
+    username: "AI ConnectX Bot"
   },
   line: {
     enabled: false,
@@ -202,54 +202,54 @@ export const sampleNotificationSettings = {
 export const initializeSampleData = () => {
   try {
     // 証言データの初期化
-    const existingTestimonials = localStorage.getItem('testimonials');
+    const existingTestimonials = sessionStorage.getItem('testimonials');
     if (!existingTestimonials) {
-      localStorage.setItem('testimonials', JSON.stringify(sampleTestimonials));
+      sessionStorage.setItem('testimonials', JSON.stringify(sampleTestimonials));
     }
 
     // リーガルリンクの初期化
-    const existingLegalLinks = localStorage.getItem('legal_links');
+    const existingLegalLinks = sessionStorage.getItem('legal_links');
     if (!existingLegalLinks) {
-      localStorage.setItem('legal_links', JSON.stringify(sampleLegalLinks));
+      sessionStorage.setItem('legal_links', JSON.stringify(sampleLegalLinks));
     }
 
     // ホームページコンテンツの初期化
-    const existingReasonsToChoose = localStorage.getItem('homepage_content_reasons_to_choose');
+    const existingReasonsToChoose = sessionStorage.getItem('homepage_content_reasons_to_choose');
     if (!existingReasonsToChoose) {
-      localStorage.setItem('homepage_content_reasons_to_choose', JSON.stringify(sampleReasonsToChoose));
+      sessionStorage.setItem('homepage_content_reasons_to_choose', JSON.stringify(sampleReasonsToChoose));
     }
 
-    const existingFirstConsultation = localStorage.getItem('first_consultation_offer');
+    const existingFirstConsultation = sessionStorage.getItem('first_consultation_offer');
     if (!existingFirstConsultation) {
-      localStorage.setItem('first_consultation_offer', JSON.stringify(sampleFirstConsultationOffer));
+      sessionStorage.setItem('first_consultation_offer', JSON.stringify(sampleFirstConsultationOffer));
     }
 
     // ヘッダー・メインビジュアル・フッターの初期化
-    const existingHeaderData = localStorage.getItem('homepage_content_header_data');
+    const existingHeaderData = sessionStorage.getItem('homepage_content_header_data');
     if (!existingHeaderData) {
-      localStorage.setItem('homepage_content_header_data', JSON.stringify(sampleHeaderData));
+      sessionStorage.setItem('homepage_content_header_data', JSON.stringify(sampleHeaderData));
     }
 
-    const existingMainVisualData = localStorage.getItem('homepage_content_main_visual_data');
+    const existingMainVisualData = sessionStorage.getItem('homepage_content_main_visual_data');
     if (!existingMainVisualData) {
-      localStorage.setItem('homepage_content_main_visual_data', JSON.stringify(sampleMainVisualData));
+      sessionStorage.setItem('homepage_content_main_visual_data', JSON.stringify(sampleMainVisualData));
     }
 
-    const existingFooterData = localStorage.getItem('homepage_content_footer_data');
+    const existingFooterData = sessionStorage.getItem('homepage_content_footer_data');
     if (!existingFooterData) {
-      localStorage.setItem('homepage_content_footer_data', JSON.stringify(sampleFooterData));
+      sessionStorage.setItem('homepage_content_footer_data', JSON.stringify(sampleFooterData));
     }
 
     // 通知設定の初期化
-    const existingNotificationSettings = localStorage.getItem('notification_settings');
+    const existingNotificationSettings = sessionStorage.getItem('notification_settings');
     if (!existingNotificationSettings) {
-      localStorage.setItem('notification_settings', JSON.stringify(sampleNotificationSettings));
+      sessionStorage.setItem('notification_settings', JSON.stringify(sampleNotificationSettings));
     }
 
     // 金融商品データの初期化
-    const existingProductSettings = localStorage.getItem('productSettings');
+    const existingProductSettings = sessionStorage.getItem('productSettings');
     if (!existingProductSettings) {
-      localStorage.setItem('productSettings', JSON.stringify(allFinancialProducts));
+      sessionStorage.setItem('productSettings', JSON.stringify(allFinancialProducts));
     }
 
     return true;
@@ -261,15 +261,15 @@ export const initializeSampleData = () => {
 // 管理画面用：サンプルデータをリセットする関数
 export const resetToSampleData = () => {
   try {
-    localStorage.setItem('testimonials', JSON.stringify(sampleTestimonials));
-    localStorage.setItem('legal_links', JSON.stringify(sampleLegalLinks));
-    localStorage.setItem('homepage_content_reasons_to_choose', JSON.stringify(sampleReasonsToChoose));
-    localStorage.setItem('first_consultation_offer', JSON.stringify(sampleFirstConsultationOffer));
-    localStorage.setItem('homepage_content_header_data', JSON.stringify(sampleHeaderData));
-    localStorage.setItem('homepage_content_main_visual_data', JSON.stringify(sampleMainVisualData));
-    localStorage.setItem('homepage_content_footer_data', JSON.stringify(sampleFooterData));
-    localStorage.setItem('notification_settings', JSON.stringify(sampleNotificationSettings));
-    localStorage.setItem('productSettings', JSON.stringify(allFinancialProducts));
+    sessionStorage.setItem('testimonials', JSON.stringify(sampleTestimonials));
+    sessionStorage.setItem('legal_links', JSON.stringify(sampleLegalLinks));
+    sessionStorage.setItem('homepage_content_reasons_to_choose', JSON.stringify(sampleReasonsToChoose));
+    sessionStorage.setItem('first_consultation_offer', JSON.stringify(sampleFirstConsultationOffer));
+    sessionStorage.setItem('homepage_content_header_data', JSON.stringify(sampleHeaderData));
+    sessionStorage.setItem('homepage_content_main_visual_data', JSON.stringify(sampleMainVisualData));
+    sessionStorage.setItem('homepage_content_footer_data', JSON.stringify(sampleFooterData));
+    sessionStorage.setItem('notification_settings', JSON.stringify(sampleNotificationSettings));
+    sessionStorage.setItem('productSettings', JSON.stringify(allFinancialProducts));
     
     return true;
   } catch (error) {

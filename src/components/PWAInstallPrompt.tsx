@@ -11,6 +11,8 @@ const PWAInstallPrompt: React.FC = () => {
   const [showInstallPrompt, setShowInstallPrompt] = useState(false);
   const [isInstalled, setIsInstalled] = useState(false);
   const [showIOSPrompt, setShowIOSPrompt] = useState(false);
+  const [hasSeenPrompt, setHasSeenPrompt] = useState(false);
+  const [lastIOSPromptTime, setLastIOSPromptTime] = useState<number | null>(null);
 
   useEffect(() => {
     // PWAがすでにインストールされているかチェック
@@ -24,10 +26,8 @@ const PWAInstallPrompt: React.FC = () => {
     const isInStandaloneMode = ('standalone' in window.navigator) && (window.navigator as any).standalone;
     
     if (isIOS && !isInStandaloneMode) {
-      // インストール済みでない場合、24時間に1回プロンプトを表示
-      const lastPrompt = localStorage.getItem('lastIOSInstallPrompt');
-      const now = Date.now();
-      if (!lastPrompt || now - parseInt(lastPrompt) > 24 * 60 * 60 * 1000) {
+      // セッション中に1回のみプロンプトを表示
+      if (!hasSeenPrompt) {
         setShowIOSPrompt(true);
       }
     }
@@ -40,7 +40,6 @@ const PWAInstallPrompt: React.FC = () => {
       
       // 初回訪問から30秒後にプロンプトを表示
       setTimeout(() => {
-        const hasSeenPrompt = localStorage.getItem('hasSeenInstallPrompt');
         if (!hasSeenPrompt) {
           setShowInstallPrompt(true);
           addBreadcrumb('PWA install prompt shown', 'ui', 'info');
@@ -55,7 +54,6 @@ const PWAInstallPrompt: React.FC = () => {
       setIsInstalled(true);
       setShowInstallPrompt(false);
       setDeferredPrompt(null);
-      localStorage.setItem('pwaInstalled', 'true');
       addBreadcrumb('PWA installed', 'ui', 'info');
     };
 
@@ -82,7 +80,7 @@ const PWAInstallPrompt: React.FC = () => {
       
       setDeferredPrompt(null);
       setShowInstallPrompt(false);
-      localStorage.setItem('hasSeenInstallPrompt', 'true');
+      setHasSeenPrompt(true);
     } catch (error) {
       console.error('Error installing PWA:', error);
     }
@@ -91,9 +89,9 @@ const PWAInstallPrompt: React.FC = () => {
   const handleDismiss = () => {
     setShowInstallPrompt(false);
     setShowIOSPrompt(false);
-    localStorage.setItem('hasSeenInstallPrompt', 'true');
+    setHasSeenPrompt(true);
     if (showIOSPrompt) {
-      localStorage.setItem('lastIOSInstallPrompt', Date.now().toString());
+      setLastIOSPromptTime(Date.now());
     }
   };
 
@@ -106,9 +104,6 @@ const PWAInstallPrompt: React.FC = () => {
     return (
       <div className="fixed bottom-4 left-4 right-4 md:left-auto md:right-4 md:w-96 bg-white rounded-lg shadow-xl border border-gray-200 p-4 z-50 animate-slide-up">
         <div className="flex items-start gap-3">
-          <div className="flex-shrink-0 w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
-            <i className="fas fa-download text-blue-600 text-lg"></i>
-          </div>
           <div className="flex-1">
             <h3 className="font-bold text-gray-900 mb-1">
               アプリとして使用できます
@@ -119,7 +114,7 @@ const PWAInstallPrompt: React.FC = () => {
             <div className="bg-gray-50 p-3 rounded text-sm text-gray-700 mb-3">
               <p className="mb-2">インストール方法:</p>
               <ol className="space-y-1">
-                <li>1. Safari下部の <i className="fas fa-share"></i> 共有ボタンをタップ</li>
+                <li>1. Safari下部の 共有ボタンをタップ</li>
                 <li>2. 「ホーム画面に追加」を選択</li>
                 <li>3. 「追加」をタップ</li>
               </ol>
@@ -140,12 +135,9 @@ const PWAInstallPrompt: React.FC = () => {
   return (
     <div className="fixed bottom-4 left-4 right-4 md:left-auto md:right-4 md:w-96 bg-white rounded-lg shadow-xl border border-gray-200 p-4 z-50 animate-slide-up">
       <div className="flex items-start gap-3">
-        <div className="flex-shrink-0 w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
-          <i className="fas fa-download text-blue-600 text-lg"></i>
-        </div>
         <div className="flex-1">
           <h3 className="font-bold text-gray-900 mb-1">
-            AI ConectXをインストール
+            AI ConnectXをインストール
           </h3>
           <p className="text-sm text-gray-600 mb-3">
             アプリとしてインストールすると、より快適にご利用いただけます

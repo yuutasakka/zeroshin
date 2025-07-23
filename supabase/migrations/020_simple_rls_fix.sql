@@ -90,11 +90,11 @@ SELECT 'プライバシーポリシー', '/privacy', true
 WHERE NOT EXISTS (SELECT 1 FROM legal_links LIMIT 1);
 
 INSERT INTO homepage_content_settings (setting_key, setting_data) 
-SELECT 'header_data', '{"logo": "AI ConectX"}'
+SELECT 'header_data', '{"logo": "AI ConnectX"}'
 WHERE NOT EXISTS (SELECT 1 FROM homepage_content_settings WHERE setting_key = 'header_data');
 
 INSERT INTO homepage_content_settings (setting_key, setting_data) 
-SELECT 'footer_data', '{"company": "AI ConectX"}'
+SELECT 'footer_data', '{"company": "AI ConnectX"}'
 WHERE NOT EXISTS (SELECT 1 FROM homepage_content_settings WHERE setting_key = 'footer_data');
 
 INSERT INTO homepage_content_settings (setting_key, setting_data) 

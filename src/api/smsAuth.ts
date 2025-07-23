@@ -45,7 +45,7 @@ export class SMSAuthService {
         if (!rateLimitOk) {
           return { success: false, error: 'SMS送信回数の上限に達しました。1時間後にお試しください。' };
         }
-        console.log('✅ レート制限チェック成功');
+        // レート制限チェック成功
       } catch (rateLimitError: any) {
         console.error('⚠️ レート制限チェック失敗（継続）:', rateLimitError?.message);
         // レート制限チェック失敗でもSMS送信は継続
@@ -85,18 +85,13 @@ export class SMSAuthService {
       // Supabaseに保存（一時的にエラーハンドリング強化）
       try {
         await this.saveOTPToDatabase(normalizedPhone, otp, expiresAt, ipAddress);
-        console.log('✅ OTPデータベース保存成功');
+        // OTPデータベース保存成功
       } catch (dbError: any) {
         console.error('⚠️ OTPデータベース保存失敗（継続）:', dbError?.message);
         // データベース保存失敗でもSMS送信は継続
       }
       
       // SMS送信
-      console.log('📱 SMS送信開始', {
-        to: normalizedPhone,
-        otp: `${otp.substring(0, 2)}****`,
-        isDirectAPI: !!(client as any)._isDirectAPI
-      });
       
       if ((client as any)._isDirectAPI) {
         // Twilio HTTP API直接使用
@@ -104,14 +99,14 @@ export class SMSAuthService {
       } else {
         // Twilio SDK使用
         const result = await (client as any).messages.create({
-          body: `【AI ConectX】認証コード: ${otp}\n\n※5分間有効です。第三者には絶対に教えないでください。`,
+          body: `【AI ConnectX】認証コード: ${otp}\n\n※5分間有効です。第三者には絶対に教えないでください。`,
           from: config.phoneNumber,
           to: normalizedPhone
         });
-        console.log('📤 Twilio SDK送信完了', { sid: result.sid, status: result.status });
+        // Twilio SDK送信完了
       }
       
-      console.log('✅ SMS送信完了', { to: normalizedPhone });
+      // SMS送信完了
 
       return { success: true };
     } catch (error: any) {
@@ -136,7 +131,7 @@ export class SMSAuthService {
       let storedOTP = null;
       try {
         storedOTP = await this.getOTPFromDatabase(normalizedPhone);
-        console.log('✅ OTPデータベース取得成功');
+        // OTPデータベース取得成功
       } catch (dbError: any) {
         console.error('⚠️ OTPデータベース取得失敗:', dbError?.message);
         // 開発環境でもOTPバイパスは無効化（セキュリティ上の理由）
@@ -146,7 +141,7 @@ export class SMSAuthService {
       
       if (!storedOTP) {
         if (!isProduction) {
-          console.log('🚫 OTPがデータベースに存在しません');
+          // OTPがデータベースに存在しません
         }
         return { success: false, error: 'OTP not found or expired' };
       }
@@ -284,7 +279,7 @@ export class SMSAuthService {
       body: new URLSearchParams({
         From: client.phoneNumber,
         To: to,
-        Body: `【AI ConectX】認証コード: ${otp}\n\n※5分間有効です。第三者には絶対に教えないでください。`
+        Body: `【AI ConnectX】認証コード: ${otp}\n\n※5分間有効です。第三者には絶対に教えないでください。`
       })
     });
 

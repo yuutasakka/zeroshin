@@ -34,7 +34,7 @@ CREATE POLICY "admin_settings_read_policy" ON admin_settings FOR SELECT USING (t
 -- 6. 必要最小限のデータ挿入
 INSERT INTO homepage_content_settings (setting_key, setting_data) VALUES 
 ('first_consultation_offer', '{"title": "初回相談無料", "description": "お気軽にご相談ください"}'),
-('footer_data', '{"companyName": "AI ConectX", "contact": {"phone": "0120-123-456"}}'),
+('footer_data', '{"companyName": "AI ConnectX", "contact": {"phone": "0120-123-456"}}'),
 ('reasons_to_choose', '{"title": "選ばれる理由", "reasons": [{"title": "安心・安全", "description": "セキュリティ対策万全"}]}');
 
 INSERT INTO admin_settings (setting_key, setting_value) VALUES 

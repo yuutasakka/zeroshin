@@ -28,7 +28,7 @@
 1. **ログインとプロジェクト選択**
    ```
    1. https://supabase.com/dashboard にアクセス
-   2. AI ConectXプロジェクトを選択
+   2. AI ConnectXプロジェクトを選択
    ```
 
 2. **SQL Editor実行**
@@ -86,7 +86,7 @@
        '{
            "title": "あなたの未来を一緒に描こう♪",
            "subtitle": "無料相談で理想の資産運用プランを見つけませんか？",
-           "description": "AI ConectXで、あなたの夢や目標に合わせた最適な資産運用戦略を専門家と一緒に作りましょう。",
+           "description": "AI ConnectXで、あなたの夢や目標に合わせた最適な資産運用戦略を専門家と一緒に作りましょう。",
            "buttonText": "無料診断を始める",
            "image_url": "/images/main-visual.jpg"
        }'::jsonb,
@@ -210,7 +210,7 @@ CREATE POLICY "homepage_content_read_policy" ON homepage_content_settings
 ## 🎉 **完了確認**
 
 ### **管理画面での動作確認**
-1. **AI ConectX管理画面にログイン**
+1. **AI ConnectX管理画面にログイン**
 2. **コンテンツ管理セクションにアクセス**
 3. **エラーが発生しないことを確認**
 4. **データの読み込みが正常に動作することを確認**

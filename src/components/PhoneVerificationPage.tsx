@@ -306,15 +306,15 @@ const PhoneVerificationPage: React.FC<PhoneVerificationPageProps> = ({
           // 診断回答データの確認と修正
           let diagnosisAnswers = userSession.diagnosisAnswers || {};
           
-          // 空の診断回答の場合、localStorageから取得を試行
+          // 空の診断回答の場合、sessionStorageから取得を試行
           if (Object.keys(diagnosisAnswers).length === 0) {
-            const storedDiagnosisData = localStorage.getItem('diagnosisData');
+            const storedDiagnosisData = sessionStorage.getItem('diagnosisData');
             if (storedDiagnosisData) {
               try {
                 const parsedData = JSON.parse(storedDiagnosisData);
                 diagnosisAnswers = parsedData;
               } catch (e) {
-                console.error(' localStorageからの診断データ取得に失敗:', e);
+                console.error(' sessionStorageからの診断データ取得に失敗:', e);
               }
             }
           }
@@ -350,11 +350,11 @@ const PhoneVerificationPage: React.FC<PhoneVerificationPageProps> = ({
           };
 
 
-          // 現在のセッションをローカルストレージに保存（一時的）
-          localStorage.setItem('currentUserSession', JSON.stringify(updatedSession));
+          // 現在のセッションをセッションストレージに保存（一時的）
+          sessionStorage.setItem('currentUserSession', JSON.stringify(updatedSession));
           
           // 保存確認
-          const savedSession = localStorage.getItem('currentUserSession');
+          const savedSession = sessionStorage.getItem('currentUserSession');
           
           setStep('success');
           
@@ -363,7 +363,7 @@ const PhoneVerificationPage: React.FC<PhoneVerificationPageProps> = ({
           await new Promise(resolve => setTimeout(resolve, 500));
           
           // 最終確認: 保存された認証状態を再度チェック
-          const finalCheck = localStorage.getItem('currentUserSession');
+          const finalCheck = sessionStorage.getItem('currentUserSession');
           if (finalCheck) {
             const parsedCheck = JSON.parse(finalCheck);
             
@@ -620,20 +620,6 @@ const PhoneVerificationPage: React.FC<PhoneVerificationPageProps> = ({
                   ※ 診断フォームで入力された電話番号に自動送信しました
                 </p>
               )}
-              {/* 開発環境での認証コード表示 */}
-              {(process.env.NODE_ENV !== 'production' && 
-                (typeof window === 'undefined' || 
-                 window.location.hostname.includes('localhost') || 
-                 window.location.hostname.includes('127.0.0.1'))) && (
-                <div className="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
-                  <p className="text-yellow-800 text-sm font-medium">
-                    開発環境用認証コード: <strong>123456</strong>
-                  </p>
-                  <p className="text-yellow-700 text-xs mt-1">
-                    本番環境では実際のSMSが送信されます
-                  </p>
-                </div>
-              )}
             </div>
 
             <form onSubmit={handleVerifyOTP} className="space-y-6">
@@ -818,7 +804,7 @@ const PhoneVerificationPage: React.FC<PhoneVerificationPageProps> = ({
             </div>
           </div>
           <p className="text-xs text-gray-400 mt-2">
-            AI ConectX - あなたの資産運用を安全にサポート
+            AI ConnectX - あなたの資産運用を安全にサポート
           </p>
         </div>
       </div>

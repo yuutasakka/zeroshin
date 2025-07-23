@@ -94,11 +94,11 @@ INSERT INTO expert_contact_settings (
     description
 ) VALUES (
     'primary_financial_advisor',
-    'AI ConectX専門アドバイザー',
+    'AI ConnectX専門アドバイザー',
     '0120-123-456',
     'advisor@moneyticket.co.jp',
     '平日 9:00-18:00',
-    'AI ConectXの認定ファイナンシャルプランナーが、お客様の資産運用に関するご相談を承ります。'
+    'AI ConnectXの認定ファイナンシャルプランナーが、お客様の資産運用に関するご相談を承ります。'
 ) ON CONFLICT (setting_key) DO NOTHING;
 
 -- 2. サンプルファイナンシャルプランナー

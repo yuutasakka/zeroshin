@@ -15,7 +15,7 @@
 2. F12で開発者ツールを開く
 3. **Console** タブを選択してクリア
 
-#### Step 2: AIConectXHero確認
+#### Step 2: AIConnectXHero確認
 **期待される表示:**
 - [ ] メインビジュアルセクション表示
 - [ ] タイトル: 「あなたの未来を一緒に描こう♪」または設定されたタイトル
@@ -31,7 +31,7 @@ Supabase設定が無効、デフォルトメインビジュアルデータを使
 #### Step 3: Footer確認
 **期待される表示:**
 - [ ] フッターセクション表示
-- [ ] サイト名「AI ConectX」表示
+- [ ] サイト名「AI ConnectX」表示
 - [ ] 会社情報・連絡先表示
 - [ ] リーガルリンク表示:
   - [ ] プライバシーポリシー
@@ -117,7 +117,7 @@ Supabase設定が無効、デフォルト専門家連絡先を使用
 
 ### Phase 1結果
 - ホームページアクセス: [ ] PASS / [ ] FAIL
-- AIConectXHero表示: [ ] PASS / [ ] FAIL  
+- AIConnectXHero表示: [ ] PASS / [ ] FAIL  
 - Footer表示: [ ] PASS / [ ] FAIL
 - Console ログ: [ ] PASS / [ ] FAIL
 

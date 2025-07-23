@@ -51,18 +51,18 @@ export class SecureStorage {
   static setSecureItem(key: string, value: any): void {
     const encrypted = this.encrypt(value);
     if (encrypted) {
-      localStorage.setItem(key, encrypted);
+      sessionStorage.setItem(key, encrypted);
     }
   }
 
   static getSecureItem(key: string): any {
-    const encrypted = localStorage.getItem(key);
+    const encrypted = sessionStorage.getItem(key);
     if (!encrypted) return null;
     return this.decrypt(encrypted);
   }
 
   static removeSecureItem(key: string): void {
-    localStorage.removeItem(key);
+    sessionStorage.removeItem(key);
   }
 }
 
@@ -149,7 +149,7 @@ export class SupabaseAdminAPI {
           const result = await response.json();
           secureLog('Supabase設定保存成功（Edge Function経由）');
           // 成功した場合でもローカルストレージにバックアップ
-          this.saveToLocalStorage(key, value);
+          this.saveToSessionStorage(key, value);
           return result.success;
         } else {
           secureLog(`Edge Function保存エラー ${response.status}, 直接テーブルアクセスを試行`);
@@ -181,7 +181,7 @@ export class SupabaseAdminAPI {
         if (response.ok || response.status === 201) {
           secureLog('Supabase設定保存成功（直接テーブルアクセス）');
           // 成功した場合でもローカルストレージにバックアップ
-          this.saveToLocalStorage(key, value);
+          this.saveToSessionStorage(key, value);
           return true;
         } else {
           const errorText = await response.text();
@@ -193,14 +193,14 @@ export class SupabaseAdminAPI {
 
       // 3. Supabase保存失敗時はローカルストレージに保存
       secureLog('Supabase保存失敗、ローカルストレージに保存中...');
-      this.saveToLocalStorage(key, value);
+      this.saveToSessionStorage(key, value);
       return true; // ローカルストレージ保存は成功とみなす
     } catch (error) {
       secureLog('Supabase設定保存エラー:', error);
       
       // エラー時でもローカルストレージに保存
       try {
-        this.saveToLocalStorage(key, value);
+        this.saveToSessionStorage(key, value);
         secureLog('エラー時フォールバック: ローカルストレージ保存成功');
         return true;
       } catch (fallbackError) {
@@ -210,21 +210,21 @@ export class SupabaseAdminAPI {
     }
   }
 
-  // ローカルストレージ保存ヘルパー関数
-  private static saveToLocalStorage(key: string, value: any): void {
-    const localStorageMapping: Record<string, string> = {
+  // sessionStorage保存ヘルパー関数
+  private static saveToSessionStorage(key: string, value: any): void {
+    const sessionStorageMapping: Record<string, string> = {
       'testimonials': 'customTestimonials',
       'financial_products': 'customFinancialProducts',
       'tracking_scripts': 'customTrackingScripts',
       'notification_settings': 'notificationConfigurations',
     };
 
-    const localKey = localStorageMapping[key] || `admin_setting_${key}`;
+    const sessionKey = sessionStorageMapping[key] || `admin_setting_${key}`;
     try {
-      localStorage.setItem(localKey, JSON.stringify(value));
-      secureLog(`ローカルストレージ保存成功: ${key} -> ${localKey}`);
+      sessionStorage.setItem(sessionKey, JSON.stringify(value));
+      secureLog(`sessionStorage保存成功: ${key} -> ${sessionKey}`);
     } catch (error) {
-      secureLog(`ローカルストレージ保存エラー: ${key}`, error);
+      secureLog(`sessionStorage保存エラー: ${key}`, error);
     }
   }
 
@@ -282,16 +282,16 @@ export class SupabaseAdminAPI {
       secureLog('Supabaseアクセス失敗、ローカルストレージを確認中...');
       
       // キー別のローカルストレージマッピング
-      const localStorageMapping: Record<string, string> = {
+      const sessionStorageMapping: Record<string, string> = {
         'testimonials': 'customTestimonials',
         'financial_products': 'customFinancialProducts',
         'tracking_scripts': 'customTrackingScripts',
         'notification_settings': 'notificationConfigurations',
       };
 
-      const localKey = localStorageMapping[key];
-      if (localKey) {
-        const storedData = localStorage.getItem(localKey);
+      const sessionKey = sessionStorageMapping[key];
+      if (sessionKey) {
+        const storedData = sessionStorage.getItem(sessionKey);
         if (storedData) {
           try {
             const parsedData = JSON.parse(storedData);
@@ -305,7 +305,7 @@ export class SupabaseAdminAPI {
 
       // 4. サンプルデータフォールバック
       if (key === 'testimonials') {
-        const sampleTestimonials = localStorage.getItem('testimonials');
+        const sampleTestimonials = sessionStorage.getItem('testimonials');
         if (sampleTestimonials) {
           try {
             const parsedSample = JSON.parse(sampleTestimonials);
@@ -331,7 +331,7 @@ export class SupabaseAdminAPI {
       const fallbackKey = fallbackMapping[key];
       if (fallbackKey) {
         try {
-          const fallbackData = localStorage.getItem(fallbackKey);
+          const fallbackData = sessionStorage.getItem(fallbackKey);
           if (fallbackData) {
             const parsedFallback = JSON.parse(fallbackData);
             secureLog(`エラー時フォールバック成功: ${key}`);

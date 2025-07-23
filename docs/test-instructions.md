@@ -4,7 +4,7 @@
 
 ### ✅ 完了済み変更内容
 1. **DiagnosisResultsPage** - 金融商品データのSupabase専用読み込み
-2. **AIConectXHero** - メインビジュアルデータのSupabase専用読み込み  
+2. **AIConnectXHero** - メインビジュアルデータのSupabase専用読み込み  
 3. **MCPFinancialAssistant** - エキスパートコンタクトデータのSupabase専用読み込み
 4. **Footer** - フッターデータとリーガルリンクのSupabase専用読み込み
 

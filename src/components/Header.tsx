@@ -24,10 +24,26 @@ const Header: React.FC = () => {
   };
 
   const handleStartDiagnosis = () => {
-    // 診断ページにナビゲート（実際のルーティング実装に応じて調整）
-    window.location.href = '/diagnosis';
-    // または React Routerを使用している場合:
-    // navigate('/diagnosis');
+    // 診断フォームセクションへスムーズスクロール
+    const diagnosisSection = document.getElementById('diagnosis-form-section');
+    if (diagnosisSection) {
+      const yOffset = -80; // ヘッダー分のオフセット
+      const elementPosition = diagnosisSection.getBoundingClientRect().top;
+      const offsetPosition = elementPosition + window.pageYOffset + yOffset;
+
+      window.scrollTo({
+        top: Math.max(0, offsetPosition),
+        behavior: 'smooth'
+      });
+      
+      // フォームにフォーカスを当てる
+      setTimeout(() => {
+        const firstInput = diagnosisSection.querySelector('button, input, select');
+        if (firstInput) {
+          (firstInput as HTMLElement).focus();
+        }
+      }, 700);
+    }
   };
 
   return (
@@ -70,13 +86,6 @@ const Header: React.FC = () => {
         <div className="container mx-auto px-4 lg:px-8">
           <div className={`flex items-center ${templateConfig?.styles.header.layout === 'centered' ? 'justify-center' : 'justify-between'} ${templateConfig?.styles.header.layout === 'vertical' ? 'flex-col py-4' : ''} h-16 md:h-20`}>
             <a href="#top" onClick={scrollToTop} className="flex items-center space-x-2 md:space-x-3 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-blue-500 rounded-lg p-2 hover:bg-gray-50 transition-all duration-200">
-              <div 
-                className="w-10 h-10 md:w-12 md:h-12 rounded-xl flex items-center justify-center shadow-lg transform hover:scale-105 transition-transform duration-200" 
-                style={{ background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' }}
-                aria-hidden="true"
-              >
-                <i className="fas fa-chart-line text-white text-lg md:text-xl"></i>
-              </div>
               <div className="flex flex-col">
                 <h1 className="text-lg sm:text-xl md:text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent leading-tight">
                   {headerData.title}
@@ -106,7 +115,6 @@ const Header: React.FC = () => {
                   onClick={handleStartDiagnosis}
                   className="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-6 py-2 rounded-full text-sm font-semibold hover:from-blue-700 hover:to-purple-700 transform hover:scale-105 transition-all duration-200 shadow-lg hover:shadow-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
                 >
-                  <i className="fas fa-rocket mr-2"></i>
                   診断を始める
                 </button>
               </div>
@@ -131,7 +139,6 @@ const Header: React.FC = () => {
           {/* サブタイトル（モバイル） */}
           <div className="sm:hidden px-3 py-2 text-center bg-gradient-to-r from-blue-50 to-purple-50">
             <span className="text-xs font-medium text-gray-600">
-              <i className="fas fa-sparkles mr-1 text-blue-500"></i>
               {headerData.subtitle}
             </span>
           </div>
@@ -149,7 +156,6 @@ const Header: React.FC = () => {
                 }} 
                 className="flex items-center py-3 px-4 text-base text-gray-700 hover:text-blue-600 hover:bg-white/70 rounded-lg transition-all duration-200 group"
               >
-                <i className="fas fa-cog mr-3 text-gray-400 group-hover:text-blue-500"></i>
                 サービス
               </a>
               <a 
@@ -160,7 +166,6 @@ const Header: React.FC = () => {
                 }} 
                 className="flex items-center py-3 px-4 text-base text-gray-700 hover:text-blue-600 hover:bg-white/70 rounded-lg transition-all duration-200 group"
               >
-                <i className="fas fa-star mr-3 text-gray-400 group-hover:text-blue-500"></i>
                 選ばれる理由
               </a>
               <a 
@@ -171,7 +176,6 @@ const Header: React.FC = () => {
                 }} 
                 className="flex items-center py-3 px-4 text-base text-gray-700 hover:text-blue-600 hover:bg-white/70 rounded-lg transition-all duration-200 group"
               >
-                <i className="fas fa-envelope mr-3 text-gray-400 group-hover:text-blue-500"></i>
                 お問い合わせ
               </a>
               <div className="pt-4 mt-4 border-t border-blue-200/50">
@@ -182,7 +186,6 @@ const Header: React.FC = () => {
                   }}
                   className="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white px-6 py-3 rounded-full text-base font-semibold hover:from-blue-700 hover:to-purple-700 transform hover:scale-105 transition-all duration-200 shadow-lg hover:shadow-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
                 >
-                  <i className="fas fa-rocket mr-2"></i>
                   診断を始める
                 </button>
               </div>

@@ -89,7 +89,6 @@ export const useAdminSession = (): UseAdminSessionReturn => {
     try {
       SecureStorage.removeSecureItem('admin_session');
       sessionStorage.removeItem('admin_authenticated');
-      localStorage.removeItem('admin_session');
       
       setSession(null);
       setIsValid(false);

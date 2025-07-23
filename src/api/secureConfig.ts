@@ -98,7 +98,11 @@ export class SecureConfigManager {
 
   // JWT設定の取得
   static async getJWTSecret(): Promise<string> {
-    return await this.getSecureConfig('jwt_secret') || process.env.JWT_SECRET || '';
+    const secret = await this.getSecureConfig('jwt_secret') || process.env.JWT_SECRET;
+    if (!secret) {
+      throw new Error('JWT_SECRETが設定されていません');
+    }
+    return secret;
   }
 
   // Gemini API設定の取得
@@ -108,12 +112,20 @@ export class SecureConfigManager {
 
   // セッション設定の取得
   static async getSessionSecret(): Promise<string> {
-    return await this.getSecureConfig('session_secret') || process.env.SESSION_SECRET || '';
+    const secret = await this.getSecureConfig('session_secret') || process.env.SESSION_SECRET;
+    if (!secret) {
+      throw new Error('SESSION_SECRETが設定されていません');
+    }
+    return secret;
   }
 
   // CSRF設定の取得
   static async getCSRFSecret(): Promise<string> {
-    return await this.getSecureConfig('csrf_secret') || process.env.CSRF_SECRET || '';
+    const secret = await this.getSecureConfig('csrf_secret') || process.env.CSRF_SECRET;
+    if (!secret) {
+      throw new Error('CSRF_SECRETが設定されていません');
+    }
+    return secret;
   }
 
   // 暗号化キーの取得
@@ -123,7 +135,7 @@ export class SecureConfigManager {
 
   // アプリケーション設定の取得
   static async getAppConfig() {
-    const title = await this.getSecureConfig('app_title') || process.env.VITE_APP_TITLE || 'AI ConectX';
+    const title = await this.getSecureConfig('app_title') || process.env.VITE_APP_TITLE || 'AI ConnectX';
     const version = await this.getSecureConfig('app_version') || process.env.VITE_APP_VERSION || '1.0.0';
     const description = await this.getSecureConfig('app_description') || process.env.VITE_APP_DESCRIPTION || '資産運用診断アプリケーション';
     
@@ -153,7 +165,7 @@ export class SecureConfigManager {
   // 設定の初期化（必要な設定がSupabaseに存在しない場合の初期化）
   static async initializeDefaultConfigs(): Promise<void> {
     const defaultConfigs = [
-      { key: 'app_title', value: 'AI ConectX', encrypt: false },
+      { key: 'app_title', value: 'AI ConnectX', encrypt: false },
       { key: 'app_version', value: '1.0.0', encrypt: false },
       { key: 'app_description', value: '資産運用診断アプリケーション', encrypt: false },
       { key: 'rate_limit_window_ms', value: '900000', encrypt: false },

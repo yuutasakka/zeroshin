@@ -36,7 +36,13 @@ const logger = winston.createLogger({
 const app = express();
 const PORT = process.env.PORT || 8080;
 const NODE_ENV = process.env.NODE_ENV || 'development';
-const JWT_SECRET = process.env.JWT_SECRET || 'ai-conectx-super-secret-key-2024';
+const JWT_SECRET = process.env.JWT_SECRET;
+if (!JWT_SECRET) {
+  logger.error('JWT_SECRET環境変数が設定されていません');
+  if (NODE_ENV === 'production') {
+    process.exit(1);
+  }
+}
 
 // セキュリティヘッダーの設定（本番環境では厳格化）
 const isProduction = NODE_ENV === 'production';
@@ -204,7 +210,7 @@ const initializeTwilio = async () => {
     if (NODE_ENV === 'production') {
       process.exit(1);
     } else {
-      console.warn('🚧 開発環境: Twilio初期化失敗 - デモモードで続行');
+      console.warn('🚧 開発環境: Twilio初期化失敗');
     }
   }
 };
@@ -334,7 +340,7 @@ app.post('/api/sms/send', smsLimiter, phoneValidation, async (req: Request, res:
     });
 
     // SMSメッセージの内容
-    const message = `AI ConectX認証コード: ${verificationCode}\n5分以内にご入力ください。このコードを他人に教えないでください。`;
+    const message = `AI ConnectX認証コード: ${verificationCode}\n5分以内にご入力ください。このコードを他人に教えないでください。`;
 
     // Twilioが初期化されていない場合は初期化
     if (!client) {
@@ -371,24 +377,8 @@ app.post('/api/sms/send', smsLimiter, phoneValidation, async (req: Request, res:
       const isDevelopment = NODE_ENV === 'development';
       const errorMessage = twilioError instanceof Error ? twilioError.message : 'Unknown error';
       
-      // 開発環境でのTwilio認証エラーまたは設定不備の特別処理
-      if (isDevelopment && (errorMessage.includes('unverified') || errorMessage.includes('Account') || !client)) {
-        logger.warn('Twilio送信失敗（開発環境デモモード有効）', {
-          phoneNumber: normalizedPhoneNumber,
-          ip: clientIP,
-          twilioError: errorMessage
-        });
-        
-        console.log(`🚧 開発環境デモモード: SMS送信をシミュレート中`);
-        
-        res.json({
-          success: true,
-          message: 'SMS認証コードを送信しました（開発環境モード）',
-          phoneNumber: normalizedPhoneNumber,
-          devMode: true
-        });
-        return;
-      }
+      // 開発環境でもTwilioエラーは上位にスロー
+      throw twilioError;
 
       // その他のTwilioエラーは上位にスロー
       throw twilioError;

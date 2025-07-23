@@ -235,13 +235,14 @@ describe('診断フロー統合テスト', () => {
       fireEvent.click(screen.getByText(/20代・投資未経験/i));
     });
 
-    // ローカルストレージに保存されているか確認
-    const savedData = localStorage.getItem('moneyticket_offline_data');
-    expect(savedData).toBeTruthy();
+    // オフライン機能は無効化されているため、データは保存されない
+    // const savedData = localStorage.getItem('moneyticket_offline_data');
+    // expect(savedData).toBeTruthy();
     
-    if (savedData) {
-      const parsed = JSON.parse(savedData);
-      expect(parsed.diagnosisAnswers).toBeDefined();
+    // セキュリティのためオフライン機能は無効化
+    // if (savedData) {
+    //   const parsed = JSON.parse(savedData);
+    //   expect(parsed.diagnosisAnswers).toBeDefined();
     }
 
     // オンラインに戻す

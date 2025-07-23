@@ -58,7 +58,7 @@ export interface CTAButtonConfig {
 }
 
 export const defaultReasonsToChooseData: ReasonsToChooseData = {
-  title: "AI ConectXが選ばれる理由",
+  title: "AI ConnectXが選ばれる理由",
   subtitle: "多くのお客様から信頼をいただいている、確かな実績をご紹介します",
   reasons: [
     {
@@ -95,7 +95,7 @@ export const defaultFirstConsultationOffer: FirstConsultationOffer = {
 
 // デフォルトヘッダー情報
 export const defaultHeaderData: HeaderData = {
-  title: "AI ConectX",
+  title: "AI ConnectX",
   subtitle: "あなたの資産運用をプロがサポート"
 };
 
@@ -108,11 +108,11 @@ export const defaultMainVisualData: MainVisualData = {
 
 // デフォルトフッター情報
 export const defaultFooterData: FooterData = {
-  siteName: "AI ConectX",
+  siteName: "AI ConnectX",
   description: "お客様の豊かな未来を全力でサポートいたします",
-  companyInfo: "運営会社：AI ConectX株式会社 | 金融商品取引業者 関東財務局長（金商）第12345号",
+  companyInfo: "運営会社：AI ConnectX株式会社 | 金融商品取引業者 関東財務局長（金商）第12345号",
   contactInfo: "〒150-0001 東京都渋谷区神宮前1-1-1 | TEL：0120-999-888",
-  copyright: "AI ConectX. All rights reserved."
+  copyright: "AI ConnectX. All rights reserved."
 };
 
 // デフォルトCTAボタン設定

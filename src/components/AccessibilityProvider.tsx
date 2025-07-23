@@ -32,17 +32,17 @@ export const AccessibilityProvider: React.FC<AccessibilityProviderProps> = ({ ch
   const [fontSize, setFontSize] = useState<'small' | 'medium' | 'large'>('medium');
   const [announcements, setAnnouncements] = useState<string[]>([]);
 
-  // ローカルストレージからフォントサイズ設定を復元
+  // セッションストレージからフォントサイズ設定を復元
   useEffect(() => {
-    const savedFontSize = localStorage.getItem('accessibility-font-size') as 'small' | 'medium' | 'large';
+    const savedFontSize = sessionStorage.getItem('accessibility-font-size') as 'small' | 'medium' | 'large';
     if (savedFontSize) {
       setFontSize(savedFontSize);
     }
   }, []);
 
-  // フォントサイズ変更時にローカルストレージに保存
+  // フォントサイズ変更時にセッションストレージに保存
   useEffect(() => {
-    localStorage.setItem('accessibility-font-size', fontSize);
+    sessionStorage.setItem('accessibility-font-size', fontSize);
     
     // CSS custom propertiesを更新
     const fontSizes = {

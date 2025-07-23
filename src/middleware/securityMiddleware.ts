@@ -26,7 +26,6 @@ export const setupSecurityMiddleware = (app: any) => {
         scriptSrc: [
           "'self'",
           "'unsafe-inline'",
-          "'unsafe-eval'",
           "https://cdn.jsdelivr.net",
           "https://cdnjs.cloudflare.com",
           "https://www.googletagmanager.com",

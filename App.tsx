@@ -2,7 +2,7 @@ import React, { useState, useEffect, lazy, Suspense } from 'react';
 import ErrorBoundary from './src/components/ErrorBoundary';
 import Header from './src/components/Header';
 // 要件定義書に基づく新しいコンポーネント
-import AIConectXHero from './src/components/AIConectXHero';
+import AIConnectXHero from './src/components/AIConnectXHero';
 import EnhancedHero from './src/components/EnhancedHero';
 import OptimizedDiagnosisFlow from './src/components/OptimizedDiagnosisFlow';
 // DiagnosisAnswersは削除されたコンポーネントの型なので、OptimizedDiagnosisAnswersを使用
@@ -279,9 +279,9 @@ const App: React.FC = () => {
       try {
         // 不正なセッション状態をクリア
         const sessionAuth = sessionStorage.getItem('admin_authenticated');
-        const adminSession = localStorage.getItem('admin_session');
+        const adminSession = sessionStorage.getItem('admin_session');
         
-        const forceLoggedIn = localStorage.getItem('force_admin_logged_in');
+        const forceLoggedIn = sessionStorage.getItem('force_admin_logged_in');
         
         if (sessionAuth === 'true' && adminSession && forceLoggedIn === 'true') {
           // セッションの有効期限をチェック
@@ -292,8 +292,8 @@ const App: React.FC = () => {
           if (session.expiryTime && now > new Date(session.expiryTime).getTime()) {
             // 期限切れセッションをクリア
             sessionStorage.removeItem('admin_authenticated');
-            localStorage.removeItem('admin_session');
-            localStorage.removeItem('force_admin_logged_in');
+            sessionStorage.removeItem('admin_session');
+            sessionStorage.removeItem('force_admin_logged_in');
             setIsAdminLoggedIn(false);
             if (currentPage === 'adminDashboard') {
               setCurrentPage('home');
@@ -308,15 +308,15 @@ const App: React.FC = () => {
         } else {
           // 不完全なセッション情報をクリア
           sessionStorage.removeItem('admin_authenticated');
-          localStorage.removeItem('admin_session');
-          localStorage.removeItem('force_admin_logged_in');
+          sessionStorage.removeItem('admin_session');
+          sessionStorage.removeItem('force_admin_logged_in');
           setIsAdminLoggedIn(false);
         }
       } catch (error) {
         // エラー時は全セッション情報をクリア
         sessionStorage.clear();
-        localStorage.removeItem('admin_session');
-        localStorage.removeItem('force_admin_logged_in');
+        sessionStorage.removeItem('admin_session');
+        sessionStorage.removeItem('force_admin_logged_in');
         setIsAdminLoggedIn(false);
         setCurrentPage('home');
       }
@@ -351,7 +351,7 @@ const App: React.FC = () => {
             // 30分以上非アクティブの場合はログアウト
             if (timeDiff > 30 * 60 * 1000) {
               sessionStorage.clear();
-              localStorage.removeItem('admin_session');
+              sessionStorage.removeItem('admin_session');
               setIsAdminLoggedIn(false);
               setCurrentPage('diagnosis');
             }
@@ -501,12 +501,12 @@ const App: React.FC = () => {
     console.log('handleAdminLoginSuccess called', { isSupabaseAuth, currentPage });
     
     // セッション情報を設定
-    const adminSession = localStorage.getItem('admin_session');
+    const adminSession = sessionStorage.getItem('admin_session');
     if (adminSession) {
       sessionStorage.setItem('admin_authenticated', 'true');
       
       // 管理者ログイン状態を強制的に維持
-      localStorage.setItem('force_admin_logged_in', 'true');
+      sessionStorage.setItem('force_admin_logged_in', 'true');
       
       // 状態を同期的に更新
       setIsAdminLoggedIn(true);
@@ -514,7 +514,7 @@ const App: React.FC = () => {
       
       console.log('Admin login state set synchronously - all session data configured');
     } else {
-      console.error('Admin session not found in localStorage');
+      console.error('Admin session not found in sessionStorage');
       // セッションがない場合はログイン失敗として扱う
       setIsAdminLoggedIn(false);
       setCurrentPage('traditionalLogin');
@@ -543,9 +543,9 @@ const App: React.FC = () => {
     
     // 全てのセッション関連データを強制クリア
     sessionStorage.clear();
-    localStorage.removeItem('admin_session');
-    localStorage.removeItem('force_admin_logged_in');
-    localStorage.removeItem('admin_session_state');
+    sessionStorage.removeItem('admin_session');
+    sessionStorage.removeItem('force_admin_logged_in');
+    sessionStorage.removeItem('admin_session_state');
     
     // 確実にログアウト状態を保証
     console.log('All admin session data cleared');
@@ -803,9 +803,9 @@ const App: React.FC = () => {
       );
     }
     // 管理者ログイン状態の場合（セキュリティ強化）
-    const forceAdminLoggedIn = localStorage.getItem('force_admin_logged_in') === 'true';
+    const forceAdminLoggedIn = sessionStorage.getItem('force_admin_logged_in') === 'true';
     const sessionAuth = sessionStorage.getItem('admin_authenticated') === 'true';
-    const adminSession = localStorage.getItem('admin_session');
+    const adminSession = sessionStorage.getItem('admin_session');
     
     // セッション有効性の詳細チェック
     let isValidSession = false;
@@ -822,15 +822,15 @@ const App: React.FC = () => {
           isValidSession = true;
         } else {
           // 期限切れまたは無効なセッションをクリア
-          localStorage.removeItem('admin_session');
-          localStorage.removeItem('force_admin_logged_in');
+          sessionStorage.removeItem('admin_session');
+          sessionStorage.removeItem('force_admin_logged_in');
           sessionStorage.removeItem('admin_authenticated');
         }
       } catch (error) {
         console.error('セッション解析エラー:', error);
         // 不正なセッションデータをクリア
-        localStorage.removeItem('admin_session');
-        localStorage.removeItem('force_admin_logged_in');
+        sessionStorage.removeItem('admin_session');
+        sessionStorage.removeItem('force_admin_logged_in');
         sessionStorage.removeItem('admin_authenticated');
       }
     }
@@ -1009,7 +1009,7 @@ const App: React.FC = () => {
       <>
         <Header />
         <main>
-          <AIConectXHero onStartDiagnosis={handleStartDiagnosis} />
+          <AIConnectXHero onStartDiagnosis={handleStartDiagnosis} />
           <ReliabilitySection />
           <SecurityTrustSection />
           <CallToActionSection />

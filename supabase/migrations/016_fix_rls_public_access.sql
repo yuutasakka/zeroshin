@@ -94,8 +94,8 @@ BEGIN
         
         INSERT INTO homepage_content_settings (setting_key, setting_data, is_active) VALUES
         ('first_consultation_offer', '{"enabled": true, "title": "初回相談無料", "description": "お気軽にご相談ください"}', true),
-        ('footer_data', '{"company": "AI ConectX", "copyright": "© 2024 AI ConectX. All rights reserved."}', true),
-        ('header_data', '{"logo": "AI ConectX", "navigation": []}', true);
+        ('footer_data', '{"company": "AI ConnectX", "copyright": "© 2024 AI ConnectX. All rights reserved."}', true),
+        ('header_data', '{"logo": "AI ConnectX", "navigation": []}', true);
     END IF;
 
     -- admin_settingsテーブル

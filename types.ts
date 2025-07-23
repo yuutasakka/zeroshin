@@ -103,11 +103,11 @@ export interface SlackNotificationConfig extends NotificationChannelConfig {
 }
 
 export interface LineNotificationConfig extends NotificationChannelConfig {
-  accessToken: string; // Placeholder for demo
+  accessToken: string;
 }
 
 export interface ChatWorkNotificationConfig extends NotificationChannelConfig {
-  apiToken: string;    // Placeholder for demo
+  apiToken: string;
   roomId: string;
 }
 

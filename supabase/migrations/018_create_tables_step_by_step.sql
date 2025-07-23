@@ -75,11 +75,11 @@ SELECT 'first_consultation_offer', '{"enabled": true, "title": "初回相談無�
 WHERE NOT EXISTS (SELECT 1 FROM homepage_content_settings WHERE setting_key = 'first_consultation_offer');
 
 INSERT INTO homepage_content_settings (setting_key, setting_data, is_active) 
-SELECT 'footer_data', '{"company": "AI ConectX", "copyright": "© 2024 AI ConectX. All rights reserved."}', true
+SELECT 'footer_data', '{"company": "AI ConnectX", "copyright": "© 2024 AI ConnectX. All rights reserved."}', true
 WHERE NOT EXISTS (SELECT 1 FROM homepage_content_settings WHERE setting_key = 'footer_data');
 
 INSERT INTO homepage_content_settings (setting_key, setting_data, is_active) 
-SELECT 'header_data', '{"logo": "AI ConectX", "navigation": []}', true
+SELECT 'header_data', '{"logo": "AI ConnectX", "navigation": []}', true
 WHERE NOT EXISTS (SELECT 1 FROM homepage_content_settings WHERE setting_key = 'header_data');
 
 -- admin_settingsテーブル

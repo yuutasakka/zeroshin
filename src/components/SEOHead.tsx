@@ -14,17 +14,17 @@ interface SEOHeadProps {
 }
 
 export const SEOHead: React.FC<SEOHeadProps> = ({
-  title = 'AI ConectX - お金診断アプリ',
+  title = 'AI ConnectX - お金診断アプリ',
   description = 'あなたに最適な金融商品を診断します。簡単な質問に答えるだけで、プロのファイナンシャルアドバイザーが厳選した金融商品をご提案。',
   keywords = '金融商品,資産運用,投資診断,お金診断,ファイナンシャルプランニング,資産形成,投資信託,NISA',
   image = '/pwa-512x512.png',
   url = typeof window !== 'undefined' ? window.location.href : 'https://aiconectx.com',
   type = 'website',
-  author = 'AI ConectX Team',
+  author = 'AI ConnectX Team',
   publishedTime,
   modifiedTime
 }) => {
-  const siteName = 'AI ConectX';
+  const siteName = 'AI ConnectX';
   const twitterHandle = '@aiconectx';
   
   // 構造化データ - Organization
@@ -69,10 +69,10 @@ export const SEOHead: React.FC<SEOHeadProps> = ({
     mainEntity: [
       {
         '@type': 'Question',
-        name: 'AI ConectXは無料で利用できますか？',
+        name: 'AI ConnectXは無料で利用できますか？',
         acceptedAnswer: {
           '@type': 'Answer',
-          text: 'はい、AI ConectXは完全無料でご利用いただけます。診断から商品のご提案まで、一切費用はかかりません。'
+          text: 'はい、AI ConnectXは完全無料でご利用いただけます。診断から商品のご提案まで、一切費用はかかりません。'
         }
       },
       {

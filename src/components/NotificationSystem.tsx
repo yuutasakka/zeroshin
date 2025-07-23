@@ -61,7 +61,7 @@ const NotificationSystem: React.FC<NotificationSystemProps> = ({ onNotificationS
       enabled: false,
       webhookUrl: '',
       channel: '#general',
-      username: 'AI ConectX'
+      username: 'AI ConnectX'
     },
     lineNotifications: {
       enabled: false,
@@ -84,7 +84,7 @@ const NotificationSystem: React.FC<NotificationSystemProps> = ({ onNotificationS
 
   const loadNotificationSettings = async () => {
     try {
-      const savedSettings = localStorage.getItem('notification_settings');
+      const savedSettings = sessionStorage.getItem('notification_settings');
       if (savedSettings) {
         setSettings(JSON.parse(savedSettings));
       }
@@ -97,7 +97,7 @@ const NotificationSystem: React.FC<NotificationSystemProps> = ({ onNotificationS
   const saveNotificationSettings = async () => {
     try {
       setIsLoading(true);
-      localStorage.setItem('notification_settings', JSON.stringify(settings));
+      sessionStorage.setItem('notification_settings', JSON.stringify(settings));
       onNotificationSent('通知設定が保存されました');
     } catch (error) {
       console.error('通知設定の保存エラー:', error);
@@ -157,7 +157,7 @@ const NotificationSystem: React.FC<NotificationSystemProps> = ({ onNotificationS
   const sendEmailNotification = async (notification: DiagnosisNotification): Promise<{ success: boolean; message?: string }> => {
     try {
       const emailConfig = settings.emailNotifications;
-      const subject = `[AI ConectX] ${getNotificationTitle(notification.type)}`;
+      const subject = `[AI ConnectX] ${getNotificationTitle(notification.type)}`;
       const body = formatNotificationMessage(notification);
 
       // 実際の実装では、バックエンドAPIまたはSMTPサービスを使用

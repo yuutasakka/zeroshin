@@ -135,7 +135,7 @@ const LoginSelectionPage: React.FC<LoginSelectionPageProps> = ({
         {/* セキュリティ情報 */}
         <div className="mt-6 text-center text-xs text-gray-500">
           <p>このページは暗号化された接続で保護されています</p>
-          <p className="mt-1">AI ConectX 管理システム</p>
+          <p className="mt-1">AI ConnectX 管理システム</p>
         </div>
       </div>
     </div>

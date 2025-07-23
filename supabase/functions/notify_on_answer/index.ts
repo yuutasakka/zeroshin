@@ -3,7 +3,7 @@ import { serve } from "std/server";
 serve(async (req) => {
   const { record } = await req.json();
   const userEmail = record.email;
-  const adminEmail = "admin@example.com"; // 管理者のメールアドレスに変更してください
+  const adminEmail = Deno.env.get("ADMIN_EMAIL") || "noreply@aiconnectx.com";
 
   // SendGridでメール送信
   const sendgridApiKey = Deno.env.get("SENDGRID_API_KEY");

@@ -2,11 +2,11 @@ import React, { useState, useEffect } from 'react';
 // アニメーションコンポーネントは削除されました
 import { defaultMainVisualData } from '../../data/homepageContentData';
 
-interface AIConectXHeroProps {
+interface AIConnectXHeroProps {
   onStartDiagnosis: () => void;
 }
 
-const AIConectXHero: React.FC<AIConectXHeroProps> = ({ onStartDiagnosis }) => {
+const AIConnectXHero: React.FC<AIConnectXHeroProps> = ({ onStartDiagnosis }) => {
   const [mainVisualData, setMainVisualData] = useState(defaultMainVisualData);
 
   useEffect(() => {
@@ -348,4 +348,4 @@ const AIConectXHero: React.FC<AIConectXHeroProps> = ({ onStartDiagnosis }) => {
   );
 };
 
-export default AIConectXHero; 
+export default AIConnectXHero; 

@@ -153,7 +153,7 @@ const RegistrationRequestPage: React.FC<RegistrationRequestPageProps> = ({ onNav
               新規ユーザー申請
             </h1>
             <p className="text-gray-600">
-              AI ConectXのご利用には管理者の承認が必要です
+              AI ConnectXのご利用には管理者の承認が必要です
             </p>
           </div>
 
@@ -285,7 +285,7 @@ const RegistrationRequestPage: React.FC<RegistrationRequestPageProps> = ({ onNav
                 className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 ${
                   errors.purpose ? 'border-red-300' : 'border-gray-300'
                 }`}
-                placeholder="どのような目的でAI ConectXを利用されますか？詳しくお聞かせください。"
+                placeholder="どのような目的でAI ConnectXを利用されますか？詳しくお聞かせください。"
                 disabled={isSubmitting}
               />
               {errors.purpose && (

@@ -124,7 +124,7 @@ const DiagnosisResultsPage: React.FC<DiagnosisResultsPageProps> = ({ diagnosisDa
   const authSuccessRef = useRef(false); // 認証成功フラグ
 
 
-  // localStorageの内容も確認
+  // sessionStorageの内容も確認
 
   // 診断データの復元機能
   const restoredDiagnosisData = useMemo(() => {
@@ -135,9 +135,9 @@ const DiagnosisResultsPage: React.FC<DiagnosisResultsPageProps> = ({ diagnosisDa
     }
 
 
-    // propsのデータが不完全な場合、localStorageから復元を試行
+    // propsのデータが不完全な場合、sessionStorageから復元を試行
     try {
-      const currentSession = localStorage.getItem('currentUserSession');
+      const currentSession = sessionStorage.getItem('currentUserSession');
       
       if (currentSession) {
         const sessionData = JSON.parse(currentSession);
@@ -149,8 +149,8 @@ const DiagnosisResultsPage: React.FC<DiagnosisResultsPageProps> = ({ diagnosisDa
       } else {
       }
 
-      // 他のlocalStorageキーも確認
-      const diagnosisDataDirect = localStorage.getItem('diagnosisData');
+      // 他のsessionStorageキーも確認
+      const diagnosisDataDirect = sessionStorage.getItem('diagnosisData');
       if (diagnosisDataDirect) {
         const parsedDirect = JSON.parse(diagnosisDataDirect);
         return parsedDirect;
@@ -293,9 +293,9 @@ const DiagnosisResultsPage: React.FC<DiagnosisResultsPageProps> = ({ diagnosisDa
               const expert = expertData[0];
               const mockPlanner: FinancialPlanner = {
                 id: 1,
-                name: expert.expert_name || 'AI ConectX専門アドバイザー',
+                name: expert.expert_name || 'AI ConnectX専門アドバイザー',
                 image_url: 'https://via.placeholder.com/150x150?text=Expert',
-                title: 'AI ConectX認定ファイナンシャルプランナー',
+                title: 'AI ConnectX認定ファイナンシャルプランナー',
                 description: expert.description || '',
                 rating: 4.8,
                 languages: ['日本語'],
@@ -347,9 +347,9 @@ const DiagnosisResultsPage: React.FC<DiagnosisResultsPageProps> = ({ diagnosisDa
             const expert = expertData[0];
             const mockPlanner: FinancialPlanner = {
               id: 1,
-              name: expert.expert_name || 'AI ConectX専門アドバイザー',
+              name: expert.expert_name || 'AI ConnectX専門アドバイザー',
               image_url: 'https://via.placeholder.com/150x150?text=Expert',
-              title: 'AI ConectX認定ファイナンシャルプランナー',
+              title: 'AI ConnectX認定ファイナンシャルプランナー',
               description: expert.description || '',
               rating: 4.8,
               languages: ['日本語'],
@@ -397,7 +397,7 @@ const DiagnosisResultsPage: React.FC<DiagnosisResultsPageProps> = ({ diagnosisDa
               id: product.id,
               name: product.name || product.product_name,
               description: product.description,
-              company: product.company || 'AI ConectX',
+              company: product.company || 'AI ConnectX',
               type: product.type || product.product_type || 'investment',
               riskLevel: product.risk_level || 'medium',
               expectedReturn: product.expected_return || '3-5%',
@@ -445,12 +445,12 @@ const DiagnosisResultsPage: React.FC<DiagnosisResultsPageProps> = ({ diagnosisDa
       
       try {
         
-        const currentSession = localStorage.getItem('currentUserSession');
+        const currentSession = sessionStorage.getItem('currentUserSession');
         
         if (!currentSession) {
           const errorMsg = '認証情報が見つかりません。診断を最初からやり直してください。';
           dispatch({ type: 'SET_AUTH_ERROR', payload: errorMsg });
-          dispatch({ type: 'SET_DEBUG_INFO', payload: 'localStorage に currentUserSession が存在しません' });
+          dispatch({ type: 'SET_DEBUG_INFO', payload: 'sessionStorage に currentUserSession が存在しません' });
           return;
         }
 
@@ -507,15 +507,15 @@ const DiagnosisResultsPage: React.FC<DiagnosisResultsPageProps> = ({ diagnosisDa
             };
             
             
-            // 復元したデータをローカルストレージに保存
-            localStorage.setItem('diagnosisData', JSON.stringify(restoredDiagnosisData));
+            // 復元したデータをセッションストレージに保存
+            sessionStorage.setItem('diagnosisData', JSON.stringify(restoredDiagnosisData));
             
             // セッションデータも更新
             const updatedSessionData = {
               ...sessionData,
               diagnosisAnswers: dbAnswers
             };
-            localStorage.setItem('currentUserSession', JSON.stringify(updatedSessionData));
+            sessionStorage.setItem('currentUserSession', JSON.stringify(updatedSessionData));
             
           }
         }
@@ -804,7 +804,7 @@ const DiagnosisResultsPage: React.FC<DiagnosisResultsPageProps> = ({ diagnosisDa
       <div className="min-h-screen bg-gradient-to-br from-red-50 via-pink-50 to-orange-50 flex items-center justify-center p-4">
         <div className="max-w-md w-full bg-white rounded-xl shadow-lg p-8 text-center">
           <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
-            <i className="fas fa-shield-alt text-red-600 text-2xl"></i>
+            <span className="text-red-600 text-2xl font-bold">🛡️</span>
           </div>
           <h1 className="text-2xl font-bold text-gray-800 mb-4">アクセス制限</h1>
           <p className="text-gray-600 mb-6">
@@ -817,9 +817,9 @@ const DiagnosisResultsPage: React.FC<DiagnosisResultsPageProps> = ({ diagnosisDa
           )}
           <button
             onClick={() => window.location.href = '/'}
-            className="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white font-semibold py-3 px-6 rounded-lg transition-all duration-200 transform hover:scale-105"
+            className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold py-3 px-6 rounded-lg transition-all duration-200 transform hover:scale-105"
           >
-            <i className="fas fa-home mr-2"></i>
+            <span className="mr-2">🏠</span>
             ホームに戻る
           </button>
         </div>
@@ -865,7 +865,7 @@ const DiagnosisResultsPage: React.FC<DiagnosisResultsPageProps> = ({ diagnosisDa
                   }}
                   className="w-full bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white font-bold py-3 sm:py-4 px-4 sm:px-6 rounded-lg transition-all duration-200 transform hover:scale-105 hover:shadow-lg cursor-pointer flex items-center justify-center text-sm sm:text-base"
                 >
-                  <i className="fas fa-phone mr-3 text-lg"></i>
+                  <span className="mr-3 text-lg">📞</span>
                   <div className="text-left">
                     <div className="text-base sm:text-lg">電話で相談</div>
                     <div className="text-xs sm:text-sm opacity-90">{state.selectedExpert.contact_info.phone_number}</div>
@@ -881,7 +881,7 @@ const DiagnosisResultsPage: React.FC<DiagnosisResultsPageProps> = ({ diagnosisDa
                   }}
                   className="w-full bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white font-bold py-3 sm:py-4 px-4 sm:px-6 rounded-lg transition-all duration-200 transform hover:scale-105 hover:shadow-lg cursor-pointer flex items-center justify-center text-sm sm:text-base"
                 >
-                  <i className="fab fa-line mr-3 text-lg"></i>
+                  <span className="mr-3 text-lg">💬</span>
                   <div className="text-left">
                     <div className="text-base sm:text-lg">LINEで相談</div>
                     <div className="text-xs sm:text-sm opacity-90">チャットでお気軽に相談</div>
@@ -902,7 +902,7 @@ const DiagnosisResultsPage: React.FC<DiagnosisResultsPageProps> = ({ diagnosisDa
                   aria-label={`${state.selectedExpert?.name}にメールで相談する`}
                   role="button"
                 >
-                  <i className="fas fa-envelope mr-3 text-lg"></i>
+                  <span className="mr-3 text-lg">✉️</span>
                   <div className="text-left">
                     <div className="text-base sm:text-lg">メールで相談</div>
                     <div className="text-xs sm:text-sm opacity-90">詳細なご相談も可能</div>
@@ -914,7 +914,7 @@ const DiagnosisResultsPage: React.FC<DiagnosisResultsPageProps> = ({ diagnosisDa
               {state.selectedExpert.contact_info.consultation_hours && (
                 <div className="bg-blue-50 p-3 rounded-lg">
                   <div className="text-sm text-blue-800 font-medium mb-1">
-                    <i className="fas fa-clock mr-2"></i>相談可能時間
+                    <span className="mr-2">🕒</span>相談可能時間
                   </div>
                   <div className="text-sm text-blue-700">
                     {state.selectedExpert.contact_info.consultation_hours}
@@ -944,7 +944,7 @@ const DiagnosisResultsPage: React.FC<DiagnosisResultsPageProps> = ({ diagnosisDa
               className="inline-block p-5 rounded-full mb-5 shadow-lg"
               style={{ background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' }}
             >
-              <i className="fas fa-chart-line text-white text-3xl"></i>
+              <span className="text-white text-3xl">📊</span>
             </div>
             <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-gray-800 mb-2 leading-tight">
               診断結果
@@ -972,7 +972,7 @@ const DiagnosisResultsPage: React.FC<DiagnosisResultsPageProps> = ({ diagnosisDa
           {/* AI アドバイス セクション */}
           <div className="bg-white p-4 sm:p-6 md:p-8 rounded-xl shadow-md mb-6 md:mb-8">
             <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-800 mb-4 flex items-center justify-center">
-              <i className="fas fa-robot text-blue-600 mr-2"></i>
+              <span className="text-blue-600 mr-2">🤖</span>
               AIによる個別アドバイス
             </h2>
             
@@ -983,7 +983,7 @@ const DiagnosisResultsPage: React.FC<DiagnosisResultsPageProps> = ({ diagnosisDa
               </div>
             ) : state.adviceError ? (
               <div className="text-red-600 py-4">
-                <i className="fas fa-exclamation-triangle mr-2"></i>
+                <span className="mr-2">⚠️</span>
                 {state.adviceError}
               </div>
             ) : state.financialAdvice ? (
@@ -994,7 +994,6 @@ const DiagnosisResultsPage: React.FC<DiagnosisResultsPageProps> = ({ diagnosisDa
               </div>
             ) : (
               <div className="text-gray-600 py-4">
-                <i className="fas fa-info-circle mr-2"></i>
                 アドバイスを準備中です...
               </div>
             )}
@@ -1004,7 +1003,7 @@ const DiagnosisResultsPage: React.FC<DiagnosisResultsPageProps> = ({ diagnosisDa
           {state.recommendedProducts.length > 0 && (
             <div className="bg-white p-4 sm:p-6 md:p-8 rounded-xl shadow-md mb-6 md:mb-8">
               <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-800 mb-4 md:mb-6 flex items-center justify-center">
-                <i className="fas fa-star text-yellow-500 mr-2"></i>
+                <span className="text-yellow-500 mr-2">⭐</span>
                 あなたにおすすめの金融商品
               </h2>
               
@@ -1023,7 +1022,7 @@ const DiagnosisResultsPage: React.FC<DiagnosisResultsPageProps> = ({ diagnosisDa
                     <ul className="text-sm text-gray-600 space-y-1">
                       {product.recommendationReasons.map((reason, reasonIndex) => (
                         <li key={reasonIndex} className="flex items-start">
-                          <i className="fas fa-check text-green-500 text-xs mt-1 mr-2"></i>
+                          <span className="text-green-500 text-xs mt-1 mr-2">✓</span>
                           {reason}
                         </li>
                       ))}
@@ -1046,8 +1045,7 @@ const DiagnosisResultsPage: React.FC<DiagnosisResultsPageProps> = ({ diagnosisDa
                         rel="noopener noreferrer"
                         className="flex-1 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white font-medium py-2 px-4 rounded-lg transition-all duration-200 transform hover:scale-105 hover:shadow-lg cursor-pointer text-center"
                       >
-                        <i className="fas fa-info-circle mr-2"></i>
-                        詳細を見る
+                                詳細を見る
                       </a>
                     )}
                     {(product as any).application_url && (
@@ -1057,14 +1055,12 @@ const DiagnosisResultsPage: React.FC<DiagnosisResultsPageProps> = ({ diagnosisDa
                         rel="noopener noreferrer"
                         className="flex-1 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white font-medium py-2 px-4 rounded-lg transition-all duration-200 transform hover:scale-105 hover:shadow-lg cursor-pointer text-center"
                       >
-                        <i className="fas fa-edit mr-2"></i>
                         お申し込み
                       </a>
                     )}
                     {!(product as any).url && !(product as any).application_url && (
                       <div className="text-center text-gray-500 text-sm py-2">
-                        <i className="fas fa-info-circle mr-2"></i>
-                        詳細情報は準備中です
+                                詳細情報は準備中です
                       </div>
                     )}
                   </div>
@@ -1078,7 +1074,7 @@ const DiagnosisResultsPage: React.FC<DiagnosisResultsPageProps> = ({ diagnosisDa
           {/* 専門家相談セクション */}
           <div className="bg-white p-4 sm:p-6 md:p-8 rounded-xl shadow-md mb-6 md:mb-8">
             <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-800 mb-4 flex items-center justify-center">
-              <i className="fas fa-user-tie text-green-600 mr-2"></i>
+              <span className="text-green-600 mr-2">👔</span>
               専門家によるサポート
             </h2>
             <p className="text-gray-600 mb-6">
@@ -1109,9 +1105,9 @@ const DiagnosisResultsPage: React.FC<DiagnosisResultsPageProps> = ({ diagnosisDa
                         dispatch({ type: 'SET_SELECTED_EXPERT', payload: planner });
                         dispatch({ type: 'SET_EXPERT_MODAL', payload: true });
                       }}
-                      className="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white font-medium py-2 px-3 sm:px-4 rounded-lg transition-all duration-200 transform hover:scale-105 hover:shadow-lg cursor-pointer text-sm sm:text-base w-full sm:w-auto mt-3 sm:mt-0 sm:ml-auto"
+                      className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-medium py-2 px-3 sm:px-4 rounded-lg transition-all duration-200 transform hover:scale-105 hover:shadow-lg cursor-pointer text-sm sm:text-base w-full sm:w-auto mt-3 sm:mt-0 sm:ml-auto"
                     >
-                      <i className="fas fa-comments mr-2"></i>
+                      <span className="mr-2">💬</span>
                       相談する
                     </button>
                   </div>
@@ -1169,15 +1165,15 @@ const DiagnosisResultsPage: React.FC<DiagnosisResultsPageProps> = ({ diagnosisDa
               className="bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white font-semibold py-2.5 sm:py-3 px-4 sm:px-6 rounded-lg transition-all duration-200 transform hover:scale-105 hover:shadow-lg cursor-pointer text-sm sm:text-base"
               aria-label="診断結果のURLをクリップボードにコピーしてシェアする"
             >
-              <i className="fas fa-share mr-2"></i>
+              <span className="mr-2">📤</span>
               この結果をシェア
             </button>
             <button
               onClick={() => window.print()}
-              className="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white font-semibold py-2.5 sm:py-3 px-4 sm:px-6 rounded-lg transition-all duration-200 transform hover:scale-105 hover:shadow-lg cursor-pointer text-sm sm:text-base"
+              className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold py-2.5 sm:py-3 px-4 sm:px-6 rounded-lg transition-all duration-200 transform hover:scale-105 hover:shadow-lg cursor-pointer text-sm sm:text-base"
               aria-label="診断結果をプリンターで印刷する"
             >
-              <i className="fas fa-print mr-2"></i>
+              <span className="mr-2">🖨️</span>
               結果を印刷
             </button>
             <button
@@ -1185,7 +1181,7 @@ const DiagnosisResultsPage: React.FC<DiagnosisResultsPageProps> = ({ diagnosisDa
               className="bg-gradient-to-r from-gray-500 to-gray-600 hover:from-gray-600 hover:to-gray-700 text-white font-semibold py-2.5 sm:py-3 px-4 sm:px-6 rounded-lg transition-all duration-200 transform hover:scale-105 hover:shadow-lg cursor-pointer text-sm sm:text-base"
               aria-label="ホームページに戻って新しい診断を始める"
             >
-              <i className="fas fa-home mr-2"></i>
+              <span className="mr-2">🏠</span>
               ホームに戻る
             </button>
           </div>

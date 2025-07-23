@@ -3,7 +3,7 @@
 # 開発ツールセットアップスクリプト
 # 使用方法: ./scripts/setup-dev-tools.sh
 
-echo "🛠️ AI ConectX 開発ツールセットアップ"
+echo "🛠️ AI ConnectX 開発ツールセットアップ"
 echo "===================================="
 
 # カラー設定
@@ -48,7 +48,7 @@ cat > docker/gitiles/gitiles.config << EOF
   allowHtml = true
   
 [ui]
-  sitename = AI ConectX Git Repository
+  sitename = AI ConnectX Git Repository
 EOF
 
 # package.jsonにスクリプト追加

@@ -82,7 +82,7 @@ export interface Product {
 }
 
 // APIクライアントクラス
-export class AIConectXAPIClient {
+export class AIConnectXAPIClient {
   private baseURL: string;
   private accessToken: string | null = null;
   
@@ -211,4 +211,4 @@ export class AIConectXAPIClient {
 }
 
 // シングルトンインスタンス
-export const apiClient = new AIConectXAPIClient();
+export const apiClient = new AIConnectXAPIClient();

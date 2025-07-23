@@ -38,7 +38,7 @@ describe('SEOHead', () => {
     );
 
     // タイトル
-    expect(titleTag.props.children).toBe('AI ConectX - お金診断アプリ');
+    expect(titleTag.props.children).toBe('AI ConnectX - お金診断アプリ');
 
     // description
     const descTag = metaTags.find(
@@ -93,7 +93,7 @@ describe('SEOHead', () => {
       (tag: any) => tag.props.property === 'og:title'
     );
     expect(ogTitle).toBeDefined();
-    expect(ogTitle.props.content).toBe('AI ConectX - お金診断アプリ');
+    expect(ogTitle.props.content).toBe('AI ConnectX - お金診断アプリ');
 
     // og:type
     const ogType = metaTags.find(
@@ -105,7 +105,7 @@ describe('SEOHead', () => {
     const ogSiteName = metaTags.find(
       (tag: any) => tag.props.property === 'og:site_name'
     );
-    expect(ogSiteName.props.content).toBe('AI ConectX');
+    expect(ogSiteName.props.content).toBe('AI ConnectX');
   });
 
   test('Twitter Cardタグが正しく設定される', () => {
@@ -142,7 +142,7 @@ describe('SEOHead', () => {
     // Organization schema
     const orgSchema = JSON.parse(scriptTags[0].props.children);
     expect(orgSchema['@type']).toBe('Organization');
-    expect(orgSchema.name).toBe('AI ConectX');
+    expect(orgSchema.name).toBe('AI ConnectX');
 
     // WebApplication schema
     const webAppSchema = JSON.parse(scriptTags[1].props.children);

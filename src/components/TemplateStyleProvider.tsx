@@ -205,7 +205,7 @@ const TemplateStyleProvider: React.FC<TemplateStyleProviderProps> = ({ children 
 
   return (
     <>
-      <style dangerouslySetInnerHTML={{ __html: templateStyles }} />
+      <style>{templateStyles}</style>
       {children}
     </>
   );

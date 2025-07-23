@@ -64,9 +64,9 @@ export class SecureSessionManager {
   // セッションのクリア
   static clearSession(): void {
     sessionStorage.removeItem(this.SESSION_KEY);
-    localStorage.removeItem('admin_authenticated');
-    localStorage.removeItem('admin_session');
-    localStorage.removeItem('force_admin_logged_in');
+    sessionStorage.removeItem('admin_authenticated');
+    sessionStorage.removeItem('admin_session');
+    sessionStorage.removeItem('force_admin_logged_in');
   }
   
   // ブラウザフィンガープリントの生成

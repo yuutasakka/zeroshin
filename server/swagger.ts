@@ -22,7 +22,7 @@ const customCss = `
 // Swagger UIのオプション
 const options = {
   customCss,
-  customSiteTitle: "AI ConectX API Documentation",
+  customSiteTitle: "AI ConnectX API Documentation",
   customfavIcon: "/favicon.ico",
   swaggerOptions: {
     persistAuthorization: true,

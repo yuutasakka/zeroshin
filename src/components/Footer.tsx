@@ -112,14 +112,8 @@ const Footer: React.FC<FooterProps> = ({ onNavigateToAdminLogin }) => {
     >
       <div className="container mx-auto px-3 sm:px-4 md:px-6 lg:px-8 max-w-7xl">
         <div className="flex items-center justify-center mb-8">
-            <div 
-              className="w-10 h-10 rounded-full flex items-center justify-center mr-4 bg-gradient-to-br from-blue-500 to-purple-600" 
-              aria-hidden="true"
-            >
-                <i className="fas fa-coins text-white"></i>
-            </div>
             <h5 className="text-xl md:text-2xl lg:text-3xl font-bold text-blue-800">
-              {footerData.siteName || 'AI ConectX'}
+              {footerData.siteName || 'AI ConnectX'}
             </h5>
         </div>
         
@@ -155,7 +149,7 @@ const Footer: React.FC<FooterProps> = ({ onNavigateToAdminLogin }) => {
                       管理者ログイン
                     </a>
                 </nav>
-                <p className="mt-8 text-xs sm:text-sm md:text-base text-gray-500">{footerData.copyright || `© ${new Date().getFullYear()} AI ConectX株式会社. All rights reserved.`}</p>
+                <p className="mt-8 text-xs sm:text-sm md:text-base text-gray-500">{footerData.copyright || `© ${new Date().getFullYear()} AI ConnectX株式会社. All rights reserved.`}</p>
             </div>
         </div>
       </div>

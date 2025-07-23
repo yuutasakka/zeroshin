@@ -1,4 +1,4 @@
--- AI ConectX 代替修正方法 - DELETE使用
+-- AI ConnectX 代替修正方法 - DELETE使用
 
 -- 1. トリガー削除
 DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users CASCADE;

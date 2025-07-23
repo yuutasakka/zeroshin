@@ -354,7 +354,7 @@ const OptimizedDiagnosisFlow: React.FC<OptimizedDiagnosisFlowProps> = ({ onCompl
         </div>
         
         <button
-          className="w-full py-4 bg-gradient-to-r from-green-500 to-emerald-500 text-white font-bold rounded-xl shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+          className="w-full py-4 bg-gradient-to-r from-blue-600 to-purple-600 text-white font-bold rounded-xl shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none hover:from-blue-700 hover:to-purple-700"
           onClick={handleComplete}
           disabled={!validatePhoneNumber(phoneInput) || !termsAccepted}
           aria-label="電話番号を確認して診断を完了する"

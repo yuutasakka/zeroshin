@@ -28,16 +28,19 @@ export class SecureStorage {
     
     // サーバーサイドでは環境変数から取得
     if (!this.encryptionKey) {
-      this.encryptionKey = process.env.ENCRYPTION_KEY || 'default-server-key';
+      this.encryptionKey = process.env.ENCRYPTION_KEY;
+      if (!this.encryptionKey) {
+        throw new Error('ENCRYPTION_KEY環境変数が設定されていません');
+      }
     }
-    return this.encryptionKey || 'default-server-key';
+    return this.encryptionKey;
   }
 
   static setSecureItem(key: string, value: any): void {
     try {
       const serialized = JSON.stringify(value);
       const encrypted = this.simpleEncrypt(serialized, this.getEncryptionKey());
-      localStorage.setItem(key, encrypted);
+      sessionStorage.setItem(key, encrypted);
     } catch (error) {
       console.error('Failed to store secure item:', error);
     }
@@ -45,7 +48,7 @@ export class SecureStorage {
 
   static getSecureItem(key: string): any | null {
     try {
-      const encrypted = localStorage.getItem(key);
+      const encrypted = sessionStorage.getItem(key);
       if (!encrypted) return null;
       
       const decrypted = this.simpleDecrypt(encrypted, this.getEncryptionKey());
@@ -57,12 +60,12 @@ export class SecureStorage {
   }
 
   static removeSecureItem(key: string): void {
-    localStorage.removeItem(key);
+    sessionStorage.removeItem(key);
   }
 
   static computeHash(input: string): string {
-    // Simple hash implementation for demonstration purposes
-    // In production, use a proper cryptographic library
+    // Simple hash implementation
+    // TODO: Replace with proper cryptographic library
     let hash = 0;
     if (input.length === 0) return hash.toString();
     for (let i = 0; i < input.length; i++) {
@@ -602,7 +605,7 @@ export const secureLog = (message: string, data?: any) => {
     maskedMessage = maskedMessage.replace(regex, '$1[PROTECTED]');
   });
 
-  console.log(`[AI ConectX Security] ${maskedMessage}`, maskedData);
+  console.log(`[AI ConnectX Security] ${maskedMessage}`, maskedData);
 };
 
 // CSRFトークン生成

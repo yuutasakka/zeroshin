@@ -68,14 +68,14 @@ export const ColorThemeProvider: React.FC<ColorThemeProviderProps> = ({ children
     if (theme) {
       setCurrentThemeState(theme);
       applyTheme(theme);
-      // ローカルストレージに保存
-      localStorage.setItem('selectedColorTheme', themeId);
+      // セッションストレージに保存
+      sessionStorage.setItem('selectedColorTheme', themeId);
     }
   };
 
-  // 初期化とローカルストレージからの読み込み
+  // 初期化とセッションストレージからの読み込み
   useEffect(() => {
-    const savedThemeId = localStorage.getItem('selectedColorTheme');
+    const savedThemeId = sessionStorage.getItem('selectedColorTheme');
     if (savedThemeId) {
       const savedTheme = colorThemes.find(t => t.id === savedThemeId);
       if (savedTheme) {

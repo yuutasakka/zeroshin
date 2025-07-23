@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 /**
- * AI ConectX セキュリティチェックリスト
+ * AI ConnectX セキュリティチェックリスト
  * 本番デプロイ前に実行必須
  */
 
@@ -16,7 +16,7 @@ class SecurityAuditor {
   private checks: SecurityCheck[] = [];
   
   async runFullAudit(): Promise<SecurityCheck[]> {
-    console.log('🔒 AI ConectX セキュリティ監査開始...\n');
+    console.log('🔒 AI ConnectX セキュリティ監査開始...\n');
     
     await this.checkEnvironmentVariables();
     await this.checkPasswordSecurity();
