@@ -873,16 +873,16 @@ export class RegistrationRequestManager {
   }): Promise<{ success: boolean; error?: string; id?: string }> {
     try {
       const normalizedPhone = requestData.phone_number.replace(/\D/g, '');
-      const requestId = `req_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
       
       const request = {
-        id: requestId,
+        // id は自動生成されるUUIDなので削除
         full_name: requestData.full_name,
         email: requestData.email.toLowerCase(),
         phone_number: normalizedPhone,
-        organization: requestData.organization || null,
-        purpose: requestData.purpose,
+        department: requestData.organization || null, // organization → department
+        reason: requestData.purpose, // purpose → reason
         status: 'pending' as const,
+        password_hash: 'temporary_hash', // 必須フィールド（後で更新）
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
       };
@@ -962,51 +962,17 @@ export class RegistrationRequestManager {
     }
   }
 
-  // Edge Function経由で申請を承認/却下
+  // 申請を承認/却下（直接データベース更新）
   async approveOrRejectRequest(
     requestId: string, 
     action: 'approve' | 'reject',
     adminNotes?: string,
     reviewedBy?: string
   ): Promise<{ success: boolean; error?: string; message?: string }> {
-    try {
-      // Edge Function呼び出し
-      const { data, error } = await this.supabase.functions.invoke('approve-registration', {
-        body: {
-          requestId,
-          action,
-          adminNotes: adminNotes || '',
-          reviewedBy: reviewedBy || 'admin'
-        }
-      });
-
-      if (error) {
-        console.error('Edge Function呼び出しエラー:', error);
-        
-        // フォールバック: 直接データベース更新
-        return await this.directUpdateRequestStatus(requestId, action, adminNotes, reviewedBy);
-      }
-
-      if (data && data.success) {
-        return {
-          success: true,
-          message: action === 'approve' ? 
-            '申請が承認され、ユーザーアカウントが作成されました。' : 
-            '申請が却下されました。'
-        };
-      }
-
-      return { 
-        success: false, 
-        error: data?.error || 'Edge Function処理中にエラーが発生しました' 
-      };
-
-    } catch (error) {
-      console.error('申請処理エラー:', error);
-      
-      // フォールバック処理
-      return await this.directUpdateRequestStatus(requestId, action, adminNotes, reviewedBy);
-    }
+    console.log('申請処理開始:', { requestId, action, adminNotes, reviewedBy });
+    
+    // Edge Function はCORSエラーが発生するため、直接データベース更新を使用
+    return await this.directUpdateRequestStatus(requestId, action, adminNotes, reviewedBy);
   }
 
   // 直接データベース更新（フォールバック）
