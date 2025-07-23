@@ -966,39 +966,13 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
           return;
         }
 
-        // 既存データとの比較（変更がない場合のチェック）
-        const existingTestimonialsString = localStorage.getItem('customTestimonials');
-        if (existingTestimonialsString) {
-          try {
-            const existingTestimonials = JSON.parse(existingTestimonialsString);
-            if (JSON.stringify(existingTestimonials) === JSON.stringify(testimonialsForEditing)) {
-              setTestimonialStatus('❌ お客様の声に変更がありません。');
-              setTimeout(() => setTestimonialStatus(''), 5000);
-              return;
-            }
-          } catch (parseError) {
-            secureLog('既存お客様の声データの解析でエラー（新規保存として処理）:', parseError);
-          }
+        // Supabaseに直接保存
+        const supabaseSuccess = await SupabaseAdminAPI.saveAdminSetting('testimonials', testimonialsForEditing);
+        if (!supabaseSuccess) {
+          throw new Error('Supabase保存に失敗しました');
         }
-
-        // まずローカルストレージに保存
-        localStorage.setItem('customTestimonials', JSON.stringify(testimonialsForEditing));
-        secureLog('お客様の声をローカルストレージに保存完了');
-        
-        // Supabaseにも保存を試行
-        try {
-          const supabaseSuccess = await SupabaseAdminAPI.saveAdminSetting('testimonials', testimonialsForEditing);
-          if (supabaseSuccess) {
-            secureLog('Supabaseにもお客様の声を保存完了');
-            setTestimonialStatus('✅ お客様の声が正常に保存され、データベースに反映されました');
-          } else {
-            secureLog('Supabase保存に失敗しましたが、ローカル保存は成功');
-            setTestimonialStatus('✅ お客様の声が正常に保存されました（ローカル保存）');
-          }
-        } catch (supabaseError) {
-          secureLog('Supabase保存でエラーが発生しましたが、ローカル保存は成功:', supabaseError);
-          setTestimonialStatus('✅ お客様の声が正常に保存されました（ローカル保存）');
-        }
+        console.log('🔧 Supabaseにお客様の声を保存完了');
+        setTestimonialStatus('✅ お客様の声が正常に保存されました');
         
         setTimeout(() => setTestimonialStatus(''), 3000);
     } catch (error) {
@@ -1017,39 +991,13 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
       setAnalyticsSettingsStatus('📊 アナリティクス設定を保存中...');
       
       try {
-          // 既存データとの比較（変更がない場合のチェック）
-          const existingScriptsString = localStorage.getItem('customTrackingScripts');
-          if (existingScriptsString) {
-            try {
-              const existingScripts = JSON.parse(existingScriptsString);
-              if (JSON.stringify(existingScripts) === JSON.stringify(trackingScripts)) {
-                setAnalyticsSettingsStatus('❌ アナリティクス設定に変更がありません。');
-                setTimeout(() => setAnalyticsSettingsStatus(''), 5000);
-                return;
-              }
-            } catch (parseError) {
-              secureLog('既存アナリティクス設定の解析でエラー（新規保存として処理）:', parseError);
-            }
+          // Supabaseに直接保存
+          const supabaseSuccess = await SupabaseAdminAPI.saveAdminSetting('tracking_scripts', trackingScripts);
+          if (!supabaseSuccess) {
+            throw new Error('Supabase保存に失敗しました');
           }
-
-          // まずローカルストレージに保存
-          localStorage.setItem('customTrackingScripts', JSON.stringify(trackingScripts));
-          secureLog('アナリティクス設定をローカルストレージに保存完了');
-          
-          // Supabaseにも保存を試行
-          try {
-            const supabaseSuccess = await SupabaseAdminAPI.saveAdminSetting('tracking_scripts', trackingScripts);
-            if (supabaseSuccess) {
-              secureLog('Supabaseにもアナリティクス設定を保存完了');
-              setAnalyticsSettingsStatus('✅ アナリティクス設定が正常に保存され、データベースに反映されました');
-            } else {
-              secureLog('Supabase保存に失敗しましたが、ローカル保存は成功');
-              setAnalyticsSettingsStatus('✅ アナリティクス設定が正常に保存されました（ローカル保存）');
-            }
-          } catch (supabaseError) {
-            secureLog('Supabase保存でエラーが発生しましたが、ローカル保存は成功:', supabaseError);
-            setAnalyticsSettingsStatus('✅ アナリティクス設定が正常に保存されました（ローカル保存）');
-          }
+          console.log('🔧 Supabaseにアナリティクス設定を保存完了');
+          setAnalyticsSettingsStatus('✅ アナリティクス設定が正常に保存されました');
           
           setTimeout(() => setAnalyticsSettingsStatus(''), 3000);
       } catch (error) {
@@ -1080,40 +1028,14 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
     setNotificationSettingsStatus('🔔 通知設定を保存中...');
     
     try {
-        // 既存データとの比較（変更がない場合のチェック）
-        const existingSettingsString = localStorage.getItem('notificationConfigurations');
-        if (existingSettingsString) {
-          try {
-            const existingSettings = JSON.parse(existingSettingsString);
-            if (JSON.stringify(existingSettings) === JSON.stringify(notificationSettings)) {
-              setNotificationSettingsStatus('❌ 通知設定に変更がありません。');
-              setTimeout(() => setNotificationSettingsStatus(''), 5000);
-              return;
-            }
-          } catch (parseError) {
-            secureLog('既存通知設定の解析でエラー（新規保存として処理）:', parseError);
-          }
+        // Supabaseに直接保存
+        console.log('🔧 Supabaseに通知設定を保存中...');
+        const supabaseSuccess = await SupabaseAdminAPI.saveAdminSetting('notification_settings', notificationSettings);
+        if (!supabaseSuccess) {
+          throw new Error('Supabase保存に失敗しました');
         }
-
-        // まずローカルストレージに保存
-        localStorage.setItem('notificationConfigurations', JSON.stringify(notificationSettings));
-        secureLog('通知設定をローカルストレージに保存完了');
-        
-        // Supabaseにも保存を試行
-        try {
-          console.log('🔧 Supabaseに通知設定を保存中...');
-          const supabaseSuccess = await SupabaseAdminAPI.saveAdminSetting('notification_settings', notificationSettings);
-          if (supabaseSuccess) {
-            console.log('🔧 Supabaseにも通知設定を保存完了');
-            setNotificationSettingsStatus('✅ 通知設定が正常に保存され、データベースに反映されました');
-          } else {
-            console.log('🔧 Supabase保存に失敗しましたが、ローカル保存は成功');
-            setNotificationSettingsStatus('✅ 通知設定が正常に保存されました（ローカル保存）');
-          }
-        } catch (supabaseError) {
-          console.error('🚨 Supabase保存でエラーが発生しましたが、ローカル保存は成功:', supabaseError);
-          setNotificationSettingsStatus('✅ 通知設定が正常に保存されました（ローカル保存）');
-        }
+        console.log('🔧 Supabaseに通知設定を保存完了');
+        setNotificationSettingsStatus('✅ 通知設定が正常に保存されました');
         
         setTimeout(() => setNotificationSettingsStatus(''), 3000);
     } catch (error) {
@@ -1201,25 +1123,14 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
     try {
       setExpertContactStatus('💾 専門家設定を保存中...');
 
-      // まずローカルストレージに保存
-      localStorage.setItem('expert_contact_settings', JSON.stringify(expertContact));
-      console.log('🔧 専門家設定をローカルストレージに保存完了:', expertContact);
-
-      // Supabaseにも保存を試行
-      try {
-        console.log('🔧 Supabaseに専門家設定を保存中...');
-        const supabaseSuccess = await SupabaseAdminAPI.saveAdminSetting('expert_contact_settings', expertContact);
-        if (supabaseSuccess) {
-          console.log('🔧 Supabaseにも専門家設定を保存完了');
-          setExpertContactStatus('✅ 専門家設定が正常に保存され、データベースに反映されました');
-        } else {
-          console.log('🔧 Supabase保存に失敗しましたが、ローカル保存は成功');
-          setExpertContactStatus('✅ 専門家設定が正常に保存されました（ローカル保存）');
-        }
-      } catch (supabaseError) {
-        console.error('🚨 Supabase保存でエラーが発生しましたが、ローカル保存は成功:', supabaseError);
-        setExpertContactStatus('✅ 専門家設定が正常に保存されました（ローカル保存）');
+      // Supabaseに保存
+      console.log('🔧 Supabaseに専門家設定を保存中...');
+      const supabaseSuccess = await SupabaseAdminAPI.saveAdminSetting('expert_contact_settings', expertContact);
+      if (!supabaseSuccess) {
+        throw new Error('Supabase保存に失敗しました');
       }
+      console.log('🔧 Supabaseに専門家設定を保存完了');
+      setExpertContactStatus('✅ 専門家設定が正常に保存されました');
 
       setTimeout(() => setExpertContactStatus(''), 3000);
     } catch (error) {
@@ -1316,29 +1227,19 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
         editingPlanner.id = Date.now();
       }
 
-      // ローカルの配列を更新
+      // Supabaseに保存
+      console.log('🔧 SupabaseにFPデータを保存中...');
+      const supabaseSuccess = await SupabaseAdminAPI.saveAdminSetting('financial_planners', editingPlanner);
+      if (!supabaseSuccess) {
+        throw new Error('Supabase保存に失敗しました');
+      }
+      console.log('🔧 SupabaseにFPデータを保存完了');
+      
+      // ローカル状態を更新
       const updatedPlanners = editingPlanner.id && financialPlanners.find(p => p.id === editingPlanner.id)
         ? financialPlanners.map(p => p.id === editingPlanner.id ? editingPlanner : p)
         : [...financialPlanners, editingPlanner];
-
       setFinancialPlanners(updatedPlanners);
-      
-      // ローカルストレージに保存
-      localStorage.setItem('financial_planners', JSON.stringify(updatedPlanners));
-      console.log('🔧 FPデータをローカルストレージに保存完了:', updatedPlanners);
-
-      // Supabaseにも保存を試行
-      try {
-        console.log('🔧 SupabaseにFPデータを保存中...');
-        const supabaseSuccess = await SupabaseAdminAPI.saveAdminSetting('financial_planners', updatedPlanners);
-        if (supabaseSuccess) {
-          console.log('🔧 SupabaseにもFPデータを保存完了');
-        } else {
-          console.log('🔧 Supabase保存に失敗しましたが、ローカル保存は成功');
-        }
-      } catch (supabaseError) {
-        console.error('🚨 Supabase保存でエラーが発生しましたが、ローカル保存は成功:', supabaseError);
-      }
 
       setPlannerStatus('✅ FP情報が正常に保存されました');
       handleClosePlannerModal();
@@ -1449,28 +1350,8 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
         return;
       }
 
-      // 変更がない場合のチェック
-      const checkCredentialsRaw = localStorage.getItem('admin_credentials');
-      if (checkCredentialsRaw) {
-        try {
-          const checkCredentials = JSON.parse(checkCredentialsRaw);
-          const currentPhone = checkCredentials.phone_number || '09012345678';
-          const currentBackup = checkCredentials.backup_code || 'MT-BACKUP-2024';
-          
-          if (adminPhoneNumber === currentPhone && adminBackupCode === currentBackup) {
-            setAdminSettingsStatus('❌ 設定に変更がありません。');
-            setTimeout(() => setAdminSettingsStatus(''), 5000);
-            return;
-          }
-        } catch (error) {
-          console.log('🔧 既存設定の解析をスキップ:', error);
-        }
-      }
-
-      secureLog('管理者設定をローカルストレージに保存中...');
-      
-      // 直接保存処理を実行（本番環境チェックを一時的に無効化）
-      console.log('🔧 保存処理を開始します');
+      // Supabaseに直接保存
+      console.log('🔧 Supabase専用保存処理を開始します');
 
       // Supabaseで管理者設定を更新
       try {
@@ -1491,11 +1372,12 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
           data_hash: hashedData
         };
         
-        // SecureStorage.setSecureItem('admin_credentials', credentialsData);
-        localStorage.setItem('admin_credentials', JSON.stringify(credentialsData));
-        console.log('🔧 ローカルストレージに保存完了:', credentialsData);
+        const success = await SupabaseAdminAPI.saveAdminSetting('admin_credentials', credentialsData);
+        if (!success) {
+          throw new Error('Supabase保存に失敗しました');
+        }
         
-        secureLog('管理者設定を正常に保存しました');
+        console.log('🔧 Supabaseに管理者設定を保存完了:', credentialsData);
         setAdminSettingsStatus('✅ 管理者設定が正常に保存されました');
         
         setTimeout(() => setAdminSettingsStatus(''), 3000);
@@ -1759,11 +1641,7 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
         return;
       }
 
-      // まずローカルストレージに保存
-      localStorage.setItem('header_data', JSON.stringify(headerData));
-      localStorage.setItem('main_visual_data', JSON.stringify(mainVisualData));
-      localStorage.setItem('footer_data', JSON.stringify(footerData));
-      console.log('🔧 ローカルストレージに保存完了');
+      // Supabaseに直接保存
 
       let successCount = 0;
       
