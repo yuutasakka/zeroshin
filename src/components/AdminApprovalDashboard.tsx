@@ -189,18 +189,18 @@ const AdminApprovalDashboard: React.FC<AdminApprovalDashboardProps> = ({
                       <label className="block text-sm font-medium text-gray-700 mb-1">電話番号</label>
                       <p className="text-gray-900">{approval.phone_number}</p>
                     </div>
-                    {approval.organization && (
+                    {approval.department && (
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">組織</label>
-                        <p className="text-gray-900">{approval.organization}</p>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">所属部署</label>
+                        <p className="text-gray-900">{approval.department}</p>
                       </div>
                     )}
                   </div>
 
-                  {approval.purpose && (
+                  {approval.reason && (
                     <div className="mb-4">
-                      <label className="block text-sm font-medium text-gray-700 mb-1">申請目的</label>
-                      <p className="text-gray-900 bg-gray-50 p-3 rounded-lg">{approval.purpose}</p>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">申請理由</label>
+                      <p className="text-gray-900 bg-gray-50 p-3 rounded-lg">{approval.reason}</p>
                     </div>
                   )}
 

@@ -830,14 +830,14 @@ export interface RegistrationRequest {
   full_name: string;
   email: string;
   phone_number: string;
-  organization?: string;
-  purpose: string;
+  department?: string; // データベースの実際のカラム名
+  reason?: string; // データベースの実際のカラム名
   status: 'pending' | 'approved' | 'rejected';
-  admin_notes?: string;
+  role?: string;
+  approved_by?: string;
+  approved_at?: string;
   created_at: string;
   updated_at: string;
-  reviewed_by?: string;
-  reviewed_at?: string;
 }
 
 // 新規登録申請管理クラス
@@ -1021,15 +1021,21 @@ export class RegistrationRequestManager {
       console.log('更新対象ID:', requestId, 'アクション:', action);
 
       if (await this.isSupabaseAvailable()) {
+        // 既存のスキーマに合わせてカラムを使用
+        const updateData: any = {
+          status: action === 'approve' ? 'approved' : 'rejected',
+          updated_at: new Date().toISOString()
+        };
+
+        // approved_by と approved_at は既存のカラム
+        if (action === 'approve') {
+          updateData.approved_by = null; // 実際のadmin UUIDが必要
+          updateData.approved_at = new Date().toISOString();
+        }
+
         const { data, error } = await this.supabase
           .from('admin_registrations')
-          .update({
-            status: action === 'approve' ? 'approved' : 'rejected',
-            admin_notes: adminNotes || '',
-            reviewed_by: reviewedBy || 'admin',
-            reviewed_at: new Date().toISOString(),
-            updated_at: new Date().toISOString()
-          })
+          .update(updateData)
           .eq('id', requestId)
           .select();
 
@@ -1039,7 +1045,7 @@ export class RegistrationRequestManager {
           return {
             success: true,
             message: action === 'approve' ? 
-              '申請が承認されました（ユーザーアカウント作成は手動で行ってください）。' : 
+              '申請が承認されました。' : 
               '申請が却下されました。'
           };
         } else {
