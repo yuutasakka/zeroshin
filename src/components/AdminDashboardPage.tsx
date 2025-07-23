@@ -23,11 +23,11 @@ import { diagnosisManager } from './supabaseClient';
 import { resetToSampleData } from '../../data/sampleData';
 import { useColorTheme } from './ColorThemeContext';
 import TwoFactorAuth from './TwoFactorAuth';
-import KeyRotationManager from './KeyRotationManager';
 // import SecurityIntegration from './SecurityIntegration'; // 非表示
 import AdminApprovalDashboard from './AdminApprovalDashboard';
 import { useDesignTemplate } from '../../src/contexts/DesignSettingsContext';
 import { DesignTemplate, designTemplates } from '../../src/types/designTypes';
+import { ImageUploadManager } from './supabaseClient';
 
 const supabaseConfig = createSupabaseClient();
 
@@ -132,6 +132,10 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
   const [editingPlanner, setEditingPlanner] = useState<FinancialPlanner | null>(null);
   const [showPlannerModal, setShowPlannerModal] = useState<boolean>(false);
   const [plannerStatus, setPlannerStatus] = useState<string>('');
+  
+  // 画像アップロード関連のstate
+  const [isUploadingImage, setIsUploadingImage] = useState<boolean>(false);
+  const [uploadStatus, setUploadStatus] = useState<string>('');
 
   // Helper functions defined before use
   const normalizePhoneNumber = (phone: string): string => {
@@ -353,7 +357,6 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
 
   // セキュリティ機能のstate
   const [showTwoFactorAuth, setShowTwoFactorAuth] = useState(false);
-  const [showKeyRotationManager, setShowKeyRotationManager] = useState(false);
   // const [showSecurityIntegration, setShowSecurityIntegration] = useState(false); // 非表示
   const [twoFactorAuthMode, setTwoFactorAuthMode] = useState<'setup' | 'verify'>('setup');
   const [adminTotpSecret, setAdminTotpSecret] = useState<string>('');
@@ -1294,6 +1297,42 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
         setEditingPlanner({ ...editingPlanner, [field]: value });
       }
     }
+  };
+
+  // 画像アップロード処理
+  const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file || !editingPlanner) return;
+
+    setIsUploadingImage(true);
+    setUploadStatus('📤 画像をアップロード中...');
+
+    try {
+      // 古い画像がある場合は削除（Supabaseストレージから）
+      if (editingPlanner.profile_image_url && editingPlanner.profile_image_url.includes('supabase')) {
+        await ImageUploadManager.deleteProfileImage(editingPlanner.profile_image_url);
+      }
+
+      // 新しい画像をアップロード
+      const fpId = editingPlanner.id || Date.now();
+      const result = await ImageUploadManager.uploadFPProfileImage(file, fpId);
+
+      if (result.success && result.url) {
+        setEditingPlanner({ 
+          ...editingPlanner, 
+          profile_image_url: result.url 
+        });
+        setUploadStatus('✅ 画像アップロード完了');
+      } else {
+        setUploadStatus(`❌ ${result.error || 'アップロードに失敗しました'}`);
+      }
+    } catch (error) {
+      console.error('画像アップロードエラー:', error);
+      setUploadStatus('❌ 画像アップロード中にエラーが発生しました');
+    }
+
+    setIsUploadingImage(false);
+    setTimeout(() => setUploadStatus(''), 3000);
   };
 
   const handleSavePlanner = async () => {
@@ -3608,22 +3647,6 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
                         </div>
                     </div>
 
-                    {/* キーローテーション */}
-                    <div className="bg-gradient-to-br from-purple-50 to-pink-100 p-6 rounded-xl shadow-md border border-purple-200">
-                        <div className="flex items-center justify-center w-12 h-12 bg-purple-500 rounded-lg mb-4 mx-auto">
-                            <i className="fas fa-key text-white text-xl"></i>
-                        </div>
-                        <h3 className="text-lg font-semibold text-gray-800 text-center mb-2">暗号化キーローテーション</h3>
-                        <p className="text-sm text-gray-600 text-center mb-4">
-                            JWT・データベース・セッション暗号化キーの自動ローテーション
-                        </p>
-                        <button
-                            onClick={() => setShowKeyRotationManager(true)}
-                            className="w-full bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
-                        >
-                            🔑 キー管理
-                        </button>
-                    </div>
 
 
                 </div>
@@ -3712,13 +3735,6 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
                             </div>
                         </div>
                         
-                        <div className="flex items-start space-x-3">
-                            <i className="fas fa-check-circle text-green-500 mt-1"></i>
-                            <div>
-                                <h4 className="font-medium text-gray-800">暗号化キーのローテーション</h4>
-                                <p className="text-sm text-gray-600">JWT秘密鍵やデータベース暗号化キーを90日ごとにローテーションしてください。</p>
-                            </div>
-                        </div>
                         
                         <div className="flex items-start space-x-3">
                             <i className="fas fa-check-circle text-green-500 mt-1"></i>
@@ -3944,15 +3960,67 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
                                     <div className="md:col-span-2">
                                         <label className="block text-sm font-medium text-gray-700 mb-2">
-                                            <i className="fas fa-image mr-2"></i>プロフィール画像URL
+                                            プロフィール画像
                                         </label>
-                                        <input
-                                            type="url"
-                                            value={editingPlanner.profile_image_url}
-                                            onChange={(e) => handlePlannerFormChange('profile_image_url', e.target.value)}
-                                            placeholder="https://images.unsplash.com/photo-..."
-                                            className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-purple-500 focus:border-purple-500"
-                                        />
+                                        
+                                        {/* 現在の画像プレビュー */}
+                                        {editingPlanner.profile_image_url && (
+                                            <div className="mb-3">
+                                                <img 
+                                                    src={editingPlanner.profile_image_url} 
+                                                    alt="プロフィール画像プレビュー"
+                                                    className="w-20 h-20 rounded-full object-cover border-2 border-gray-300"
+                                                    onError={(e) => {
+                                                        (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=300&h=300&fit=crop&crop=face';
+                                                    }}
+                                                />
+                                            </div>
+                                        )}
+                                        
+                                        {/* ファイルアップロード */}
+                                        <div className="flex items-center space-x-3">
+                                            <label className="cursor-pointer bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors inline-flex items-center">
+                                                {isUploadingImage ? (
+                                                    <>
+                                                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                                                        アップロード中...
+                                                    </>
+                                                ) : (
+                                                    <>
+                                                        📤 画像を選択
+                                                    </>
+                                                )}
+                                                <input
+                                                    type="file" 
+                                                    accept="image/*"
+                                                    onChange={handleImageUpload}
+                                                    disabled={isUploadingImage}
+                                                    className="hidden"
+                                                />
+                                            </label>
+                                            
+                                            {/* URLで入力する選択肢も残す */}
+                                            <div className="flex-1">
+                                                <input
+                                                    type="url"
+                                                    value={editingPlanner.profile_image_url}
+                                                    onChange={(e) => handlePlannerFormChange('profile_image_url', e.target.value)}
+                                                    placeholder="または画像URLを直接入力"
+                                                    className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-purple-500 focus:border-purple-500 text-sm"
+                                                />
+                                            </div>
+                                        </div>
+                                        
+                                        {/* アップロード状況表示 */}
+                                        {uploadStatus && (
+                                            <div className="mt-2 text-sm">
+                                                {uploadStatus}
+                                            </div>
+                                        )}
+                                        
+                                        <div className="mt-2 text-xs text-gray-500">
+                                            JPG、PNG、WebP形式のファイル（5MB以下）をアップロードできます
+                                        </div>
                                     </div>
 
                                     <div className="md:col-span-2">
@@ -4199,11 +4267,6 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
             />
         )}
 
-        {showKeyRotationManager && (
-            <KeyRotationManager
-                onClose={() => setShowKeyRotationManager(false)}
-            />
-        )}
 
 
 

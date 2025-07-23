@@ -1842,4 +1842,145 @@ export class AdminSMSAuth {
       return { isVerified: false, error: 'SMS認証状態の確認に失敗しました。' };
     }
   }
+}
+
+// 画像アップロード管理クラス
+export class ImageUploadManager {
+  
+  // FPプロフィール画像をアップロード
+  static async uploadFPProfileImage(
+    file: File, 
+    fpId: string | number
+  ): Promise<{ success: boolean; url?: string; error?: string }> {
+    try {
+      // ファイル形式をチェック
+      const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+      if (!allowedTypes.includes(file.type)) {
+        return { 
+          success: false, 
+          error: 'JPG、PNG、WebP形式の画像ファイルのみアップロード可能です。' 
+        };
+      }
+
+      // ファイルサイズをチェック (5MB制限)
+      const maxSize = 5 * 1024 * 1024; // 5MB
+      if (file.size > maxSize) {
+        return { 
+          success: false, 
+          error: 'ファイルサイズは5MB以下にしてください。' 
+        };
+      }
+
+      // ファイル名を生成 (タイムスタンプ + fpId + 拡張子)
+      const timestamp = Date.now();
+      const fileExt = file.name.split('.').pop()?.toLowerCase();
+      const fileName = `fp-${fpId}-${timestamp}.${fileExt}`;
+      const filePath = `fp-profiles/${fileName}`;
+
+      console.log('🖼️ 画像アップロード開始:', { fileName, fileSize: file.size, fileType: file.type });
+
+      // Supabase Storageにアップロード
+      const { data, error } = await supabase.storage
+        .from('profile-images')
+        .upload(filePath, file, {
+          cacheControl: '3600',
+          upsert: true
+        });
+
+      if (error) {
+        console.error('💥 画像アップロードエラー:', error);
+        return { 
+          success: false, 
+          error: '画像のアップロードに失敗しました。' 
+        };
+      }
+
+      // アップロードされた画像のパブリックURLを取得
+      const { data: urlData } = supabase.storage
+        .from('profile-images')
+        .getPublicUrl(filePath);
+
+      const publicUrl = urlData.publicUrl;
+      
+      console.log('✅ 画像アップロード成功:', { publicUrl });
+      
+      return { 
+        success: true, 
+        url: publicUrl 
+      };
+
+    } catch (error) {
+      console.error('💥 画像アップロード処理エラー:', error);
+      return { 
+        success: false, 
+        error: '画像アップロード処理中にエラーが発生しました。' 
+      };
+    }
+  }
+
+  // 古い画像を削除
+  static async deleteProfileImage(imageUrl: string): Promise<{ success: boolean; error?: string }> {
+    try {
+      // URLからファイルパスを抽出
+      const urlParts = imageUrl.split('/');
+      const fileName = urlParts[urlParts.length - 1];
+      const filePath = `fp-profiles/${fileName}`;
+
+      console.log('🗑️ 画像削除開始:', { filePath });
+
+      const { error } = await supabase.storage
+        .from('profile-images')
+        .remove([filePath]);
+
+      if (error) {
+        console.error('💥 画像削除エラー:', error);
+        return { 
+          success: false, 
+          error: '古い画像の削除に失敗しました。' 
+        };
+      }
+
+      console.log('✅ 画像削除成功');
+      return { success: true };
+
+    } catch (error) {
+      console.error('💥 画像削除処理エラー:', error);
+      return { 
+        success: false, 
+        error: '画像削除処理中にエラーが発生しました。' 
+      };
+    }
+  }
+
+  // 画像リストを取得（管理用）
+  static async listProfileImages(): Promise<{ success: boolean; images?: any[]; error?: string }> {
+    try {
+      const { data, error } = await supabase.storage
+        .from('profile-images')
+        .list('fp-profiles', {
+          limit: 100,
+          offset: 0
+        });
+
+      if (error) {
+        console.error('💥 画像リスト取得エラー:', error);
+        return { 
+          success: false, 
+          error: '画像リストの取得に失敗しました。' 
+        };
+      }
+
+      return { 
+        success: true, 
+        images: data 
+      };
+
+    } catch (error) {
+      console.error('💥 画像リスト取得処理エラー:', error);
+      return { 
+        success: false, 
+        error: '画像リスト取得処理中にエラーが発生しました。' 
+      };
+    }
+  }
 } 
