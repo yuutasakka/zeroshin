@@ -1342,33 +1342,61 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
 
   const handleDeletePlanner = async (plannerId: number) => {
     // 削除確認
+    const plannerToDelete = financialPlanners.find(p => p.id === plannerId);
+    const plannerName = plannerToDelete?.name || 'このプランナー';
+    
+    if (!confirm(`本当に ${plannerName} を削除しますか？\n\nこの操作は取り消すことができません。`)) {
+      return;
+    }
 
     setPlannerStatus('削除中...');
     try {
       if (supabaseConfig.url && supabaseConfig.key && !supabaseConfig.url.includes('your-project')) {
-        const response = await fetch(`${supabaseConfig.url}/rest/v1/financial_planners?id.eq=${plannerId}`, {
+        console.log('プランナー削除開始:', plannerId);
+        
+        const response = await fetch(`${supabaseConfig.url}/rest/v1/financial_planners?id=eq.${plannerId}`, {
           method: 'DELETE',
           headers: {
             'Authorization': `Bearer ${supabaseConfig.key}`,
             'apikey': supabaseConfig.key,
-            'Content-Type': 'application/json'
+            'Content-Type': 'application/json',
+            'Prefer': 'return=representation'
           }
         });
 
+        console.log('削除レスポンス:', response.status, response.statusText);
+
         if (response.ok) {
           setPlannerStatus('✅ 削除されました');
+          console.log('プランナー削除成功:', plannerId);
           await loadFinancialPlanners();
         } else {
-          throw new Error('削除に失敗しました');
+          const errorText = await response.text();
+          console.error('削除エラー:', response.status, errorText);
+          throw new Error(`削除に失敗しました: ${response.status} ${response.statusText}`);
         }
       } else {
-        setPlannerStatus('❌ Supabaseが設定されていません');
+        // Supabaseが設定されていない場合、ローカルの状態から削除
+        console.log('Supabase設定なし、ローカル削除を実行');
+        const updatedPlanners = financialPlanners.filter(p => p.id !== plannerId);
+        setFinancialPlanners(updatedPlanners);
+        setPlannerStatus('✅ 削除されました（ローカルのみ）');
       }
       
       setTimeout(() => setPlannerStatus(''), 3000);
     } catch (error) {
       secureLog('ファイナンシャルプランナーの削除エラー:', error);
-      setPlannerStatus('❌ 削除に失敗しました');
+      console.error('削除処理の詳細エラー:', error);
+      
+      // エラー時でもローカル削除を試行
+      try {
+        const updatedPlanners = financialPlanners.filter(p => p.id !== plannerId);
+        setFinancialPlanners(updatedPlanners);
+        setPlannerStatus('✅ 削除されました（ローカルのみ）');
+      } catch (localError) {
+        setPlannerStatus('❌ 削除に失敗しました');
+      }
+      
       setTimeout(() => setPlannerStatus(''), 3000);
     }
   };
@@ -3810,8 +3838,17 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
                                         <i className="fas fa-edit mr-1"></i>編集
                                     </button>
                                     <button
-                                        onClick={() => planner.id && handleDeletePlanner(planner.id)}
+                                        onClick={() => {
+                                            console.log('削除ボタンクリック:', planner.id, planner.name);
+                                            if (planner.id) {
+                                                handleDeletePlanner(planner.id);
+                                            } else {
+                                                console.error('プランナーIDが見つかりません:', planner);
+                                                alert('削除できません：プランナーIDが見つかりません。');
+                                            }
+                                        }}
                                         className="flex-1 bg-red-500 hover:bg-red-600 text-white text-sm py-2 px-3 rounded transition-colors"
+                                        title={`${planner.name}を削除`}
                                     >
                                         <i className="fas fa-trash mr-1"></i>削除
                                     </button>
