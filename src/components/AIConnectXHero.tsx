@@ -286,10 +286,40 @@ const AIConnectXHero: React.FC<AIConnectXHeroProps> = ({ onStartDiagnosis }) => 
         }
       `}</style>
       
-      <section style={heroStyles.hero} className="hero-section">
-        {/* 背景（アニメーションなし） */}
-        <div style={heroStyles.background}>
+      <section style={{
+        ...heroStyles.hero,
+        background: 'linear-gradient(135deg, #f0f4ff 0%, #e6f1ff 50%, #f0f4ff 100%)'
+      }} className="hero-section">
+        {/* 背景レイヤー */}
+        <div style={{
+          ...heroStyles.background,
+          background: 'linear-gradient(135deg, rgba(59, 130, 246, 0.05) 0%, rgba(147, 51, 234, 0.05) 100%)'
+        }}>
         </div>
+        
+        {/* 装飾的な円形要素 */}
+        <div style={{
+          position: 'absolute',
+          top: '10%',
+          left: '5%',
+          width: '150px',
+          height: '150px',
+          background: 'radial-gradient(circle, rgba(59, 130, 246, 0.1) 0%, transparent 70%)',
+          borderRadius: '50%',
+          filter: 'blur(40px)',
+          zIndex: 0
+        }}></div>
+        <div style={{
+          position: 'absolute',
+          bottom: '10%',
+          right: '5%',
+          width: '200px',
+          height: '200px',
+          background: 'radial-gradient(circle, rgba(147, 51, 234, 0.1) 0%, transparent 70%)',
+          borderRadius: '50%',
+          filter: 'blur(40px)',
+          zIndex: 0
+        }}></div>
         
         {/* メインコンテンツ */}
         <div style={heroStyles.content} className="hero-content">

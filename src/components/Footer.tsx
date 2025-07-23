@@ -108,6 +108,16 @@ const Footer: React.FC<FooterProps> = ({ onNavigateToAdminLogin }) => {
     <footer 
       id="footer"
       className="bg-white py-12 px-4 border-t border-gray-200"
+      style={{
+        backgroundColor: '#ffffff',
+        paddingTop: '3rem',
+        paddingBottom: '3rem',
+        paddingLeft: '1rem',
+        paddingRight: '1rem',
+        borderTopWidth: '1px',
+        borderTopColor: '#e5e7eb',
+        borderTopStyle: 'solid'
+      }}
       role="contentinfo"
     >
       <div className="container mx-auto px-3 sm:px-4 md:px-6 lg:px-8 max-w-7xl">
