@@ -58,7 +58,7 @@ export interface CTAButtonConfig {
 }
 
 export const defaultReasonsToChooseData: ReasonsToChooseData = {
-  title: "選ばれる理由があります",
+  title: "AI ConectXが選ばれる理由",
   subtitle: "多くのお客様から信頼をいただいている、確かな実績をご紹介します",
   reasons: [
     {
