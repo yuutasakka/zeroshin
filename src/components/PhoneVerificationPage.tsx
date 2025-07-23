@@ -314,7 +314,7 @@ const PhoneVerificationPage: React.FC<PhoneVerificationPageProps> = ({
                 const parsedData = JSON.parse(storedDiagnosisData);
                 diagnosisAnswers = parsedData;
               } catch (e) {
-                console.error('🔍 localStorageからの診断データ取得に失敗:', e);
+                console.error(' localStorageからの診断データ取得に失敗:', e);
               }
             }
           }
@@ -382,7 +382,7 @@ const PhoneVerificationPage: React.FC<PhoneVerificationPageProps> = ({
           }
 
         } catch (sessionError) {
-          console.error('❌ 認証後のシステムエラー:', sessionError);
+          console.error(' 認証後のシステムエラー:', sessionError);
           throw new Error('認証は成功しましたが、システムエラーが発生しました。管理者にお問い合わせください。');
         }
       }

@@ -141,7 +141,7 @@ const AdminPasswordResetPage: React.FC<AdminPasswordResetPageProps> = ({ onNavig
       <div className="bg-white rounded-2xl shadow-xl p-8 w-full max-w-md">
         <div className="text-center mb-8">
           <h1 className="text-3xl font-bold text-gray-800 mb-2">
-            🔐 AI ConectX
+             AI ConectX
           </h1>
           <h2 className="text-xl font-semibold text-gray-600">
             {mode === 'send-email' ? 'パスワードリセット' : 'パスワード変更'}
@@ -171,7 +171,7 @@ const AdminPasswordResetPage: React.FC<AdminPasswordResetPageProps> = ({ onNavig
 
                 {error && (
                   <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-                    <p className="text-red-600 text-sm">❌ {error}</p>
+                    <p className="text-red-600 text-sm"> {error}</p>
                   </div>
                 )}
 
@@ -210,7 +210,7 @@ const AdminPasswordResetPage: React.FC<AdminPasswordResetPageProps> = ({ onNavig
               // メール送信完了画面
               <div className="text-center space-y-4">
                 <div className="bg-green-50 border border-green-200 rounded-lg p-6">
-                  <div className="text-green-600 text-4xl mb-4">📧</div>
+                  <div className="text-green-600 text-4xl mb-4"></div>
                   <h3 className="text-lg font-semibold text-green-800 mb-2">
                     メール送信完了
                   </h3>
@@ -299,13 +299,13 @@ const AdminPasswordResetPage: React.FC<AdminPasswordResetPageProps> = ({ onNavig
 
             {error && (
               <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-                <p className="text-red-600 text-sm">❌ {error}</p>
+                <p className="text-red-600 text-sm"> {error}</p>
               </div>
             )}
 
             {message && (
               <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-                <p className="text-green-600 text-sm">✅ {message}</p>
+                <p className="text-green-600 text-sm"> {message}</p>
               </div>
             )}
 

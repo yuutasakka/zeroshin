@@ -7,7 +7,7 @@ const getEnvVar = (viteVar: string, fallback: string) => {
   if (typeof import.meta !== 'undefined' && import.meta && (import.meta as any).env) {
     const value = (import.meta as any).env[viteVar];
     if (value) {
-      console.log(`✅ Found ${viteVar} in import.meta.env`);
+      console.log(` Found ${viteVar} in import.meta.env`);
       return value;
     }
   }
@@ -16,7 +16,7 @@ const getEnvVar = (viteVar: string, fallback: string) => {
   if (typeof process !== 'undefined' && process.env) {
     const value = process.env[viteVar];
     if (value) {
-      console.log(`✅ Found ${viteVar} in process.env`);
+      console.log(` Found ${viteVar} in process.env`);
       return value;
     }
   }
@@ -25,12 +25,12 @@ const getEnvVar = (viteVar: string, fallback: string) => {
   if (typeof window !== 'undefined' && (window as any).__ENV__) {
     const value = (window as any).__ENV__[viteVar];
     if (value) {
-      console.log(`✅ Found ${viteVar} in window.__ENV__`);
+      console.log(` Found ${viteVar} in window.__ENV__`);
       return value;
     }
   }
   
-  console.warn(`⚠️ ${viteVar} not found in any environment source, using fallback`);
+  console.warn(` ${viteVar} not found in any environment source, using fallback`);
   return fallback;
 };
 
@@ -46,21 +46,21 @@ const supabaseAnonKey = (() => {
     window.location.hostname !== '127.0.0.1';
   
   if (isProduction && !key) {
-    console.error('🚨 CRITICAL: VITE_SUPABASE_ANON_KEY environment variable is missing in production!');
+    console.error(' CRITICAL: VITE_SUPABASE_ANON_KEY environment variable is missing in production!');
     // アプリケーション全体のクラッシュを防ぐため、エラーを返すが続行
-    console.warn('⚠️ Supabase will be initialized with limited functionality');
+    console.warn(' Supabase will be initialized with limited functionality');
     return 'missing-key-will-cause-limited-functionality';
   }
   
   if (!key && !isProduction) {
-    console.warn('⚠️ VITE_SUPABASE_ANON_KEY not found, using fallback for development');
+    console.warn(' VITE_SUPABASE_ANON_KEY not found, using fallback for development');
     return 'dev-fallback-key';
   }
   
   return key;
 })();
 
-console.log('🚀 Supabaseクライアント初期化', { 
+console.log(' Supabaseクライアント初期化', { 
   url: supabaseUrl, 
   keyPrefix: supabaseAnonKey.substring(0, 10) + '...'
 });
@@ -114,9 +114,9 @@ export class SupabaseAdminAuth {
   // 管理者認証情報を取得
   static async getAdminCredentials(username: string): Promise<AdminCredentials | null> {
     try {
-      console.log('🔍 getAdminCredentials開始', { username, supabaseUrl, supabaseAnonKey: supabaseAnonKey.substring(0, 10) + '...' });
+      console.log(' getAdminCredentials開始', { username, supabaseUrl, supabaseAnonKey: supabaseAnonKey.substring(0, 10) + '...' });
       
-      console.log('🗃️ Supabaseクエリ実行中...');
+      console.log('🗃 Supabaseクエリ実行中...');
       const { data, error } = await supabase
         .from('admin_credentials')
         .select('*')
@@ -125,14 +125,14 @@ export class SupabaseAdminAuth {
         .single();
 
       if (error) {
-        console.error('❌ 管理者認証情報取得エラー:', error);
+        console.error(' 管理者認証情報取得エラー:', error);
         return null;
       }
 
-      console.log('✅ Supabase認証情報取得成功', { username: data?.username, isActive: data?.is_active });
+      console.log(' Supabase認証情報取得成功', { username: data?.username, isActive: data?.is_active });
       return data;
     } catch (error) {
-      console.error('💥 Supabase接続エラー:', error);
+      console.error(' Supabase接続エラー:', error);
       return null;
     }
   }
@@ -251,7 +251,7 @@ export class SupabaseAdminAuth {
     is_active: boolean;
   }): Promise<{ success: boolean; error?: string }> {
     try {
-      console.log('🔧 新規管理者認証情報作成開始', { username: credentials.username });
+      console.log(' 新規管理者認証情報作成開始', { username: credentials.username });
       
       // ユーザー名の重複チェック
       const existingUser = await this.getAdminCredentials(credentials.username);
@@ -284,7 +284,7 @@ export class SupabaseAdminAuth {
         .single();
 
       if (error) {
-        console.error('❌ 管理者認証情報作成エラー:', error);
+        console.error(' 管理者認証情報作成エラー:', error);
         
         // エラーの種類に応じたメッセージを返す
         if (error.code === '23505') { // PostgreSQL unique violation
@@ -294,10 +294,10 @@ export class SupabaseAdminAuth {
         return { success: false, error: 'データベースエラーが発生しました。' };
       }
 
-      console.log('✅ 新規管理者認証情報作成成功', { username: credentials.username, id: data.id });
+      console.log(' 新規管理者認証情報作成成功', { username: credentials.username, id: data.id });
       return { success: true };
     } catch (error) {
-      console.error('💥 管理者認証情報作成失敗:', error);
+      console.error(' 管理者認証情報作成失敗:', error);
       return { success: false, error: '予期しないエラーが発生しました。' };
     }
   }
@@ -308,7 +308,7 @@ export class SupabaseAdminAuth {
     const isDevelopment = !isProduction;
     
     if (isDevelopment) {
-      console.log('🔐 hashPassword開始（bcrypt）', { passwordLength: password.length });
+      console.log(' hashPassword開始（bcrypt）', { passwordLength: password.length });
     }
     
     try {
@@ -319,15 +319,15 @@ export class SupabaseAdminAuth {
       // const hash = await bcrypt.hash(password, saltRounds);
       
       if (isDevelopment) {
-        console.log('🔐 bcryptはブラウザで使用不可、SHA-256にフォールバック');
+        console.log(' bcryptはブラウザで使用不可、SHA-256にフォールバック');
       }
       
       // bcryptが使用できないため、必ずエラーをスロー
       throw new Error('bcrypt not available in browser');
     } catch (error) {
       if (isDevelopment) {
-        console.error('💥 bcryptハッシュ化エラー:', error);
-        console.warn('⚠️ bcrypt失敗、強化SHA-256にフォールバック');
+        console.error(' bcryptハッシュ化エラー:', error);
+        console.warn(' bcrypt失敗、強化SHA-256にフォールバック');
       }
       
       // フォールバック: 強化されたSHA-256（ソルト付き）
@@ -400,12 +400,12 @@ export class SupabaseAdminAuth {
         ];
         
         if (isProduction && defaultHashes.includes(hash)) {
-          console.error('🚨 CRITICAL SECURITY WARNING: デフォルトパスワードハッシュが検出されました！本番環境では必ず変更してください！');
+          console.error(' CRITICAL SECURITY WARNING: デフォルトパスワードハッシュが検出されました！本番環境では必ず変更してください！');
           throw new Error('Default password detected in production environment');
         }
         
         if (isDevelopment) {
-          console.warn('⚠️ 従来のSHA-256ハッシュ検出 - アップグレード推奨');
+          console.warn(' 従来のSHA-256ハッシュ検出 - アップグレード推奨');
         }
         
         const encoder = new TextEncoder();
@@ -422,7 +422,7 @@ export class SupabaseAdminAuth {
       }
     } catch (error) {
       if (isDevelopment) {
-        console.error('💥 パスワード検証エラー:', error);
+        console.error(' パスワード検証エラー:', error);
       }
       return false;
     }
@@ -764,7 +764,7 @@ export class DiagnosisSessionManager {
   // デバッグ用: 全セッション取得（開発環境のみ）
   async getAllSessions(): Promise<any[] | null> {
     try {
-      console.log('🔍 全セッション取得開始');
+      console.log(' 全セッション取得開始');
       
       // Supabaseを試行
       if (await this.isSupabaseAvailable()) {
@@ -775,7 +775,7 @@ export class DiagnosisSessionManager {
           .limit(50);
 
         if (!error && data) {
-          console.log('🔍 Supabaseから全セッション取得:', data.length);
+          console.log(' Supabaseから全セッション取得:', data.length);
           return data;
         }
       }
@@ -783,7 +783,7 @@ export class DiagnosisSessionManager {
       // フォールバック: ローカルストレージから取得
       console.warn('Supabase利用不可、ローカルストレージから取得');
       const localSessions = this.getLocalSessions();
-      console.log('🔍 ローカルストレージから全セッション取得:', localSessions.length);
+      console.log(' ローカルストレージから全セッション取得:', localSessions.length);
       return localSessions;
     } catch (error) {
       console.error('全セッション取得例外:', error);
@@ -1156,14 +1156,14 @@ export class AdminPasswordReset {
       });
 
       if (error) {
-        console.error('❌ パスワードリセットメール送信エラー:', error);
+        console.error(' パスワードリセットメール送信エラー:', error);
         return { success: false, error: 'パスワードリセットメールの送信に失敗しました。' };
       }
 
-      console.log('✅ パスワードリセットメール送信完了');
+      console.log(' パスワードリセットメール送信完了');
       return { success: true };
     } catch (error) {
-      console.error('💥 パスワードリセットメール送信エラー:', error);
+      console.error(' パスワードリセットメール送信エラー:', error);
       return { success: false, error: 'パスワードリセットメールの送信中にエラーが発生しました。' };
     }
   }
@@ -1193,7 +1193,7 @@ export class AdminPasswordReset {
       });
 
       if (error) {
-        console.error('❌ パスワード更新エラー:', error);
+        console.error(' パスワード更新エラー:', error);
         return { success: false, error: 'パスワードの更新に失敗しました。' };
       }
 
@@ -1217,10 +1217,10 @@ export class AdminPasswordReset {
           .eq('username', user.email);
       }
 
-      console.log('✅ パスワード更新完了');
+      console.log(' パスワード更新完了');
       return { success: true };
     } catch (error) {
-      console.error('💥 パスワード更新エラー:', error);
+      console.error(' パスワード更新エラー:', error);
       return { success: false, error: 'パスワードの更新中にエラーが発生しました。' };
     }
   }
@@ -1270,7 +1270,7 @@ export class AdminApprovalSystem {
         .single();
 
       if (error) {
-        console.error('❌ 承認申請作成エラー:', error);
+        console.error(' 承認申請作成エラー:', error);
         return { success: false, error: '承認申請の作成に失敗しました。' };
       }
 
@@ -1288,10 +1288,10 @@ export class AdminApprovalSystem {
           }
         });
 
-      console.log('✅ 管理者承認申請作成完了', { approvalId: data.id });
+      console.log(' 管理者承認申請作成完了', { approvalId: data.id });
       return { success: true, approvalId: data.id };
     } catch (error) {
-      console.error('💥 承認申請作成エラー:', error);
+      console.error(' 承認申請作成エラー:', error);
       return { success: false, error: '承認申請の作成中にエラーが発生しました。' };
     }
   }
@@ -1310,13 +1310,13 @@ export class AdminApprovalSystem {
         .order('created_at', { ascending: false });
 
       if (error) {
-        console.error('❌ 承認待ち一覧取得エラー:', error);
+        console.error(' 承認待ち一覧取得エラー:', error);
         return { success: false, error: '承認待ち一覧の取得に失敗しました。' };
       }
 
       return { success: true, approvals: data || [] };
     } catch (error) {
-      console.error('💥 承認待ち一覧取得エラー:', error);
+      console.error(' 承認待ち一覧取得エラー:', error);
       return { success: false, error: '承認待ち一覧の取得中にエラーが発生しました。' };
     }
   }
@@ -1328,7 +1328,7 @@ export class AdminApprovalSystem {
     comment?: string
   ): Promise<{ success: boolean; adminId?: number; error?: string }> {
     try {
-      console.log('✅ 管理者申請承認開始', { approvalId, approverId });
+      console.log(' 管理者申請承認開始', { approvalId, approverId });
       
       // 承認待ちデータを取得
       const { data: approvalData, error: approvalError } = await supabase
@@ -1361,7 +1361,7 @@ export class AdminApprovalSystem {
         .single();
 
       if (adminError) {
-        console.error('❌ 管理者アカウント作成エラー:', adminError);
+        console.error(' 管理者アカウント作成エラー:', adminError);
         return { success: false, error: '管理者アカウントの作成に失敗しました。' };
       }
 
@@ -1390,10 +1390,10 @@ export class AdminApprovalSystem {
           }
         });
 
-      console.log('🎉 管理者申請承認完了', { adminId: newAdmin.id });
+      console.log(' 管理者申請承認完了', { adminId: newAdmin.id });
       return { success: true, adminId: newAdmin.id };
     } catch (error) {
-      console.error('💥 管理者申請承認エラー:', error);
+      console.error(' 管理者申請承認エラー:', error);
       return { success: false, error: '管理者申請の承認中にエラーが発生しました。' };
     }
   }
@@ -1405,7 +1405,7 @@ export class AdminApprovalSystem {
     reason: string
   ): Promise<{ success: boolean; error?: string }> {
     try {
-      console.log('❌ 管理者申請拒否開始', { approvalId, rejectorId });
+      console.log(' 管理者申請拒否開始', { approvalId, rejectorId });
       
       // 承認状態を更新
       const { error: updateError } = await supabase
@@ -1421,7 +1421,7 @@ export class AdminApprovalSystem {
         .eq('status', 'pending');
 
       if (updateError) {
-        console.error('❌ 申請拒否更新エラー:', updateError);
+        console.error(' 申請拒否更新エラー:', updateError);
         return { success: false, error: '申請の拒否処理に失敗しました。' };
       }
 
@@ -1439,10 +1439,10 @@ export class AdminApprovalSystem {
           }
         });
 
-      console.log('✅ 管理者申請拒否完了', { approvalId });
+      console.log(' 管理者申請拒否完了', { approvalId });
       return { success: true };
     } catch (error) {
-      console.error('💥 管理者申請拒否エラー:', error);
+      console.error(' 管理者申請拒否エラー:', error);
       return { success: false, error: '管理者申請の拒否中にエラーが発生しました。' };
     }
   }
@@ -1466,13 +1466,13 @@ export class AdminApprovalSystem {
         .order('created_at', { ascending: true });
 
       if (error) {
-        console.error('❌ 承認履歴取得エラー:', error);
+        console.error(' 承認履歴取得エラー:', error);
         return { success: false, error: '承認履歴の取得に失敗しました。' };
       }
 
       return { success: true, history: data || [] };
     } catch (error) {
-      console.error('💥 承認履歴取得エラー:', error);
+      console.error(' 承認履歴取得エラー:', error);
       return { success: false, error: '承認履歴の取得中にエラーが発生しました。' };
     }
   }
@@ -1547,7 +1547,7 @@ export class AdminEmailAuth {
     reason?: string;
   }): Promise<{ success: boolean; token?: string; error?: string }> {
     try {
-      console.log('🔧 管理者メール認証開始', { email: credentials.email });
+      console.log(' 管理者メール認証開始', { email: credentials.email });
       
       // メールアドレスの重複チェック
       const { data: existingVerification } = await supabase
@@ -1584,7 +1584,7 @@ export class AdminEmailAuth {
         .single();
 
       if (error) {
-        console.error('❌ メール認証データ保存エラー:', error);
+        console.error(' メール認証データ保存エラー:', error);
         return { success: false, error: 'データベースエラーが発生しました。' };
       }
 
@@ -1600,7 +1600,7 @@ export class AdminEmailAuth {
         error: undefined 
       };
     } catch (error) {
-      console.error('💥 メール認証開始エラー:', error);
+      console.error(' メール認証開始エラー:', error);
       return { success: false, error: 'メール認証の開始に失敗しました。' };
     }
   }
@@ -1612,7 +1612,7 @@ export class AdminEmailAuth {
     error?: string 
   }> {
     try {
-      console.log('🔍 メール認証トークン検証', { token });
+      console.log(' メール認証トークン検証', { token });
       
       const { data, error } = await supabase
         .from('admin_email_verification')
@@ -1636,7 +1636,7 @@ export class AdminEmailAuth {
 
       return { success: true, adminData: data };
     } catch (error) {
-      console.error('💥 メール認証トークン検証エラー:', error);
+      console.error(' メール認証トークン検証エラー:', error);
       return { success: false, error: 'トークンの検証に失敗しました。' };
     }
   }
@@ -1649,7 +1649,7 @@ export class AdminEmailAuth {
     error?: string 
   }> {
     try {
-      console.log('✅ メール認証完了処理', { token });
+      console.log(' メール認証完了処理', { token });
       
       // トークン検証
       const verificationResult = await this.verifyEmailToken(token);
@@ -1682,14 +1682,14 @@ export class AdminEmailAuth {
         })
         .eq('verification_token', token);
 
-      console.log('🎉 管理者承認申請作成完了', { approvalId: approvalResult.approvalId });
+      console.log(' 管理者承認申請作成完了', { approvalId: approvalResult.approvalId });
       return { 
         success: true, 
         approvalId: approvalResult.approvalId,
         message: 'メール認証が完了しました。既存の管理者による承認をお待ちください。'
       };
     } catch (error) {
-      console.error('💥 メール認証完了エラー:', error);
+      console.error(' メール認証完了エラー:', error);
       return { success: false, error: 'メール認証の完了に失敗しました。' };
     }
   }
@@ -1704,7 +1704,7 @@ export class AdminSMSAuth {
     error?: string 
   }> {
     try {
-      console.log('📱 管理者SMS認証コード送信', { adminId, phoneNumber });
+      console.log(' 管理者SMS認証コード送信', { adminId, phoneNumber });
       
       // 既存の未認証SMSコードを無効化
       await supabase
@@ -1732,12 +1732,12 @@ export class AdminSMSAuth {
         .single();
 
       if (error) {
-        console.error('❌ SMS認証データ保存エラー:', error);
+        console.error(' SMS認証データ保存エラー:', error);
         return { success: false, error: 'SMS認証データの保存に失敗しました。' };
       }
 
       // SMS送信（本番環境では実際のSMS送信サービスを使用）
-      console.log('📱 SMS認証コード送信', {
+      console.log(' SMS認証コード送信', {
         to: phoneNumber,
         code: smsCode,
         message: `AI ConectX管理者認証コード: ${smsCode} (10分間有効)`
@@ -1745,7 +1745,7 @@ export class AdminSMSAuth {
 
       return { success: true };
     } catch (error) {
-      console.error('💥 SMS認証コード送信エラー:', error);
+      console.error(' SMS認証コード送信エラー:', error);
       return { success: false, error: 'SMS認証コードの送信に失敗しました。' };
     }
   }
@@ -1805,10 +1805,10 @@ export class AdminSMSAuth {
         })
         .eq('id', data.id);
 
-      console.log('🎉 SMS認証成功', { adminId });
+      console.log(' SMS認証成功', { adminId });
       return { success: true };
     } catch (error) {
-      console.error('💥 SMS認証コード検証エラー:', error);
+      console.error(' SMS認証コード検証エラー:', error);
       return { success: false, error: 'SMS認証コードの検証に失敗しました。' };
     }
   }
@@ -1838,7 +1838,7 @@ export class AdminSMSAuth {
       
       return { isVerified: verificationTime > oneHourAgo };
     } catch (error) {
-      console.error('💥 SMS認証状態確認エラー:', error);
+      console.error(' SMS認証状態確認エラー:', error);
       return { isVerified: false, error: 'SMS認証状態の確認に失敗しました。' };
     }
   }
@@ -1877,7 +1877,7 @@ export class ImageUploadManager {
       const fileName = `fp-${fpId}-${timestamp}.${fileExt}`;
       const filePath = `fp-profiles/${fileName}`;
 
-      console.log('🖼️ 画像アップロード開始:', { fileName, fileSize: file.size, fileType: file.type });
+      console.log(' 画像アップロード開始:', { fileName, fileSize: file.size, fileType: file.type });
 
       // Supabase Storageにアップロード
       const { data, error } = await supabase.storage
@@ -1888,7 +1888,7 @@ export class ImageUploadManager {
         });
 
       if (error) {
-        console.error('💥 画像アップロードエラー:', error);
+        console.error(' 画像アップロードエラー:', error);
         return { 
           success: false, 
           error: '画像のアップロードに失敗しました。' 
@@ -1902,7 +1902,7 @@ export class ImageUploadManager {
 
       const publicUrl = urlData.publicUrl;
       
-      console.log('✅ 画像アップロード成功:', { publicUrl });
+      console.log(' 画像アップロード成功:', { publicUrl });
       
       return { 
         success: true, 
@@ -1910,7 +1910,7 @@ export class ImageUploadManager {
       };
 
     } catch (error) {
-      console.error('💥 画像アップロード処理エラー:', error);
+      console.error(' 画像アップロード処理エラー:', error);
       return { 
         success: false, 
         error: '画像アップロード処理中にエラーが発生しました。' 
@@ -1926,25 +1926,25 @@ export class ImageUploadManager {
       const fileName = urlParts[urlParts.length - 1];
       const filePath = `fp-profiles/${fileName}`;
 
-      console.log('🗑️ 画像削除開始:', { filePath });
+      console.log('🗑 画像削除開始:', { filePath });
 
       const { error } = await supabase.storage
         .from('profile-images')
         .remove([filePath]);
 
       if (error) {
-        console.error('💥 画像削除エラー:', error);
+        console.error(' 画像削除エラー:', error);
         return { 
           success: false, 
           error: '古い画像の削除に失敗しました。' 
         };
       }
 
-      console.log('✅ 画像削除成功');
+      console.log(' 画像削除成功');
       return { success: true };
 
     } catch (error) {
-      console.error('💥 画像削除処理エラー:', error);
+      console.error(' 画像削除処理エラー:', error);
       return { 
         success: false, 
         error: '画像削除処理中にエラーが発生しました。' 
@@ -1963,7 +1963,7 @@ export class ImageUploadManager {
         });
 
       if (error) {
-        console.error('💥 画像リスト取得エラー:', error);
+        console.error(' 画像リスト取得エラー:', error);
         return { 
           success: false, 
           error: '画像リストの取得に失敗しました。' 
@@ -1976,7 +1976,7 @@ export class ImageUploadManager {
       };
 
     } catch (error) {
-      console.error('💥 画像リスト取得処理エラー:', error);
+      console.error(' 画像リスト取得処理エラー:', error);
       return { 
         success: false, 
         error: '画像リスト取得処理中にエラーが発生しました。' 

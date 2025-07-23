@@ -133,7 +133,7 @@ class ProductionLogger {
     if (this.isProduction()) {
       console.warn(JSON.stringify(securityLog));
     } else {
-      console.warn(`🔒 SECURITY [${severity.toUpperCase()}]: ${event}`, securityLog);
+      console.warn(` SECURITY [${severity.toUpperCase()}]: ${event}`, securityLog);
     }
   }
 
@@ -151,7 +151,7 @@ class ProductionLogger {
     if (this.isProduction()) {
       console.info(JSON.stringify(perfLog));
     } else {
-      console.log(`⏱️ PERF: ${metric} = ${value}${unit}`, context);
+      console.log(` PERF: ${metric} = ${value}${unit}`, context);
     }
   }
 }

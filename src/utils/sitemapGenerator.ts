@@ -129,5 +129,5 @@ if (require.main === module) {
   const outputPath = path.join(__dirname, '../../public/sitemap.xml');
   
   fs.writeFileSync(outputPath, sitemap, 'utf-8');
-  console.log(`✅ Sitemap generated successfully at ${outputPath}`);
+  console.log(` Sitemap generated successfully at ${outputPath}`);
 }

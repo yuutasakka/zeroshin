@@ -14,7 +14,7 @@ export const demoConfig = {
   // デモモードの警告メッセージ
   getDemoWarning(): string {
     return this.isDemoMode 
-      ? '⚠️ デモモードが有効です。本番環境では必ず無効化してください。' 
+      ? ' デモモードが有効です。本番環境では必ず無効化してください。' 
       : '';
   },
   

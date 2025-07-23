@@ -156,7 +156,7 @@ const DiagnosisResultsPage: React.FC<DiagnosisResultsPageProps> = ({ diagnosisDa
         return parsedDirect;
       }
     } catch (error) {
-      console.error('🔍 診断データ復元エラー:', error);
+      console.error(' 診断データ復元エラー:', error);
     }
 
     // フォールバック: デフォルトデータ
@@ -376,7 +376,7 @@ const DiagnosisResultsPage: React.FC<DiagnosisResultsPageProps> = ({ diagnosisDa
         const supabaseConfig = createSupabaseClient();
         
         if (!supabaseConfig.url || !supabaseConfig.key) {
-          secureLog('⚠️ Supabase設定なし：デフォルト金融商品データを使用');
+          secureLog(' Supabase設定なし：デフォルト金融商品データを使用');
           return;
         }
 
@@ -409,7 +409,7 @@ const DiagnosisResultsPage: React.FC<DiagnosisResultsPageProps> = ({ diagnosisDa
             }));
 
             dispatch({ type: 'SET_FINANCIAL_PRODUCTS', payload: formattedProducts });
-            secureLog(`✅ Supabaseから${formattedProducts.length}件の金融商品データを読み込み`);
+            secureLog(` Supabaseから${formattedProducts.length}件の金融商品データを読み込み`);
             return;
           }
         } else if (response.status === 400) {

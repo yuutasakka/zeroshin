@@ -59,7 +59,7 @@ const Footer: React.FC<FooterProps> = ({ onNavigateToAdminLogin }) => {
       if (!supabaseConfig.url || !supabaseConfig.key || 
           supabaseConfig.url.includes('your-project') || 
           supabaseConfig.key.includes('your-anon-key')) {
-        secureLog('⚠️ Footer: Supabase設定が無効：デフォルトリーガルリンクを使用');
+        secureLog(' Footer: Supabase設定が無効：デフォルトリーガルリンクを使用');
         setDefaultLegalLinks();
         return;
       }

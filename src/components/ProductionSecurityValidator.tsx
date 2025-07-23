@@ -88,7 +88,7 @@ const ProductionSecurityValidator: React.FC = () => {
   if (!validationResult.isValid) {
     return (
       <div className="fixed top-0 left-0 right-0 bg-red-600 text-white p-4 text-center z-50">
-        <div className="font-bold">🚨 本番環境セキュリティエラー</div>
+        <div className="font-bold"> 本番環境セキュリティエラー</div>
         <div className="text-sm mt-2">
           {validationResult.errors.map((error, index) => (
             <div key={index}>• {error}</div>
@@ -101,7 +101,7 @@ const ProductionSecurityValidator: React.FC = () => {
   if (validationResult.warnings.length > 0) {
     return (
       <div className="fixed top-0 right-0 bg-orange-500 text-white p-2 text-xs z-40 max-w-sm">
-        <div className="font-bold">⚠️ セキュリティ警告</div>
+        <div className="font-bold"> セキュリティ警告</div>
         {validationResult.warnings.map((warning, index) => (
           <div key={index}>• {warning}</div>
         ))}

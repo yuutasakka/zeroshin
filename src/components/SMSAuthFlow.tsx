@@ -241,7 +241,7 @@ const SMSAuthFlow: React.FC<SMSAuthFlowProps> = ({
           
           {/* Title */}
           <h2 className="text-2xl md:text-3xl font-bold text-gray-800 mb-6 text-center">
-            📱 電話番号認証
+             電話番号認証
           </h2>
           
           {/* Description */}
@@ -254,7 +254,7 @@ const SMSAuthFlow: React.FC<SMSAuthFlowProps> = ({
           {/* Error Message */}
           {error && (
             <div className="w-full bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-6 text-center font-medium">
-              ⚠️ {error}
+               {error}
             </div>
           )}
           
@@ -343,7 +343,7 @@ const SMSAuthFlow: React.FC<SMSAuthFlowProps> = ({
                     <span>認証中...</span>
                   </div>
                 ) : (
-                  '✅ 認証する'
+                  ' 認証する'
                 )}
               </button>
               
@@ -366,7 +366,7 @@ const SMSAuthFlow: React.FC<SMSAuthFlowProps> = ({
                 disabled={isLoading}
                 className="w-full py-3 px-6 rounded-xl font-medium text-base transition-all duration-200 focus:ring-2 focus:ring-offset-2 focus:outline-none bg-white border-2 border-blue-300 text-blue-700 hover:bg-blue-50 hover:border-blue-400 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                📱 電話番号を変更
+                 電話番号を変更
               </button>
             </div>
           )}

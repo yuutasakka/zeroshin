@@ -851,12 +851,12 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
     secureLog('handleSaveProductSettings関数が呼び出されました');
     secureLog('保存する商品データ:', productsForEditing);
     
-    setProductSettingsStatus('💾 商品設定を保存中...');
+    setProductSettingsStatus(' 商品設定を保存中...');
     
     try {
       // 商品データの基本チェック
       if (!productsForEditing || productsForEditing.length === 0) {
-        setProductSettingsStatus('❌ 商品設定データがありません。');
+        setProductSettingsStatus(' 商品設定データがありません。');
         setTimeout(() => setProductSettingsStatus(''), 5000);
         return;
       }
@@ -865,7 +865,7 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
       try {
         const existingProducts = await SupabaseAdminAPI.loadAdminSetting('financial_products');
         if (existingProducts && JSON.stringify(existingProducts) === JSON.stringify(productsForEditing)) {
-          setProductSettingsStatus('❌ 商品設定に変更がありません。');
+          setProductSettingsStatus(' 商品設定に変更がありません。');
           setTimeout(() => setProductSettingsStatus(''), 5000);
           return;
         }
@@ -878,20 +878,20 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
         const supabaseSuccess = await SupabaseAdminAPI.saveAdminSetting('financial_products', productsForEditing);
         if (supabaseSuccess) {
           secureLog('Supabaseに商品設定を保存完了');
-          setProductSettingsStatus('✅ 商品設定が正常に保存され、データベースに反映されました');
+          setProductSettingsStatus(' 商品設定が正常に保存され、データベースに反映されました');
         } else {
           secureLog('Supabase保存に失敗');
-          setProductSettingsStatus('❌ 商品設定の保存に失敗しました。');
+          setProductSettingsStatus(' 商品設定の保存に失敗しました。');
         }
       } catch (supabaseError) {
         secureLog('Supabase保存でエラーが発生:', supabaseError);
-        setProductSettingsStatus('❌ 商品設定の保存中にエラーが発生しました。');
+        setProductSettingsStatus(' 商品設定の保存中にエラーが発生しました。');
       }
       
       setTimeout(() => setProductSettingsStatus(''), 3000);
     } catch (error) {
       secureLog("Error saving product settings:", error);
-      setProductSettingsStatus('❌ 保存中にエラーが発生しました。');
+      setProductSettingsStatus(' 保存中にエラーが発生しました。');
       setTimeout(() => setProductSettingsStatus(''), 5000);
     }
   };
@@ -961,7 +961,7 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
     try {
         // お客様の声データの基本チェック
         if (!testimonialsForEditing || testimonialsForEditing.length === 0) {
-          setTestimonialStatus('❌ お客様の声のデータがありません。');
+          setTestimonialStatus(' お客様の声のデータがありません。');
           setTimeout(() => setTestimonialStatus(''), 5000);
           return;
         }
@@ -971,13 +971,13 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
         if (!supabaseSuccess) {
           throw new Error('Supabase保存に失敗しました');
         }
-        console.log('🔧 Supabaseにお客様の声を保存完了');
-        setTestimonialStatus('✅ お客様の声が正常に保存されました');
+        console.log(' Supabaseにお客様の声を保存完了');
+        setTestimonialStatus(' お客様の声が正常に保存されました');
         
         setTimeout(() => setTestimonialStatus(''), 3000);
     } catch (error) {
         secureLog("Error saving testimonial settings:", error);
-        setTestimonialStatus('❌ 保存中にエラーが発生しました。');
+        setTestimonialStatus(' 保存中にエラーが発生しました。');
         setTimeout(() => setTestimonialStatus(''), 5000);
     }
   };
@@ -988,7 +988,7 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
   };
 
   const handleSaveTrackingScripts = async () => {
-      setAnalyticsSettingsStatus('📊 アナリティクス設定を保存中...');
+      setAnalyticsSettingsStatus(' アナリティクス設定を保存中...');
       
       try {
           // Supabaseに直接保存
@@ -996,13 +996,13 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
           if (!supabaseSuccess) {
             throw new Error('Supabase保存に失敗しました');
           }
-          console.log('🔧 Supabaseにアナリティクス設定を保存完了');
-          setAnalyticsSettingsStatus('✅ アナリティクス設定が正常に保存されました');
+          console.log(' Supabaseにアナリティクス設定を保存完了');
+          setAnalyticsSettingsStatus(' アナリティクス設定が正常に保存されました');
           
           setTimeout(() => setAnalyticsSettingsStatus(''), 3000);
       } catch (error) {
           secureLog("Error saving tracking scripts:", error);
-          setAnalyticsSettingsStatus('❌ 保存中にエラーが発生しました。');
+          setAnalyticsSettingsStatus(' 保存中にエラーが発生しました。');
           setTimeout(() => setAnalyticsSettingsStatus(''), 5000);
       }
   };
@@ -1023,24 +1023,24 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
   };
 
   const handleSaveNotificationSettings = async () => {
-    console.log('🔧 通知設定保存関数が呼び出されました');
-    console.log('🔧 現在の通知設定:', notificationSettings);
-    setNotificationSettingsStatus('🔔 通知設定を保存中...');
+    console.log(' 通知設定保存関数が呼び出されました');
+    console.log(' 現在の通知設定:', notificationSettings);
+    setNotificationSettingsStatus(' 通知設定を保存中...');
     
     try {
         // Supabaseに直接保存
-        console.log('🔧 Supabaseに通知設定を保存中...');
+        console.log(' Supabaseに通知設定を保存中...');
         const supabaseSuccess = await SupabaseAdminAPI.saveAdminSetting('notification_settings', notificationSettings);
         if (!supabaseSuccess) {
           throw new Error('Supabase保存に失敗しました');
         }
-        console.log('🔧 Supabaseに通知設定を保存完了');
-        setNotificationSettingsStatus('✅ 通知設定が正常に保存されました');
+        console.log(' Supabaseに通知設定を保存完了');
+        setNotificationSettingsStatus(' 通知設定が正常に保存されました');
         
         setTimeout(() => setNotificationSettingsStatus(''), 3000);
     } catch (error) {
-        console.error('🚨 通知設定保存エラー:', error);
-        setNotificationSettingsStatus(`❌ 通知設定の保存中にエラーが発生しました: ${error}`);
+        console.error(' 通知設定保存エラー:', error);
+        setNotificationSettingsStatus(` 通知設定の保存中にエラーが発生しました: ${error}`);
         setTimeout(() => setNotificationSettingsStatus(''), 5000);
     }
   };
@@ -1078,21 +1078,21 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
         const supabaseSuccess = await SupabaseAdminAPI.saveAdminSetting('legal_links', updatedLinks);
         if (supabaseSuccess) {
           secureLog('リーガルリンクをSupabaseに保存完了');
-          setLegalLinksStatus('✅ リーガルリンクが正常に保存され、データベースに反映されました');
+          setLegalLinksStatus(' リーガルリンクが正常に保存され、データベースに反映されました');
         } else {
           secureLog('Supabase保存に失敗');
-          setLegalLinksStatus('❌ 保存に失敗しました');
+          setLegalLinksStatus(' 保存に失敗しました');
         }
       } catch (supabaseError) {
         secureLog('Supabase保存でエラーが発生:', supabaseError);
-        setLegalLinksStatus('❌ 保存中にエラーが発生しました');
+        setLegalLinksStatus(' 保存中にエラーが発生しました');
       }
       
       setEditingLegalLink(null);
       setTimeout(() => setLegalLinksStatus(''), 3000);
     } catch (error) {
       secureLog('Error saving legal link:', error);
-      setLegalLinksStatus('❌ 保存中にエラーが発生しました。');
+      setLegalLinksStatus(' 保存中にエラーが発生しました。');
       setTimeout(() => setLegalLinksStatus(''), 5000);
     }
   };
@@ -1118,24 +1118,24 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
   };
 
   const handleSaveExpertContactSettings = async () => {
-    console.log('🔧 専門家設定保存関数が呼び出されました');
-    console.log('🔧 現在の専門家設定:', expertContact);
+    console.log(' 専門家設定保存関数が呼び出されました');
+    console.log(' 現在の専門家設定:', expertContact);
     try {
-      setExpertContactStatus('💾 専門家設定を保存中...');
+      setExpertContactStatus(' 専門家設定を保存中...');
 
       // Supabaseに保存
-      console.log('🔧 Supabaseに専門家設定を保存中...');
+      console.log(' Supabaseに専門家設定を保存中...');
       const supabaseSuccess = await SupabaseAdminAPI.saveAdminSetting('expert_contact_settings', expertContact);
       if (!supabaseSuccess) {
         throw new Error('Supabase保存に失敗しました');
       }
-      console.log('🔧 Supabaseに専門家設定を保存完了');
-      setExpertContactStatus('✅ 専門家設定が正常に保存されました');
+      console.log(' Supabaseに専門家設定を保存完了');
+      setExpertContactStatus(' 専門家設定が正常に保存されました');
 
       setTimeout(() => setExpertContactStatus(''), 3000);
     } catch (error) {
-      console.error('🚨 専門家設定保存エラー:', error);
-      setExpertContactStatus(`❌ 保存中にエラーが発生しました: ${error}`);
+      console.error(' 専門家設定保存エラー:', error);
+      setExpertContactStatus(` 保存中にエラーが発生しました: ${error}`);
       setTimeout(() => setExpertContactStatus(''), 5000);
     }
   };
@@ -1185,7 +1185,7 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
     if (!file || !editingPlanner) return;
 
     setIsUploadingImage(true);
-    setUploadStatus('📤 画像をアップロード中...');
+    setUploadStatus(' 画像をアップロード中...');
 
     try {
       // 古い画像がある場合は削除（Supabaseストレージから）
@@ -1202,13 +1202,13 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
           ...editingPlanner, 
           profile_image_url: result.url 
         });
-        setUploadStatus('✅ 画像アップロード完了');
+        setUploadStatus(' 画像アップロード完了');
       } else {
-        setUploadStatus(`❌ ${result.error || 'アップロードに失敗しました'}`);
+        setUploadStatus(` ${result.error || 'アップロードに失敗しました'}`);
       }
     } catch (error) {
       console.error('画像アップロードエラー:', error);
-      setUploadStatus('❌ 画像アップロード中にエラーが発生しました');
+      setUploadStatus(' 画像アップロード中にエラーが発生しました');
     }
 
     setIsUploadingImage(false);
@@ -1218,9 +1218,9 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
   const handleSavePlanner = async () => {
     if (!editingPlanner) return;
 
-    console.log('🔧 FP保存関数が呼び出されました');
-    console.log('🔧 現在の編集中FPデータ:', editingPlanner);
-    setPlannerStatus('💾 FP情報を保存中...');
+    console.log(' FP保存関数が呼び出されました');
+    console.log(' 現在の編集中FPデータ:', editingPlanner);
+    setPlannerStatus(' FP情報を保存中...');
     try {
       // IDがない場合は新規作成
       if (!editingPlanner.id) {
@@ -1228,12 +1228,12 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
       }
 
       // Supabaseに保存
-      console.log('🔧 SupabaseにFPデータを保存中...');
+      console.log(' SupabaseにFPデータを保存中...');
       const supabaseSuccess = await SupabaseAdminAPI.saveAdminSetting('financial_planners', editingPlanner);
       if (!supabaseSuccess) {
         throw new Error('Supabase保存に失敗しました');
       }
-      console.log('🔧 SupabaseにFPデータを保存完了');
+      console.log(' SupabaseにFPデータを保存完了');
       
       // ローカル状態を更新
       const updatedPlanners = editingPlanner.id && financialPlanners.find(p => p.id === editingPlanner.id)
@@ -1241,13 +1241,13 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
         : [...financialPlanners, editingPlanner];
       setFinancialPlanners(updatedPlanners);
 
-      setPlannerStatus('✅ FP情報が正常に保存されました');
+      setPlannerStatus(' FP情報が正常に保存されました');
       handleClosePlannerModal();
       
       setTimeout(() => setPlannerStatus(''), 3000);
     } catch (error) {
-      console.error('🚨 ファイナンシャルプランナーの保存エラー:', error);
-      setPlannerStatus(`❌ 保存に失敗しました: ${error}`);
+      console.error(' ファイナンシャルプランナーの保存エラー:', error);
+      setPlannerStatus(` 保存に失敗しました: ${error}`);
       setTimeout(() => setPlannerStatus(''), 3000);
     }
   };
@@ -1279,7 +1279,7 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
         console.log('削除レスポンス:', response.status, response.statusText);
 
         if (response.ok) {
-          setPlannerStatus('✅ 削除されました');
+          setPlannerStatus(' 削除されました');
           console.log('プランナー削除成功:', plannerId);
           await loadFinancialPlanners();
         } else {
@@ -1292,7 +1292,7 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
         console.log('Supabase設定なし、ローカル削除を実行');
         const updatedPlanners = financialPlanners.filter(p => p.id !== plannerId);
         setFinancialPlanners(updatedPlanners);
-        setPlannerStatus('✅ 削除されました（ローカルのみ）');
+        setPlannerStatus(' 削除されました（ローカルのみ）');
       }
       
       setTimeout(() => setPlannerStatus(''), 3000);
@@ -1304,9 +1304,9 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
       try {
         const updatedPlanners = financialPlanners.filter(p => p.id !== plannerId);
         setFinancialPlanners(updatedPlanners);
-        setPlannerStatus('✅ 削除されました（ローカルのみ）');
+        setPlannerStatus(' 削除されました（ローカルのみ）');
       } catch (localError) {
-        setPlannerStatus('❌ 削除に失敗しました');
+        setPlannerStatus(' 削除に失敗しました');
       }
       
       setTimeout(() => setPlannerStatus(''), 3000);
@@ -1315,22 +1315,22 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
 
   // 管理者設定保存機能（ローカルストレージ優先、Supabaseはオプション）
   const handleSaveAdminSettings = async () => {
-    console.log('🔧 handleSaveAdminSettings関数が呼び出されました');
-    console.log('🔧 現在の電話番号:', adminPhoneNumber);
-    console.log('🔧 現在のバックアップコード:', adminBackupCode);
+    console.log(' handleSaveAdminSettings関数が呼び出されました');
+    console.log(' 現在の電話番号:', adminPhoneNumber);
+    console.log(' 現在のバックアップコード:', adminBackupCode);
     
-    setAdminSettingsStatus('💾 管理者設定を保存中...');
+    setAdminSettingsStatus(' 管理者設定を保存中...');
     
     try {
       // 入力値の基本チェック
       if (!adminPhoneNumber || adminPhoneNumber.trim() === '') {
-        setAdminSettingsStatus('❌ 電話番号を入力してください。');
+        setAdminSettingsStatus(' 電話番号を入力してください。');
         setTimeout(() => setAdminSettingsStatus(''), 5000);
         return;
       }
 
       if (!adminBackupCode || adminBackupCode.trim() === '') {
-        setAdminSettingsStatus('❌ バックアップコードを入力してください。');
+        setAdminSettingsStatus(' バックアップコードを入力してください。');
         setTimeout(() => setAdminSettingsStatus(''), 5000);
         return;
       }
@@ -1338,20 +1338,20 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
       // 電話番号の形式チェック（数字のみ、10-11桁）
       const phoneRegex = /^[0-9]{10,11}$/;
       if (!phoneRegex.test(adminPhoneNumber)) {
-        setAdminSettingsStatus('❌ 電話番号は10桁または11桁の数字で入力してください。');
+        setAdminSettingsStatus(' 電話番号は10桁または11桁の数字で入力してください。');
         setTimeout(() => setAdminSettingsStatus(''), 5000);
         return;
       }
 
       // バックアップコードの形式チェック
       if (adminBackupCode.length < 8) {
-        setAdminSettingsStatus('❌ バックアップコードは8文字以上で入力してください。');
+        setAdminSettingsStatus(' バックアップコードは8文字以上で入力してください。');
         setTimeout(() => setAdminSettingsStatus(''), 5000);
         return;
       }
 
       // Supabaseに直接保存
-      console.log('🔧 Supabase専用保存処理を開始します');
+      console.log(' Supabase専用保存処理を開始します');
 
       // Supabaseで管理者設定を更新
       try {
@@ -1377,19 +1377,19 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
           throw new Error('Supabase保存に失敗しました');
         }
         
-        console.log('🔧 Supabaseに管理者設定を保存完了:', credentialsData);
-        setAdminSettingsStatus('✅ 管理者設定が正常に保存されました');
+        console.log(' Supabaseに管理者設定を保存完了:', credentialsData);
+        setAdminSettingsStatus(' 管理者設定が正常に保存されました');
         
         setTimeout(() => setAdminSettingsStatus(''), 3000);
 
       } catch (error) {
-        console.error('🚨 管理者設定保存エラー:', error);
-        setAdminSettingsStatus(`❌ 保存中にエラーが発生しました: ${error}`);
+        console.error(' 管理者設定保存エラー:', error);
+        setAdminSettingsStatus(` 保存中にエラーが発生しました: ${error}`);
         setTimeout(() => setAdminSettingsStatus(''), 5000);
       }
     } catch (error) {
-      console.error('🚨 管理者設定保存外部エラー:', error);
-      setAdminSettingsStatus(`❌ 保存中に予期しないエラーが発生しました: ${error}`);
+      console.error(' 管理者設定保存外部エラー:', error);
+      setAdminSettingsStatus(` 保存中に予期しないエラーが発生しました: ${error}`);
       setTimeout(() => setAdminSettingsStatus(''), 5000);
     }
   };
@@ -1482,12 +1482,12 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
   };
 
   const handleSaveHomepageContentSettings = async () => {
-    setHomepageContentStatus('💾 ホームページコンテンツを保存中...');
+    setHomepageContentStatus(' ホームページコンテンツを保存中...');
     
     try {
       // データの基本チェック
       if (!reasonsToChoose.title || !reasonsToChoose.subtitle || !firstConsultationOffer.title || !ctaButtonConfig.button_text) {
-        setHomepageContentStatus('❌ 必須項目が入力されていません。');
+        setHomepageContentStatus(' 必須項目が入力されていません。');
         setTimeout(() => setHomepageContentStatus(''), 5000);
         return;
       }
@@ -1528,24 +1528,24 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
       }
 
       if (successCount === 3) {
-        setHomepageContentStatus('✅ ホームページコンテンツが正常に保存され、データベースに反映されました');
+        setHomepageContentStatus(' ホームページコンテンツが正常に保存され、データベースに反映されました');
       } else if (successCount > 0) {
-        setHomepageContentStatus('⚠️ 一部のコンテンツが保存されました（部分的成功）');
+        setHomepageContentStatus(' 一部のコンテンツが保存されました（部分的成功）');
       } else {
-        setHomepageContentStatus('❌ コンテンツの保存に失敗しました');
+        setHomepageContentStatus(' コンテンツの保存に失敗しました');
       }
       
       setTimeout(() => setHomepageContentStatus(''), 3000);
     } catch (error) {
       secureLog("Error saving homepage content settings:", error);
-      setHomepageContentStatus('❌ 保存中にエラーが発生しました。');
+      setHomepageContentStatus(' 保存中にエラーが発生しました。');
       setTimeout(() => setHomepageContentStatus(''), 5000);
     }
   };
 
   const handleTestNotification = async (channel: keyof NotificationSettings) => {
     try {
-      setNotificationSettingsStatus(`🧪 ${channel}通知のテストを実行しています...`);
+      setNotificationSettingsStatus(` ${channel}通知のテストを実行しています...`);
       
       // Basic validation for the channel
       const config = notificationSettings[channel];
@@ -1560,7 +1560,7 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
           }
           secureLog(`📧 Email Test to: ${emailConfig.recipientEmails}`);
           secureLog(`Message: ${testMessage}`);
-          setNotificationSettingsStatus('✅ メール通知テストを実行しました');
+          setNotificationSettingsStatus(' メール通知テストを実行しました');
           break;
         }
           
@@ -1573,7 +1573,7 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
           secureLog(`💬 Slack Test to: ${slackConfig.channel || '#general'}`);
           secureLog(`Webhook: ${slackConfig.webhookUrl}`);
           secureLog(`Message: ${testMessage}`);
-          setNotificationSettingsStatus('✅ Slack通知テストを実行しました');
+          setNotificationSettingsStatus(' Slack通知テストを実行しました');
           break;
         }
           
@@ -1583,10 +1583,10 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
             setNotificationSettingsStatus('LINEのアクセストークンが設定されていません。');
             return;
           }
-          secureLog(`📱 LINE Test`);
+          secureLog(` LINE Test`);
           secureLog(`Token: ${lineConfig.accessToken.substring(0, 10)}...`);
           secureLog(`Message: ${testMessage}`);
-          setNotificationSettingsStatus('✅ LINE通知テストを実行しました');
+          setNotificationSettingsStatus(' LINE通知テストを実行しました');
           break;
         }
           
@@ -1599,7 +1599,7 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
           secureLog(`💼 ChatWork Test to Room: ${chatworkConfig.roomId}`);
           secureLog(`Token: ${chatworkConfig.apiToken.substring(0, 10)}...`);
           secureLog(`Message: ${testMessage}`);
-          setNotificationSettingsStatus('✅ ChatWork通知テストを実行しました');
+          setNotificationSettingsStatus(' ChatWork通知テストを実行しました');
           break;
         }
       }
@@ -1608,7 +1608,7 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
       
     } catch (error) {
       secureLog('通知テストエラー:', error);
-      setNotificationSettingsStatus(`❌ ${channel}通知テストでエラーが発生しました: ${error}`);
+      setNotificationSettingsStatus(` ${channel}通知テストでエラーが発生しました: ${error}`);
       setTimeout(() => setNotificationSettingsStatus(''), 5000);
     }
   };
@@ -1627,16 +1627,16 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
   };
 
   const handleSaveHeaderAndVisualSettings = async () => {
-    console.log('🔧 ヘッダー・メインビジュアル・フッター設定保存関数が呼び出されました');
-    console.log('🔧 現在のヘッダーデータ:', headerData);
-    console.log('🔧 現在のメインビジュアルデータ:', mainVisualData);
-    console.log('🔧 現在のフッターデータ:', footerData);
-    setHeaderVisualStatus('💾 ヘッダー・メインビジュアル・フッター設定を保存中...');
+    console.log(' ヘッダー・メインビジュアル・フッター設定保存関数が呼び出されました');
+    console.log(' 現在のヘッダーデータ:', headerData);
+    console.log(' 現在のメインビジュアルデータ:', mainVisualData);
+    console.log(' 現在のフッターデータ:', footerData);
+    setHeaderVisualStatus(' ヘッダー・メインビジュアル・フッター設定を保存中...');
     
     try {
       // データの基本チェック
       if (!headerData.title || !headerData.subtitle || !mainVisualData.title || !mainVisualData.subtitle || !footerData.siteName) {
-        setHeaderVisualStatus('❌ 必須項目が入力されていません。');
+        setHeaderVisualStatus(' 必須項目が入力されていません。');
         setTimeout(() => setHeaderVisualStatus(''), 5000);
         return;
       }
@@ -1647,59 +1647,59 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
       
       // ヘッダーデータを保存
       try {
-        console.log('🔧 ヘッダーデータをSupabaseに保存中...');
+        console.log(' ヘッダーデータをSupabaseに保存中...');
         const headerSuccess = await SupabaseAdminAPI.saveAdminSetting('header_data', headerData);
         if (headerSuccess) {
-          console.log('🔧 ヘッダーデータをSupabaseに保存完了');
+          console.log(' ヘッダーデータをSupabaseに保存完了');
           successCount++;
         } else {
-          console.log('🔧 ヘッダーデータ保存失敗');
+          console.log(' ヘッダーデータ保存失敗');
         }
       } catch (error) {
-        console.error('🚨 ヘッダーデータの保存エラー:', error);
+        console.error(' ヘッダーデータの保存エラー:', error);
       }
 
       // メインビジュアルデータを保存
       try {
-        console.log('🔧 メインビジュアルデータをSupabaseに保存中...');
+        console.log(' メインビジュアルデータをSupabaseに保存中...');
         const mainVisualSuccess = await SupabaseAdminAPI.saveAdminSetting('main_visual_data', mainVisualData);
         if (mainVisualSuccess) {
-          console.log('🔧 メインビジュアルデータをSupabaseに保存完了');
+          console.log(' メインビジュアルデータをSupabaseに保存完了');
           successCount++;
         } else {
-          console.log('🔧 メインビジュアルデータ保存失敗');
+          console.log(' メインビジュアルデータ保存失敗');
         }
       } catch (error) {
-        console.error('🚨 メインビジュアルデータの保存エラー:', error);
+        console.error(' メインビジュアルデータの保存エラー:', error);
       }
 
       // フッターデータを保存
       try {
-        console.log('🔧 フッターデータをSupabaseに保存中...');
+        console.log(' フッターデータをSupabaseに保存中...');
         const footerSuccess = await SupabaseAdminAPI.saveAdminSetting('footer_data', footerData);
         if (footerSuccess) {
-          console.log('🔧 フッターデータをSupabaseに保存完了');
+          console.log(' フッターデータをSupabaseに保存完了');
           successCount++;
         } else {
-          console.log('🔧 フッターデータ保存失敗');
+          console.log(' フッターデータ保存失敗');
         }
       } catch (error) {
-        console.error('🚨 フッターデータの保存エラー:', error);
+        console.error(' フッターデータの保存エラー:', error);
       }
 
       if (successCount === 3) {
-        setHeaderVisualStatus('✅ ヘッダー・メインビジュアル・フッター設定が正常に保存されました');
+        setHeaderVisualStatus(' ヘッダー・メインビジュアル・フッター設定が正常に保存されました');
       } else if (successCount > 0) {
-        setHeaderVisualStatus('⚠️ 一部の設定の保存に失敗しました');
+        setHeaderVisualStatus(' 一部の設定の保存に失敗しました');
       } else {
-        setHeaderVisualStatus('❌ 設定の保存に失敗しました');
+        setHeaderVisualStatus(' 設定の保存に失敗しました');
       }
 
       setTimeout(() => setHeaderVisualStatus(''), 3000);
 
     } catch (error) {
-      console.error('🚨 ヘッダー・メインビジュアル・フッター設定保存エラー:', error);
-      setHeaderVisualStatus(`❌ 保存中にエラーが発生しました: ${error}`);
+      console.error(' ヘッダー・メインビジュアル・フッター設定保存エラー:', error);
+      setHeaderVisualStatus(` 保存中にエラーが発生しました: ${error}`);
       setTimeout(() => setHeaderVisualStatus(''), 5000);
     }
   };
@@ -1715,11 +1715,11 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
     try {
       setDesignTemplateStatus('テンプレートを変更中...');
       await setDesignTemplate(templateId);
-      setDesignTemplateStatus(`✅ デザインテンプレートを「${designTemplates[templateId].name}」に変更しました`);
+      setDesignTemplateStatus(` デザインテンプレートを「${designTemplates[templateId].name}」に変更しました`);
       setTimeout(() => setDesignTemplateStatus(''), 5000);
     } catch (error) {
       secureLog('デザインテンプレート変更エラー:', error);
-      setDesignTemplateStatus('❌ デザインテンプレートの変更に失敗しました');
+      setDesignTemplateStatus(' デザインテンプレートの変更に失敗しました');
       setTimeout(() => setDesignTemplateStatus(''), 5000);
     }
   };
@@ -2577,7 +2577,7 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
 
                 {/* デバッグ情報（開発時のみ表示） */}
                 <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg text-sm">
-                    <h4 className="font-semibold text-blue-800 mb-2">🔧 設定確認情報:</h4>
+                    <h4 className="font-semibold text-blue-800 mb-2"> 設定確認情報:</h4>
                     <p className="text-blue-700">選ばれる理由タイトル: {reasonsToChoose?.title || 'データなし'}</p>
                     <p className="text-blue-700">理由項目数: {reasonsToChoose?.reasons?.length || 0}</p>
                     <p className="text-blue-700">初回相談特典タイトル: {firstConsultationOffer?.title || 'データなし'}</p>
@@ -2957,8 +2957,8 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
                 </h2>
                 
                 {headerVisualStatus && (
-                    <div className={`p-3 mb-4 rounded-md text-sm ${headerVisualStatus.includes('❌') || headerVisualStatus.includes('エラー') ? 'bg-red-100 text-red-700' : 
-                        headerVisualStatus.includes('⚠️') ? 'bg-yellow-100 text-yellow-700' : 'bg-green-100 text-green-700'}`}>
+                    <div className={`p-3 mb-4 rounded-md text-sm ${headerVisualStatus.includes('') || headerVisualStatus.includes('エラー') ? 'bg-red-100 text-red-700' : 
+                        headerVisualStatus.includes('') ? 'bg-yellow-100 text-yellow-700' : 'bg-green-100 text-green-700'}`}>
                         {headerVisualStatus}
                     </div>
                 )}
@@ -3482,7 +3482,7 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
         {viewMode === 'securitySettings' && (
             <div className="bg-white p-6 md:p-8 rounded-xl shadow-2xl">
                 <h2 className="text-2xl font-bold text-gray-800 mb-6 flex items-center">
-                    <i className="fas fa-shield-alt mr-3 text-red-600"></i>🔐 セキュリティ設定
+                    <i className="fas fa-shield-alt mr-3 text-red-600"></i> セキュリティ設定
                 </h2>
                 
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
@@ -3503,7 +3503,7 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
                                 }}
                                 className="w-full bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
                             >
-                                🛠️ 2FA設定
+                                🛠 2FA設定
                             </button>
                             <button
                                 onClick={() => {
@@ -3512,7 +3512,7 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
                                 }}
                                 className="w-full bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
                             >
-                                ✅ 2FA認証テスト
+                                 2FA認証テスト
                             </button>
                         </div>
                     </div>
@@ -3552,7 +3552,7 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
                                 <div>
                                     <p className="text-sm text-gray-600">2FA設定状況</p>
                                     <p className="text-lg font-semibold text-gray-800">
-                                        {adminTotpSecret ? '✅ 有効' : '❌ 無効'}
+                                        {adminTotpSecret ? ' 有効' : ' 無効'}
                                     </p>
                                 </div>
                                 <i className={`fas fa-shield-alt text-2xl ${adminTotpSecret ? 'text-green-500' : 'text-red-500'}`}></i>
@@ -3633,7 +3633,7 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
                 </h2>
                 
                 {plannerStatus && (
-                    <div className={`p-3 mb-4 rounded-md text-sm ${plannerStatus.includes('エラー') || plannerStatus.includes('❌') ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'}`}>
+                    <div className={`p-3 mb-4 rounded-md text-sm ${plannerStatus.includes('エラー') || plannerStatus.includes('') ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'}`}>
                         {plannerStatus}
                     </div>
                 )}
@@ -3857,7 +3857,7 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
                                                     </>
                                                 ) : (
                                                     <>
-                                                        📤 画像を選択
+                                                         画像を選択
                                                     </>
                                                 )}
                                                 <input
