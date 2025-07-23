@@ -597,21 +597,18 @@ const App: React.FC = () => {
           {/* 2番目: 診断フォーム */}
           <div className="diagnosis-section" id="diagnosis-form-section">
             <div className="home-right-col">
-              <OptimizedDiagnosisFlow
-                onComplete={(optimizedAnswers) => {
-                  console.log('🔍 App.tsx: 最適化診断完了 - 回答データ:', optimizedAnswers);
+              <DiagnosisForm
+                onComplete={(answers) => {
+                  console.log('🔍 App.tsx: 診断完了 - 回答データ:', answers);
                   
-                  // OptimizedDiagnosisAnswersからDiagnosisAnswersに変換
-                  const [age, experience] = (optimizedAnswers.ageAndExperience || '-').split('-');
-                  const [purpose, budget] = (optimizedAnswers.purposeAndBudget || '-').split('-');
-                  
+                  // 簡素化された回答を既存の形式に変換
                   const convertedAnswers: DiagnosisAnswers = {
-                    age: age || '',
-                    experience: experience || '',
-                    purpose: purpose || '',
-                    amount: budget || '',
-                    timing: 'now', // クイック診断では常に「すぐに」
-                    phone: optimizedAnswers.phoneNumber || ''
+                    age: answers[1] || '',
+                    experience: answers[3] || '',
+                    purpose: answers[4] || '',
+                    amount: answers[2] || '',
+                    timing: 'now',
+                    phone: ''
                   };
                   
                   setDiagnosisAnswers(convertedAnswers);
@@ -632,10 +629,8 @@ const App: React.FC = () => {
                   console.log('🔍 App.tsx: 変換後の診断データ:', legacyDiagnosisData);
                   setDiagnosisData(legacyDiagnosisData);
                   
-                  setCurrentPage('verification');
-                  setPhoneNumberToVerify(convertedAnswers.phone || null);
+                  setCurrentPage('smsAuth');
                 }}
-                onCancel={() => {}}
               />
             </div>
           </div>
