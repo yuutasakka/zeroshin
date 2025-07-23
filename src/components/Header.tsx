@@ -23,6 +23,13 @@ const Header: React.FC = () => {
     }
   };
 
+  const handleStartDiagnosis = () => {
+    // 診断ページにナビゲート（実際のルーティング実装に応じて調整）
+    window.location.href = '/diagnosis';
+    // または React Routerを使用している場合:
+    // navigate('/diagnosis');
+  };
+
   return (
     <>
       <style jsx>{`
@@ -57,7 +64,7 @@ const Header: React.FC = () => {
       `}</style>
       <header 
         id="navigation"
-        className={`app-header fixed top-0 left-0 right-0 bg-white/95 backdrop-blur-lg border-b border-gray-100 shadow-lg z-50 ${templateConfig ? `layout-${templateConfig.styles.header.layout}` : ''}`}
+        className={`app-header fixed top-0 left-0 right-0 bg-gradient-to-r from-blue-50/95 via-white/95 to-purple-50/95 backdrop-blur-lg border-b border-blue-100/50 shadow-lg z-50 ${templateConfig ? `layout-${templateConfig.styles.header.layout}` : ''}`}
         role="banner"
       >
         <div className="container mx-auto px-4 lg:px-8">
@@ -82,20 +89,24 @@ const Header: React.FC = () => {
             
             {/* デスクトップナビゲーション */}
             <nav className="hidden md:flex items-center space-x-1">
-              <a href="#main-visual-section" onClick={(e) => scrollToSection(e, 'main-visual-section')} className="px-4 py-2 text-sm md:text-base text-gray-700 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all duration-200 font-medium relative group">
+              <a href="#main-visual-section" onClick={(e) => scrollToSection(e, 'main-visual-section')} className="px-4 py-2 text-sm md:text-base text-gray-700 hover:text-blue-600 hover:bg-white/70 rounded-lg transition-all duration-200 font-medium relative group">
                 <span className="relative z-10">サービス</span>
-                <div className="absolute inset-0 bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200"></div>
+                <div className="absolute inset-0 bg-gradient-to-r from-blue-50/80 to-purple-50/80 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200"></div>
               </a>
-              <a href="#reliability-section" onClick={(e) => scrollToSection(e, 'reliability-section')} className="px-4 py-2 text-sm md:text-base text-gray-700 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all duration-200 font-medium relative group">
+              <a href="#reliability-section" onClick={(e) => scrollToSection(e, 'reliability-section')} className="px-4 py-2 text-sm md:text-base text-gray-700 hover:text-blue-600 hover:bg-white/70 rounded-lg transition-all duration-200 font-medium relative group">
                 <span className="relative z-10">選ばれる理由</span>
-                <div className="absolute inset-0 bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200"></div>
+                <div className="absolute inset-0 bg-gradient-to-r from-blue-50/80 to-purple-50/80 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200"></div>
               </a>
-              <a href="#cta-section" onClick={(e) => scrollToSection(e, 'cta-section')} className="px-4 py-2 text-sm md:text-base text-gray-700 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all duration-200 font-medium relative group">
+              <a href="#cta-section" onClick={(e) => scrollToSection(e, 'cta-section')} className="px-4 py-2 text-sm md:text-base text-gray-700 hover:text-blue-600 hover:bg-white/70 rounded-lg transition-all duration-200 font-medium relative group">
                 <span className="relative z-10">お問い合わせ</span>
-                <div className="absolute inset-0 bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200"></div>
+                <div className="absolute inset-0 bg-gradient-to-r from-blue-50/80 to-purple-50/80 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200"></div>
               </a>
-              <div className="ml-4 pl-4 border-l border-gray-200">
-                <button className="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-6 py-2 rounded-full text-sm font-semibold hover:from-blue-700 hover:to-purple-700 transform hover:scale-105 transition-all duration-200 shadow-lg hover:shadow-xl">
+              <div className="ml-4 pl-4 border-l border-blue-200/50">
+                <button 
+                  onClick={handleStartDiagnosis}
+                  className="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-6 py-2 rounded-full text-sm font-semibold hover:from-blue-700 hover:to-purple-700 transform hover:scale-105 transition-all duration-200 shadow-lg hover:shadow-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                >
+                  <i className="fas fa-rocket mr-2"></i>
                   診断を始める
                 </button>
               </div>
@@ -128,7 +139,7 @@ const Header: React.FC = () => {
         
         {/* モバイルメニュー */}
         <div className={`md:hidden ${isMobileMenuOpen ? 'block animate-slide-down' : 'hidden'}`}>
-          <nav className="bg-white/95 backdrop-blur-lg border-t border-gray-100 px-4 py-4 shadow-lg">
+          <nav className="bg-gradient-to-r from-blue-50/95 via-white/95 to-purple-50/95 backdrop-blur-lg border-t border-blue-100/50 px-4 py-4 shadow-lg">
             <div className="space-y-2">
               <a 
                 href="#main-visual-section" 
@@ -136,7 +147,7 @@ const Header: React.FC = () => {
                   scrollToSection(e, 'main-visual-section');
                   setIsMobileMenuOpen(false);
                 }} 
-                className="flex items-center py-3 px-4 text-base text-gray-700 hover:text-blue-600 hover:bg-gradient-to-r hover:from-blue-50 hover:to-purple-50 rounded-lg transition-all duration-200 group"
+                className="flex items-center py-3 px-4 text-base text-gray-700 hover:text-blue-600 hover:bg-white/70 rounded-lg transition-all duration-200 group"
               >
                 <i className="fas fa-cog mr-3 text-gray-400 group-hover:text-blue-500"></i>
                 サービス
@@ -147,7 +158,7 @@ const Header: React.FC = () => {
                   scrollToSection(e, 'reliability-section');
                   setIsMobileMenuOpen(false);
                 }} 
-                className="flex items-center py-3 px-4 text-base text-gray-700 hover:text-blue-600 hover:bg-gradient-to-r hover:from-blue-50 hover:to-purple-50 rounded-lg transition-all duration-200 group"
+                className="flex items-center py-3 px-4 text-base text-gray-700 hover:text-blue-600 hover:bg-white/70 rounded-lg transition-all duration-200 group"
               >
                 <i className="fas fa-star mr-3 text-gray-400 group-hover:text-blue-500"></i>
                 選ばれる理由
@@ -158,13 +169,19 @@ const Header: React.FC = () => {
                   scrollToSection(e, 'cta-section');
                   setIsMobileMenuOpen(false);
                 }} 
-                className="flex items-center py-3 px-4 text-base text-gray-700 hover:text-blue-600 hover:bg-gradient-to-r hover:from-blue-50 hover:to-purple-50 rounded-lg transition-all duration-200 group"
+                className="flex items-center py-3 px-4 text-base text-gray-700 hover:text-blue-600 hover:bg-white/70 rounded-lg transition-all duration-200 group"
               >
                 <i className="fas fa-envelope mr-3 text-gray-400 group-hover:text-blue-500"></i>
                 お問い合わせ
               </a>
-              <div className="pt-4 mt-4 border-t border-gray-200">
-                <button className="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white px-6 py-3 rounded-full text-base font-semibold hover:from-blue-700 hover:to-purple-700 transform hover:scale-105 transition-all duration-200 shadow-lg hover:shadow-xl">
+              <div className="pt-4 mt-4 border-t border-blue-200/50">
+                <button 
+                  onClick={() => {
+                    handleStartDiagnosis();
+                    setIsMobileMenuOpen(false);
+                  }}
+                  className="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white px-6 py-3 rounded-full text-base font-semibold hover:from-blue-700 hover:to-purple-700 transform hover:scale-105 transition-all duration-200 shadow-lg hover:shadow-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                >
                   <i className="fas fa-rocket mr-2"></i>
                   診断を始める
                 </button>
