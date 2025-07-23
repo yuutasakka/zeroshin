@@ -1196,69 +1196,35 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
   };
 
   const handleSaveExpertContactSettings = async () => {
+    console.log('🔧 専門家設定保存関数が呼び出されました');
+    console.log('🔧 現在の専門家設定:', expertContact);
     try {
       setExpertContactStatus('💾 専門家設定を保存中...');
 
-      // Supabaseに保存を試行
-      const response = await fetch(`${supabaseConfig.url}/rest/v1/expert_contact_settings`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${supabaseConfig.key}`,
-          'apikey': supabaseConfig.key,
-          'Content-Type': 'application/json',
-          'Prefer': 'resolution=merge-duplicates'
-        },
-        body: JSON.stringify({
-          setting_key: 'primary_financial_advisor',
-          expert_name: expertContact.expert_name,
-          phone_number: expertContact.phone_number,
-          email: expertContact.email,
-          line_url: expertContact.line_url,
-          business_hours: expertContact.business_hours,
-          description: expertContact.description,
-          is_active: true
-        })
-      });
+      // まずローカルストレージに保存
+      localStorage.setItem('expert_contact_settings', JSON.stringify(expertContact));
+      console.log('🔧 専門家設定をローカルストレージに保存完了:', expertContact);
 
-      if (response.ok) {
-        setExpertContactStatus('✅ 専門家設定が正常に保存されました');
-        secureLog('専門家設定をSupabaseに保存完了');
-      } else {
-        // UPSERTを試行
-        const updateResponse = await fetch(`${supabaseConfig.url}/rest/v1/expert_contact_settings?setting_key.eq=primary_financial_advisor`, {
-          method: 'PATCH',
-          headers: {
-            'Authorization': `Bearer ${supabaseConfig.key}`,
-            'apikey': supabaseConfig.key,
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({
-            expert_name: expertContact.expert_name,
-            phone_number: expertContact.phone_number,
-            email: expertContact.email,
-            line_url: expertContact.line_url,
-            business_hours: expertContact.business_hours,
-            description: expertContact.description,
-            is_active: true,
-            updated_at: new Date().toISOString()
-          })
-        });
-
-        if (updateResponse.ok) {
-          setExpertContactStatus('✅ 専門家設定が正常に更新されました');
-          secureLog('専門家設定をSupabaseで更新完了');
+      // Supabaseにも保存を試行
+      try {
+        console.log('🔧 Supabaseに専門家設定を保存中...');
+        const supabaseSuccess = await SupabaseAdminAPI.saveAdminSetting('expert_contact_settings', expertContact);
+        if (supabaseSuccess) {
+          console.log('🔧 Supabaseにも専門家設定を保存完了');
+          setExpertContactStatus('✅ 専門家設定が正常に保存され、データベースに反映されました');
         } else {
-          throw new Error('Supabase保存に失敗');
+          console.log('🔧 Supabase保存に失敗しましたが、ローカル保存は成功');
+          setExpertContactStatus('✅ 専門家設定が正常に保存されました（ローカル保存）');
         }
+      } catch (supabaseError) {
+        console.error('🚨 Supabase保存でエラーが発生しましたが、ローカル保存は成功:', supabaseError);
+        setExpertContactStatus('✅ 専門家設定が正常に保存されました（ローカル保存）');
       }
 
       setTimeout(() => setExpertContactStatus(''), 3000);
     } catch (error) {
-      secureLog('専門家設定保存エラー:', error);
-      
-      // エラー時の処理
-      setExpertContactStatus('❌ 保存中にエラーが発生しました。');
-      
+      console.error('🚨 専門家設定保存エラー:', error);
+      setExpertContactStatus(`❌ 保存中にエラーが発生しました: ${error}`);
       setTimeout(() => setExpertContactStatus(''), 5000);
     }
   };
