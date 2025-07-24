@@ -243,7 +243,7 @@ describe('診断フロー統合テスト', () => {
     // if (savedData) {
     //   const parsed = JSON.parse(savedData);
     //   expect(parsed.diagnosisAnswers).toBeDefined();
-    }
+    // }
 
     // オンラインに戻す
     Object.defineProperty(navigator, 'onLine', {
