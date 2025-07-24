@@ -22,6 +22,7 @@
     "test:watch": "vitest",
     "test:ui": "vitest --ui",
     "generate-keys": "node scripts/generate-env-keys.js",
+    "update-supabase-data": "tsx scripts/update-supabase-data.ts",
     "setup-env": "mkdir -p scripts && node scripts/generate-env-keys.js",
     "validate-production": "node scripts/validate-production-env.js",
     "build:production": "npm run validate-production && npm run build",
