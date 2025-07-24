@@ -1,209 +1,132 @@
-# AI ConnectX 管理者認証システムセットアップガイド
+# 管理者アカウント設定ガイド
 
-## 概要
+このドキュメントでは、タスカル管理画面にアクセスするための管理者アカウントの設定方法を説明します。
 
-AI ConnectXアプリケーションには、Supabaseデータベースと連携した安全な管理者認証システムが実装されています。このガイドでは、管理者認証システムのセットアップと使用方法について説明します。
+## 管理者情報
 
-## 🚀 クイックスタート
+**ユーザー名**: admin  
+**パスワード**: zg79juX!3ij5  
+**メールアドレス**: admin@taskal.jp  
+**権限**: super_admin
 
-### デモモード（Supabase設定なし）
+## セットアップ方法
 
-Supabaseを設定せずにデモモードで管理者認証を試すことができます：
+### 方法1: 自動スクリプトを使用（推奨）
 
-**デフォルト管理者認証情報:**
-- ユーザー名: `admin`
-- パスワード: `AIConnectX2024!`
-
-### 本格運用（Supabase設定あり）
-
-本格的な運用には、Supabaseプロジェクトの設定が必要です。
-
-## 📋 セットアップ手順
-
-### 1. Supabaseプロジェクトの作成
-
-1. [Supabase](https://supabase.com)にアクセス
-2. 新しいプロジェクトを作成
-3. プロジェクトURL、anon key、service role keyを取得
-
-### 2. 環境変数の設定
-
-`.env`ファイルを作成し、以下の環境変数を設定：
-
+1. 環境変数を設定:
 ```bash
-# Supabase設定
-REACT_APP_SUPABASE_URL=https://your-project-id.supabase.co
-REACT_APP_SUPABASE_ANON_KEY=your_supabase_anon_key_here
-
-# または Vite形式
-VITE_SUPABASE_URL=https://your-project-id.supabase.co
-VITE_SUPABASE_ANON_KEY=your_supabase_anon_key_here
+# .envファイルに追加
+VITE_SUPABASE_URL=your_supabase_project_url
+SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
 ```
 
-### 3. データベースマイグレーション
-
-Supabaseプロジェクトに以下のSQLを実行：
-
-```sql
--- supabase/migrations/001_create_admin_system.sql の内容を実行
-```
-
-または、Supabase CLIを使用：
-
+2. スクリプト実行:
 ```bash
-# Supabase CLIをインストール
-npm install -g supabase
-
-# プロジェクトと連携
-supabase init
-supabase link --project-ref your-project-id
-
-# マイグレーションを実行
-supabase db push
+npm run create-admin-user
 ```
 
-### 4. 初期管理者アカウントの確認
+### 方法2: Supabase管理画面で手動実行
 
-マイグレーション実行後、以下の初期管理者アカウントが作成されます：
+1. Supabase管理画面にログイン
+2. SQL Editorを開く
+3. 以下のファイルの内容をコピー&ペースト:
+   `/supabase/sql/insert_admin_user.sql`
+4. 実行ボタンをクリック
 
-- **ユーザー名**: `admin`
-- **パスワード**: `AIConnectX2024!`
-- **電話番号**: `+819012345678`
+## セキュリティ考慮事項
 
-## 🔧 管理者認証システムの機能
+### パスワードハッシュ化
+- パスワードはbcrypt（ソルトラウンド12）でハッシュ化されています
+- 元のパスワード: `zg79juX!3ij5`
+- ハッシュ値: `$2b$12$2.XNU3sFZZ3CMiZoUYeFJOnTi89Tpwe7eKQJLY/cMizD1Id9.VZ7m`
 
-### セキュリティ機能
+### アクセス制御
+- `is_active`: アカウントの有効/無効切り替え
+- `login_attempts`: ログイン試行回数（ブルートフォース攻撃対策）
+- `locked_until`: アカウントロック期限
 
-- **パスワードハッシュ化**: SHA-256によるパスワードハッシュ化
-- **ログイン試行制限**: 5回の失敗でアカウントロック（15分間）
-- **セッション管理**: 30分間のセッションタイムアウト
-- **監査ログ**: すべてのログイン試行と管理者操作を記録
-
-### データベーステーブル
-
-1. **admin_credentials**: 管理者認証情報
-2. **admin_login_attempts**: ログイン試行履歴
-3. **audit_logs**: システム監査ログ
-
-## 🎯 使用方法
-
-### 管理者ログイン
-
-1. アプリケーションで管理者ログインページにアクセス
-2. ユーザー名とパスワードを入力
-3. ログイン成功後、管理画面にアクセス可能
-
-### パスワード変更
-
+### データベーステーブル構造
 ```sql
--- Supabaseで直接パスワードを変更する場合
+admin_credentials (
+  id SERIAL PRIMARY KEY,
+  username VARCHAR(100) UNIQUE NOT NULL,
+  password_hash TEXT NOT NULL,
+  email VARCHAR(255),
+  phone_number VARCHAR(20),
+  role VARCHAR(50) DEFAULT 'admin',
+  is_active BOOLEAN DEFAULT TRUE,
+  last_login TIMESTAMP WITH TIME ZONE,
+  login_attempts INTEGER DEFAULT 0,
+  locked_until TIMESTAMP WITH TIME ZONE,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+)
+```
+
+## 管理画面アクセス
+
+1. ブラウザで管理画面にアクセス:
+   `https://your-domain.com/admin`
+
+2. ログイン情報を入力:
+   - ユーザー名: `admin`
+   - パスワード: `zg79juX!3ij5`
+
+3. 「ログイン」ボタンをクリック
+
+## トラブルシューティング
+
+### ログインできない場合
+
+1. **パスワードが間違っている**
+   - 大文字小文字、記号を正確に入力
+   - コピー&ペーストを使用することを推奨
+
+2. **アカウントがロックされている**
+   - SQLで確認: `SELECT * FROM admin_credentials WHERE username = 'admin';`
+   - ロック解除: `UPDATE admin_credentials SET locked_until = NULL, login_attempts = 0 WHERE username = 'admin';`
+
+3. **アカウントが無効になっている**
+   - 有効化: `UPDATE admin_credentials SET is_active = TRUE WHERE username = 'admin';`
+
+### データベースエラーの場合
+
+1. **テーブルが存在しない**
+   - SQLファイルを再実行: `/supabase/sql/insert_admin_user.sql`
+
+2. **権限エラー**
+   - Service Role Keyが正しく設定されているか確認
+
+## パスワード変更方法
+
+セキュリティ向上のため、初回ログイン後にパスワードを変更することを推奨します:
+
+1. 管理画面にログイン
+2. 「設定」→「パスワード変更」
+3. 新しいパスワードを入力
+4. 変更を保存
+
+または、SQLで直接更新:
+```sql
 UPDATE admin_credentials 
-SET password_hash = 'new_sha256_hash',
-    password_changed_at = NOW(),
-    updated_at = NOW()
+SET password_hash = '$2b$12$新しいハッシュ値'
 WHERE username = 'admin';
 ```
 
-### 新しい管理者の追加
+## 注意事項
 
-```sql
-INSERT INTO admin_credentials (
-    username, 
-    password_hash, 
-    phone_number, 
-    backup_code
-) VALUES (
-    'new_admin',
-    'sha256_hash_of_password',
-    '+819012345678',
-    'BACKUP-CODE-' || extract(epoch from now())::text
-);
+- この情報は機密情報です。安全に管理してください
+- 定期的にパスワードを変更してください
+- 不要になったアカウントは無効化してください
+- ログイン履歴を定期的に確認してください
+
+## ファイル構成
+
 ```
-
-## 🛡️ セキュリティのベストプラクティス
-
-### 本番環境での推奨事項
-
-1. **強力なパスワード**: 12文字以上、大小英数字+記号
-2. **定期的なパスワード変更**: 3ヶ月ごと
-3. **IP制限**: 必要に応じてアクセス元IPを制限
-4. **2要素認証**: 将来的な実装を検討
-5. **ログ監視**: 不審なログイン試行の監視
-
-### 環境変数の管理
-
-- `.env`ファイルをGitにコミットしない
-- 本番環境では環境変数を暗号化
-- 定期的なキーローテーション
-
-## 🔍 トラブルシューティング
-
-### よくある問題
-
-#### 1. Supabase接続エラー
-
-**症状**: ログイン時に接続エラーが発生
-**解決策**: 
-- 環境変数が正しく設定されているか確認
-- SupabaseプロジェクトのURLとキーを再確認
-- ネットワーク接続を確認
-
-#### 2. デモモードから抜け出せない
-
-**症状**: 正しい環境変数を設定してもデモモードのまま
-**解決策**:
-- ブラウザのキャッシュをクリア
-- アプリケーションを再起動
-- 環境変数の形式を確認（REACT_APP_ または VITE_）
-
-#### 3. ログイン試行制限
-
-**症状**: アカウントがロックされて解除されない
-**解決策**:
-```sql
--- データベースで直接ロックを解除
-UPDATE admin_credentials 
-SET failed_attempts = 0, 
-    locked_until = NULL 
-WHERE username = 'admin';
+/supabase/sql/
+├── insert_admin_user.sql     # 管理者挿入SQL
+/scripts/
+├── create-admin-user.ts      # 管理者作成スクリプト
+/docs/
+├── ADMIN_SETUP.md           # この文書
 ```
-
-## 📊 監査とログ
-
-### ログイン試行の確認
-
-```sql
-SELECT * FROM admin_login_attempts 
-WHERE username = 'admin' 
-ORDER BY created_at DESC 
-LIMIT 10;
-```
-
-### 監査ログの確認
-
-```sql
-SELECT * FROM audit_logs 
-WHERE event_type LIKE 'admin_%' 
-ORDER BY created_at DESC 
-LIMIT 20;
-```
-
-## 🔄 アップデート
-
-システムのアップデート時は以下を確認：
-
-1. データベーススキーマの変更
-2. セキュリティ設定の更新
-3. 新機能の環境変数追加
-
-## 📞 サポート
-
-問題が発生した場合：
-
-1. このドキュメントのトラブルシューティングを確認
-2. Supabaseプロジェクトの設定を再確認
-3. 開発チームに連絡
-
----
-
-**注意**: このシステムは開発・テスト用途に最適化されています。本番環境では追加のセキュリティ対策を実装することを強く推奨します。 
