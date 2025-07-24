@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MoneyTicket Debug Page</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background-color: #f0f0f0;
+        }
+        .status-box {
+            background: white;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .success { color: green; }
+        .error { color: red; }
+        .warning { color: orange; }
+        pre {
+            background: #f5f5f5;
+            padding: 10px;
+            border-radius: 4px;
+            overflow-x: auto;
+        }
+    </style>
+</head>
+<body>
+    <h1>MoneyTicket デバッグページ</h1>
+    
+    <div class="status-box">
+        <h2>1. 環境変数チェック</h2>
+        <div id="env-check">確認中...</div>
+    </div>
+
+    <div class="status-box">
+        <h2>2. Supabase接続テスト</h2>
+        <div id="supabase-check">確認中...</div>
+    </div>
+
+    <div class="status-box">
+        <h2>3. コンソールエラー</h2>
+        <div id="console-errors">
+            <pre id="error-log">エラーなし</pre>
+        </div>
+    </div>
+
+    <div class="status-box">
+        <h2>4. React アプリケーション状態</h2>
+        <div id="react-check">確認中...</div>
+    </div>
+
+    <script type="module">
+        // エラーログ記録
+        const errorLog = [];
+        window.addEventListener('error', (e) => {
+            errorLog.push({
+                message: e.message,
+                filename: e.filename,
+                line: e.lineno,
+                column: e.colno,
+                stack: e.error?.stack
+            });
+            updateErrorLog();
+        });
+
+        window.addEventListener('unhandledrejection', (e) => {
+            errorLog.push({
+                message: 'Unhandled Promise Rejection: ' + e.reason,
+                stack: e.reason?.stack
+            });
+            updateErrorLog();
+        });
+
+        function updateErrorLog() {
+            const logEl = document.getElementById('error-log');
+            if (errorLog.length > 0) {
+                logEl.textContent = JSON.stringify(errorLog, null, 2);
+                logEl.className = 'error';
+            }
+        }
+
+        // 1. 環境変数チェック
+        async function checkEnvironment() {
+            const envEl = document.getElementById('env-check');
+            try {
+                const envVars = {
+                    'import.meta': typeof import.meta !== 'undefined',
+                    'import.meta.env': typeof import.meta?.env !== 'undefined',
+                    'VITE_SUPABASE_URL': import.meta?.env?.VITE_SUPABASE_URL || 'Not found',
+                    'VITE_SUPABASE_ANON_KEY': import.meta?.env?.VITE_SUPABASE_ANON_KEY ? 'Set (hidden)' : 'Not found',
+                    'NODE_ENV': import.meta?.env?.NODE_ENV || 'Not found',
+                    'MODE': import.meta?.env?.MODE || 'Not found'
+                };
+                
+                let html = '<ul>';
+                for (const [key, value] of Object.entries(envVars)) {
+                    const className = value === 'Not found' ? 'error' : 'success';
+                    html += `<li><strong>${key}:</strong> <span class="${className}">${value}</span></li>`;
+                }
+                html += '</ul>';
+                envEl.innerHTML = html;
+            } catch (e) {
+                envEl.innerHTML = `<span class="error">エラー: ${e.message}</span>`;
+            }
+        }
+
+        // 2. Supabase接続テスト
+        async function checkSupabase() {
+            const supabaseEl = document.getElementById('supabase-check');
+            try {
+                // Supabaseクライアントをインポート
+                const { createClient } = await import('@supabase/supabase-js');
+                
+                const supabaseUrl = import.meta?.env?.VITE_SUPABASE_URL || 'https://eqirzbuqgymrtnfmvwhq.supabase.co';
+                const supabaseAnonKey = import.meta?.env?.VITE_SUPABASE_ANON_KEY || '';
+                
+                if (!supabaseAnonKey) {
+                    supabaseEl.innerHTML = '<span class="error">VITE_SUPABASE_ANON_KEY が設定されていません</span>';
+                    return;
+                }
+                
+                const supabase = createClient(supabaseUrl, supabaseAnonKey);
+                
+                // テーブルへの接続テスト
+                const { data, error } = await supabase
+                    .from('homepage_content_settings')
+                    .select('id')
+                    .limit(1);
+                
+                if (error) {
+                    supabaseEl.innerHTML = `<span class="error">接続エラー: ${error.message}</span>`;
+                } else {
+                    supabaseEl.innerHTML = '<span class="success">接続成功！</span>';
+                }
+            } catch (e) {
+                supabaseEl.innerHTML = `<span class="error">エラー: ${e.message}</span>`;
+            }
+        }
+
+        // 3. React アプリケーションチェック
+        async function checkReact() {
+            const reactEl = document.getElementById('react-check');
+            try {
+                // Reactがロードされているか確認
+                const hasReact = typeof window.React !== 'undefined';
+                const hasReactDOM = typeof window.ReactDOM !== 'undefined';
+                const rootElement = document.getElementById('root');
+                
+                let html = '<ul>';
+                html += `<li>React loaded: <span class="${hasReact ? 'success' : 'error'}">${hasReact}</span></li>`;
+                html += `<li>ReactDOM loaded: <span class="${hasReactDOM ? 'success' : 'error'}">${hasReactDOM}</span></li>`;
+                html += `<li>Root element exists: <span class="${rootElement ? 'success' : 'error'}">${!!rootElement}</span></li>`;
+                html += '</ul>';
+                
+                // アプリケーションのロードを試みる
+                if (!rootElement) {
+                    const newRoot = document.createElement('div');
+                    newRoot.id = 'root';
+                    document.body.appendChild(newRoot);
+                    html += '<p class="warning">Rootエレメントを作成しました</p>';
+                }
+                
+                reactEl.innerHTML = html;
+            } catch (e) {
+                reactEl.innerHTML = `<span class="error">エラー: ${e.message}</span>`;
+            }
+        }
+
+        // すべてのチェックを実行
+        async function runAllChecks() {
+            await checkEnvironment();
+            await checkSupabase();
+            await checkReact();
+        }
+
+        // ページロード時に実行
+        runAllChecks();
+    </script>
+</body>
+</html>

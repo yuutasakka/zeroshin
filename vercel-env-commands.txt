@@ -1,0 +1,35 @@
+# 🔧 Vercel環境変数設定コマンド
+# 以下のコマンドをコピーしてVercel CLIで実行:
+
+# セキュリティキー設定
+vercel env add ENCRYPTION_KEY production
+vercel env add JWT_SECRET production
+vercel env add SESSION_SECRET production
+vercel env add CSRF_SECRET production
+
+# アプリケーション設定
+vercel env add PRODUCTION_MODE production
+vercel env add NODE_ENV production
+vercel env add RATE_LIMIT_WINDOW_MS production
+vercel env add RATE_LIMIT_MAX_REQUESTS production
+vercel env add SMS_RATE_LIMIT_MAX production
+vercel env add SMS_WINDOW_MINUTES production
+vercel env add AUTH_RATE_LIMIT_MAX production
+vercel env add IP_RATE_LIMIT_MAX production
+vercel env add ENABLE_SECURITY_HEADERS production
+vercel env add ENABLE_RATE_LIMITING production
+vercel env add ENABLE_REQUEST_LOGGING production
+vercel env add ENABLE_CORS_STRICT production
+vercel env add VITE_APP_TITLE production
+vercel env add VITE_APP_VERSION production
+vercel env add VITE_APP_DESCRIPTION production
+
+# ⚠️ 外部サービス設定（手動で値を入力）
+vercel env add TWILIO_ACCOUNT_SID production
+vercel env add TWILIO_AUTH_TOKEN production
+vercel env add TWILIO_PHONE_NUMBER production
+vercel env add VITE_SUPABASE_URL production
+vercel env add VITE_SUPABASE_ANON_KEY production
+vercel env add SUPABASE_SERVICE_ROLE_KEY production
+vercel env add DATABASE_URL production
+vercel env add GEMINI_API_KEY production
