@@ -486,7 +486,7 @@ export class InputValidator {
   private static detectXMLInjection(input: string): boolean {
     const patterns = [
       /<\?xml/i,
-      /<!\\[CDATA\\[/i,
+      /<!\[CDATA\[/i,
       /<!DOCTYPE/i,
       /<!ENTITY/i,
       /&[a-zA-Z0-9]+;/
