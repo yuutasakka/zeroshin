@@ -4,9 +4,9 @@ import { createClient } from '@supabase/supabase-js';
 // Vercel環境用のSupabaseクライアント作成
 function getSupabaseAdmin() {
   // Vercel環境では環境変数名が異なる可能性があるため複数チェック
-  const supabaseUrl = process.env.VITE_SUPABASE_URL || 
-                      process.env.NEXT_PUBLIC_SUPABASE_URL || 
-                      process.env.SUPABASE_URL || '';
+  const supabaseUrl = process.env.SUPABASE_URL || 
+                      process.env.VITE_SUPABASE_URL || 
+                      process.env.NEXT_PUBLIC_SUPABASE_URL || '';
   
   const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY || 
                          process.env.SUPABASE_SERVICE_KEY || '';
