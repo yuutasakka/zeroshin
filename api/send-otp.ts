@@ -16,7 +16,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     console.log('🔍 [send-otp] Starting imports...');
     
     // Vercel専用のSMSAuthServiceを使用
-    const { SMSAuthService } = await import('./_lib/smsAuthServer');
+    const { SMSAuthService } = await import('./_lib/smsAuth');
     console.log('✅ [send-otp] SMSAuthService imported');
     
     const { SecurityMiddleware } = await import('./_lib/securityMiddleware');
