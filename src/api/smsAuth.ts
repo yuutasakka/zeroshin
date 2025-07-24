@@ -20,6 +20,7 @@ export class SMSAuthService {
       const twilio = require('twilio');
       return twilio(config.accountSid, config.authToken);
     } catch (error) {
+      console.error('Twilio SDK load error:', error);
       // Twilio SDKが利用できない場合はHTTP API直接使用
       return {
         accountSid: config.accountSid,
