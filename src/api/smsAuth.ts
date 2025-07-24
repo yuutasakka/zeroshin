@@ -47,8 +47,9 @@ export class SMSAuthService {
         }
         // レート制限チェック成功
       } catch (rateLimitError: any) {
-        console.error('⚠️ レート制限チェック失敗（継続）:', rateLimitError?.message);
-        // レート制限チェック失敗でもSMS送信は継続
+        console.error('⚠️ レート制限チェック失敗:', rateLimitError?.message);
+        // セキュリティ上、レート制限チェック失敗時は処理を停止
+        return { success: false, error: 'サービスが一時的に利用できません。しばらくしてからお試しください。' };
       }
 
       const otp = this.generateOTP();
@@ -112,8 +113,8 @@ export class SMSAuthService {
     } catch (error: any) {
       console.error('💥 SMS送信エラー詳細:', {
         error: error?.message || 'Unknown error',
-        stack: error?.stack || 'No stack trace',
-        phoneNumber: phoneNumber,
+        stack: process.env.NODE_ENV === 'development' ? (error?.stack || 'No stack trace') : 'Stack trace hidden in production',
+        phoneNumber: this.maskPhoneNumber(phoneNumber),
         hasConfig: !!(process.env.TWILIO_ACCOUNT_SID && process.env.TWILIO_AUTH_TOKEN && process.env.TWILIO_PHONE_NUMBER)
       });
       return { success: false, error: `SMS送信に失敗しました: ${error?.message || 'Unknown error'}` };
@@ -447,5 +448,15 @@ export class SMSAuthService {
       console.error('Rate limit check failed:', error);
       return false; // エラーの場合は安全側に倒す
     }
+  }
+
+  // 電話番号をマスキングするユーティリティ関数
+  private static maskPhoneNumber(phoneNumber: string): string {
+    if (!phoneNumber) return '[MASKED]';
+    const normalized = phoneNumber.replace(/[^\d]/g, '');
+    if (normalized.length < 4) return '[MASKED]';
+    const visible = normalized.slice(-3); // 最後の3桁のみ表示
+    const masked = '*'.repeat(normalized.length - 3);
+    return masked + visible;
   }
 }

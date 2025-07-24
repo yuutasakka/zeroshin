@@ -6,8 +6,19 @@ export async function POST_sendOTP(request: Request) {
   try {
     const { phoneNumber } = await request.json();
     
-    if (!phoneNumber) {
+    // 入力値検証の強化
+    if (!phoneNumber || typeof phoneNumber !== 'string') {
       return new Response(JSON.stringify({ error: 'Phone number is required' }), {
+        status: 400,
+        headers: { 'Content-Type': 'application/json' }
+      });
+    }
+
+    // 電話番号フォーマットの厳密な検証
+    const phoneRegex = /^(\+81|0)[0-9]{9,10}$/;
+    const normalizedPhone = phoneNumber.replace(/[-\s\(\)]/g, '');
+    if (!phoneRegex.test(normalizedPhone)) {
+      return new Response(JSON.stringify({ error: 'Invalid phone number format' }), {
         status: 400,
         headers: { 'Content-Type': 'application/json' }
       });
@@ -39,8 +50,18 @@ export async function POST_verifyOTP(request: Request) {
   try {
     const { phoneNumber, otp } = await request.json();
     
-    if (!phoneNumber || !otp) {
+    // 入力値検証の強化
+    if (!phoneNumber || !otp || typeof phoneNumber !== 'string' || typeof otp !== 'string') {
       return new Response(JSON.stringify({ error: 'Phone number and OTP are required' }), {
+        status: 400,
+        headers: { 'Content-Type': 'application/json' }
+      });
+    }
+
+    // OTPフォーマット検証（6桁の数字）
+    const otpRegex = /^[0-9]{6}$/;
+    if (!otpRegex.test(otp)) {
+      return new Response(JSON.stringify({ error: 'Invalid OTP format' }), {
         status: 400,
         headers: { 'Content-Type': 'application/json' }
       });

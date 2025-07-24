@@ -383,8 +383,10 @@ export const SECURITY_CONFIG = {
 export const SUPABASE_CONFIG = {
   url: (typeof import.meta !== 'undefined' && (import.meta as any).env?.VITE_SUPABASE_URL) || 
        process.env.VITE_SUPABASE_URL || 
-       process.env.NEXT_PUBLIC_SUPABASE_URL || 
-       'https://eqirzbuqgymrtnfmvwhq.supabase.co',
+       process.env.NEXT_PUBLIC_SUPABASE_URL || (() => {
+         console.error('🚨 CRITICAL: VITE_SUPABASE_URL environment variable is missing!');
+         throw new Error('Supabase URL not configured');
+       })(),
   anonKey: (typeof import.meta !== 'undefined' && (import.meta as any).env?.VITE_SUPABASE_ANON_KEY) || 
            process.env.VITE_SUPABASE_ANON_KEY || 
            process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || (() => {
