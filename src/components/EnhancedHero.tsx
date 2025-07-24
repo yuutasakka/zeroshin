@@ -17,9 +17,9 @@ const EnhancedHero: React.FC<EnhancedHeroProps> = ({ onStartDiagnosis }) => {
   }, []);
 
   const stats = [
-    { number: '50,000+', label: 'ユーザー数' },
-    { number: '¥2.5億', label: '運用資産総額' },
-    { number: '4.8/5.0', label: '満足度' }
+    { number: '30秒', label: '診断時間' },
+    { number: '5万人+', label: '診断実績' },
+    { number: '98%', label: '満足度' }
   ];
 
   return (
@@ -44,18 +44,24 @@ const EnhancedHero: React.FC<EnhancedHeroProps> = ({ onStartDiagnosis }) => {
 
         {/* メインタイトル */}
         <h1 className={`text-3xl md:text-6xl font-bold text-gray-800 mb-4 md:mb-6 transform transition-all duration-1000 delay-200 ${isAnimated ? 'translate-y-0 opacity-100' : 'translate-y-4 opacity-0'}`}>
-          あなたの資産を
+          30秒であなたの
           <br />
           <span className="bg-gradient-to-r from-orange-600 to-orange-700 bg-clip-text text-transparent">
-            最大化する投資プラン
+            "資金調達戦闘力"
           </span>
+          <br />
+          をチェック！
         </h1>
 
         {/* サブタイトル */}
-        <p className={`text-lg md:text-xl text-gray-600 mb-6 md:mb-8 max-w-2xl mx-auto transform transition-all duration-1000 delay-300 ${isAnimated ? 'translate-y-0 opacity-100' : 'translate-y-4 opacity-0'}`}>
-          たった30秒の診断で、あなたに最適な投資戦略をAIが提案。
-          <br />
-          プロの投資アドバイザーへの相談も無料でサポート
+        <p className={`text-lg md:text-xl text-gray-600 mb-2 max-w-3xl mx-auto transform transition-all duration-1000 delay-300 ${isAnimated ? 'translate-y-0 opacity-100' : 'translate-y-4 opacity-0'}`}>
+          先に戦闘力を把握してから、キャッシング・ファクタリングの業者調査へ
+        </p>
+        
+        {/* 追加のサブテキスト */}
+        <p className={`text-base md:text-lg text-gray-500 mb-6 md:mb-8 max-w-2xl mx-auto transform transition-all duration-1000 delay-350 ${isAnimated ? 'translate-y-0 opacity-100' : 'translate-y-4 opacity-0'}`}>
+          調査前に"自分の資金調達力"を理解すれば、<br className="hidden md:block" />
+          無駄なく最適なサービスが選べる！
         </p>
 
         {/* CTA ボタン */}
@@ -104,13 +110,13 @@ const EnhancedHero: React.FC<EnhancedHeroProps> = ({ onStartDiagnosis }) => {
         {/* 信頼性バッジ */}
         <div className={`flex flex-wrap justify-center gap-4 mt-12 transform transition-all duration-1000 delay-600 ${isAnimated ? 'translate-y-0 opacity-100' : 'translate-y-4 opacity-0'}`}>
           <div className="flex items-center gap-2 px-4 py-2 bg-white rounded-full shadow-md">
-            <span className="text-sm font-medium text-gray-700">金融庁認可</span>
+            <span className="text-sm font-medium text-gray-700">完全無料診断</span>
           </div>
           <div className="flex items-center gap-2 px-4 py-2 bg-white rounded-full shadow-md">
-            <span className="text-sm font-medium text-gray-700">SSL暗号化</span>
+            <span className="text-sm font-medium text-gray-700">個人情報保護</span>
           </div>
           <div className="flex items-center gap-2 px-4 py-2 bg-white rounded-full shadow-md">
-            <span className="text-sm font-medium text-gray-700">スマホ完結</span>
+            <span className="text-sm font-medium text-gray-700">即時結果表示</span>
           </div>
         </div>
       </div>

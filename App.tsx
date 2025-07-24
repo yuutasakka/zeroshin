@@ -20,6 +20,7 @@ import SecurityTrustSection from './src/components/SecurityTrustSection';
 import CallToActionSection from './src/components/CallToActionSection';
 import Footer from './src/components/Footer';
 import FixedCTA from './src/components/FixedCTA';
+import CombatPowerResults from './src/components/CombatPowerResults';
 
 // 動的インポート（Code Splitting）
 const PhoneVerificationPage = lazy(() => import('./src/components/PhoneVerificationPage'));
@@ -137,6 +138,8 @@ const App: React.FC = () => {
   const [diagnosisData, setDiagnosisData] = useState<DiagnosisFormState | null>(null);
   // 新しい診断答えの状態
   const [diagnosisAnswers, setDiagnosisAnswers] = useState<DiagnosisAnswers | null>(null);
+  // 生の診断回答を保存（新しい戦闘力診断用）
+  const [rawDiagnosisAnswers, setRawDiagnosisAnswers] = useState<Record<number, string> | null>(null);
   const [isAdminLoggedIn, setIsAdminLoggedIn] = useState<boolean>(false);
   const [showUsageNotice, setShowUsageNotice] = useState<boolean>(false);
   
@@ -491,6 +494,7 @@ const App: React.FC = () => {
     setPhoneNumberToVerify(null);
     setDiagnosisData(null);
     setDiagnosisAnswers(null);
+    setRawDiagnosisAnswers(null);
     if (isAdminLoggedIn) {
         setIsAdminLoggedIn(false);
     }
@@ -600,6 +604,9 @@ const App: React.FC = () => {
               <DiagnosisForm
                 onComplete={(answers) => {
                   console.log('🔍 App.tsx: 診断完了 - 回答データ:', answers);
+                  
+                  // 生の回答を保存（新しい戦闘力診断用）
+                  setRawDiagnosisAnswers(answers);
                   
                   // 簡素化された回答を既存の形式に変換
                   const convertedAnswers: DiagnosisAnswers = {
@@ -955,13 +962,26 @@ const App: React.FC = () => {
     }
 
     if (currentPage === 'results') {
+      // 新しい戦闘力結果画面を使用
+      // 生の診断回答を使用（rawDiagnosisAnswersが存在しない場合はデフォルト値）
+      const answersToUse = rawDiagnosisAnswers || {
+        1: '～300万円',
+        2: '～10万円',
+        3: '0件',
+        4: '収入に対して返済が10%未満',
+        5: '1ヶ月以内'
+      };
+      
       return (
-        <Suspense fallback={<LoadingSpinner />}>
-          <DiagnosisResultsPage
-            diagnosisData={diagnosisData}
-            onReturnToStart={handleReturnToStart}
-          />
-        </Suspense>
+        <CombatPowerResults
+          diagnosisAnswers={answersToUse}
+          onDownloadGuide={() => {
+            // 攻略本ダウンロード処理（後で実装）
+            console.log('攻略本ダウンロード開始');
+            // ここでPDFダウンロードまたはメール送信フォームを表示
+            alert('攻略本のダウンロードリンクをメールで送信します。');
+          }}
+        />
       );
     }
 
@@ -977,6 +997,9 @@ const App: React.FC = () => {
           <div style={{ paddingTop: '2rem' }}>
             <DiagnosisForm
               onComplete={(answers) => {
+                // 生の回答を保存
+                setRawDiagnosisAnswers(answers);
+                
                 // 簡素化された回答を既存の形式に変換
                 const convertedAnswers: DiagnosisAnswers = {
                   age: answers[1] || '',

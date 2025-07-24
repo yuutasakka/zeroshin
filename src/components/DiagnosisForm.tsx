@@ -4,6 +4,7 @@ interface Question {
   id: number;
   question: string;
   options: string[];
+  helpText?: string;
 }
 
 interface DiagnosisFormProps {
@@ -13,28 +14,33 @@ interface DiagnosisFormProps {
 const questions: Question[] = [
   {
     id: 1,
-    question: "現在の年齢を教えてください",
-    options: ["30歳未満", "30～34歳", "35～39歳", "40歳以上"]
+    question: "年間収入レンジを教えてください",
+    options: ["～300万円", "300～500万円", "500～800万円", "800万円～"],
+    helpText: "年収は審査の重要ポイント。安定収入があれば低金利の選択肢が広がります。"
   },
   {
     id: 2,
-    question: "年収を教えてください",
-    options: ["500万円未満", "500～700万円", "700～1000万円", "1000万円以上"]
+    question: "普段の口座残高（現金＋預金）は？",
+    options: ["～10万円", "10～50万円", "50～100万円", "100万円～"],
+    helpText: "預金残高は返済能力の証明に。多いほど審査通過率がアップします。"
   },
   {
     id: 3,
-    question: "投資経験はありますか？",
-    options: ["全くない", "少しある（1年未満）", "ある程度ある（1～3年）", "豊富にある（3年以上）"]
+    question: "現在の借入件数（クレジット含む）は？",
+    options: ["0件", "1～2件", "3件以上"],
+    helpText: "借入件数が少ないほど有利。3件以上は「おまとめ」も検討を。"
   },
   {
     id: 4,
-    question: "投資の目的は何ですか？",
-    options: ["老後の資産形成", "子供の教育資金", "住宅購入資金", "資産運用・増やしたい"]
+    question: "月々の返済負担率は？",
+    options: ["収入に対して返済が10%未満", "10～30%", "30%以上"],
+    helpText: "返済負担率＝（毎月の借入返済合計）÷（月収）。30%以下が理想的です。"
   },
   {
     id: 5,
-    question: "リスクに対する考え方は？",
-    options: ["絶対に損したくない", "少しのリスクなら許容", "ある程度のリスクは許容", "高リスク高リターンを狙いたい"]
+    question: "資金が必要な緊急度は？",
+    options: ["今すぐ", "1週間以内", "1ヶ月以内"],
+    helpText: "急ぎの場合は即日融資可能な業者を、余裕があれば低金利サービスを選べます。"
   }
 ];
 
@@ -90,6 +96,17 @@ const DiagnosisForm: React.FC<DiagnosisFormProps> = ({ onComplete }) => {
             transform: translateX(0);
           }
         }
+        
+        @keyframes slideInMobile {
+          from {
+            opacity: 0;
+            transform: translateY(20px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
 
         @keyframes pulse {
           0% {
@@ -102,19 +119,45 @@ const DiagnosisForm: React.FC<DiagnosisFormProps> = ({ onComplete }) => {
             box-shadow: 0 0 0 0 rgba(255, 107, 53, 0);
           }
         }
+        
+        @keyframes progressGlow {
+          0%, 100% {
+            box-shadow: 0 2px 10px rgba(255, 107, 53, 0.3);
+          }
+          50% {
+            box-shadow: 0 2px 20px rgba(255, 107, 53, 0.5);
+          }
+        }
 
         .question-card {
           animation: slideIn 0.4s ease-out;
+        }
+        
+        @media (max-width: 768px) {
+          .question-card {
+            animation: slideInMobile 0.4s ease-out;
+          }
         }
 
         .option-button {
           transition: all 0.3s ease;
           transform: translateY(0);
+          -webkit-tap-highlight-color: transparent;
         }
 
         .option-button:hover {
           transform: translateY(-2px);
           box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+        }
+        
+        @media (hover: none) {
+          .option-button:hover {
+            transform: none;
+          }
+          
+          .option-button:active {
+            transform: scale(0.98);
+          }
         }
 
         .option-button.selected {
@@ -123,13 +166,50 @@ const DiagnosisForm: React.FC<DiagnosisFormProps> = ({ onComplete }) => {
 
         .progress-fill {
           transition: width 0.5s ease-out;
+          animation: progressGlow 2s ease-in-out infinite;
+        }
+        
+        @media (max-width: 768px) {
+          .diagnosis-form-container {
+            padding: 1rem !important;
+          }
+          
+          .question-card {
+            padding: 2rem 1.5rem !important;
+            margin-bottom: 1rem !important;
+          }
+          
+          .option-button {
+            padding: 1rem !important;
+            font-size: 0.875rem !important;
+          }
         }
       `}</style>
 
-      {/* プログレスバー */}
+      {/* タイトルとプログレスバー */}
       <div style={{
         marginBottom: '3rem'
       }}>
+        {/* 所要時間表示 */}
+        <div style={{
+          textAlign: 'center',
+          marginBottom: '2rem'
+        }}>
+          <span style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: '0.5rem',
+            padding: '0.5rem 1rem',
+            backgroundColor: '#fef3c7',
+            color: '#f59e0b',
+            borderRadius: '9999px',
+            fontSize: '0.875rem',
+            fontWeight: 600
+          }}>
+            <span>▶</span> 所要時間：30秒
+          </span>
+        </div>
+        
         <div style={{
           display: 'flex',
           justifyContent: 'space-between',
@@ -173,11 +253,49 @@ const DiagnosisForm: React.FC<DiagnosisFormProps> = ({ onComplete }) => {
           fontSize: '1.5rem',
           fontWeight: 700,
           color: '#243b53',
-          marginBottom: '2rem',
+          marginBottom: '1rem',
           textAlign: 'center'
         }}>
           {questions[currentQuestion].question}
         </h2>
+        
+        {/* ヘルプテキスト */}
+        {questions[currentQuestion].helpText && (
+          <div style={{
+            display: 'flex',
+            alignItems: 'flex-start',
+            gap: '0.5rem',
+            marginBottom: '2rem',
+            padding: '1rem',
+            backgroundColor: '#f0f4f8',
+            borderRadius: '0.75rem',
+            border: '1px solid #e0e7ff'
+          }}>
+            <span style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              width: '20px',
+              height: '20px',
+              backgroundColor: '#3b82f6',
+              color: 'white',
+              borderRadius: '50%',
+              fontSize: '0.75rem',
+              fontWeight: 'bold',
+              flexShrink: 0
+            }}>
+              ℹ
+            </span>
+            <p style={{
+              fontSize: '0.875rem',
+              color: '#4b5563',
+              lineHeight: 1.5,
+              margin: 0
+            }}>
+              {questions[currentQuestion].helpText}
+            </p>
+          </div>
+        )}
 
         <div style={{
           display: 'flex',
