@@ -156,7 +156,7 @@ const Hero: React.FC<HeroProps> = ({ onStartDiagnosis }) => {
               borderRadius: '12px',
               cursor: 'pointer',
               transition: 'all 0.3s ease',
-              boxShadow: '0 4px 16px rgba(243, 156, 18, 0.25)'
+              boxShadow: '0 4px 16px rgba(243, 156, 18, 0.25)',
               position: 'relative',
               overflow: 'hidden'
             }}
