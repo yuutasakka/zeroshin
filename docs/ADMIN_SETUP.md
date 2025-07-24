@@ -33,6 +33,7 @@ npm run create-admin-user
    - `/supabase/sql/admin_minimal.sql` (最小限・推奨)
    - `/supabase/sql/insert_admin_simple.sql` (基本版)
    - `/supabase/sql/admin_with_phone.sql` (phone_number必須の場合)
+   - `/supabase/sql/admin_with_backup_code.sql` (phone_number+backup_code必須の場合)
    - `/supabase/sql/insert_admin_user.sql` (完全版)
 4. 実行ボタンをクリック
 
@@ -113,7 +114,10 @@ admin_credentials (
    - phone_numberが必須の場合: `/supabase/sql/admin_with_phone.sql` を使用
    - または電話番号なしで作成: `/supabase/sql/admin_minimal.sql` を使用
 
-5. **テーブル構造の不整合**
+5. **backup_code NOT NULL制約エラー**
+   - backup_codeも必須の場合: `/supabase/sql/admin_with_backup_code.sql` を使用
+
+6. **テーブル構造の不整合**
    - テーブル修正SQLを実行: `/supabase/sql/fix_admin_credentials.sql`
 
 ## パスワード変更方法
@@ -143,12 +147,13 @@ WHERE username = 'admin';
 
 ```
 /supabase/sql/
-├── admin_minimal.sql         # 最小限の管理者挿入SQL
-├── insert_admin_simple.sql  # 基本版
-├── admin_with_phone.sql      # phone_number必須版
-├── insert_admin_user.sql     # 完全版
+├── admin_minimal.sql           # 最小限の管理者挿入SQL
+├── insert_admin_simple.sql    # 基本版
+├── admin_with_phone.sql        # phone_number必須版
+├── admin_with_backup_code.sql  # phone_number+backup_code必須版
+├── insert_admin_user.sql       # 完全版
 /scripts/
-├── create-admin-user.ts      # 管理者作成スクリプト
+├── create-admin-user.ts        # 管理者作成スクリプト
 /docs/
-├── ADMIN_SETUP.md           # この文書
+├── ADMIN_SETUP.md             # この文書
 ```
