@@ -98,11 +98,32 @@ const PhoneVerificationPage: React.FC<PhoneVerificationPageProps> = ({
             });
 
             if (!response.ok) {
-              const errorData = await response.json().catch(() => ({}));
-              throw new Error(errorData.error || 'SMS送信に失敗しました');
+              let errorMessage = 'SMS送信に失敗しました';
+              try {
+                const contentType = response.headers.get('content-type');
+                if (contentType && contentType.includes('application/json')) {
+                  const errorData = await response.json();
+                  errorMessage = errorData.error || errorMessage;
+                }
+              } catch (parseError) {
+                console.error('Error parsing response:', parseError);
+              }
+              throw new Error(errorMessage);
             }
 
-            const result = await response.json();
+            let result;
+            try {
+              const contentType = response.headers.get('content-type');
+              if (contentType && contentType.includes('application/json')) {
+                result = await response.json();
+              } else {
+                throw new Error('Invalid response format');
+              }
+            } catch (parseError) {
+              console.error('Error parsing successful response:', parseError);
+              throw new Error('レスポンスの解析に失敗しました');
+            }
+            
             if (!result.success) {
               throw new Error(result.error || 'SMS送信に失敗しました');
             }
@@ -186,9 +207,18 @@ const PhoneVerificationPage: React.FC<PhoneVerificationPageProps> = ({
       });
 
       if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        console.error('SMS送信API失敗:', { status: response.status, statusText: response.statusText, error: errorData });
-        throw new Error(errorData.error || `SMS送信に失敗しました (${response.status})`);
+        let errorMessage = `SMS送信に失敗しました (${response.status})`;
+        try {
+          const contentType = response.headers.get('content-type');
+          if (contentType && contentType.includes('application/json')) {
+            const errorData = await response.json();
+            errorMessage = errorData.error || errorMessage;
+          }
+        } catch (parseError) {
+          console.error('Error parsing response:', parseError);
+        }
+        console.error('SMS送信API失敗:', { status: response.status, statusText: response.statusText });
+        throw new Error(errorMessage);
       }
 
       setStep('otp-verification');
@@ -274,13 +304,35 @@ const PhoneVerificationPage: React.FC<PhoneVerificationPageProps> = ({
         });
 
         if (!response.ok) {
-          const errorData = await response.json().catch(() => ({}));
-          console.error('OTP認証API失敗:', { status: response.status, statusText: response.statusText, error: errorData });
+          let errorMessage = `認証に失敗しました (${response.status})`;
+          try {
+            const contentType = response.headers.get('content-type');
+            if (contentType && contentType.includes('application/json')) {
+              const errorData = await response.json();
+              errorMessage = errorData.error || errorMessage;
+            }
+          } catch (parseError) {
+            console.error('Error parsing response:', parseError);
+          }
+          console.error('OTP認証API失敗:', { status: response.status, statusText: response.statusText });
           handleFailedAttempt();
-          throw new Error(errorData.error || `認証に失敗しました (${response.status})`);
+          throw new Error(errorMessage);
         }
 
-        const result = await response.json();
+        let result;
+        try {
+          const contentType = response.headers.get('content-type');
+          if (contentType && contentType.includes('application/json')) {
+            result = await response.json();
+          } else {
+            throw new Error('Invalid response format');
+          }
+        } catch (parseError) {
+          console.error('Error parsing successful response:', parseError);
+          handleFailedAttempt();
+          throw new Error('レスポンスの解析に失敗しました');
+        }
+        
         if (!result.success) {
           handleFailedAttempt();
           throw new Error(result.error || '認証コードが正しくありません。再度確認してください。');
@@ -422,9 +474,18 @@ const PhoneVerificationPage: React.FC<PhoneVerificationPageProps> = ({
       });
 
       if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        console.error('SMS送信API失敗:', { status: response.status, statusText: response.statusText, error: errorData });
-        throw new Error(errorData.error || `SMS送信に失敗しました (${response.status})`);
+        let errorMessage = `SMS送信に失敗しました (${response.status})`;
+        try {
+          const contentType = response.headers.get('content-type');
+          if (contentType && contentType.includes('application/json')) {
+            const errorData = await response.json();
+            errorMessage = errorData.error || errorMessage;
+          }
+        } catch (parseError) {
+          console.error('Error parsing response:', parseError);
+        }
+        console.error('SMS送信API失敗:', { status: response.status, statusText: response.statusText });
+        throw new Error(errorMessage);
       }
 
       setCountdown(60);
@@ -723,8 +784,8 @@ const PhoneVerificationPage: React.FC<PhoneVerificationPageProps> = ({
                   </div>
                 ) : (
                   <>
-                    <span className="text-lg text-gray-800">認証完了して結果を受け取る</span>
-                    <div className="text-sm text-gray-800 opacity-90 mt-1">あなた専用の投資プランが待っています！</div>
+                    <span className="text-lg">認証完了して結果を受け取る</span>
+                    <div className="text-sm opacity-90 mt-1">あなた専用の投資プランが待っています！</div>
                   </>
                 )}
               </button>
