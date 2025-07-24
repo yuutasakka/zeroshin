@@ -36,19 +36,19 @@ const CallToActionSection: React.FC = () => {
   };
 
   return (
-    <section id="cta-section" className="py-16 px-4 text-center" style={{ background: 'linear-gradient(180deg, #2C3E50 0%, #1A252F 100%)' }}>
+    <section id="cta-section" className="py-16 px-4 text-center" style={{ background: '#FFFFFF' }}>
       <div className="max-w-4xl mx-auto">
         <h3 
           className="text-2xl md:text-4xl lg:text-5xl mb-6 font-bold leading-tight"
           style={{
             letterSpacing: '-0.02em',
-            color: 'white'
+            color: '#2C3E50'
           }}
         >
           あなたの理想的な未来を<br />
           <span style={{ color: '#F39C12' }}>今日から始めませんか？</span>
         </h3>
-        <p className="text-lg md:text-xl mb-8 leading-relaxed" style={{ color: '#ECF0F1' }}>
+        <p className="text-lg md:text-xl mb-8 leading-relaxed" style={{ color: '#34495E' }}>
             経験豊富なプロフェッショナルが、あなたの人生設計に合わせた<br />
             最適な資産運用プランを無料でご提案いたします。
         </p>
@@ -68,7 +68,7 @@ const CallToActionSection: React.FC = () => {
             {ctaButtonConfig.button_text}
           </button>
           
-          <p className="text-sm" style={{ color: '#BDC3C7' }}>
+          <p className="text-sm" style={{ color: '#7F8C8D' }}>
             お電話でのご相談：{ctaButtonConfig.phone_number || '0120-XXX-XXX'}（平日 9:00-18:00）
           </p>
         </div>
@@ -76,16 +76,16 @@ const CallToActionSection: React.FC = () => {
         <div 
           className="mt-10 p-6 md:p-8 rounded-2xl"
           style={{ 
-            background: 'rgba(44, 62, 80, 0.95)',
-            border: '1px solid rgba(255, 255, 255, 0.4)',
+            background: '#F8FAFC',
+            border: '1px solid #ECF0F1',
             backdropFilter: 'blur(10px)',
             WebkitBackdropFilter: 'blur(10px)'
           }}
         >
-            <h4 className="font-bold mb-3 text-lg md:text-xl" style={{ color: 'white' }}>
+            <h4 className="font-bold mb-3 text-lg md:text-xl" style={{ color: '#2C3E50' }}>
                 {consultationOffer.title}
             </h4>
-            <p style={{ color: '#ECF0F1' }}>
+            <p style={{ color: '#34495E' }}>
                 {consultationOffer.description}
             </p>
         </div>
