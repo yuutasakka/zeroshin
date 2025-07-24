@@ -73,7 +73,7 @@ const Hero: React.FC<HeroProps> = ({ onStartDiagnosis }) => {
             alignItems: 'center',
             gap: '8px',
             padding: '8px 16px',
-            backgroundColor: 'rgba(44, 62, 80, 0.08)',
+            backgroundColor: '#2C3E50',
             borderRadius: '999px',
             marginBottom: '24px'
           }}>
@@ -81,14 +81,14 @@ const Hero: React.FC<HeroProps> = ({ onStartDiagnosis }) => {
               display: 'inline-block',
               width: '8px',
               height: '8px',
-              backgroundColor: '#2C3E50',
+              backgroundColor: '#FFFFFF',
               borderRadius: '50%',
               animation: 'pulse 2s ease-in-out infinite'
             }} />
             <span style={{
               fontSize: '14px',
               fontWeight: 700,
-              color: '#2C3E50'
+              color: '#FFFFFF'
             }}>
               30秒で診断完了
             </span>
@@ -109,7 +109,7 @@ const Hero: React.FC<HeroProps> = ({ onStartDiagnosis }) => {
               display: 'inline-block',
               animation: 'highlight 2s ease-in-out infinite'
             }}>
-              "資金調達戦闘力"
+              "資金調達力"
             </span>
             <br />
             をチェック！
@@ -150,25 +150,25 @@ const Hero: React.FC<HeroProps> = ({ onStartDiagnosis }) => {
               padding: '20px 48px',
               fontSize: '18px',
               fontWeight: 700,
-              backgroundColor: '#F39C12',
+              backgroundColor: '#2C3E50',
               color: '#FFFFFF',
               border: 'none',
               borderRadius: '12px',
               cursor: 'pointer',
               transition: 'all 0.3s ease',
-              boxShadow: '0 4px 16px rgba(243, 156, 18, 0.25)',
+              boxShadow: '0 4px 16px rgba(44, 62, 80, 0.25)',
               position: 'relative',
               overflow: 'hidden'
             }}
             onMouseEnter={(e) => {
-              e.currentTarget.style.backgroundColor = '#D68910';
+              e.currentTarget.style.backgroundColor = '#1A252F';
               e.currentTarget.style.transform = 'translateY(-2px)';
-              e.currentTarget.style.boxShadow = '0 6px 20px rgba(243, 156, 18, 0.35)';
+              e.currentTarget.style.boxShadow = '0 6px 20px rgba(44, 62, 80, 0.35)';
             }}
             onMouseLeave={(e) => {
-              e.currentTarget.style.backgroundColor = '#F39C12';
+              e.currentTarget.style.backgroundColor = '#2C3E50';
               e.currentTarget.style.transform = 'translateY(0)';
-              e.currentTarget.style.boxShadow = '0 4px 16px rgba(243, 156, 18, 0.25)';
+              e.currentTarget.style.boxShadow = '0 4px 16px rgba(44, 62, 80, 0.25)';
             }}
           >
             無料診断を開始する

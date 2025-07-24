@@ -172,7 +172,7 @@ const CombatPowerResults: React.FC<CombatPowerResultsProps> = ({ diagnosisAnswer
             fontSize: '18px',
             color: '#666666'
           }}>
-            あなたの資金調達戦闘力
+            あなたの資金調達力
           </p>
         </div>
         

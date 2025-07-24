@@ -96,20 +96,20 @@ export const defaultFirstConsultationOffer: FirstConsultationOffer = {
 // デフォルトヘッダー情報
 export const defaultHeaderData: HeaderData = {
   title: "タスカル",
-  subtitle: "資金調達戦闘力診断"
+  subtitle: "資金調達力診断"
 };
 
 // デフォルトメインビジュアルメッセージ
 export const defaultMainVisualData: MainVisualData = {
-  title: "30秒であなたの\n資金調達戦闘力をチェック！",
-  highlightWord: "資金調達戦闘力",
+  title: "30秒であなたの\n資金調達力をチェック！",
+  highlightWord: "資金調達力",
   subtitle: "キャッシング・ファクタリング業者調査の前に自分の実力を把握しよう"
 };
 
 // デフォルトフッター情報
 export const defaultFooterData: FooterData = {
   siteName: "タスカル",
-  description: "30秒であなたの資金調達戦闘力をチェック！",
+  description: "30秒であなたの資金調達力をチェック！",
   companyInfo: "運営会社：タスカル株式会社",
   contactInfo: "お問い合わせ：support@taskal.jp",
   copyright: "タスカル. All rights reserved."

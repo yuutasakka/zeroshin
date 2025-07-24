@@ -96,7 +96,7 @@ UPDATE homepage_content_settings
 SET content_data = jsonb_set(
   content_data,
   '{service_description}',
-  '"30秒で分かる資金調達戦闘力診断 - あなたに最適な資金調達方法をご提案"'
+  '"30秒で分かる資金調達力診断 - あなたに最適な資金調達方法をご提案"'
 )
 WHERE setting_name = 'main_content';
 
@@ -104,7 +104,7 @@ UPDATE homepage_content_settings
 SET content_data = jsonb_set(
   content_data,
   '{main_headline}',
-  '"あなたの資金調達戦闘力をチェック！"'
+  '"あなたの資金調達力をチェック！"'
 )
 WHERE setting_name = 'main_content';
 
@@ -194,7 +194,7 @@ CREATE TABLE IF NOT EXISTS faq_items (
 -- FAQ データを挿入
 INSERT INTO faq_items (category, question, answer, display_order) VALUES
 ('basics', 'タスカルのサービスは本当に無料ですか？', 'はい、診断から資金調達のご提案まで完全無料です。成功報酬もいただきません。提携金融機関から紹介料をいただくビジネスモデルのため、お客様からは一切費用をいただきません。', 1),
-('basics', '他の資金調達サービスとの違いは何ですか？', 'タスカルは「資金調達戦闘力診断」により、お客様の現在の調達可能性を可視化します。30秒の診断で、どの資金調達方法が最適か、審査通過の可能性はどの程度かを判定し、最適な金融機関をご紹介します。', 2),
+('basics', '他の資金調達サービスとの違いは何ですか？', 'タスカルは「資金調達力診断」により、お客様の現在の調達可能性を可視化します。30秒の診断で、どの資金調達方法が最適か、審査通過の可能性はどの程度かを判定し、最適な金融機関をご紹介します。', 2),
 ('basics', '個人事業主でも利用できますか？', 'はい、法人・個人事業主問わずご利用いただけます。それぞれの事業形態に合わせた最適な資金調達方法をご提案いたします。', 3),
 ('screening', '診断結果が低かった場合、資金調達は難しいですか？', '診断結果は現時点での目安です。結果が低くても、適切な準備と対策により資金調達は可能です。無料の攻略本では、各スコアを改善する具体的な方法をご紹介しています。', 4),
 ('screening', '赤字決算でも資金調達は可能ですか？', '可能です。ファクタリングや補助金など、決算内容に左右されにくい資金調達方法があります。また、事業計画をしっかり作成することで、将来性を評価してもらえる融資もあります。', 5),
@@ -205,7 +205,7 @@ INSERT INTO faq_items (category, question, answer, display_order) VALUES
 UPDATE company_settings 
 SET company_name = 'タスカル株式会社',
     service_name = 'タスカル',
-    description = '30秒で分かる資金調達戦闘力診断サービス',
+    description = '30秒で分かる資金調達力診断サービス',
     contact_email = 'info@taskal.jp',
     support_email = 'support@taskal.jp',
     phone_number = '0120-123-456'

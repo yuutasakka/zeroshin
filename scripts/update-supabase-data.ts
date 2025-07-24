@@ -126,8 +126,8 @@ async function updateSupabaseData() {
         content_data: {
           company_name: 'タスカル株式会社',
           service_name: 'タスカル',
-          service_description: '30秒で分かる資金調達戦闘力診断 - あなたに最適な資金調達方法をご提案',
-          main_headline: 'あなたの資金調達戦闘力をチェック！',
+          service_description: '30秒で分かる資金調達力診断 - あなたに最適な資金調達方法をご提案',
+          main_headline: 'あなたの資金調達力をチェック！',
           sub_headline: '先に戦闘力を把握してから、キャッシング・ファクタリングの業者調査へ',
           cta_text: '無料診断を開始する'
         }

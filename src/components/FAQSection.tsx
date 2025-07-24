@@ -200,7 +200,7 @@ const FAQSection: React.FC = () => {
               alignItems: 'center',
               gap: '8px',
               padding: '12px 24px',
-              backgroundColor: '#3174F3',
+              backgroundColor: '#2C3E50',
               color: '#FFFFFF',
               textDecoration: 'none',
               borderRadius: '8px',
@@ -209,11 +209,11 @@ const FAQSection: React.FC = () => {
               transition: 'all 0.2s ease'
             }}
             onMouseEnter={(e) => {
-              e.currentTarget.style.backgroundColor = '#1E5FE1';
+              e.currentTarget.style.backgroundColor = '#1A252F';
               e.currentTarget.style.transform = 'translateY(-1px)';
             }}
             onMouseLeave={(e) => {
-              e.currentTarget.style.backgroundColor = '#3174F3';
+              e.currentTarget.style.backgroundColor = '#2C3E50';
               e.currentTarget.style.transform = 'translateY(0)';
             }}
           >

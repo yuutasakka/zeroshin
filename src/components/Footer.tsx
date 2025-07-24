@@ -71,7 +71,7 @@ const Footer: React.FC<FooterProps> = ({ onNavigateToAdminLogin }) => {
             maxWidth: '600px',
             margin: '0 auto'
           }}>
-            30秒で分かる資金調達戦闘力診断
+            30秒で分かる資金調達力診断
           </p>
         </div>
 
