@@ -6,9 +6,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   const allowedOrigins = [
     'https://moneyticket.vercel.app',
     'https://moneyticket-git-main-sakkayuta.vercel.app',
+    'https://moneyticket-git-main-seai0520s-projects.vercel.app',
     'https://moneyticket01-10gswrw2q-seai0520s-projects.vercel.app',
     'https://moneyticket01-rogabfsul-seai0520s-projects.vercel.app',
     'https://moneyticket01-18dyp3oo0-seai0520s-projects.vercel.app',
+    'https://moneyticket01.vercel.app',
+    'http://localhost:5173',
+    'http://localhost:3000',
   ];
   
   const origin = req.headers.origin;
@@ -17,6 +21,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
   res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  res.setHeader('Access-Control-Allow-Credentials', 'true');
+
+  // セキュリティヘッダー設定（レスポンスの前に設定）
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  res.setHeader('X-Frame-Options', 'DENY');
+  res.setHeader('X-XSS-Protection', '1; mode=block');
+  res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
+  res.setHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
 
   if (req.method === 'OPTIONS') {
     res.status(200).end();
@@ -48,13 +60,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         user: null 
       });
     }
-
-    // セキュリティヘッダー設定
-    res.setHeader('X-Content-Type-Options', 'nosniff');
-    res.setHeader('X-Frame-Options', 'DENY');
-    res.setHeader('X-XSS-Protection', '1; mode=block');
-    res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
-    res.setHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
 
   } catch (error) {
     console.error('Auth check API error:', error);
