@@ -1,10 +1,10 @@
 import React, { useEffect, useState } from 'react';
 
-interface HeroNewProps {
+interface HeroProps {
   onStartDiagnosis: () => void;
 }
 
-const HeroNew: React.FC<HeroNewProps> = ({ onStartDiagnosis }) => {
+const Hero: React.FC<HeroProps> = ({ onStartDiagnosis }) => {
   const [isVisible, setIsVisible] = useState(false);
 
   useEffect(() => {
@@ -278,4 +278,4 @@ const HeroNew: React.FC<HeroNewProps> = ({ onStartDiagnosis }) => {
   );
 };
 
-export default HeroNew;
+export default Hero;

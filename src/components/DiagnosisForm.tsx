@@ -49,6 +49,7 @@ const DiagnosisForm: React.FC<DiagnosisFormProps> = ({ onComplete }) => {
   const [answers, setAnswers] = useState<Record<number, string>>({});
   const [selectedOption, setSelectedOption] = useState<string | null>(null);
   const [isAnimating, setIsAnimating] = useState(false);
+  const [showHelpText, setShowHelpText] = useState(false);
 
   const progress = ((currentQuestion + 1) / questions.length) * 100;
 
@@ -56,7 +57,6 @@ const DiagnosisForm: React.FC<DiagnosisFormProps> = ({ onComplete }) => {
     setSelectedOption(answer);
     setIsAnimating(true);
     
-    // 選択をアニメーション付きで記録
     setTimeout(() => {
       const newAnswers = { ...answers, [questions[currentQuestion].id]: answer };
       setAnswers(newAnswers);
@@ -65,8 +65,8 @@ const DiagnosisForm: React.FC<DiagnosisFormProps> = ({ onComplete }) => {
         setCurrentQuestion(currentQuestion + 1);
         setSelectedOption(null);
         setIsAnimating(false);
+        setShowHelpText(false);
       } else {
-        // 診断完了
         onComplete(newAnswers);
       }
     }, 300);
@@ -76,220 +76,182 @@ const DiagnosisForm: React.FC<DiagnosisFormProps> = ({ onComplete }) => {
     if (currentQuestion > 0) {
       setCurrentQuestion(currentQuestion - 1);
       setSelectedOption(null);
+      setShowHelpText(false);
     }
   };
 
   return (
-    <div className="diagnosis-form-container" style={{
+    <div style={{
       maxWidth: '600px',
       margin: '0 auto',
-      padding: '2rem'
+      padding: '20px'
     }}>
-      <style>{`
-        @keyframes slideIn {
-          from {
-            opacity: 0;
-            transform: translateX(30px);
-          }
-          to {
-            opacity: 1;
-            transform: translateX(0);
-          }
-        }
-        
-        @keyframes slideInMobile {
-          from {
-            opacity: 0;
-            transform: translateY(20px);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0);
-          }
-        }
-
-        @keyframes pulse {
-          0% {
-            box-shadow: 0 0 0 0 rgba(255, 107, 53, 0.4);
-          }
-          70% {
-            box-shadow: 0 0 0 10px rgba(255, 107, 53, 0);
-          }
-          100% {
-            box-shadow: 0 0 0 0 rgba(255, 107, 53, 0);
-          }
-        }
-        
-        @keyframes progressGlow {
-          0%, 100% {
-            box-shadow: 0 2px 10px rgba(255, 107, 53, 0.3);
-          }
-          50% {
-            box-shadow: 0 2px 20px rgba(255, 107, 53, 0.5);
-          }
-        }
-
-        .question-card {
-          animation: slideIn 0.4s ease-out;
-        }
-        
-        @media (max-width: 768px) {
-          .question-card {
-            animation: slideInMobile 0.4s ease-out;
-          }
-        }
-
-        .option-button {
-          transition: all 0.3s ease;
-          transform: translateY(0);
-          -webkit-tap-highlight-color: transparent;
-        }
-
-        .option-button:hover {
-          transform: translateY(-2px);
-          box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
-        }
-        
-        @media (hover: none) {
-          .option-button:hover {
-            transform: none;
-          }
-          
-          .option-button:active {
-            transform: scale(0.98);
-          }
-        }
-
-        .option-button.selected {
-          animation: pulse 0.5s ease-out;
-        }
-
-        .progress-fill {
-          transition: width 0.5s ease-out;
-          animation: progressGlow 2s ease-in-out infinite;
-        }
-        
-        @media (max-width: 768px) {
-          .diagnosis-form-container {
-            padding: 1rem !important;
-          }
-          
-          .question-card {
-            padding: 2rem 1.5rem !important;
-            margin-bottom: 1rem !important;
-          }
-          
-          .option-button {
-            padding: 1rem !important;
-            font-size: 0.875rem !important;
-          }
-        }
-      `}</style>
-
-      {/* タイトルとプログレスバー */}
+      {/* プログレスステップバー */}
       <div style={{
-        marginBottom: '3rem'
+        marginBottom: '40px'
       }}>
-        {/* 所要時間表示 */}
-        <div style={{
-          textAlign: 'center',
-          marginBottom: '2rem'
-        }}>
-          <span style={{
-            display: 'inline-flex',
-            alignItems: 'center',
-            gap: '0.5rem',
-            padding: '0.5rem 1rem',
-            backgroundColor: '#fef3c7',
-            color: '#f59e0b',
-            borderRadius: '9999px',
-            fontSize: '0.875rem',
-            fontWeight: 600
-          }}>
-            <span>▶</span> 所要時間：30秒
-          </span>
-        </div>
-        
+        {/* ステップインジケーター */}
         <div style={{
           display: 'flex',
           justifyContent: 'space-between',
-          alignItems: 'center',
-          marginBottom: '0.5rem'
+          marginBottom: '12px',
+          position: 'relative'
         }}>
-          <span style={{ fontSize: '0.875rem', color: '#627d98', fontWeight: 500 }}>
-            質問 {currentQuestion + 1} / {questions.length}
-          </span>
-          <span style={{ fontSize: '0.875rem', color: '#627d98', fontWeight: 500 }}>
-            {Math.round(progress)}%
-          </span>
+          {/* 背景ライン */}
+          <div style={{
+            position: 'absolute',
+            top: '12px',
+            left: '24px',
+            right: '24px',
+            height: '2px',
+            backgroundColor: '#E5E7EB',
+            zIndex: 0
+          }} />
+          {/* アクティブライン */}
+          <div style={{
+            position: 'absolute',
+            top: '12px',
+            left: '24px',
+            height: '2px',
+            backgroundColor: '#3174F3',
+            width: `calc(${(currentQuestion / (questions.length - 1)) * 100}% - 48px)`,
+            transition: 'width 0.5s ease',
+            zIndex: 0
+          }} />
+          
+          {/* ステップドット */}
+          {[...Array(questions.length)].map((_, index) => (
+            <div
+              key={index}
+              style={{
+                position: 'relative',
+                zIndex: 1,
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center'
+              }}
+            >
+              <div style={{
+                width: '24px',
+                height: '24px',
+                borderRadius: '50%',
+                backgroundColor: index <= currentQuestion ? '#3174F3' : '#FFFFFF',
+                border: index <= currentQuestion ? 'none' : '2px solid #E5E7EB',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                transition: 'all 0.3s ease',
+                boxShadow: index === currentQuestion ? '0 0 0 4px rgba(49, 116, 243, 0.2)' : 'none'
+              }}>
+                {index < currentQuestion && (
+                  <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+                    <path d="M2 6L4.5 8.5L10 3" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                  </svg>
+                )}
+                {index === currentQuestion && (
+                  <div style={{
+                    width: '8px',
+                    height: '8px',
+                    borderRadius: '50%',
+                    backgroundColor: '#FFFFFF'
+                  }} />
+                )}
+              </div>
+              <span style={{
+                fontSize: '12px',
+                color: index <= currentQuestion ? '#3174F3' : '#999999',
+                marginTop: '4px',
+                fontWeight: index === currentQuestion ? 600 : 400
+              }}>
+                {index + 1}
+              </span>
+            </div>
+          ))}
         </div>
+
+        {/* 進捗率表示 */}
         <div style={{
-          height: '8px',
-          backgroundColor: '#e4e4e7',
-          borderRadius: '9999px',
-          overflow: 'hidden'
+          textAlign: 'center',
+          fontSize: '14px',
+          color: '#666666',
+          marginTop: '8px'
         }}>
-          <div 
-            className="progress-fill"
-            style={{
-              height: '100%',
-              width: `${progress}%`,
-              background: 'linear-gradient(90deg, #ff6b35 0%, #f35627 100%)',
-              borderRadius: '9999px'
-            }}
-          />
+          進捗: {Math.round(progress)}%
         </div>
       </div>
 
       {/* 質問カード */}
-      <div className="question-card" key={currentQuestion} style={{
-        background: 'white',
-        borderRadius: '1.5rem',
-        padding: '3rem',
-        boxShadow: '0 10px 40px rgba(0, 0, 0, 0.1)',
-        marginBottom: '2rem'
-      }}>
-        <h2 style={{
-          fontSize: '1.5rem',
-          fontWeight: 700,
-          color: '#243b53',
-          marginBottom: '1rem',
-          textAlign: 'center'
+      <div 
+        key={currentQuestion}
+        style={{
+          backgroundColor: '#FFFFFF',
+          borderRadius: '16px',
+          padding: '32px',
+          boxShadow: '0 4px 16px rgba(0, 0, 0, 0.08)',
+          marginBottom: '24px',
+          animation: 'slideIn 0.4s ease-out'
+        }}
+      >
+        {/* 質問文 */}
+        <div style={{
+          display: 'flex',
+          alignItems: 'flex-start',
+          justifyContent: 'space-between',
+          marginBottom: '24px'
         }}>
-          {questions[currentQuestion].question}
-        </h2>
-        
-        {/* ヘルプテキスト */}
-        {questions[currentQuestion].helpText && (
-          <div style={{
-            display: 'flex',
-            alignItems: 'flex-start',
-            gap: '0.5rem',
-            marginBottom: '2rem',
-            padding: '1rem',
-            backgroundColor: '#f0f4f8',
-            borderRadius: '0.75rem',
-            border: '1px solid #e0e7ff'
+          <h2 style={{
+            fontSize: '20px',
+            fontWeight: 700,
+            color: '#333333',
+            margin: 0,
+            flex: 1
           }}>
-            <span style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              width: '20px',
-              height: '20px',
-              backgroundColor: '#3b82f6',
-              color: 'white',
-              borderRadius: '50%',
-              fontSize: '0.75rem',
-              fontWeight: 'bold',
-              flexShrink: 0
-            }}>
-              ℹ
-            </span>
+            {questions[currentQuestion].question}
+          </h2>
+          {questions[currentQuestion].helpText && (
+            <button
+              onClick={() => setShowHelpText(!showHelpText)}
+              style={{
+                width: '32px',
+                height: '32px',
+                borderRadius: '50%',
+                backgroundColor: showHelpText ? '#3174F3' : '#F7F9FC',
+                border: 'none',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                marginLeft: '16px',
+                transition: 'all 0.2s ease',
+                flexShrink: 0
+              }}
+              aria-label="ヘルプを表示"
+            >
+              <span style={{
+                fontSize: '16px',
+                fontWeight: 700,
+                color: showHelpText ? '#FFFFFF' : '#3174F3'
+              }}>
+                ℹ
+              </span>
+            </button>
+          )}
+        </div>
+
+        {/* ヘルプテキスト */}
+        {showHelpText && questions[currentQuestion].helpText && (
+          <div style={{
+            backgroundColor: '#F7F9FC',
+            borderLeft: '4px solid #3174F3',
+            borderRadius: '8px',
+            padding: '16px',
+            marginBottom: '24px',
+            animation: 'fadeIn 0.3s ease-out'
+          }}>
             <p style={{
-              fontSize: '0.875rem',
-              color: '#4b5563',
-              lineHeight: 1.5,
+              fontSize: '14px',
+              color: '#666666',
+              lineHeight: 1.6,
               margin: 0
             }}>
               {questions[currentQuestion].helpText}
@@ -297,61 +259,61 @@ const DiagnosisForm: React.FC<DiagnosisFormProps> = ({ onComplete }) => {
           </div>
         )}
 
+        {/* 選択肢 */}
         <div style={{
           display: 'flex',
           flexDirection: 'column',
-          gap: '1rem'
+          gap: '12px'
         }}>
           {questions[currentQuestion].options.map((option, index) => (
             <button
               key={index}
               onClick={() => handleAnswer(option)}
-              className={`option-button ${selectedOption === option ? 'selected' : ''}`}
+              disabled={isAnimating}
               style={{
-                padding: '1.25rem',
-                borderRadius: '1rem',
-                border: selectedOption === option 
-                  ? '2px solid #ff6b35' 
-                  : '2px solid #e4e4e7',
-                background: selectedOption === option 
-                  ? 'linear-gradient(135deg, #fff7ed 0%, #ffedd5 100%)'
-                  : 'white',
-                color: selectedOption === option 
-                  ? '#ff6b35' 
-                  : '#486581',
-                fontSize: '1rem',
-                fontWeight: selectedOption === option ? 700 : 500,
+                width: '100%',
+                padding: '20px 24px',
+                borderRadius: '12px',
+                border: selectedOption === option ? '2px solid #3174F3' : '2px solid #E5E7EB',
+                backgroundColor: selectedOption === option ? '#F0F5FF' : '#FFFFFF',
+                color: selectedOption === option ? '#3174F3' : '#333333',
+                fontSize: '16px',
+                fontWeight: selectedOption === option ? 600 : 500,
                 cursor: 'pointer',
                 textAlign: 'left',
+                transition: 'all 0.2s ease',
                 position: 'relative',
-                overflow: 'hidden'
+                animation: `fadeIn 0.3s ease-out ${index * 0.1}s both`
               }}
-              disabled={isAnimating}
+              onMouseEnter={(e) => {
+                if (selectedOption !== option) {
+                  e.currentTarget.style.borderColor = '#B8D0FF';
+                  e.currentTarget.style.backgroundColor = '#F7FAFF';
+                }
+              }}
+              onMouseLeave={(e) => {
+                if (selectedOption !== option) {
+                  e.currentTarget.style.borderColor = '#E5E7EB';
+                  e.currentTarget.style.backgroundColor = '#FFFFFF';
+                }
+              }}
             >
-              <span style={{ position: 'relative', zIndex: 1 }}>
-                {option}
-              </span>
+              <span>{option}</span>
               {selectedOption === option && (
                 <svg 
                   style={{
                     position: 'absolute',
-                    right: '1.25rem',
+                    right: '24px',
                     top: '50%',
                     transform: 'translateY(-50%)',
-                    width: '24px',
-                    height: '24px'
+                    width: '20px',
+                    height: '20px'
                   }}
-                  viewBox="0 0 24 24" 
+                  viewBox="0 0 20 20" 
                   fill="none"
                 >
-                  <circle cx="12" cy="12" r="10" fill="#ff6b35" />
-                  <path 
-                    d="M8 12l3 3 5-6" 
-                    stroke="white" 
-                    strokeWidth="2" 
-                    strokeLinecap="round" 
-                    strokeLinejoin="round"
-                  />
+                  <circle cx="10" cy="10" r="10" fill="#3174F3" />
+                  <path d="M6 10L8.5 12.5L14 7" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                 </svg>
               )}
             </button>
@@ -359,39 +321,76 @@ const DiagnosisForm: React.FC<DiagnosisFormProps> = ({ onComplete }) => {
         </div>
       </div>
 
-      {/* ナビゲーションボタン */}
+      {/* ナビゲーション */}
       <div style={{
         display: 'flex',
-        justifyContent: currentQuestion > 0 ? 'space-between' : 'center',
-        alignItems: 'center'
+        justifyContent: currentQuestion > 0 ? 'space-between' : 'flex-end',
+        alignItems: 'center',
+        gap: '16px'
       }}>
         {currentQuestion > 0 && (
           <button
             onClick={handleBack}
             style={{
-              padding: '0.75rem 2rem',
-              borderRadius: '9999px',
-              border: '2px solid #e4e4e7',
-              background: 'white',
-              color: '#627d98',
-              fontSize: '1rem',
-              fontWeight: 600,
+              padding: '12px 24px',
+              borderRadius: '8px',
+              border: '2px solid #E5E7EB',
+              backgroundColor: '#FFFFFF',
+              color: '#666666',
+              fontSize: '16px',
+              fontWeight: 500,
               cursor: 'pointer',
-              transition: 'all 0.3s ease'
+              transition: 'all 0.2s ease',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px'
             }}
             onMouseEnter={(e) => {
-              e.currentTarget.style.borderColor = '#ff6b35';
-              e.currentTarget.style.color = '#ff6b35';
+              e.currentTarget.style.borderColor = '#3174F3';
+              e.currentTarget.style.color = '#3174F3';
             }}
             onMouseLeave={(e) => {
-              e.currentTarget.style.borderColor = '#e4e4e7';
-              e.currentTarget.style.color = '#627d98';
+              e.currentTarget.style.borderColor = '#E5E7EB';
+              e.currentTarget.style.color = '#666666';
             }}
           >
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+              <path d="M10 12L6 8L10 4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
             前の質問へ
           </button>
         )}
       </div>
+
+      <style>{`
+        @keyframes slideIn {
+          from {
+            opacity: 0;
+            transform: translateX(20px);
+          }
+          to {
+            opacity: 1;
+            transform: translateX(0);
+          }
+        }
+
+        @keyframes fadeIn {
+          from {
+            opacity: 0;
+            transform: translateY(10px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+
+        @media (max-width: 768px) {
+          .question-card {
+            padding: 24px 16px !important;
+          }
+        }
+      `}</style>
     </div>
   );
 };

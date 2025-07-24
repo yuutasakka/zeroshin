@@ -1,168 +1,354 @@
-import React, { useState, useEffect } from 'react';
-import { LegalLink } from '../../types';
-import { defaultFooterData } from '../../data/homepageContentData';
-import { secureLog } from '../../security.config';
-import { createSupabaseClient } from './adminUtils';
-import { useFooterData } from '../../src/contexts/DesignSettingsContext';
-
-// セキュリティ関数: URLの安全性を確認
-const sanitizeUrl = (url: string): string => {
-  if (typeof url !== 'string') return '#';
-  
-  const dangerousProtocols = ['javascript:', 'data:', 'vbscript:', 'file:', 'ftp:'];
-  const urlLower = url.toLowerCase().trim();
-  
-  for (const protocol of dangerousProtocols) {
-    if (urlLower.startsWith(protocol)) {
-      return '#';
-    }
-  }
-  
-  if (url.startsWith('http://') || url.startsWith('https://') || url.startsWith('/') || url.startsWith('#')) {
-    return url;
-  }
-  
-  return '#';
-};
-
-// セキュリティ関数: テキストのサニタイゼーション
-const sanitizeText = (text: string): string => {
-  if (typeof text !== 'string') return '';
-  
-  return text
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#39;')
-    .trim();
-};
+import React from 'react';
 
 interface FooterProps {
   onNavigateToAdminLogin: () => void;
 }
 
 const Footer: React.FC<FooterProps> = ({ onNavigateToAdminLogin }) => {
-  const [legalLinks, setLegalLinks] = useState<LegalLink[]>([]);
-  const footerDataFromContext = useFooterData();
-  const footerData = footerDataFromContext || defaultFooterData;
-
-  useEffect(() => {
-    loadLegalLinks();
-  }, []);
-
-  const loadLegalLinks = async () => {
-    try {
-      const supabaseConfig = createSupabaseClient();
-      
-      // Supabase設定を確認
-      if (!supabaseConfig.url || !supabaseConfig.key || 
-          supabaseConfig.url.includes('your-project') || 
-          supabaseConfig.key.includes('your-anon-key')) {
-        secureLog(' Footer: Supabase設定が無効：デフォルトリーガルリンクを使用');
-        setDefaultLegalLinks();
-        return;
-      }
-
-      // Supabaseからリーガルリンクデータを取得
-      const response = await fetch(`${supabaseConfig.url}/rest/v1/legal_links?select=*&is_active.eq=true&order=id`, {
-        headers: {
-          'Authorization': `Bearer ${supabaseConfig.key}`,
-          'apikey': supabaseConfig.key,
-          'Content-Type': 'application/json'
-        }
-      });
-
-      if (response.ok) {
-        const links = await response.json();
-        if (links && links.length > 0) {
-          setLegalLinks(links);
-          secureLog(`Supabaseから${links.length}件のリーガルリンクを読み込み`);
-          return;
-        }
-      } else if (response.status === 400) {
-        secureLog('Supabaseリーガルリンクテーブルが存在しません (400エラー) - デフォルトリンクを使用');
-      } else {
-        secureLog(`Supabaseリーガルリンク取得エラー: ${response.status} ${response.statusText}`);
-      }
-      
-      // エラーまたはデータなしの場合はデフォルトリンクを使用
-      setDefaultLegalLinks();
-    } catch (error) {
-      secureLog('リーガルリンクフェッチエラー:', error);
-      setDefaultLegalLinks();
-    }
-  };
-
-  const setDefaultLegalLinks = () => {
-    const defaultLinks: LegalLink[] = [
-      { id: 1, link_type: 'privacy_policy', title: 'プライバシーポリシー', url: '#privacy', is_active: true, created_at: '', updated_at: '' },
-      { id: 2, link_type: 'terms_of_service', title: '利用規約', url: '#terms', is_active: true, created_at: '', updated_at: '' },
-      { id: 3, link_type: 'specified_commercial_transactions', title: '特定商取引法', url: '#scta', is_active: true, created_at: '', updated_at: '' },
-      { id: 4, link_type: 'company_info', title: '会社概要', url: '#company', is_active: true, created_at: '', updated_at: '' }
-    ];
-    setLegalLinks(defaultLinks);
-  };
+  const currentYear = new Date().getFullYear();
 
   return (
-    <footer 
-      id="footer"
-      className="py-12 px-4"
-      style={{
-        background: '#243b53',
-        borderTop: '1px solid #334e68'
-      }}
-      role="contentinfo"
-    >
-      <div className="container mx-auto px-3 sm:px-4 md:px-6 lg:px-8 max-w-7xl">
-        <div className="flex items-center justify-center mb-8">
-            <h5 className="text-xl md:text-2xl lg:text-3xl font-bold text-white">
-              {footerData.siteName || 'タスカル'}
-            </h5>
-        </div>
-        
-        <div className="text-center space-y-4">
-            <p className="text-sm sm:text-base md:text-lg max-w-2xl mx-auto leading-relaxed" style={{ color: '#d9e2ec' }}>{footerData.description}</p>
-            
-            <div className="space-y-3">
-                <p className="text-sm sm:text-base md:text-lg font-medium" style={{ color: '#bcccdc' }}>{footerData.companyInfo}</p>
-                <p className="text-sm sm:text-base md:text-lg" style={{ color: '#bcccdc' }}>{footerData.contactInfo}</p>
-                <nav className="flex flex-wrap justify-center gap-2 sm:gap-4 md:gap-6 mt-6">
-                    {legalLinks
-                      .filter(link => link.is_active)
-                      .map(link => (
-                        <a 
-                          key={link.id} 
-                          href={sanitizeUrl(link.url)} 
-                          className="text-xs sm:text-sm md:text-base transition-colors duration-200 hover:underline px-1"
-                          style={{ color: '#9fb3c8' }}
-                          onMouseEnter={(e) => e.currentTarget.style.color = '#ff6b35'}
-                          onMouseLeave={(e) => e.currentTarget.style.color = '#9fb3c8'}
-                          target={link.url.startsWith('http') ? '_blank' : undefined}
-                          rel={link.url.startsWith('http') ? 'noopener noreferrer' : undefined}
-                        >
-                          {sanitizeText(link.title)}
-                        </a>
-                      ))
-                    }
-                    <a 
-                      href="#admin" 
-                      onClick={(e) => { 
-                        e.preventDefault(); 
-                        onNavigateToAdminLogin(); 
-                      }} 
-                      className="text-xs sm:text-sm md:text-base transition-colors duration-200 hover:underline px-1"
-                      style={{ color: '#9fb3c8' }}
-                      onMouseEnter={(e) => e.currentTarget.style.color = '#ff6b35'}
-                      onMouseLeave={(e) => e.currentTarget.style.color = '#9fb3c8'}
-                    >
-                      管理者ログイン
-                    </a>
-                </nav>
-                <p className="mt-8 text-xs sm:text-sm md:text-base" style={{ color: '#829ab1' }}>{footerData.copyright || `© ${new Date().getFullYear()} タスカル株式会社. All rights reserved.`}</p>
+    <footer style={{
+      backgroundColor: '#333333',
+      color: '#FFFFFF',
+      padding: '60px 20px 40px',
+      marginTop: '80px'
+    }}>
+      <div style={{
+        maxWidth: '1200px',
+        margin: '0 auto'
+      }}>
+        {/* ロゴとサービス名 */}
+        <div style={{
+          textAlign: 'center',
+          marginBottom: '48px'
+        }}>
+          <div style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: '12px',
+            marginBottom: '16px'
+          }}>
+            {/* ロゴアイコン */}
+            <div style={{
+              width: '40px',
+              height: '40px',
+              backgroundColor: '#3174F3',
+              borderRadius: '12px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center'
+            }}>
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                <path 
+                  d="M12 2L2 7V12C2 16.5 4.5 20.5 12 22C19.5 20.5 22 16.5 22 12V7L12 2Z" 
+                  stroke="#FFFFFF" 
+                  strokeWidth="2" 
+                  strokeLinecap="round" 
+                  strokeLinejoin="round"
+                />
+                <path 
+                  d="M9 12L11 14L15 10" 
+                  stroke="#FFFFFF" 
+                  strokeWidth="2" 
+                  strokeLinecap="round" 
+                  strokeLinejoin="round"
+                />
+              </svg>
             </div>
+            <h3 style={{
+              fontSize: '24px',
+              fontWeight: 700,
+              margin: 0
+            }}>
+              タスカル
+            </h3>
+          </div>
+          <p style={{
+            fontSize: '16px',
+            color: '#CCCCCC',
+            lineHeight: 1.6,
+            maxWidth: '600px',
+            margin: '0 auto'
+          }}>
+            30秒で分かる資金調達戦闘力診断
+          </p>
+        </div>
+
+        {/* リンクとナビゲーション */}
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+          gap: '40px',
+          marginBottom: '48px',
+          textAlign: 'center'
+        }}>
+          {/* サービス */}
+          <div>
+            <h4 style={{
+              fontSize: '16px',
+              fontWeight: 700,
+              marginBottom: '20px',
+              color: '#FFFFFF'
+            }}>
+              サービス
+            </h4>
+            <ul style={{
+              listStyle: 'none',
+              padding: 0,
+              margin: 0,
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '12px'
+            }}>
+              <li>
+                <a 
+                  href="#diagnosis-form-section"
+                  style={{
+                    color: '#CCCCCC',
+                    textDecoration: 'none',
+                    fontSize: '14px',
+                    transition: 'color 0.2s ease'
+                  }}
+                  onMouseEnter={(e) => e.currentTarget.style.color = '#3174F3'}
+                  onMouseLeave={(e) => e.currentTarget.style.color = '#CCCCCC'}
+                >
+                  無料診断
+                </a>
+              </li>
+              <li>
+                <a 
+                  href="#features"
+                  style={{
+                    color: '#CCCCCC',
+                    textDecoration: 'none',
+                    fontSize: '14px',
+                    transition: 'color 0.2s ease'
+                  }}
+                  onMouseEnter={(e) => e.currentTarget.style.color = '#3174F3'}
+                  onMouseLeave={(e) => e.currentTarget.style.color = '#CCCCCC'}
+                >
+                  診断の特徴
+                </a>
+              </li>
+              <li>
+                <a 
+                  href="#faq"
+                  style={{
+                    color: '#CCCCCC',
+                    textDecoration: 'none',
+                    fontSize: '14px',
+                    transition: 'color 0.2s ease'
+                  }}
+                  onMouseEnter={(e) => e.currentTarget.style.color = '#3174F3'}
+                  onMouseLeave={(e) => e.currentTarget.style.color = '#CCCCCC'}
+                >
+                  よくある質問
+                </a>
+              </li>
+            </ul>
+          </div>
+
+          {/* 会社情報 */}
+          <div>
+            <h4 style={{
+              fontSize: '16px',
+              fontWeight: 700,
+              marginBottom: '20px',
+              color: '#FFFFFF'
+            }}>
+              会社情報
+            </h4>
+            <ul style={{
+              listStyle: 'none',
+              padding: 0,
+              margin: 0,
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '12px'
+            }}>
+              <li>
+                <a 
+                  href="#company"
+                  style={{
+                    color: '#CCCCCC',
+                    textDecoration: 'none',
+                    fontSize: '14px',
+                    transition: 'color 0.2s ease'
+                  }}
+                  onMouseEnter={(e) => e.currentTarget.style.color = '#3174F3'}
+                  onMouseLeave={(e) => e.currentTarget.style.color = '#CCCCCC'}
+                >
+                  会社概要
+                </a>
+              </li>
+              <li>
+                <a 
+                  href="#contact"
+                  style={{
+                    color: '#CCCCCC',
+                    textDecoration: 'none',
+                    fontSize: '14px',
+                    transition: 'color 0.2s ease'
+                  }}
+                  onMouseEnter={(e) => e.currentTarget.style.color = '#3174F3'}
+                  onMouseLeave={(e) => e.currentTarget.style.color = '#CCCCCC'}
+                >
+                  お問い合わせ
+                </a>
+              </li>
+            </ul>
+          </div>
+
+          {/* 法的情報 */}
+          <div>
+            <h4 style={{
+              fontSize: '16px',
+              fontWeight: 700,
+              marginBottom: '20px',
+              color: '#FFFFFF'
+            }}>
+              法的情報
+            </h4>
+            <ul style={{
+              listStyle: 'none',
+              padding: 0,
+              margin: 0,
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '12px'
+            }}>
+              <li>
+                <a 
+                  href="#privacy"
+                  style={{
+                    color: '#CCCCCC',
+                    textDecoration: 'none',
+                    fontSize: '14px',
+                    transition: 'color 0.2s ease'
+                  }}
+                  onMouseEnter={(e) => e.currentTarget.style.color = '#3174F3'}
+                  onMouseLeave={(e) => e.currentTarget.style.color = '#CCCCCC'}
+                >
+                  プライバシーポリシー
+                </a>
+              </li>
+              <li>
+                <a 
+                  href="#terms"
+                  style={{
+                    color: '#CCCCCC',
+                    textDecoration: 'none',
+                    fontSize: '14px',
+                    transition: 'color 0.2s ease'
+                  }}
+                  onMouseEnter={(e) => e.currentTarget.style.color = '#3174F3'}
+                  onMouseLeave={(e) => e.currentTarget.style.color = '#CCCCCC'}
+                >
+                  利用規約
+                </a>
+              </li>
+              <li>
+                <a 
+                  href="#scta"
+                  style={{
+                    color: '#CCCCCC',
+                    textDecoration: 'none',
+                    fontSize: '14px',
+                    transition: 'color 0.2s ease'
+                  }}
+                  onMouseEnter={(e) => e.currentTarget.style.color = '#3174F3'}
+                  onMouseLeave={(e) => e.currentTarget.style.color = '#CCCCCC'}
+                >
+                  特定商取引法に基づく表記
+                </a>
+              </li>
+            </ul>
+          </div>
+
+          {/* その他 */}
+          <div>
+            <h4 style={{
+              fontSize: '16px',
+              fontWeight: 700,
+              marginBottom: '20px',
+              color: '#FFFFFF'
+            }}>
+              その他
+            </h4>
+            <ul style={{
+              listStyle: 'none',
+              padding: 0,
+              margin: 0,
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '12px'
+            }}>
+              <li>
+                <a 
+                  href="#admin"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    onNavigateToAdminLogin();
+                  }}
+                  style={{
+                    color: '#CCCCCC',
+                    textDecoration: 'none',
+                    fontSize: '14px',
+                    transition: 'color 0.2s ease',
+                    cursor: 'pointer'
+                  }}
+                  onMouseEnter={(e) => e.currentTarget.style.color = '#3174F3'}
+                  onMouseLeave={(e) => e.currentTarget.style.color = '#CCCCCC'}
+                >
+                  管理者ログイン
+                </a>
+              </li>
+            </ul>
+          </div>
+        </div>
+
+        {/* 下線 */}
+        <div style={{
+          borderTop: '1px solid #555555',
+          paddingTop: '32px',
+          textAlign: 'center'
+        }}>
+          {/* コピーライト */}
+          <p style={{
+            fontSize: '14px',
+            color: '#999999',
+            margin: 0
+          }}>
+            © {currentYear} タスカル Inc. All rights reserved.
+          </p>
         </div>
       </div>
+
+      {/* モバイルレスポンシブ */}
+      <style>{`
+        @media (max-width: 768px) {
+          footer > div {
+            padding: 0 16px;
+          }
+          
+          footer h3 {
+            font-size: 20px !important;
+          }
+          
+          footer .grid {
+            grid-template-columns: 1fr 1fr !important;
+            gap: 24px !important;
+            text-align: left !important;
+          }
+        }
+        
+        @media (max-width: 480px) {
+          footer .grid {
+            grid-template-columns: 1fr !important;
+          }
+        }
+      `}</style>
     </footer>
   );
 };

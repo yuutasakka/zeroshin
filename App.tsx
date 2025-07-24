@@ -1,14 +1,10 @@
 import React, { useState, useEffect, lazy, Suspense } from 'react';
 import ErrorBoundary from './src/components/ErrorBoundary';
 import Header from './src/components/Header';
-import HeaderNew from './src/components/HeaderNew';
 // 要件定義書に基づく新しいコンポーネント
-import TaskalHero from './src/components/TaskalHero';
-import EnhancedHero from './src/components/EnhancedHero';
-import HeroNew from './src/components/HeroNew';
+import Hero from './src/components/Hero';
 import DiagnosisForm from './src/components/DiagnosisForm';
-import DiagnosisFormNew from './src/components/DiagnosisFormNew';
-// DiagnosisAnswersは削除されたコンポーネントの型なので、OptimizedDiagnosisAnswersを使用
+// 診断回答の型定義
 type DiagnosisAnswers = {
   age: string;
   experience: string;
@@ -22,10 +18,8 @@ import ReliabilitySection from './src/components/ReliabilitySection';
 import SecurityTrustSection from './src/components/SecurityTrustSection';
 import CallToActionSection from './src/components/CallToActionSection';
 import Footer from './src/components/Footer';
-import FooterNew from './src/components/FooterNew';
 import FixedCTA from './src/components/FixedCTA';
 import CombatPowerResults from './src/components/CombatPowerResults';
-import CombatPowerResultsNew from './src/components/CombatPowerResultsNew';
 import FAQSection from './src/components/FAQSection';
 
 // 動的インポート（Code Splitting）
@@ -84,58 +78,6 @@ const LoadingSpinner = () => (
     `}</style>
   </div>
 );
-// import I18nProvider from './src/i18n/I18nProvider';
-// import { initializeLanguage } from './src/utils/languageStorage';
-
-
-// セキュリティ関数: HTMLサニタイゼーション（コメントアウト - 未使用）
-// const sanitizeHTML = (html: string): string => {
-//   // 危険なタグとスクリプトを除去
-//   const dangerousPatterns = [
-//     /<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi,
-//     /<iframe\b[^<]*(?:(?!<\/iframe>)<[^<]*)*<\/iframe>/gi,
-//     /<object\b[^<]*(?:(?!<\/object>)<[^<]*)*<\/object>/gi,
-//     /<embed\b[^<]*>/gi,
-//     /<form\b[^<]*(?:(?!<\/form>)<[^<]*)*<\/form>/gi,
-//     /javascript:/gi,
-//     /on\w+\s*=/gi,
-//     /<[^>]*vbscript:/gi,
-//     /<[^>]*data:/gi
-//   ];
-//   
-//   let sanitized = html;
-//   dangerousPatterns.forEach(pattern => {
-//     sanitized = sanitized.replace(pattern, '');
-//   });
-//   
-//   return sanitized.trim();
-// };
-
-// HTML検証関数（コメントアウト - 未使用）
-// const isValidHTML = (html: string): boolean => {
-//   // 基本的な安全性チェック
-//   const allowedTags = ['link', 'meta', 'style', 'title', 'noscript'];
-//   try {
-//     const doc = new DOMParser().parseFromString(html, 'text/html');
-//     const errorNode = doc.querySelector('parsererror');
-//     
-//     if (errorNode) {
-//       return false;
-//     }
-//     
-//     // すべての要素が許可されたタグかチェック
-//     const elements = doc.body.querySelectorAll('*');
-//     for (const element of elements) {
-//       if (!allowedTags.includes(element.tagName.toLowerCase())) {
-//         return false;
-//       }
-//     }
-//     
-//     return true;
-//   } catch (error) {
-//     return false;
-//   }
-// };
 
 const App: React.FC = () => {
   // 要件定義書に基づくページ状態の更新
@@ -158,10 +100,6 @@ const App: React.FC = () => {
     // 状態変更の処理（ログ出力は本番環境では無効）
   }, [isAdminLoggedIn, isSupabaseAuth]);
 
-  // 言語初期化
-  // useEffect(() => {
-  //   initializeLanguage();
-  // }, []);
 
   useEffect(() => {
     // Apply body class for verification and results pages for consistent styling
@@ -189,7 +127,6 @@ const App: React.FC = () => {
           setIsAdminLoggedIn(true);
           
           // プロファイルからパスワード変更要求をチェック
-          // const { data: profileData, error: profileError } = await supabase
           await supabase
             .from('profiles')
             .select('requires_password_change')
@@ -393,16 +330,6 @@ const App: React.FC = () => {
 
         // 診断完了履歴チェック機能を無効化
         // 電話番号認証時のみポップアップを表示するように変更済み
-        // diagnosisManager.getVerifiedSessions().then(verifiedSessions => {
-        //   const currentUrl = window.location.href;
-        //   const isOnDiagnosisPage = !currentUrl.includes('/admin') && !currentUrl.includes('/login');
-        //   
-        //   if (verifiedSessions.length > 0 && isOnDiagnosisPage) {
-        //     setTimeout(() => setShowUsageNotice(true), 1000);
-        //   }
-        // }).catch(() => {
-        //   // Supabase接続エラーは無視
-        // });
 
         // トラッキングスクリプトはSupabaseから直接読み込み（管理画面設定から）
         // ここではlocalStorageに依存しない実装
@@ -597,11 +524,11 @@ const App: React.FC = () => {
       return (
         <ErrorBoundary>
           <div style={{ minHeight: '100vh', background: '#ffffff', padding: 0, margin: 0, width: '100%', maxWidth: '100vw', boxSizing: 'border-box', overflowX: 'hidden' }}>
-          <HeaderNew />
+          <Header />
           
           {/* 1番目: メインヒーロー（あなたの未来の資産を診断！） */}
           <div className="hero-section">
-            <HeroNew onStartDiagnosis={handleStartDiagnosis} />
+            <Hero onStartDiagnosis={handleStartDiagnosis} />
           </div>
           
           {/* 2番目: 診断フォーム */}
@@ -611,7 +538,7 @@ const App: React.FC = () => {
             minHeight: '100vh'
           }}>
             <div className="home-right-col">
-              <DiagnosisFormNew
+              <DiagnosisForm
                 onComplete={(answers) => {
                   console.log('🔍 App.tsx: 診断完了 - 回答データ:', answers);
                   
@@ -662,7 +589,7 @@ const App: React.FC = () => {
             <CallToActionSection />
           </div>
           
-          <FooterNew onNavigateToAdminLogin={navigateToAdminLogin} />
+          <Footer onNavigateToAdminLogin={navigateToAdminLogin} />
           <style>{`
             /* 診断フォーカスアニメーション */
             .diagnosis-focus-animation {
@@ -986,7 +913,7 @@ const App: React.FC = () => {
       };
       
       return (
-        <CombatPowerResultsNew
+        <CombatPowerResults
           diagnosisAnswers={answersToUse}
           onDownloadGuide={() => {
             // 攻略本ダウンロード処理（後で実装）
@@ -1046,7 +973,7 @@ const App: React.FC = () => {
       <>
         <Header />
         <main>
-          <TaskalHero onStartDiagnosis={handleStartDiagnosis} />
+          <Hero onStartDiagnosis={handleStartDiagnosis} />
           <ReliabilitySection />
           <SecurityTrustSection />
           <CallToActionSection />

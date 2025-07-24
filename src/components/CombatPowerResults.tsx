@@ -7,9 +7,9 @@ interface CombatPowerResultsProps {
 }
 
 interface SubScores {
-  attackPower: number; // 調達ポテンシャル
-  defensePower: number; // 返済余力
-  mobility: number; // 資金入手スピード
+  attackPower: number;
+  defensePower: number;
+  mobility: number;
 }
 
 const CombatPowerResults: React.FC<CombatPowerResultsProps> = ({ diagnosisAnswers, onDownloadGuide }) => {
@@ -76,13 +76,13 @@ const CombatPowerResults: React.FC<CombatPowerResultsProps> = ({ diagnosisAnswer
     // パーソナライズドコメント
     let comment = '';
     if (rank === 'S') {
-      comment = `あなたの戦闘力は${total}点（Sランク）！\n・攻撃力が高いので、まずは低金利の銀行系ローンを比較\n・防御力も十分なので、複数の選択肢から最適なものを選べます`;
+      comment = `戦闘力${total}点！最高ランクです。多くの選択肢から最適な条件を選べる立場にあります。`;
     } else if (rank === 'A') {
-      comment = `あなたの戦闘力は${total}点（Aランク）！\n・${attackPower > defensePower ? '攻撃力が高いので、積極的な資金調達が可能' : '防御力が高いので、安定した返済計画を立てられます'}\n・${mobility > 20 ? '急ぎの場合は即日融資も検討できます' : '時間に余裕があるので、じっくり比較検討しましょう'}`;
+      comment = `戦闘力${total}点！良好な状態です。${attackPower > defensePower ? '特に調達力が高く' : '特に返済余力があり'}、安心して資金調達を進められます。`;
     } else if (rank === 'B') {
-      comment = `あなたの戦闘力は${total}点（Bランク）！\n・${defensePower < 30 ? '防御力を底上げするには返済負担率の見直しを' : '攻撃力を上げるには収入証明の準備を'}\n・慎重に業者を選定することで、良い条件での借入が可能です`;
+      comment = `戦闘力${total}点！標準的な状態です。${defensePower < 30 ? '返済計画を見直すことで' : '収入証明を準備することで'}、より良い条件が期待できます。`;
     } else {
-      comment = `あなたの戦闘力は${total}点（Cランク）！\n・まずは現在の借入状況を整理することから始めましょう\n・おまとめローンや債務整理の相談も視野に入れることをお勧めします`;
+      comment = `戦闘力${total}点！まずは現状を整理しましょう。専門家への相談も検討してください。`;
     }
     
     return {
@@ -113,130 +113,223 @@ const CombatPowerResults: React.FC<CombatPowerResultsProps> = ({ diagnosisAnswer
 
   const getRankColor = (rank: string) => {
     switch (rank) {
-      case 'S': return '#FFD700'; // ゴールド
-      case 'A': return '#FF6B35'; // オレンジ
-      case 'B': return '#3B82F6'; // ブルー
+      case 'S': return '#F5A623'; // ゴールド
+      case 'A': return '#3174F3'; // ブルー
+      case 'B': return '#10B981'; // グリーン
       case 'C': return '#6B7280'; // グレー
       default: return '#6B7280';
     }
   };
 
+  // レーダーチャート描画用の座標計算
+  const calculateRadarPoints = (scores: SubScores): string => {
+    const centerX = 150;
+    const centerY = 150;
+    const radius = 100;
+    const angles = [-90, 30, 150]; // 上、右下、左下
+    
+    const points = [
+      scores.attackPower,
+      scores.defensePower,
+      scores.mobility
+    ].map((score, index) => {
+      const angle = angles[index] * Math.PI / 180;
+      const r = (score / 100) * radius;
+      const x = centerX + r * Math.cos(angle);
+      const y = centerY + r * Math.sin(angle);
+      return `${x},${y}`;
+    });
+    
+    return points.join(' ');
+  };
+
   return (
     <div style={{
       minHeight: '100vh',
-      background: 'linear-gradient(135deg, #0B1426 0%, #1A2332 100%)',
-      color: 'white',
-      padding: '2rem',
-      position: 'relative',
-      overflow: 'hidden'
+      backgroundColor: '#F7F9FC',
+      padding: '80px 20px 40px',
+      position: 'relative'
     }}>
-      {/* 背景アニメーション */}
-      <div style={{
-        position: 'absolute',
-        top: 0,
-        left: 0,
-        right: 0,
-        bottom: 0,
-        opacity: 0.1,
-        background: `radial-gradient(circle at 20% 30%, ${getRankColor(rank)} 0%, transparent 40%)`,
-        animation: 'pulse 4s ease-in-out infinite'
-      }} />
-      
       <div style={{
         maxWidth: '800px',
-        margin: '0 auto',
-        position: 'relative',
-        zIndex: 1
+        margin: '0 auto'
       }}>
         {/* タイトル */}
-        <h1 className="fade-in-1" style={{
+        <div style={{
           textAlign: 'center',
-          fontSize: '2.5rem',
-          fontWeight: 800,
-          marginBottom: '3rem',
-          textShadow: '2px 2px 4px rgba(0,0,0,0.3)'
+          marginBottom: '48px',
+          animation: 'fadeIn 0.8s ease-out'
         }}>
-          あなたの資金調達戦闘力
-        </h1>
+          <h1 style={{
+            fontSize: 'clamp(2rem, 4vw, 2.5rem)',
+            fontWeight: 700,
+            color: '#333333',
+            marginBottom: '8px'
+          }}>
+            診断結果
+          </h1>
+          <p style={{
+            fontSize: '18px',
+            color: '#666666'
+          }}>
+            あなたの資金調達戦闘力
+          </p>
+        </div>
         
         {/* メインスコアカード */}
-        <div className="scale-in" style={{
-          background: 'rgba(255, 255, 255, 0.1)',
-          backdropFilter: 'blur(10px)',
-          borderRadius: '2rem',
-          padding: '3rem',
-          marginBottom: '2rem',
-          border: `3px solid ${getRankColor(rank)}`,
-          boxShadow: `0 0 30px ${getRankColor(rank)}40`,
-          textAlign: 'center'
+        <div style={{
+          backgroundColor: '#FFFFFF',
+          borderRadius: '24px',
+          padding: '48px',
+          marginBottom: '32px',
+          boxShadow: '0 8px 24px rgba(0, 0, 0, 0.08)',
+          textAlign: 'center',
+          animation: 'slideUp 0.8s ease-out 0.2s both'
         }}>
           {/* 総合スコア */}
-          <div className="score-display" style={{
-            fontSize: '5rem',
-            fontWeight: 900,
+          <div style={{
+            fontSize: 'clamp(3rem, 8vw, 5rem)',
+            fontWeight: 700,
             lineHeight: 1,
-            marginBottom: '1rem',
-            color: getRankColor(rank),
-            textShadow: `0 0 20px ${getRankColor(rank)}80`
+            marginBottom: '16px',
+            color: getRankColor(rank)
           }}>
             {currentScore}
-            <span style={{ fontSize: '2rem' }}>点</span>
+            <span style={{ fontSize: '0.5em', fontWeight: 500 }}>点</span>
           </div>
           
           {/* ランク表示 */}
-          <div className="rank-badge" style={{
+          <div style={{
             display: 'inline-block',
-            padding: '0.5rem 2rem',
-            background: getRankColor(rank),
-            color: rank === 'S' ? '#000' : '#fff',
-            borderRadius: '9999px',
-            fontSize: '2rem',
-            fontWeight: 800,
-            marginBottom: '2rem',
-            boxShadow: `0 4px 20px ${getRankColor(rank)}60`
+            padding: '12px 32px',
+            backgroundColor: getRankColor(rank),
+            color: '#FFFFFF',
+            borderRadius: '999px',
+            fontSize: '24px',
+            fontWeight: 700,
+            marginBottom: '40px',
+            boxShadow: `0 4px 16px ${getRankColor(rank)}40`
           }}>
             {rank}ランク
           </div>
           
-          {/* サブスコア */}
-          <div className="sub-scores" style={{
+          {/* レーダーチャート */}
+          <div style={{
+            display: 'flex',
+            justifyContent: 'center',
+            marginBottom: '40px'
+          }}>
+            <svg width="300" height="300" viewBox="0 0 300 300" style={{ maxWidth: '100%' }}>
+              {/* 背景グリッド */}
+              <g opacity="0.3">
+                {[20, 40, 60, 80, 100].map((size) => (
+                  <polygon
+                    key={size}
+                    points={calculateRadarPoints({ 
+                      attackPower: size, 
+                      defensePower: size, 
+                      mobility: size 
+                    })}
+                    fill="none"
+                    stroke="#E5E7EB"
+                    strokeWidth="1"
+                  />
+                ))}
+                {/* 軸線 */}
+                <line x1="150" y1="150" x2="150" y2="50" stroke="#E5E7EB" strokeWidth="1" />
+                <line x1="150" y1="150" x2="237" y2="200" stroke="#E5E7EB" strokeWidth="1" />
+                <line x1="150" y1="150" x2="63" y2="200" stroke="#E5E7EB" strokeWidth="1" />
+              </g>
+              
+              {/* データプロット */}
+              <polygon
+                points={calculateRadarPoints(subScores)}
+                fill={`${getRankColor(rank)}20`}
+                stroke={getRankColor(rank)}
+                strokeWidth="3"
+                strokeLinejoin="round"
+              />
+              
+              {/* データポイント */}
+              {calculateRadarPoints(subScores).split(' ').map((point, index) => {
+                const [x, y] = point.split(',').map(Number);
+                return (
+                  <circle
+                    key={index}
+                    cx={x}
+                    cy={y}
+                    r="6"
+                    fill={getRankColor(rank)}
+                    stroke="#FFFFFF"
+                    strokeWidth="2"
+                  />
+                );
+              })}
+              
+              {/* ラベル */}
+              <text x="150" y="30" textAnchor="middle" fill="#333333" fontSize="14" fontWeight="600">
+                攻撃力
+              </text>
+              <text x="260" y="220" textAnchor="middle" fill="#333333" fontSize="14" fontWeight="600">
+                防御力
+              </text>
+              <text x="40" y="220" textAnchor="middle" fill="#333333" fontSize="14" fontWeight="600">
+                機動力
+              </text>
+              
+              {/* スコア表示 */}
+              <text x="150" y="70" textAnchor="middle" fill="#666666" fontSize="12">
+                {Math.round(subScores.attackPower)}
+              </text>
+              <text x="230" y="190" textAnchor="middle" fill="#666666" fontSize="12">
+                {Math.round(subScores.defensePower)}
+              </text>
+              <text x="70" y="190" textAnchor="middle" fill="#666666" fontSize="12">
+                {Math.round(subScores.mobility)}
+              </text>
+            </svg>
+          </div>
+          
+          {/* サブスコア詳細 */}
+          <div style={{
             display: 'grid',
             gridTemplateColumns: 'repeat(3, 1fr)',
-            gap: '2rem',
-            marginTop: '2rem'
+            gap: '24px',
+            maxWidth: '500px',
+            margin: '0 auto'
           }}>
             <div>
-              <div style={{ fontSize: '0.875rem', opacity: 0.8, marginBottom: '0.5rem' }}>
+              <div style={{ fontSize: '12px', color: '#999999', marginBottom: '4px' }}>
                 攻撃力
               </div>
-              <div style={{ fontSize: '1.5rem', fontWeight: 700 }}>
+              <div style={{ fontSize: '20px', fontWeight: 700, color: '#333333' }}>
                 {Math.round(subScores.attackPower)}
               </div>
-              <div style={{ fontSize: '0.75rem', opacity: 0.6 }}>
+              <div style={{ fontSize: '12px', color: '#666666' }}>
                 調達ポテンシャル
               </div>
             </div>
             
             <div>
-              <div style={{ fontSize: '0.875rem', opacity: 0.8, marginBottom: '0.5rem' }}>
+              <div style={{ fontSize: '12px', color: '#999999', marginBottom: '4px' }}>
                 防御力
               </div>
-              <div style={{ fontSize: '1.5rem', fontWeight: 700 }}>
+              <div style={{ fontSize: '20px', fontWeight: 700, color: '#333333' }}>
                 {Math.round(subScores.defensePower)}
               </div>
-              <div style={{ fontSize: '0.75rem', opacity: 0.6 }}>
+              <div style={{ fontSize: '12px', color: '#666666' }}>
                 返済余力
               </div>
             </div>
             
             <div>
-              <div style={{ fontSize: '0.875rem', opacity: 0.8, marginBottom: '0.5rem' }}>
+              <div style={{ fontSize: '12px', color: '#999999', marginBottom: '4px' }}>
                 機動力
               </div>
-              <div style={{ fontSize: '1.5rem', fontWeight: 700 }}>
+              <div style={{ fontSize: '20px', fontWeight: 700, color: '#333333' }}>
                 {Math.round(subScores.mobility)}
               </div>
-              <div style={{ fontSize: '0.75rem', opacity: 0.6 }}>
+              <div style={{ fontSize: '12px', color: '#666666' }}>
                 資金入手スピード
               </div>
             </div>
@@ -244,94 +337,131 @@ const CombatPowerResults: React.FC<CombatPowerResultsProps> = ({ diagnosisAnswer
         </div>
         
         {/* パーソナライズドコメント */}
-        <div className="fade-in-2" style={{
-          background: 'rgba(255, 255, 255, 0.05)',
-          borderRadius: '1rem',
-          padding: '2rem',
-          marginBottom: '3rem',
-          border: '1px solid rgba(255, 255, 255, 0.2)'
+        <div style={{
+          backgroundColor: '#FFFFFF',
+          borderRadius: '16px',
+          padding: '32px',
+          marginBottom: '32px',
+          boxShadow: '0 4px 12px rgba(0, 0, 0, 0.05)',
+          animation: 'slideUp 0.8s ease-out 0.4s both'
         }}>
-          <h3 style={{ marginBottom: '1rem', fontSize: '1.25rem' }}>診断結果</h3>
+          <h3 style={{
+            fontSize: '20px',
+            fontWeight: 700,
+            color: '#333333',
+            marginBottom: '16px'
+          }}>
+            総合評価
+          </h3>
           <p style={{
-            whiteSpace: 'pre-line',
+            fontSize: '16px',
+            color: '#666666',
             lineHeight: 1.8,
-            opacity: 0.9
+            margin: 0
           }}>
             {comment}
           </p>
         </div>
         
-        {/* 調査前にここをチェック！ */}
-        <div className="fade-in-3" style={{
-          background: 'rgba(255, 255, 255, 0.05)',
-          borderRadius: '1rem',
-          padding: '2rem',
-          marginBottom: '3rem',
-          border: '1px solid rgba(255, 255, 255, 0.2)'
+        {/* ミニアドバイス */}
+        <div style={{
+          backgroundColor: '#FFFFFF',
+          borderRadius: '16px',
+          padding: '32px',
+          marginBottom: '48px',
+          boxShadow: '0 4px 12px rgba(0, 0, 0, 0.05)',
+          animation: 'slideUp 0.8s ease-out 0.6s both'
         }}>
-          <h3 style={{ marginBottom: '1rem', fontSize: '1.25rem' }}>
+          <h3 style={{
+            fontSize: '20px',
+            fontWeight: 700,
+            color: '#333333',
+            marginBottom: '16px',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px'
+          }}>
+            <span style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              width: '32px',
+              height: '32px',
+              backgroundColor: '#3174F3',
+              color: '#FFFFFF',
+              borderRadius: '50%',
+              fontSize: '16px'
+            }}>
+              ✓
+            </span>
             調査前にここをチェック！
           </h3>
-          <ul style={{ paddingLeft: '1.5rem', lineHeight: 1.8, opacity: 0.9 }}>
+          <ul style={{
+            paddingLeft: '20px',
+            margin: 0,
+            color: '#666666',
+            fontSize: '16px',
+            lineHeight: 2
+          }}>
             <li>必要書類を事前に準備（本人確認書類、収入証明書など）</li>
             <li>借入希望額と返済期間を明確にする</li>
             <li>複数の業者を比較して最適な条件を見つける</li>
-            <li>返済シミュレーションで無理のない計画を立てる</li>
           </ul>
         </div>
         
         {/* CTA - 攻略本ダウンロード */}
-        <div className="fade-in-4" style={{
+        <div style={{
           textAlign: 'center',
-          position: 'relative'
+          animation: 'slideUp 0.8s ease-out 0.8s both'
         }}>
           <button
-            className="cta-button"
             onClick={() => setShowDownloadModal(true)}
+            className="btn-accent btn-pulse"
             style={{
-              background: 'linear-gradient(135deg, #FFD700 0%, #FFA000 100%)',
-              color: '#000',
-              padding: '1.5rem 3rem',
-              borderRadius: '9999px',
+              display: 'inline-flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '12px',
+              padding: '20px 48px',
+              backgroundColor: '#F5A623',
+              color: '#FFFFFF',
+              fontSize: '18px',
+              fontWeight: 700,
               border: 'none',
-              fontSize: '1.25rem',
-              fontWeight: 800,
+              borderRadius: '12px',
               cursor: 'pointer',
-              boxShadow: '0 10px 30px rgba(255, 215, 0, 0.3)',
-              transform: 'scale(1)',
               transition: 'all 0.3s ease',
-              animation: 'bounce 2s infinite'
+              boxShadow: '0 4px 16px rgba(245, 166, 35, 0.3)',
+              position: 'relative',
+              width: '100%',
+              maxWidth: '400px'
             }}
             onMouseEnter={(e) => {
-              e.currentTarget.style.transform = 'scale(1.05)';
-              e.currentTarget.style.boxShadow = '0 15px 40px rgba(255, 215, 0, 0.5)';
+              e.currentTarget.style.backgroundColor = '#E89100';
+              e.currentTarget.style.transform = 'translateY(-2px)';
+              e.currentTarget.style.boxShadow = '0 6px 20px rgba(245, 166, 35, 0.4)';
             }}
             onMouseLeave={(e) => {
-              e.currentTarget.style.transform = 'scale(1)';
-              e.currentTarget.style.boxShadow = '0 10px 30px rgba(255, 215, 0, 0.3)';
+              e.currentTarget.style.backgroundColor = '#F5A623';
+              e.currentTarget.style.transform = 'translateY(0)';
+              e.currentTarget.style.boxShadow = '0 4px 16px rgba(245, 166, 35, 0.3)';
             }}
           >
-            ＜攻略本ダウンロード＞
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+              <path d="M12 2L2 7V12C2 16.5 4.5 20.5 12 22C19.5 20.5 22 16.5 22 12V7L12 2Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              <path d="M12 11V15M12 8V8.01" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+            攻略本ダウンロード
           </button>
           
           <div style={{
-            marginTop: '1.5rem',
-            fontSize: '1.125rem',
-            opacity: 0.9
-          }}>
-            <strong>30秒診断後の"次の一手"を完全網羅！</strong><br />
-            個人向け資金調達マニュアルPDF（無料）
-          </div>
-          
-          <div style={{
-            marginTop: '1rem',
-            fontSize: '0.875rem',
-            opacity: 0.7,
+            marginTop: '24px',
+            fontSize: '16px',
+            color: '#666666',
             lineHeight: 1.6
           }}>
-            ✓ 各サブスコア改善の具体ステップ<br />
-            ✓ キャッシング／個人向けファクタリング主要業者比較表<br />
-            ✓ 調査時に見るべき「審査ポイント」チェックリスト
+            <strong style={{ color: '#333333' }}>完全無料</strong>のPDFマニュアル<br />
+            5分で読める資金調達の成功法則
           </div>
         </div>
       </div>
@@ -345,14 +475,9 @@ const CombatPowerResults: React.FC<CombatPowerResultsProps> = ({ diagnosisAnswer
       />
       
       <style>{`
-        @keyframes pulse {
-          0%, 100% { opacity: 0.1; transform: scale(1); }
-          50% { opacity: 0.2; transform: scale(1.1); }
-        }
-        
-        @keyframes bounce {
-          0%, 100% { transform: translateY(0); }
-          50% { transform: translateY(-10px); }
+        @keyframes fadeIn {
+          from { opacity: 0; }
+          to { opacity: 1; }
         }
         
         @keyframes slideUp {
@@ -366,80 +491,13 @@ const CombatPowerResults: React.FC<CombatPowerResultsProps> = ({ diagnosisAnswer
           }
         }
         
-        @keyframes scaleIn {
-          from {
-            transform: scale(0.8);
-            opacity: 0;
-          }
-          to {
-            transform: scale(1);
-            opacity: 1;
-          }
+        .btn-pulse {
+          animation: pulse 2s ease-in-out infinite;
         }
         
-        /* モバイル対応スタイル */
-        @media (max-width: 768px) {
-          h1 {
-            font-size: 2rem !important;
-          }
-          
-          .score-display {
-            font-size: 4rem !important;
-          }
-          
-          .rank-badge {
-            font-size: 1.5rem !important;
-            padding: 0.5rem 1.5rem !important;
-          }
-          
-          .sub-scores {
-            gap: 1rem !important;
-          }
-          
-          .sub-score-item {
-            font-size: 0.75rem !important;
-          }
-          
-          .sub-score-value {
-            font-size: 1.25rem !important;
-          }
-          
-          .cta-button {
-            font-size: 1rem !important;
-            padding: 1.25rem 2rem !important;
-          }
-        }
-        
-        /* タッチデバイス最適化 */
-        @media (hover: none) {
-          .cta-button:hover {
-            transform: none !important;
-          }
-          
-          .cta-button:active {
-            transform: scale(0.98) !important;
-          }
-        }
-        
-        /* アニメーション順序 */
-        .fade-in-1 {
-          animation: slideUp 0.5s ease-out 0.1s both;
-        }
-        
-        .fade-in-2 {
-          animation: slideUp 0.5s ease-out 0.3s both;
-        }
-        
-        .fade-in-3 {
-          animation: slideUp 0.5s ease-out 0.5s both;
-        }
-        
-        .fade-in-4 {
-          animation: slideUp 0.5s ease-out 0.7s both;
-        }
-        
-        .scale-in {
-          animation: scaleIn 0.6s ease-out 0.2s both;
+        @keyframes pulse {
+          0%, 100% { transform: scale(1); }
+          50% { transform: scale(1.02); }
         }
       `}</style>
     </div>
