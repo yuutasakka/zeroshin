@@ -691,7 +691,7 @@ const AdminLoginPage: React.FC<AdminLoginPageProps> = ({ onLogin, onNavigateHome
             {mode === 'login' && (
               <>
                 <p className="text-gray-600 text-sm">
-                  AI ConnectX管理画面にアクセスするため、認証情報を入力してください。
+                  タスカル管理画面にアクセスするため、認証情報を入力してください。
                 </p>
               </>
             )}

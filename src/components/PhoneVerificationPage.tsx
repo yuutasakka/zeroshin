@@ -804,7 +804,7 @@ const PhoneVerificationPage: React.FC<PhoneVerificationPageProps> = ({
             </div>
           </div>
           <p className="text-xs text-gray-400 mt-2">
-            AI ConnectX - あなたの資産運用を安全にサポート
+            タスカル - あなたの資金調達を安全にサポート
           </p>
         </div>
       </div>

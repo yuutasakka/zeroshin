@@ -340,7 +340,7 @@ app.post('/api/sms/send', smsLimiter, phoneValidation, async (req: Request, res:
     });
 
     // SMSメッセージの内容
-    const message = `AI ConnectX認証コード: ${verificationCode}\n5分以内にご入力ください。このコードを他人に教えないでください。`;
+    const message = `タスカル認証コード: ${verificationCode}\n5分以内にご入力ください。このコードを他人に教えないでください。`;
 
     // Twilioが初期化されていない場合は初期化
     if (!client) {

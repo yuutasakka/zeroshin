@@ -293,9 +293,9 @@ const DiagnosisResultsPage: React.FC<DiagnosisResultsPageProps> = ({ diagnosisDa
               const expert = expertData[0];
               const mockPlanner: FinancialPlanner = {
                 id: 1,
-                name: expert.expert_name || 'AI ConnectX専門アドバイザー',
+                name: expert.expert_name || 'タスカル専門アドバイザー',
                 image_url: 'https://via.placeholder.com/150x150?text=Expert',
-                title: 'AI ConnectX認定ファイナンシャルプランナー',
+                title: 'タスカル認定ファイナンシャルプランナー',
                 description: expert.description || '',
                 rating: 4.8,
                 languages: ['日本語'],
@@ -347,9 +347,9 @@ const DiagnosisResultsPage: React.FC<DiagnosisResultsPageProps> = ({ diagnosisDa
             const expert = expertData[0];
             const mockPlanner: FinancialPlanner = {
               id: 1,
-              name: expert.expert_name || 'AI ConnectX専門アドバイザー',
+              name: expert.expert_name || 'タスカル専門アドバイザー',
               image_url: 'https://via.placeholder.com/150x150?text=Expert',
-              title: 'AI ConnectX認定ファイナンシャルプランナー',
+              title: 'タスカル認定ファイナンシャルプランナー',
               description: expert.description || '',
               rating: 4.8,
               languages: ['日本語'],
@@ -397,7 +397,7 @@ const DiagnosisResultsPage: React.FC<DiagnosisResultsPageProps> = ({ diagnosisDa
               id: product.id,
               name: product.name || product.product_name,
               description: product.description,
-              company: product.company || 'AI ConnectX',
+              company: product.company || 'タスカル',
               type: product.type || product.product_type || 'investment',
               riskLevel: product.risk_level || 'medium',
               expectedReturn: product.expected_return || '3-5%',

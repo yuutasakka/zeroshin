@@ -18,7 +18,7 @@ export const SEOHead: React.FC<SEOHeadProps> = ({
   description = 'あなたに最適な金融商品を診断します。簡単な質問に答えるだけで、プロのファイナンシャルアドバイザーが厳選した金融商品をご提案。',
   keywords = '金融商品,資産運用,投資診断,お金診断,ファイナンシャルプランニング,資産形成,投資信託,NISA',
   image = '/pwa-512x512.png',
-  url = typeof window !== 'undefined' ? window.location.href : 'https://aiconectx.com',
+  url = typeof window !== 'undefined' ? window.location.href : 'https://taskal.jp',
   type = 'website',
   author = 'タスカル Team',
   publishedTime,
@@ -32,8 +32,8 @@ export const SEOHead: React.FC<SEOHeadProps> = ({
     '@context': 'https://schema.org',
     '@type': 'Organization',
     name: siteName,
-    url: 'https://aiconectx.com',
-    logo: 'https://aiconectx.com/pwa-512x512.png',
+    url: 'https://taskal.jp',
+    logo: 'https://taskal.jp/pwa-512x512.png',
     sameAs: [
       'https://twitter.com/aiconectx',
       'https://www.facebook.com/aiconectx',
@@ -47,7 +47,7 @@ export const SEOHead: React.FC<SEOHeadProps> = ({
     '@type': 'WebApplication',
     name: siteName,
     description: description,
-    url: 'https://aiconectx.com',
+    url: 'https://taskal.jp',
     applicationCategory: 'FinanceApplication',
     operatingSystem: 'Any',
     offers: {
@@ -103,13 +103,13 @@ export const SEOHead: React.FC<SEOHeadProps> = ({
         '@type': 'ListItem',
         position: 1,
         name: 'ホーム',
-        item: 'https://aiconectx.com'
+        item: 'https://taskal.jp'
       },
       {
         '@type': 'ListItem',
         position: 2,
         name: '診断',
-        item: 'https://aiconectx.com/diagnosis'
+        item: 'https://taskal.jp/diagnosis'
       }
     ]
   };
