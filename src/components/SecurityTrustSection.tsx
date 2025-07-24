@@ -108,21 +108,22 @@ const SecurityTrustSection: React.FC = () => {
             width: 4rem;
             height: 4rem;
             border-radius: 50%;
-            background: #F39C12;
+            background: rgba(255, 255, 255, 0.1);
             display: flex;
             align-items: center;
             justify-content: center;
             margin: 0 auto 1rem auto;
             font-size: 1.5rem;
-            color: white;
+            color: #2C3E50;
             transition: all 0.3s ease;
+            border: 2px solid #2C3E50;
           }
           
           .security-badge-icon-container:hover {
             transform: scale(1.1);
-            background: #D68910;
-            box-shadow: 0 0 30px rgba(243, 156, 18, 0.3);
-            transform: scale(1.1);
+            background: rgba(255, 255, 255, 0.2);
+            box-shadow: 0 0 30px rgba(44, 62, 80, 0.1);
+            border-color: #34495E;
           }
           
           @media (max-width: 768px) {
@@ -160,7 +161,7 @@ const SecurityTrustSection: React.FC = () => {
                 <div className="security-badge-icon-container" aria-hidden="true">
                   <i className={item.iconClass}></i>
                 </div>
-                <div className="security-badge mb-3" style={{ color: '#2C3E50', fontWeight: 'bold' }}>{item.title}</div>
+                <div className="security-badge mb-3" style={{ color: '#F39C12', fontWeight: 'bold' }}>{item.title}</div>
                 <p className="text-sm" style={{ color: '#34495E' }}>{item.description}</p>
               </div>
             ))}

@@ -56,7 +56,7 @@ const Header: React.FC = () => {
           <h1 style={{
             fontSize: '24px',
             fontWeight: 700,
-            color: '#3174F3',
+            color: '#F39C12',
             margin: 0,
             letterSpacing: '-0.02em'
           }}>
