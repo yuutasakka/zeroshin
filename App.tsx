@@ -610,7 +610,6 @@ const App: React.FC = () => {
               padding: 80px 20px;
               display: flex;
               justify-content: center;
-              background: linear-gradient(to bottom, #ECF0F1 0%, #BDC3C7 50%, #95A5A6 100%);
               position: relative;
             }
             
