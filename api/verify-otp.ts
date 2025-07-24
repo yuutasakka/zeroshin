@@ -11,6 +11,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const allowedOrigins = [
       'https://moneyticket.vercel.app',
       'https://moneyticket-git-main-sakkayuta.vercel.app',
+      'https://moneyticket-git-main-seai0520s-projects.vercel.app',
       'https://moneyticket01-10gswrw2q-seai0520s-projects.vercel.app', // 以前のデプロイ先
       'https://moneyticket01-rogabfsul-seai0520s-projects.vercel.app', // 以前のデプロイ先
       'https://moneyticket01-18dyp3oo0-seai0520s-projects.vercel.app', // 以前のデプロイ先
@@ -22,6 +23,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       'https://moneyticket01-5wrbneqpz-seai0520s-projects.vercel.app', // 以前のデプロイ先
       'https://moneyticket01-3k0j3cwan-seai0520s-projects.vercel.app', // 以前のデプロイ先
       'https://moneyticket01.vercel.app', // メインドメイン
+      'http://localhost:5173', // ローカル開発
+      'http://localhost:3000', // ローカル開発（代替ポート）
     ];
     const origin = req.headers.origin;
     if (origin && allowedOrigins.includes(origin)) {
