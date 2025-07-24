@@ -93,23 +93,22 @@ const SecurityTrustSection: React.FC = () => {
     loadSecurityTrustData();
   }, []);
   return (
-    <section className="py-16 md:py-20 px-4" style={{ background: '#ffffff' }}>
+    <section className="py-16 md:py-20 px-4" style={{ background: '#FFFFFF' }}>
       <div className="container mx-auto px-4 max-w-7xl">
         <style>{`
           .luxury-card {
-            background: #f8fafc;
-            border: 1px solid #e4e4e7;
-            border: 1px solid rgba(0, 0, 0, 0.1);
+            background: #FFFFFF;
+            border: 1px solid #ECF0F1;
             border-radius: 1.5rem;
             padding: 2rem;
-            box-shadow: 0 8px 16px -4px rgba(0, 0, 0, 0.15);
+            box-shadow: 0 4px 12px rgba(44, 62, 80, 0.08);
           }
           
           .security-badge-icon-container {
             width: 4rem;
             height: 4rem;
             border-radius: 50%;
-            background: #ff6b35;
+            background: #F39C12;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -121,8 +120,8 @@ const SecurityTrustSection: React.FC = () => {
           
           .security-badge-icon-container:hover {
             transform: scale(1.1);
-            background: #f35627;
-            box-shadow: 0 0 30px rgba(255, 107, 53, 0.5);
+            background: #D68910;
+            box-shadow: 0 0 30px rgba(243, 156, 18, 0.3);
             transform: scale(1.1);
           }
           
@@ -151,7 +150,7 @@ const SecurityTrustSection: React.FC = () => {
           }
         `}</style>
         <div className="luxury-card">
-          <h3 className="text-2xl md:text-3xl lg:text-4xl text-center mb-12 font-bold leading-tight" style={{ color: '#243b53' }}>
+          <h3 className="text-2xl md:text-3xl lg:text-4xl text-center mb-12 font-bold leading-tight" style={{ color: '#2C3E50' }}>
             安心・安全への取り組み
           </h3>
           
@@ -161,8 +160,8 @@ const SecurityTrustSection: React.FC = () => {
                 <div className="security-badge-icon-container" aria-hidden="true">
                   <i className={item.iconClass}></i>
                 </div>
-                <div className="security-badge mb-3" style={{ color: '#243b53', fontWeight: 'bold' }}>{item.title}</div>
-                <p className="text-sm" style={{ color: '#627d98' }}>{item.description}</p>
+                <div className="security-badge mb-3" style={{ color: '#2C3E50', fontWeight: 'bold' }}>{item.title}</div>
+                <p className="text-sm" style={{ color: '#34495E' }}>{item.description}</p>
               </div>
             ))}
           </div>

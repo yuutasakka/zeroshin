@@ -14,7 +14,7 @@ const Hero: React.FC<HeroProps> = ({ onStartDiagnosis }) => {
   return (
     <section style={{
       minHeight: '100vh',
-      background: 'linear-gradient(135deg, #F7F9FC 0%, #FFFFFF 100%)',
+      background: 'linear-gradient(135deg, #FFFFFF 0%, #F8FAFC 100%)',
       position: 'relative',
       overflow: 'hidden',
       display: 'flex',
@@ -25,8 +25,8 @@ const Hero: React.FC<HeroProps> = ({ onStartDiagnosis }) => {
       <div style={{
         position: 'absolute',
         inset: 0,
-        backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%233174F3' fill-opacity='0.03'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
-        opacity: 0.5
+        backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%232C3E50' fill-opacity='0.02'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
+        opacity: 0.3
       }} />
 
       {/* 装飾的な円 */}
@@ -37,7 +37,7 @@ const Hero: React.FC<HeroProps> = ({ onStartDiagnosis }) => {
         width: '400px',
         height: '400px',
         borderRadius: '50%',
-        background: 'radial-gradient(circle, rgba(49, 116, 243, 0.1) 0%, transparent 70%)',
+        background: 'radial-gradient(circle, rgba(44, 62, 80, 0.05) 0%, transparent 70%)',
         animation: 'float 6s ease-in-out infinite'
       }} />
       <div style={{
@@ -47,7 +47,7 @@ const Hero: React.FC<HeroProps> = ({ onStartDiagnosis }) => {
         width: '500px',
         height: '500px',
         borderRadius: '50%',
-        background: 'radial-gradient(circle, rgba(245, 166, 35, 0.1) 0%, transparent 70%)',
+        background: 'radial-gradient(circle, rgba(243, 156, 18, 0.05) 0%, transparent 70%)',
         animation: 'float 8s ease-in-out infinite reverse'
       }} />
 
@@ -73,7 +73,7 @@ const Hero: React.FC<HeroProps> = ({ onStartDiagnosis }) => {
             alignItems: 'center',
             gap: '8px',
             padding: '8px 16px',
-            backgroundColor: 'rgba(49, 116, 243, 0.1)',
+            backgroundColor: 'rgba(44, 62, 80, 0.08)',
             borderRadius: '999px',
             marginBottom: '24px'
           }}>
@@ -81,14 +81,14 @@ const Hero: React.FC<HeroProps> = ({ onStartDiagnosis }) => {
               display: 'inline-block',
               width: '8px',
               height: '8px',
-              backgroundColor: '#3174F3',
+              backgroundColor: '#2C3E50',
               borderRadius: '50%',
               animation: 'pulse 2s ease-in-out infinite'
             }} />
             <span style={{
               fontSize: '14px',
               fontWeight: 700,
-              color: '#3174F3'
+              color: '#2C3E50'
             }}>
               30秒で診断完了
             </span>
@@ -98,14 +98,14 @@ const Hero: React.FC<HeroProps> = ({ onStartDiagnosis }) => {
           <h1 style={{
             fontSize: 'clamp(2rem, 5vw, 3.5rem)',
             fontWeight: 700,
-            color: '#333333',
+            color: '#2C3E50',
             lineHeight: 1.2,
             marginBottom: '24px',
             letterSpacing: '-0.02em'
           }}>
             あなたの
             <span style={{
-              color: '#3174F3',
+              color: '#F39C12',
               display: 'inline-block',
               animation: 'highlight 2s ease-in-out infinite'
             }}>
@@ -118,7 +118,7 @@ const Hero: React.FC<HeroProps> = ({ onStartDiagnosis }) => {
           {/* サブテキスト */}
           <p style={{
             fontSize: 'clamp(1rem, 2vw, 1.25rem)',
-            color: '#666666',
+            color: '#34495E',
             lineHeight: 1.6,
             marginBottom: '32px',
             maxWidth: '600px',
@@ -131,7 +131,7 @@ const Hero: React.FC<HeroProps> = ({ onStartDiagnosis }) => {
           {/* 追加説明 */}
           <p style={{
             fontSize: 'clamp(0.875rem, 1.5vw, 1rem)',
-            color: '#999999',
+            color: '#7F8C8D',
             lineHeight: 1.6,
             marginBottom: '48px'
           }}>
@@ -150,25 +150,25 @@ const Hero: React.FC<HeroProps> = ({ onStartDiagnosis }) => {
               padding: '20px 48px',
               fontSize: '18px',
               fontWeight: 700,
-              backgroundColor: '#F5A623',
+              backgroundColor: '#F39C12',
               color: '#FFFFFF',
               border: 'none',
               borderRadius: '12px',
               cursor: 'pointer',
               transition: 'all 0.3s ease',
-              boxShadow: '0 4px 16px rgba(245, 166, 35, 0.3)',
+              boxShadow: '0 4px 16px rgba(243, 156, 18, 0.25)'
               position: 'relative',
               overflow: 'hidden'
             }}
             onMouseEnter={(e) => {
-              e.currentTarget.style.backgroundColor = '#E89100';
+              e.currentTarget.style.backgroundColor = '#D68910';
               e.currentTarget.style.transform = 'translateY(-2px)';
-              e.currentTarget.style.boxShadow = '0 6px 20px rgba(245, 166, 35, 0.4)';
+              e.currentTarget.style.boxShadow = '0 6px 20px rgba(243, 156, 18, 0.35)';
             }}
             onMouseLeave={(e) => {
-              e.currentTarget.style.backgroundColor = '#F5A623';
+              e.currentTarget.style.backgroundColor = '#F39C12';
               e.currentTarget.style.transform = 'translateY(0)';
-              e.currentTarget.style.boxShadow = '0 4px 16px rgba(245, 166, 35, 0.3)';
+              e.currentTarget.style.boxShadow = '0 4px 16px rgba(243, 156, 18, 0.25)';
             }}
           >
             無料診断を開始する
@@ -189,11 +189,11 @@ const Hero: React.FC<HeroProps> = ({ onStartDiagnosis }) => {
               display: 'flex',
               alignItems: 'center',
               gap: '8px',
-              color: '#666666',
+              color: '#34495E',
               fontSize: '14px'
             }}>
               <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-                <path d="M10 2L12.5 7.5L18 8L14 12L15 18L10 15.5L5 18L6 12L2 8L7.5 7.5L10 2Z" fill="#F5A623" stroke="#F5A623" strokeWidth="1.5" strokeLinejoin="round"/>
+                <path d="M10 2L12.5 7.5L18 8L14 12L15 18L10 15.5L5 18L6 12L2 8L7.5 7.5L10 2Z" fill="#F39C12" stroke="#F39C12" strokeWidth="1.5" strokeLinejoin="round"/>
               </svg>
               <span>5万人以上が診断</span>
             </div>
@@ -201,12 +201,12 @@ const Hero: React.FC<HeroProps> = ({ onStartDiagnosis }) => {
               display: 'flex',
               alignItems: 'center',
               gap: '8px',
-              color: '#666666',
+              color: '#34495E',
               fontSize: '14px'
             }}>
               <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-                <path d="M10 1C14.9706 1 19 5.02944 19 10C19 14.9706 14.9706 19 10 19C5.02944 19 1 14.9706 1 10C1 5.02944 5.02944 1 10 1Z" stroke="#3174F3" strokeWidth="1.5"/>
-                <path d="M7 10L9 12L13 8" stroke="#3174F3" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                <path d="M10 1C14.9706 1 19 5.02944 19 10C19 14.9706 14.9706 19 10 19C5.02944 19 1 14.9706 1 10C1 5.02944 5.02944 1 10 1Z" stroke="#2C3E50" strokeWidth="1.5"/>
+                <path d="M7 10L9 12L13 8" stroke="#2C3E50" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
               </svg>
               <span>完全無料・匿名OK</span>
             </div>
@@ -214,12 +214,12 @@ const Hero: React.FC<HeroProps> = ({ onStartDiagnosis }) => {
               display: 'flex',
               alignItems: 'center',
               gap: '8px',
-              color: '#666666',
+              color: '#34495E',
               fontSize: '14px'
             }}>
               <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-                <path d="M10 2V10L14 14" stroke="#10B981" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                <circle cx="10" cy="10" r="9" stroke="#10B981" strokeWidth="1.5"/>
+                <path d="M10 2V10L14 14" stroke="#27AE60" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                <circle cx="10" cy="10" r="9" stroke="#27AE60" strokeWidth="1.5"/>
               </svg>
               <span>30秒で結果表示</span>
             </div>
@@ -235,9 +235,9 @@ const Hero: React.FC<HeroProps> = ({ onStartDiagnosis }) => {
           pointerEvents: 'none'
         }}>
           <svg width="300" height="300" viewBox="0 0 300 300" fill="none">
-            <circle cx="150" cy="150" r="100" stroke="#3174F3" strokeWidth="2" strokeDasharray="5 5" opacity="0.5"/>
-            <circle cx="150" cy="150" r="70" stroke="#F5A623" strokeWidth="2" strokeDasharray="5 5" opacity="0.5"/>
-            <circle cx="150" cy="150" r="40" stroke="#10B981" strokeWidth="2" strokeDasharray="5 5" opacity="0.5"/>
+            <circle cx="150" cy="150" r="100" stroke="#2C3E50" strokeWidth="2" strokeDasharray="5 5" opacity="0.3"/>
+            <circle cx="150" cy="150" r="70" stroke="#F39C12" strokeWidth="2" strokeDasharray="5 5" opacity="0.3"/>
+            <circle cx="150" cy="150" r="40" stroke="#27AE60" strokeWidth="2" strokeDasharray="5 5" opacity="0.3"/>
           </svg>
         </div>
       </div>

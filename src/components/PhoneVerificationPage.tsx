@@ -26,6 +26,7 @@ const PhoneVerificationPage: React.FC<PhoneVerificationPageProps> = ({
   const [countdown, setCountdown] = useState(0);
   const [showUsageNotice, setShowUsageNotice] = useState(false);
   const [isInitialSMSSent, setIsInitialSMSSent] = useState(false); // SMS送信済みフラグを追加
+  const [agreedToTerms, setAgreedToTerms] = useState(false); // プライバシーポリシー・利用規約同意フラグ
   
   // 試行回数制限の状態
   const [failedAttempts, setFailedAttempts] = useState(0);
@@ -570,9 +571,26 @@ const PhoneVerificationPage: React.FC<PhoneVerificationPageProps> = ({
                 </div>
               )}
 
+              {/* プライバシーポリシー・利用規約同意チェックボックス */}
+              <div className="flex items-start space-x-3">
+                <input
+                  type="checkbox"
+                  id="terms-agreement"
+                  checked={agreedToTerms}
+                  onChange={(e) => setAgreedToTerms(e.target.checked)}
+                  className="mt-1 w-4 h-4 text-emerald-600 bg-gray-100 border-gray-300 rounded focus:ring-emerald-500 focus:ring-2"
+                />
+                <label htmlFor="terms-agreement" className="text-sm text-gray-700 leading-relaxed">
+                  <a href="/privacy-policy" target="_blank" className="text-emerald-600 hover:text-emerald-800 underline">プライバシーポリシー</a>
+                  および
+                  <a href="/terms-of-service" target="_blank" className="text-emerald-600 hover:text-emerald-800 underline">利用規約</a>
+                  に同意します
+                </label>
+              </div>
+
               <button
                 type="submit"
-                disabled={loading || !phoneNumber}
+                disabled={loading || !phoneNumber || !agreedToTerms}
                 className="w-full bg-gradient-to-r from-emerald-500 to-blue-500 hover:from-emerald-600 hover:to-blue-600 text-white font-semibold py-4 px-6 rounded-xl transition-all duration-200 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none shadow-lg"
               >
                 {loading ? (
@@ -583,11 +601,21 @@ const PhoneVerificationPage: React.FC<PhoneVerificationPageProps> = ({
                 ) : (
                   <>
                     <span className="text-lg">認証コードを受け取る</span>
-                    <div className="text-sm opacity-90 mt-1">診断結果まであと1ステップ！</div>
+                    <div className="text-sm opacity-90 mt-1">
+                      {!agreedToTerms ? '利用規約への同意が必要です' : '診断結果まであと1ステップ！'}
+                    </div>
                   </>
                 )}
               </button>
             </form>
+
+            {/* プライバシーポリシー・利用規約同意の注意事項 */}
+            <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-xl">
+              <p className="text-blue-700 text-xs leading-relaxed">
+                <i className="fas fa-info-circle mr-1"></i>
+                お客様の個人情報は適切に保護され、診断結果の提供以外の目的では使用いたしません。詳細は上記リンクよりご確認ください。
+              </p>
+            </div>
 
             <div className="mt-6 text-center">
               <button
@@ -702,6 +730,14 @@ const PhoneVerificationPage: React.FC<PhoneVerificationPageProps> = ({
               </button>
             </form>
 
+            {/* プライバシーポリシー・利用規約の確認表示 */}
+            <div className="mt-6 p-3 bg-green-50 border border-green-200 rounded-lg">
+              <p className="text-green-700 text-xs text-center">
+                <i className="fas fa-check-circle mr-1"></i>
+                プライバシーポリシー・利用規約に同意済み
+              </p>
+            </div>
+
             <div className="mt-6 text-center space-y-3">
               {countdown > 0 ? (
                 <p className="text-gray-500 text-sm">
@@ -726,6 +762,7 @@ const PhoneVerificationPage: React.FC<PhoneVerificationPageProps> = ({
                   setLockoutTime(null);
                   setLockoutEndTime(null);
                   setIsInitialSMSSent(false); // フラグをリセット
+                  setAgreedToTerms(false); // 同意フラグもリセット
                 }}
                 disabled={!!(lockoutTime && lockoutTime > 0)}
                 className="w-full text-gray-600 hover:text-gray-800 py-2 transition-colors duration-200 text-sm disabled:opacity-50 disabled:cursor-not-allowed"

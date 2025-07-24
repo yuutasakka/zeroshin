@@ -60,14 +60,14 @@ const FAQSection: React.FC = () => {
           <h2 style={{
             fontSize: 'clamp(2rem, 4vw, 2.5rem)',
             fontWeight: 700,
-            color: '#333333',
+            color: '#2C3E50',
             marginBottom: '16px'
           }}>
             よくある質問
           </h2>
           <p style={{
             fontSize: '18px',
-            color: '#666666'
+            color: '#34495E'
           }}>
             お客様からよくいただく質問にお答えします
           </p>
@@ -84,11 +84,11 @@ const FAQSection: React.FC = () => {
               key={index}
               style={{
                 backgroundColor: '#FFFFFF',
-                border: '1px solid #E5E7EB',
+                border: '1px solid #ECF0F1',
                 borderRadius: '12px',
                 overflow: 'hidden',
                 transition: 'all 0.3s ease',
-                boxShadow: openIndex === index ? '0 4px 12px rgba(0, 0, 0, 0.08)' : 'none'
+                boxShadow: openIndex === index ? '0 4px 12px rgba(44, 62, 80, 0.08)' : 'none'
               }}
             >
               <button

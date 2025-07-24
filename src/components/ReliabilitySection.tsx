@@ -184,7 +184,7 @@ const ReliabilitySection: React.FC = () => {
   };
 
   return (
-    <section id="reliability-section" className="py-16 md:py-20 px-4" style={{ background: '#f8fafc' }}>
+    <section id="reliability-section" className="py-16 md:py-20 px-4" style={{ background: '#FFFFFF' }}>
       <div className="container mx-auto px-4 max-w-7xl">
         <style>{`
           /* 確実なレイアウト保証 */
@@ -215,12 +215,12 @@ const ReliabilitySection: React.FC = () => {
           }
           
           .stats-card {
-            background: white !important;
-            border: 1px solid #e4e4e7 !important;
+            background: #FFFFFF !important;
+            border: 1px solid #ECF0F1 !important;
             border-radius: 1.5rem !important;
             padding: 2rem !important;
             text-align: center !important;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08) !important;
+            box-shadow: 0 4px 20px rgba(44, 62, 80, 0.06) !important;
             transition: all 0.3s ease !important;
             width: 100% !important;
             display: block !important;
@@ -228,29 +228,29 @@ const ReliabilitySection: React.FC = () => {
           
           .stats-card:hover {
             transform: translateY(-4px);
-            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12) !important;
-            border-color: #ff6b35 !important;
+            box-shadow: 0 8px 30px rgba(44, 62, 80, 0.1) !important;
+            border-color: #F39C12 !important;
           }
           
           .stats-number {
             font-size: 2.5rem;
             font-weight: 800;
-            color: #ff6b35;
+            color: #F39C12;
             margin-bottom: 0.5rem;
           }
           
           .testimonial-card {
-            background: white;
-            border: 1px solid #e4e4e7;
+            background: #FFFFFF;
+            border: 1px solid #ECF0F1;
             border-radius: 1rem;
             padding: 1.5rem;
-            box-shadow: 0 2px 15px rgba(0, 0, 0, 0.06);
+            box-shadow: 0 2px 15px rgba(44, 62, 80, 0.06);
             transition: all 0.3s ease;
           }
           
           .testimonial-card:hover {
             transform: translateY(-2px);
-            box-shadow: 0 8px 16px -4px rgba(0, 0, 0, 0.15);
+            box-shadow: 0 8px 16px -4px rgba(44, 62, 80, 0.12);
           }
           
           @media (max-width: 768px) {
@@ -289,10 +289,10 @@ const ReliabilitySection: React.FC = () => {
           }
         `}</style>
         <div className="text-center mb-16">
-          <h3 className="text-3xl md:text-4xl lg:text-5xl mb-6 font-bold leading-tight" style={{ color: '#243b53' }}>
+          <h3 className="text-3xl md:text-4xl lg:text-5xl mb-6 font-bold leading-tight" style={{ color: '#2C3E50' }}>
             {reasonsData.title}
           </h3>
-          <p className="text-lg md:text-xl max-w-2xl mx-auto leading-relaxed" style={{ color: '#627d98' }}>
+          <p className="text-lg md:text-xl max-w-2xl mx-auto leading-relaxed" style={{ color: '#34495E' }}>
             {reasonsData.subtitle}
           </p>
         </div>
@@ -306,14 +306,14 @@ const ReliabilitySection: React.FC = () => {
           {reasonsData.reasons.map((reason, index) => (
             <div key={reason.title} className={`stats-card ${templateConfig?.styles.sections.layout === 'timeline' ? 'timeline-item' : ''}`} style={{ animationDelay: reason.animationDelay }}>
               <div className="stats-number">{reason.value}</div>
-              <h4 className="text-xl font-semibold mb-2" style={{ color: '#243b53' }}>{reason.title}</h4>
-              <p style={{ color: '#627d98' }}>{reason.description}</p>
+              <h4 className="text-xl font-semibold mb-2" style={{ color: '#2C3E50' }}>{reason.title}</h4>
+              <p style={{ color: '#34495E' }}>{reason.description}</p>
             </div>
           ))}
         </div>
         
         <div className="mb-16">
-          <h4 className="text-2xl md:text-3xl font-bold text-center mb-12" style={{ color: '#243b53' }}>お客様の声</h4>
+          <h4 className="text-2xl md:text-3xl font-bold text-center mb-12" style={{ color: '#2C3E50' }}>お客様の声</h4>
           {testimonials.length > 0 ? (
             <div className="grid md:grid-cols-2 gap-8" style={{ 
               display: 'grid', 
@@ -325,26 +325,26 @@ const ReliabilitySection: React.FC = () => {
                   <div className="flex items-center mb-4">
                     <div 
                       className="w-12 h-12 rounded-full flex items-center justify-center mr-4 text-xl"
-                      style={{ background: '#ff6b35', color: 'white'}}
+                      style={{ background: '#F39C12', color: 'white'}}
                       aria-hidden="true"
                     >
                       {testimonial.avatarEmoji}
                     </div>
                     <div>
-                      <p className="font-semibold" style={{color: '#243b53'}}>
+                      <p className="font-semibold" style={{color: '#2C3E50'}}>
                         {testimonial.nameAndRole}
                       </p>
-                      <div style={{color: '#ff6b35'}}>
+                      <div style={{color: '#F39C12'}}>
                         {'★'.repeat(testimonial.ratingStars || 5)}{'☆'.repeat(5 - (testimonial.ratingStars || 5))}
                       </div>
                     </div>
                   </div>
-                  <p style={{ color: '#627d98' }}>{testimonial.text}</p>
+                  <p style={{ color: '#34495E' }}>{testimonial.text}</p>
                 </div>
               ))}
             </div>
           ) : (
-            <p className="text-center p-6 rounded-lg" style={{ color: '#627d98', background: '#f0f4f8' }}>現在、お客様の声は登録されていません。</p>
+            <p className="text-center p-6 rounded-lg" style={{ color: '#34495E', background: '#F8FAFC' }}>現在、お客様の声は登録されていません。</p>
           )}
         </div>
       </div>

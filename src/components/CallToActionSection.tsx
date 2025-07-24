@@ -36,7 +36,7 @@ const CallToActionSection: React.FC = () => {
   };
 
   return (
-    <section id="cta-section" className="py-16 px-4 text-center" style={{ background: 'linear-gradient(180deg, #243b53 0%, #102a43 100%)' }}>
+    <section id="cta-section" className="py-16 px-4 text-center" style={{ background: 'linear-gradient(180deg, #2C3E50 0%, #1A252F 100%)' }}>
       <div className="max-w-4xl mx-auto">
         <h3 
           className="text-2xl md:text-4xl lg:text-5xl mb-6 font-bold leading-tight"
@@ -46,9 +46,9 @@ const CallToActionSection: React.FC = () => {
           }}
         >
           あなたの理想的な未来を<br />
-          <span style={{ color: '#ff6b35' }}>今日から始めませんか？</span>
+          <span style={{ color: '#F39C12' }}>今日から始めませんか？</span>
         </h3>
-        <p className="text-lg md:text-xl mb-8 leading-relaxed" style={{ color: '#d9e2ec' }}>
+        <p className="text-lg md:text-xl mb-8 leading-relaxed" style={{ color: '#ECF0F1' }}>
             経験豊富なプロフェッショナルが、あなたの人生設計に合わせた<br />
             最適な資産運用プランを無料でご提案いたします。
         </p>
@@ -61,14 +61,14 @@ const CallToActionSection: React.FC = () => {
             style={{
               padding: '1rem 3rem',
               fontSize: '1.125rem',
-              background: 'linear-gradient(135deg, #ff6b35 0%, #f35627 100%)',
+              background: 'linear-gradient(135deg, #F39C12 0%, #D68910 100%)',
               minWidth: '280px'
             }}
           >
             {ctaButtonConfig.button_text}
           </button>
           
-          <p className="text-sm" style={{ color: '#9fb3c8' }}>
+          <p className="text-sm" style={{ color: '#BDC3C7' }}>
             お電話でのご相談：{ctaButtonConfig.phone_number || '0120-XXX-XXX'}（平日 9:00-18:00）
           </p>
         </div>
@@ -76,7 +76,7 @@ const CallToActionSection: React.FC = () => {
         <div 
           className="mt-10 p-6 md:p-8 rounded-2xl"
           style={{ 
-            background: 'rgba(36, 59, 83, 0.95)',
+            background: 'rgba(44, 62, 80, 0.95)',
             border: '1px solid rgba(255, 255, 255, 0.4)',
             backdropFilter: 'blur(10px)',
             WebkitBackdropFilter: 'blur(10px)'
@@ -85,7 +85,7 @@ const CallToActionSection: React.FC = () => {
             <h4 className="font-bold mb-3 text-lg md:text-xl" style={{ color: 'white' }}>
                 {consultationOffer.title}
             </h4>
-            <p style={{ color: '#d9e2ec' }}>
+            <p style={{ color: '#ECF0F1' }}>
                 {consultationOffer.description}
             </p>
         </div>
