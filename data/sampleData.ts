@@ -9,45 +9,45 @@ import { allFinancialProducts } from './financialProductsData';
 export const sampleTestimonials: Testimonial[] = [
   {
     id: 'testimonial_001',
-    nameAndRole: "山田さん（30代・IT企業勤務）",
+    nameAndRole: "山田さん（38歳・運送業）",
     avatarEmoji: "👨",
     ratingStars: 5,
-    text: "タスカルを使って初めて資産運用を始めました。診断結果が非常に分かりやすく、自分に最適な投資商品を見つけることができました。特にリスク許容度の診断が的確で、安心して投資を続けています。毎月の積立投資も順調に増えており、将来への不安が大幅に軽減されました。"
+    text: "トラックの買い替えでファクタリングを検討していましたが、診断のおかげで手数料の安い会社を見つけることができました。資金繰りが楽になり、事業の拡大にも取り組めています。診断結果が分かりやすく、初めてでも安心して利用できました。"
   },
   {
     id: 'testimonial_002',
-    nameAndRole: "佐藤さん（20代・公務員）",
+    nameAndRole: "佐藤さん（42歳・飲食店経営）",
     avatarEmoji: "👩",
     ratingStars: 5,
-    text: "お金の知識がほとんどなかった私でも、タスカルの診断を受けることで将来の資産形成への道筋が見えました。アドバイザーの方も親切で、定期的な相談ができるのが心強いです。特にNISAの活用方法を教えてもらったおかげで、税制優遇を最大限活用できています。"
+    text: "コロナで売上が落ち込んだ時、どこに相談すればいいか分からず困っていました。診断で自分に合う融資先が見つかり、店を続けることができています。スタッフの雇用も維持でき、本当に助かりました。"
   },
   {
     id: 'testimonial_003',
-    nameAndRole: "田中さん（40代・商社勤務）",
+    nameAndRole: "田中さん（35歳・建設業）",
     avatarEmoji: "👨",
     ratingStars: 4,
-    text: "複数の金融機関を比較検討するのが大変でしたが、タスカルで一括診断できるのが便利でした。手数料の比較も分かりやすく、コストを抑えて投資を始めることができました。おかげで年間20万円以上の手数料を節約できています。"
+    text: "急な設備投資で資金が必要でしたが、診断結果を見て最適な調達方法がすぐに分かりました。複数の選択肢を比較できるのが便利で、金利の低い銀行融資を利用することができました。おかげで事業を拡大できました。"
   },
   {
     id: 'testimonial_004',
-    nameAndRole: "鈴木さん（30代・フリーランス）",
+    nameAndRole: "鈴木さん（29歳・フリーランス）",
     avatarEmoji: "👩",
     ratingStars: 5,
-    text: "不安定な収入の中でも、タスカルの診断で自分に合った投資方法を見つけられました。少額から始められる商品を紹介してもらい、無理なく資産形成を続けています。収入の変動に合わせて投資額を調整できるのも助かっています。"
+    text: "個人事業主でも借りられるか不安でしたが、診断結果で複数の選択肢が見つかり安心しました。ビジネスローンやクレジットカードなど、自分の状況に合った資金調達方法を教えてもらい、事業拡大に向けて前向きに取り組めています。"
   },
   {
     id: 'testimonial_005',
-    nameAndRole: "高橋さん（30代・製造業）",
+    nameAndRole: "高橋さん（40歳・製造業）",
     avatarEmoji: "👨",
     ratingStars: 4,
-    text: "老後の資産形成に不安を感じていましたが、タスカルの診断で具体的な目標設定ができました。iDeCoやNISAの活用方法も詳しく教えてもらい、税制優遇を最大限活用できています。65歳までに3000万円の目標が現実的に見えてきました。"
+    text: "設備更新の資金調達で悩んでいましたが、タスカルの診断で政府系金融機関の低金利融資を知ることができました。手続きもサポートしてもらい、想定より低い金利で借り入れできました。計画的な設備投資が実現できています。"
   },
   {
     id: 'testimonial_006',
-    nameAndRole: "伊藤さん（20代・看護師）",
+    nameAndRole: "伊藤さん（33歳・美容室経営）",
     avatarEmoji: "👩",
     ratingStars: 5,
-    text: "忙しい仕事の合間でも、オンラインで簡単に診断を受けられるのが魅力的でした。診断結果に基づいて提案された商品で、着実に資産を増やすことができています。夜勤の多い生活でも、24時間いつでも相談できるのが心強いです。"
+    text: "店舗改装の資金が必要で、どこから借りればいいか迷っていました。診断で複数の選択肢を提示してもらい、自分に最適な条件の融資を受けることができました。おかげで理想的な店舗リニューアルが実現できました。"
   }
 ];
 
@@ -112,27 +112,27 @@ export const sampleLegalLinks: LegalLink[] = [
 // タスカルを選ぶ理由のサンプルデータ
 export const sampleReasonsToChoose: ReasonsToChooseData = {
   title: "タスカルが選ばれる理由",
-  subtitle: "あなたに最適な資産運用をサポートする3つの強み",
+  subtitle: "あなたに最適な資金調達をサポートする3つの強み",
   reasons: [
     {
       iconClass: "fas fa-bullseye",
       title: "パーソナライズされた診断",
       value: "100%",
-      description: "AI技術と金融の専門知識を組み合わせ、あなただけのオーダーメイド資産運用プランを提案します",
+      description: "AI技術と金融の専門知識を組み合わせ、あなたの事業に最適な資金調達方法を提案します",
       animationDelay: "0s"
     },
     {
       iconClass: "fas fa-shield-alt",
       title: "業界最高水準のセキュリティ",
       value: "100%",
-      description: "金融機関レベルのセキュリティシステムで、お客様の大切な個人情報と資産を守ります",
+      description: "金融機関レベルのセキュリティシステムで、お客様の大切な事業情報を守ります",
       animationDelay: "0.5s"
     },
     {
       iconClass: "fas fa-phone",
       title: "充実したサポート体制",
       value: "24/7",
-      description: "経験豊富なファイナンシャルプランナーが、投資初心者から上級者まで丁寧にサポートします",
+      description: "経験豊富な資金調達アドバイザーが、個人事業主から法人まで丁寧にサポートします",
       animationDelay: "1s"
     }
   ]
@@ -141,7 +141,7 @@ export const sampleReasonsToChoose: ReasonsToChooseData = {
 // 初回相談特典のサンプルデータ
 export const sampleFirstConsultationOffer: FirstConsultationOffer = {
   title: "初回相談無料キャンペーン",
-  description: "タスカルの専門アドバイザーが、あなたの診断結果を詳しく解説し、最適な投資戦略をご提案します。詳細な診断結果の解説（30分）、個別投資戦略の提案、リスク管理アドバイス、税制優遇制度の活用方法、継続サポートプランのご案内を無料で行います。",
+  description: "タスカルの専門アドバイザーが、あなたの診断結果を詳しく解説し、最適な資金調達戦略をご提案します。詳細な診断結果の解説（30分）、個別資金調達戦略の提案、リスク管理アドバイス、融資制度の活用方法、継続サポートプランのご案内を無料で行います。",
   icon: "fas fa-gift",
   backgroundColor: "rgba(34, 197, 94, 0.1)",
   borderColor: "var(--accent-gold)"
@@ -150,21 +150,21 @@ export const sampleFirstConsultationOffer: FirstConsultationOffer = {
 // ヘッダーデータのサンプル
 export const sampleHeaderData: HeaderData = {
   title: "タスカル",
-  subtitle: "あなたの資産運用パートナー"
+  subtitle: "あなたの資金調達パートナー"
 };
 
 // メインビジュアルデータのサンプル
 export const sampleMainVisualData: MainVisualData = {
-  title: "あなたに最適な資産運用を見つけよう",
+  title: "あなたに最適な資金調達方法を見つけよう",
   highlightWord: "最適",
-  subtitle: "3分の簡単診断で、あなたの年齢、収入、投資経験、リスク許容度に基づいた最適な金融商品をご提案。初心者から上級者まで、誰でも安心して始められる資産運用をサポートします。"
+  subtitle: "3分の簡単診断で、あなたの事業規模、業種、資金需要、返済能力に基づいた最適な資金調達方法をご提案。個人事業主から法人まで、誰でも安心して利用できる資金調達をサポートします。"
 };
 
 // フッターデータのサンプル
 export const sampleFooterData: FooterData = {
   siteName: "タスカル",
-  description: "AI技術と金融の専門知識を組み合わせ、あなたの資産運用を成功に導く信頼できるパートナーです。一人ひとりに最適な投資戦略をご提案し、安心できる資産形成をサポートいたします。",
-  contactInfo: "電話: 0120-123-456 | メール: info@aiconectx.co.jp",
+  description: "AI技術と金融の専門知識を組み合わせ、あなたの事業資金調達を成功に導く信頼できるパートナーです。一人ひとりに最適な資金調達戦略をご提案し、安心できる事業成長をサポートいたします。",
+  contactInfo: "電話: 0120-123-456 | メール: info@taskal.co.jp",
   companyInfo: "〒100-0001 東京都千代田区千代田1-1-1 | 平日 9:00-18:00",
   copyright: "© 2024 タスカル株式会社. All rights reserved."
 };
@@ -175,9 +175,9 @@ export const sampleNotificationSettings = {
     enabled: true,
     smtpServer: "smtp.gmail.com",
     smtpPort: "587",
-    smtpUser: "notifications@aiconectx.co.jp",
+    smtpUser: "notifications@taskal.co.jp",
     smtpPassword: "[SMTP_PASSWORD_PLACEHOLDER]", // 本番環境では環境変数で管理
-    fromEmail: "notifications@aiconectx.co.jp",
+    fromEmail: "notifications@taskal.co.jp",
     fromName: "タスカル通知システム"
   },
   slack: {
