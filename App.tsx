@@ -51,7 +51,6 @@ import { HelmetProvider } from 'react-helmet-async';
 import { AccessibilityProvider } from './src/components/AccessibilityProvider';
 import SkipLinks from './src/components/SkipLinks';
 import AccessibilityAnnouncer from './src/components/AccessibilityAnnouncer';
-import AccessibilitySettings from './src/components/AccessibilitySettings';
 
 // ローディングコンポーネント（アニメーションなし）
 const LoadingSpinner = () => (
@@ -994,7 +993,6 @@ const App: React.FC = () => {
                   {usageNotice}
                   <PWAInstallPrompt />
                   <PWAUpdatePrompt />
-                  {currentPage !== 'results' && <AccessibilitySettings />}
                   {/* <AccessibilityAudit /> */}
                 </div>
               </TemplateStyleProvider>
