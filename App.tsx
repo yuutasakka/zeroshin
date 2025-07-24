@@ -1,10 +1,13 @@
 import React, { useState, useEffect, lazy, Suspense } from 'react';
 import ErrorBoundary from './src/components/ErrorBoundary';
 import Header from './src/components/Header';
+import HeaderNew from './src/components/HeaderNew';
 // 要件定義書に基づく新しいコンポーネント
 import TaskalHero from './src/components/TaskalHero';
 import EnhancedHero from './src/components/EnhancedHero';
+import HeroNew from './src/components/HeroNew';
 import DiagnosisForm from './src/components/DiagnosisForm';
+import DiagnosisFormNew from './src/components/DiagnosisFormNew';
 // DiagnosisAnswersは削除されたコンポーネントの型なので、OptimizedDiagnosisAnswersを使用
 type DiagnosisAnswers = {
   age: string;
@@ -19,8 +22,11 @@ import ReliabilitySection from './src/components/ReliabilitySection';
 import SecurityTrustSection from './src/components/SecurityTrustSection';
 import CallToActionSection from './src/components/CallToActionSection';
 import Footer from './src/components/Footer';
+import FooterNew from './src/components/FooterNew';
 import FixedCTA from './src/components/FixedCTA';
 import CombatPowerResults from './src/components/CombatPowerResults';
+import CombatPowerResultsNew from './src/components/CombatPowerResultsNew';
+import FAQSection from './src/components/FAQSection';
 
 // 動的インポート（Code Splitting）
 const PhoneVerificationPage = lazy(() => import('./src/components/PhoneVerificationPage'));
@@ -591,17 +597,21 @@ const App: React.FC = () => {
       return (
         <ErrorBoundary>
           <div style={{ minHeight: '100vh', background: '#ffffff', padding: 0, margin: 0, width: '100%', maxWidth: '100vw', boxSizing: 'border-box', overflowX: 'hidden' }}>
-          <Header />
+          <HeaderNew />
           
           {/* 1番目: メインヒーロー（あなたの未来の資産を診断！） */}
           <div className="hero-section">
-            <EnhancedHero onStartDiagnosis={handleStartDiagnosis} />
+            <HeroNew onStartDiagnosis={handleStartDiagnosis} />
           </div>
           
           {/* 2番目: 診断フォーム */}
-          <div className="diagnosis-section" id="diagnosis-form-section">
+          <div className="diagnosis-section" id="diagnosis-form-section" style={{
+            backgroundColor: '#F7F9FC',
+            padding: '80px 20px',
+            minHeight: '100vh'
+          }}>
             <div className="home-right-col">
-              <DiagnosisForm
+              <DiagnosisFormNew
                 onComplete={(answers) => {
                   console.log('🔍 App.tsx: 診断完了 - 回答データ:', answers);
                   
@@ -642,14 +652,17 @@ const App: React.FC = () => {
             </div>
           </div>
           
-          {/* 3番目以降: その他のセクション */}
+          {/* 3番目: FAQセクション */}
+          <FAQSection />
+          
+          {/* 4番目以降: その他のセクション */}
           <div className="additional-sections">
             <ReliabilitySection />
             <SecurityTrustSection />
             <CallToActionSection />
           </div>
           
-          <Footer onNavigateToAdminLogin={navigateToAdminLogin} />
+          <FooterNew onNavigateToAdminLogin={navigateToAdminLogin} />
           <style>{`
             /* 診断フォーカスアニメーション */
             .diagnosis-focus-animation {
@@ -973,7 +986,7 @@ const App: React.FC = () => {
       };
       
       return (
-        <CombatPowerResults
+        <CombatPowerResultsNew
           diagnosisAnswers={answersToUse}
           onDownloadGuide={() => {
             // 攻略本ダウンロード処理（後で実装）

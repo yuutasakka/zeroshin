@@ -29,42 +29,43 @@
     <meta name="twitter:title" content="タスカル - 資金調達戦闘力診断" />
     <meta name="twitter:description" content="30秒であなたの資金調達戦闘力をチェック！" />
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Playfair+Display:wght@400;500;600;700&family=Noto+Sans+JP:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/src/styles/design-system.css">
     <link rel="stylesheet" href="/src/styles/accessibility.css">
     <style>
         :root {
-            /* 🎨 Premium Color Palette - 高コントラスト */
-            --primary-navy: #0B1426;
-            --primary-midnight: #1A2332;
-            --primary-slate: #2D3748;
-            --accent-gold: #D4AF37;
-            --accent-platinum: #E5E7EB;
-            --accent-emerald: #059669;
-            --accent-rose: #E11D48;
+            /* 🎨 タスカル デザインシステム - プロフェッショナルカラー */
+            --primary-navy: #3174F3;
+            --primary-midnight: #1E5FE1;
+            --primary-slate: #5B92F5;
+            --accent-gold: #F5A623;
+            --accent-platinum: #F7B84D;
+            --accent-emerald: #10B981;
+            --accent-rose: #EF4444;
             
             /* 📖 高可読性グレースケール - WCAG AA準拠 */
-            --neutral-50: #FAFBFC;
-            --neutral-100: #F7FAFC;
-            --neutral-200: #EDF2F7;
-            --neutral-300: #D1D5DB;
-            --neutral-400: #9CA3AF;
-            --neutral-500: #6B7280;
-            --neutral-600: #4B5563;
-            --neutral-700: #374151;
-            --neutral-800: #1F2937;
-            --neutral-900: #111827;
+            --neutral-50: #FFFFFF;
+            --neutral-100: #F7F9FC;
+            --neutral-200: #EDF1F7;
+            --neutral-300: #E5E7EB;
+            --neutral-400: #D1D5DB;
+            --neutral-500: #9CA3AF;
+            --neutral-600: #6B7280;
+            --neutral-700: #4B5563;
+            --neutral-800: #374151;
+            --neutral-900: #333333;
             
-            /* ✨ プレミアムグラデーション */
-            --gradient-primary: linear-gradient(135deg, #0B1426 0%, #2D3748 100%);
-            --gradient-luxury: linear-gradient(135deg, #1A2332 0%, #374151 50%, #4B5563 100%);
-            --gradient-gold: linear-gradient(135deg, #D4AF37 0%, #F59E0B 100%);
-            --gradient-platinum: linear-gradient(135deg, #F8FAFC 0%, #E5E7EB 100%);
-            --gradient-emerald: linear-gradient(135deg, #059669 0%, #10B981 100%);
+            /* ✨ プロフェッショナルグラデーション */
+            --gradient-primary: linear-gradient(135deg, #3174F3 0%, #1E5FE1 100%);
+            --gradient-luxury: linear-gradient(135deg, #5B92F5 0%, #3174F3 50%, #1E5FE1 100%);
+            --gradient-gold: linear-gradient(135deg, #F5A623 0%, #E89100 100%);
+            --gradient-platinum: linear-gradient(135deg, #FFFFFF 0%, #F7F9FC 100%);
+            --gradient-emerald: linear-gradient(135deg, #10B981 0%, #059669 100%);
             
             /* 🔤 タイポグラフィー */
-            --font-primary: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-            --font-display: 'Playfair Display', Georgia, serif;
-            --font-japanese: 'Noto Sans JP', sans-serif;
+            --font-primary: 'Noto Sans JP', 'メイリオ', 'Meiryo', 'Hiragino Sans', sans-serif;
+            --font-display: 'Noto Sans JP', 'メイリオ', 'Meiryo', 'Hiragino Sans', sans-serif;
+            --font-japanese: 'Noto Sans JP', 'メイリオ', 'Meiryo', sans-serif;
             
             /* 📏 改善されたレスポンシブフォントサイズ - より視認性重視 */
             --text-xs: clamp(0.875rem, 0.8rem + 0.375vw, 1rem);
