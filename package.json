@@ -25,6 +25,7 @@
     "update-supabase-data": "tsx scripts/update-supabase-data.ts",
     "create-admin-user": "tsx scripts/create-admin-user.ts",
     "insert-admin-registration": "tsx scripts/insert-admin-registration.ts",
+    "update-security-trust-data": "tsx scripts/update-security-trust-data.ts",
     "setup-env": "mkdir -p scripts && node scripts/generate-env-keys.js",
     "validate-production": "node scripts/validate-production-env.js",
     "build:production": "npm run validate-production && npm run build",
