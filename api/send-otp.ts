@@ -2,18 +2,28 @@ import type { VercelRequest, VercelResponse } from '@vercel/node';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   try {
-    // 動的インポートを使用（Vercelサーバーレス環境対応）
-    const { SMSAuthService } = await import('./_lib/smsAuth');
-    const { SecurityMiddleware } = await import('./_lib/securityMiddleware');
-    const ProductionLogger = (await import('./_lib/productionLogger')).default;
-
     // 環境変数のチェック（デバッグ用）
-    console.log('Environment check:', {
+    console.log('🔍 [send-otp] Environment check:', {
       hasTwilioAccountSid: !!process.env.TWILIO_ACCOUNT_SID,
       hasTwilioAuthToken: !!process.env.TWILIO_AUTH_TOKEN,
       hasTwilioPhoneNumber: !!process.env.TWILIO_PHONE_NUMBER,
-      nodeEnv: process.env.NODE_ENV
+      nodeEnv: process.env.NODE_ENV,
+      twilioAccountSidPrefix: process.env.TWILIO_ACCOUNT_SID ? process.env.TWILIO_ACCOUNT_SID.substring(0, 4) + '...' : 'undefined',
+      twilioPhoneNumber: process.env.TWILIO_PHONE_NUMBER || 'undefined'
     });
+
+    // 動的インポートを使用（Vercelサーバーレス環境対応）
+    console.log('🔍 [send-otp] Starting imports...');
+    
+    // Vercel専用のSMSAuthServiceを使用
+    const { SMSAuthService } = await import('./_lib/smsAuthServer');
+    console.log('✅ [send-otp] SMSAuthService imported');
+    
+    const { SecurityMiddleware } = await import('./_lib/securityMiddleware');
+    console.log('✅ [send-otp] SecurityMiddleware imported');
+    
+    const ProductionLogger = (await import('./_lib/productionLogger')).default;
+    console.log('✅ [send-otp] All imports completed');
 
     // CORS設定 - 本番環境用
     const allowedOrigins = [
@@ -66,10 +76,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
 
     // 入力サニタイゼーション
+    console.log('🔍 [send-otp] Request body:', req.body);
     const sanitizedBody = SecurityMiddleware.sanitizeInput(req.body);
     const { phoneNumber } = sanitizedBody;
+    console.log('🔍 [send-otp] Sanitized phone number:', phoneNumber);
     
     if (!phoneNumber) {
+      console.error('❌ [send-otp] No phone number provided');
       res.status(400).json({ error: '電話番号が必要です' });
       return;
     }
@@ -84,17 +97,24 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     // 環境判定（プロダクションロガーで使用）
     
     ProductionLogger.info('SMS送信リクエスト', { phoneNumber: phoneNumber.substring(0, 3) + '***', clientIP });
+    console.log('🔍 [send-otp] Calling SMSAuthService.sendOTP with:', {
+      phoneNumber: phoneNumber.substring(0, 3) + '***',
+      clientIP
+    });
     
     const result = await SMSAuthService.sendOTP(phoneNumber, clientIP);
+    console.log('🔍 [send-otp] SMSAuthService.sendOTP result:', result);
     
     ProductionLogger.info('SMS送信結果', { success: result.success, hasError: !!result.error });
     
     if (!result.success) {
+      console.error('❌ [send-otp] SMS sending failed:', result.error);
       ProductionLogger.error('SMS送信失敗', undefined, { error: result.error });
       res.status(400).json({ error: result.error });
       return;
     }
     
+    console.log('✅ [send-otp] SMS sent successfully');
     ProductionLogger.info('SMS送信成功');
 
     // セキュリティヘッダー設定
@@ -106,7 +126,15 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     res.status(200).json({ success: true });
   } catch (error) {
-    console.error('Send OTP API error:', error);
+    console.error('❌ [send-otp] Send OTP API error:', error);
+    console.error('❌ [send-otp] Error details:', {
+      name: error instanceof Error ? error.name : 'Unknown',
+      message: error instanceof Error ? error.message : 'Unknown error',
+      stack: error instanceof Error ? error.stack : undefined,
+      errorType: typeof error,
+      error: error
+    });
+    
     // 開発環境では詳細なエラー情報を返す
     const isDevelopment = process.env.NODE_ENV === 'development';
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
@@ -114,7 +142,17 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     res.status(500).json({ 
       error: 'SMS送信に失敗しました',
       details: isDevelopment ? errorMessage : undefined,
-      hint: 'Twilio環境変数が正しく設定されているか確認してください'
+      hint: 'Twilio環境変数が正しく設定されているか確認してください',
+      // デバッグ用に一時的に詳細を含める
+      debugInfo: {
+        errorName: error instanceof Error ? error.name : 'Unknown',
+        errorMessage: errorMessage,
+        hasEnvVars: {
+          accountSid: !!process.env.TWILIO_ACCOUNT_SID,
+          authToken: !!process.env.TWILIO_AUTH_TOKEN,
+          phoneNumber: !!process.env.TWILIO_PHONE_NUMBER
+        }
+      }
     });
   }
 }
