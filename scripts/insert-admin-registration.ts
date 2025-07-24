@@ -30,21 +30,20 @@ async function insertAdminRegistration() {
       console.log('WARNING: 既存データ削除エラー:', deleteError.message);
     }
 
-    // 新しい管理者登録データを挿入
+    // 新しい管理者登録データを挿入（実際のテーブル構造に合わせて修正）
     console.log('新しい管理者登録データを挿入中...');
     const { data, error: insertError } = await supabase
       .from('admin_registrations')
       .insert([{
-        full_name: '田中 営業太郎',
+        full_name: '田中 営業太郎（株式会社SEAI・営業部長）',
         email: 'sales@seai.co.jp',
-        company_name: '株式会社SEAI',
+        password_hash: '$2b$12$2.XNU3sFZZ3CMiZoUYeFJOnTi89Tpwe7eKQJLY/cMizD1Id9.VZ7m', // パスワード: zg79juX!3ij5
         department: '営業部',
-        position: '営業部長',
         phone_number: '03-1234-5678',
-        reason_for_access: 'タスカル管理画面での顧客管理と分析業務のため',
+        reason: 'タスカル管理画面での顧客管理と分析業務のため。株式会社SEAIの営業部長として、顧客データの管理と売上分析を担当します。',
+        role: 'admin',
         status: 'approved',
-        approved_at: new Date().toISOString(),
-        approved_by: 'admin'
+        approved_at: new Date().toISOString()
       }])
       .select();
 
@@ -56,12 +55,12 @@ async function insertAdminRegistration() {
     console.log('SUCCESS: 管理者登録データが正常に挿入されました');
     console.log('');
     console.log('--- 挿入されたデータ ---');
-    console.log('氏名: 田中 営業太郎');
+    console.log('氏名: 田中 営業太郎（株式会社SEAI・営業部長）');
     console.log('メールアドレス: sales@seai.co.jp');
-    console.log('会社名: 株式会社SEAI');
     console.log('部署: 営業部');
-    console.log('役職: 営業部長');
     console.log('電話番号: 03-1234-5678');
+    console.log('パスワード: zg79juX!3ij5');
+    console.log('ロール: admin');
     console.log('ステータス: approved');
     console.log('');
 
@@ -76,7 +75,7 @@ async function insertAdminRegistration() {
     // 最終確認
     const { data: verifyData, error: verifyError } = await supabase
       .from('admin_registrations')
-      .select('full_name, email, company_name, status, approved_at, created_at')
+      .select('full_name, email, department, status, approved_at, created_at')
       .eq('email', 'sales@seai.co.jp')
       .single();
 

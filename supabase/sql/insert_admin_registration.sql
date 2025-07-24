@@ -3,32 +3,26 @@
 -- 既存データがあれば削除
 DELETE FROM admin_registrations WHERE email = 'sales@seai.co.jp';
 
--- 管理者登録データを挿入
+-- 管理者登録データを挿入（実際のテーブル構造に合わせて修正）
 INSERT INTO admin_registrations (
   full_name,
   email,
-  company_name,
+  password_hash,
   department,
-  position,
   phone_number,
-  reason_for_access,
+  reason,
+  role,
   status,
-  approved_at,
-  approved_by,
-  created_at,
-  updated_at
+  approved_at
 ) VALUES (
-  '田中 営業太郎',
+  '田中 営業太郎（株式会社SEAI・営業部長）',
   'sales@seai.co.jp',
-  '株式会社SEAI',
+  '$2b$12$2.XNU3sFZZ3CMiZoUYeFJOnTi89Tpwe7eKQJLY/cMizD1Id9.VZ7m', -- パスワード: zg79juX!3ij5
   '営業部',
-  '営業部長',
   '03-1234-5678',
-  'タスカル管理画面での顧客管理と分析業務のため',
-  'approved',
-  NOW(),
+  'タスカル管理画面での顧客管理と分析業務のため。株式会社SEAIの営業部長として、顧客データの管理と売上分析を担当します。',
   'admin',
-  NOW(),
+  'approved',
   NOW()
 );
 
@@ -36,7 +30,7 @@ INSERT INTO admin_registrations (
 SELECT 
   full_name,
   email,
-  company_name,
+  department,
   status,
   approved_at,
   created_at

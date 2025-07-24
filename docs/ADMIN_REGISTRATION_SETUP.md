@@ -5,13 +5,13 @@
 ## 挿入されるデータ
 
 **基本情報**
-- 氏名: 田中 営業太郎
+- 氏名: 田中 営業太郎（株式会社SEAI・営業部長）
 - メールアドレス: sales@seai.co.jp
-- 会社名: 株式会社SEAI
 - 部署: 営業部
-- 役職: 営業部長
 - 電話番号: 03-1234-5678
-- アクセス理由: タスカル管理画面での顧客管理と分析業務のため
+- パスワード: zg79juX!3ij5 （ハッシュ化して保存）
+- ロール: admin
+- アクセス理由: タスカル管理画面での顧客管理と分析業務のため。株式会社SEAIの営業部長として、顧客データの管理と売上分析を担当します。
 - ステータス: approved（承認済み）
 
 ## セットアップ方法
@@ -41,22 +41,19 @@ npm run insert-admin-registration
 
 ```sql
 admin_registrations (
-  id SERIAL PRIMARY KEY,
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  email VARCHAR(255) NOT NULL UNIQUE,
+  password_hash TEXT NOT NULL,
   full_name VARCHAR(255) NOT NULL,
-  email VARCHAR(255) UNIQUE NOT NULL,
-  company_name VARCHAR(255),
-  department VARCHAR(255),
-  position VARCHAR(255),
   phone_number VARCHAR(20),
-  reason_for_access TEXT,
-  status VARCHAR(50) DEFAULT 'pending',
+  reason TEXT,
+  department VARCHAR(100),
+  role VARCHAR(50) DEFAULT 'admin',
+  status VARCHAR(20) DEFAULT 'pending' CHECK (status IN ('pending', 'approved', 'rejected')),
+  approved_by UUID REFERENCES public.admins(id),
   approved_at TIMESTAMP WITH TIME ZONE,
-  approved_by VARCHAR(255),
-  rejected_at TIMESTAMP WITH TIME ZONE,
-  rejected_by VARCHAR(255),
-  rejection_reason TEXT,
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 )
 ```
 
@@ -83,7 +80,7 @@ admin_registrations (
 SELECT 
   full_name,
   email,
-  company_name,
+  department,
   status,
   approved_at,
   created_at
