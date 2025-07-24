@@ -8,7 +8,7 @@ const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.VITE_SUP
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
 if (!supabaseUrl || !supabaseServiceKey) {
-  console.error('❌ Supabase環境変数が設定されていません');
+  console.error('ERROR: Supabase環境変数が設定されていません');
   console.log('必要な環境変数:');
   console.log('- NEXT_PUBLIC_SUPABASE_URL または VITE_SUPABASE_URL');
   console.log('- SUPABASE_SERVICE_ROLE_KEY');
@@ -18,11 +18,11 @@ if (!supabaseUrl || !supabaseServiceKey) {
 const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
 async function updateSupabaseData() {
-  console.log('🚀 タスカル用データ更新を開始します...');
+  console.log('タスカル用データ更新を開始します...');
 
   try {
     // 1. 専門家情報の更新
-    console.log('📝 専門家情報を更新中...');
+    console.log('専門家情報を更新中...');
     const { error: expertError } = await supabase
       .from('expert_contact_settings')
       .update({
@@ -35,13 +35,13 @@ async function updateSupabaseData() {
       .eq('id', 1);
 
     if (expertError) {
-      console.warn('⚠️ 専門家情報の更新でエラー:', expertError.message);
+      console.warn('WARNING: 専門家情報の更新でエラー:', expertError.message);
     } else {
-      console.log('✅ 専門家情報を更新しました');
+      console.log('SUCCESS: 専門家情報を更新しました');
     }
 
     // 2. 商品データの更新
-    console.log('💰 資金調達商品データを更新中...');
+    console.log(' 資金調達商品データを更新中...');
     const productData = {
       products: fundingProducts.slice(0, 5).map(product => ({
         id: product.id,
@@ -65,13 +65,13 @@ async function updateSupabaseData() {
       .eq('id', 1);
 
     if (productError) {
-      console.warn('⚠️ 商品データの更新でエラー:', productError.message);
+      console.warn('WARNING: 商品データの更新でエラー:', productError.message);
     } else {
-      console.log('✅ 商品データを更新しました');
+      console.log('SUCCESS: 商品データを更新しました');
     }
 
     // 3. 成功事例（testimonials）の更新
-    console.log('⭐ 成功事例を更新中...');
+    console.log(' 成功事例を更新中...');
     
     // 既存のテスティモニアルを削除
     await supabase.from('testimonials').delete().neq('id', 0);
@@ -113,13 +113,13 @@ async function updateSupabaseData() {
       .insert(testimonialData);
 
     if (testimonialError) {
-      console.warn('⚠️ 成功事例の更新でエラー:', testimonialError.message);
+      console.warn('WARNING: 成功事例の更新でエラー:', testimonialError.message);
     } else {
-      console.log('✅ 成功事例を更新しました');
+      console.log('SUCCESS: 成功事例を更新しました');
     }
 
     // 4. 会社情報の更新
-    console.log('🏢 会社情報を更新中...');
+    console.log(' 会社情報を更新中...');
     const { error: companyError } = await supabase
       .from('homepage_content_settings')
       .update({
@@ -135,13 +135,13 @@ async function updateSupabaseData() {
       .eq('setting_name', 'main_content');
 
     if (companyError) {
-      console.warn('⚠️ 会社情報の更新でエラー:', companyError.message);
+      console.warn('WARNING: 会社情報の更新でエラー:', companyError.message);
     } else {
-      console.log('✅ 会社情報を更新しました');
+      console.log('SUCCESS: 会社情報を更新しました');
     }
 
     // 5. ファイナンシャルプランナー情報を資金調達アドバイザーに更新
-    console.log('👨‍💼 アドバイザー情報を更新中...');
+    console.log(' アドバイザー情報を更新中...');
     const { error: advisorError } = await supabase
       .from('financial_planners')
       .update({
@@ -156,13 +156,13 @@ async function updateSupabaseData() {
       .eq('id', 1);
 
     if (advisorError) {
-      console.warn('⚠️ アドバイザー情報の更新でエラー:', advisorError.message);
+      console.warn('WARNING: アドバイザー情報の更新でエラー:', advisorError.message);
     } else {
-      console.log('✅ アドバイザー情報を更新しました');
+      console.log('SUCCESS: アドバイザー情報を更新しました');
     }
 
-    console.log('🎉 全てのデータ更新が完了しました！');
-    console.log('\n📊 更新されたデータ:');
+    console.log(' 全てのデータ更新が完了しました！');
+    console.log('\n 更新されたデータ:');
     console.log('- 専門家情報: 資金調達コンサルタント');
     console.log('- 商品データ: 5種類の資金調達方法');
     console.log('- 成功事例: 4件の資金調達成功事例');
@@ -170,7 +170,7 @@ async function updateSupabaseData() {
     console.log('- アドバイザー: 資金調達専門家');
 
   } catch (error) {
-    console.error('❌ データ更新中にエラーが発生しました:', error);
+    console.error('ERROR: データ更新中にエラーが発生しました:', error);
     process.exit(1);
   }
 }

@@ -125,10 +125,10 @@ export const fundingFAQData: FAQItem[] = [
 
 // カテゴリ情報
 export const faqCategories = [
-  { id: 'basics', name: '基本的な質問', icon: '📋' },
-  { id: 'screening', name: '審査・診断について', icon: '🔍' },
-  { id: 'methods', name: '資金調達方法', icon: '💰' },
-  { id: 'procedure', name: '手続き・必要書類', icon: '📄' },
-  { id: 'security', name: 'セキュリティ', icon: '🔒' },
-  { id: 'others', name: 'その他', icon: '💡' }
+  { id: 'basics', name: '基本的な質問' },
+  { id: 'screening', name: '審査・診断について' },
+  { id: 'methods', name: '資金調達方法' },
+  { id: 'procedure', name: '手続き・必要書類' },
+  { id: 'security', name: 'セキュリティ' },
+  { id: 'others', name: 'その他' }
 ];
