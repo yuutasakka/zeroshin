@@ -200,7 +200,6 @@ const FAQSection: React.FC = () => {
               alignItems: 'center',
               gap: '8px',
               padding: '12px 24px',
-              color: '#FFFFFF',
               textDecoration: 'none',
               borderRadius: '8px',
               fontSize: '16px',

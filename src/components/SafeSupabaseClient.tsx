@@ -48,7 +48,7 @@ export const SupabaseProvider: React.FC<SupabaseProviderProps> = ({ children }) 
           return fallback;
         };
 
-        const supabaseUrl = getEnvVar('VITE_SUPABASE_URL', 'https://eqirzbuqgymrtnfmvwhq.supabase.co');
+        const supabaseUrl = getEnvVar('VITE_SUPABASE_URL', '');
         const supabaseKey = getEnvVar('VITE_SUPABASE_ANON_KEY', '');
 
         const isProduction = typeof window !== 'undefined' && 

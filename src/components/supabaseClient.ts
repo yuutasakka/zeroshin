@@ -34,7 +34,7 @@ const getEnvVar = (viteVar: string, fallback: string) => {
   return fallback;
 };
 
-const supabaseUrl = getEnvVar('VITE_SUPABASE_URL', 'https://eqirzbuqgymrtnfmvwhq.supabase.co');
+const supabaseUrl = getEnvVar('VITE_SUPABASE_URL', '');
 
 // セキュリティ向上: 本番環境ではハードコードされたキーを削除
 const supabaseAnonKey = (() => {
@@ -67,7 +67,38 @@ if (process.env.NODE_ENV !== 'production') {
   });
 }
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey);
+// Supabaseクライアントの作成（セキュリティ向上のためフォールバック処理を追加）
+const createSupabaseClient = () => {
+  if (!supabaseUrl || supabaseUrl.includes('your-project')) {
+    console.error('Supabase URLが設定されていません。環境変数VITE_SUPABASE_URLを設定してください。');
+    // フォールバッククライアントを返す（機能は制限される）
+    return {
+      from: () => ({
+        select: () => Promise.resolve({ data: null, error: new Error('Supabase not configured') }),
+        insert: () => Promise.resolve({ data: null, error: new Error('Supabase not configured') }),
+        update: () => Promise.resolve({ data: null, error: new Error('Supabase not configured') }),
+        delete: () => Promise.resolve({ data: null, error: new Error('Supabase not configured') })
+      }),
+      auth: {
+        resetPasswordForEmail: () => Promise.resolve({ error: new Error('Supabase not configured') }),
+        updateUser: () => Promise.resolve({ error: new Error('Supabase not configured') }),
+        getUser: () => Promise.resolve({ data: { user: null }, error: null })
+      },
+      storage: {
+        from: () => ({
+          upload: () => Promise.resolve({ data: null, error: new Error('Supabase not configured') }),
+          remove: () => Promise.resolve({ error: new Error('Supabase not configured') }),
+          getPublicUrl: () => ({ publicUrl: '' }),
+          list: () => Promise.resolve({ data: [], error: new Error('Supabase not configured') })
+        })
+      }
+    } as any;
+  }
+  
+  return createClient(supabaseUrl, supabaseAnonKey);
+};
+
+export const supabase = createSupabaseClient();
 
 // 管理者認証情報の型定義
 export interface AdminCredentials {
