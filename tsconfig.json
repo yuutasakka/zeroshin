@@ -54,6 +54,7 @@
     "components/**/*",
     "server/**/*",
     "data/**/*",
+    "api/**/*",
     "*.ts",
     "*.tsx"
   ],
