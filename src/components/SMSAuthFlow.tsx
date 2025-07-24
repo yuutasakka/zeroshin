@@ -22,6 +22,7 @@ const SMSAuthFlow: React.FC<SMSAuthFlowProps> = ({
   const [remainingTime, setRemainingTime] = useState(0);
   const [canResend, setCanResend] = useState(true);
   const [resendCount, setResendCount] = useState(0);
+  const [agreedToTerms, setAgreedToTerms] = useState(false);
 
   // OTPタイマー（5分）
   useEffect(() => {
@@ -86,6 +87,11 @@ const SMSAuthFlow: React.FC<SMSAuthFlowProps> = ({
     const performSendSMS = async () => {
       if (!validatePhoneNumber(phoneNumber)) {
         setError('正しい電話番号を入力してください（090/080/070で始まる11桁）');
+        return;
+      }
+
+      if (!agreedToTerms) {
+        setError('利用規約とプライバシーポリシーへの同意が必要です');
         return;
       }
 
@@ -278,9 +284,9 @@ const SMSAuthFlow: React.FC<SMSAuthFlowProps> = ({
               
               <button
                 onClick={handleSendSMS}
-                disabled={phoneNumber.length !== 11 || isLoading}
+                disabled={phoneNumber.length !== 11 || isLoading || !agreedToTerms}
                 className={`w-full py-4 px-6 rounded-xl font-bold text-lg transition-all duration-200 focus:ring-2 focus:ring-offset-2 focus:outline-none min-h-[56px] ${
-                  phoneNumber.length === 11 && !isLoading
+                  phoneNumber.length === 11 && !isLoading && agreedToTerms
                     ? 'bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600 text-black shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 focus:ring-cyan-500'
                     : 'bg-gray-200 text-gray-400 cursor-not-allowed'
                 }`}
@@ -294,6 +300,23 @@ const SMSAuthFlow: React.FC<SMSAuthFlowProps> = ({
                   '📨 SMS認証コードを送信'
                 )}
               </button>
+
+              {/* 利用規約・プライバシーポリシー同意チェックボックス */}
+              <div className="flex items-start space-x-3">
+                <input
+                  type="checkbox"
+                  id="terms-agreement-sms"
+                  checked={agreedToTerms}
+                  onChange={(e) => setAgreedToTerms(e.target.checked)}
+                  className="mt-1 w-4 h-4 text-cyan-600 bg-gray-100 border-gray-300 rounded focus:ring-cyan-500 focus:ring-2"
+                />
+                <label htmlFor="terms-agreement-sms" className="text-sm text-gray-700 leading-relaxed">
+                  <a href="/privacy-policy" target="_blank" className="text-cyan-600 hover:text-cyan-800 underline">プライバシーポリシー</a>
+                  および
+                  <a href="/terms-of-service" target="_blank" className="text-cyan-600 hover:text-cyan-800 underline">利用規約</a>
+                  に同意します
+                </label>
+              </div>
             </div>
           )}
           

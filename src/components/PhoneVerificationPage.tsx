@@ -632,23 +632,6 @@ const PhoneVerificationPage: React.FC<PhoneVerificationPageProps> = ({
                 </div>
               )}
 
-              {/* プライバシーポリシー・利用規約同意チェックボックス */}
-              <div className="flex items-start space-x-3">
-                <input
-                  type="checkbox"
-                  id="terms-agreement"
-                  checked={agreedToTerms}
-                  onChange={(e) => setAgreedToTerms(e.target.checked)}
-                  className="mt-1 w-4 h-4 text-emerald-600 bg-gray-100 border-gray-300 rounded focus:ring-emerald-500 focus:ring-2"
-                />
-                <label htmlFor="terms-agreement" className="text-sm text-gray-700 leading-relaxed">
-                  <a href="/privacy-policy" target="_blank" className="text-emerald-600 hover:text-emerald-800 underline">プライバシーポリシー</a>
-                  および
-                  <a href="/terms-of-service" target="_blank" className="text-emerald-600 hover:text-emerald-800 underline">利用規約</a>
-                  に同意します
-                </label>
-              </div>
-
               <button
                 type="submit"
                 disabled={loading || !phoneNumber || !agreedToTerms}
@@ -668,6 +651,23 @@ const PhoneVerificationPage: React.FC<PhoneVerificationPageProps> = ({
                   </>
                 )}
               </button>
+
+              {/* プライバシーポリシー・利用規約同意チェックボックス */}
+              <div className="flex items-start space-x-3 mt-4">
+                <input
+                  type="checkbox"
+                  id="terms-agreement"
+                  checked={agreedToTerms}
+                  onChange={(e) => setAgreedToTerms(e.target.checked)}
+                  className="mt-1 w-4 h-4 text-emerald-600 bg-gray-100 border-gray-300 rounded focus:ring-emerald-500 focus:ring-2"
+                />
+                <label htmlFor="terms-agreement" className="text-sm text-gray-700 leading-relaxed">
+                  <a href="/privacy-policy" target="_blank" className="text-emerald-600 hover:text-emerald-800 underline">プライバシーポリシー</a>
+                  および
+                  <a href="/terms-of-service" target="_blank" className="text-emerald-600 hover:text-emerald-800 underline">利用規約</a>
+                  に同意します
+                </label>
+              </div>
             </form>
 
             {/* プライバシーポリシー・利用規約同意の注意事項 */}
