@@ -43,7 +43,6 @@
 
 
 .high-contrast a {
-  color: var(--link-color) !important;
   text-decoration: underline !important;
 }
 
