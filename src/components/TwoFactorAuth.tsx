@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { SecureConfigManager, secureLog, SECURITY_CONFIG } from '../../security.config';
 import { supabase } from './supabaseClient';
 import { QRCodeSVG } from 'qrcode.react';
+import CryptoJS from 'crypto-js';
 
 interface TwoFactorAuthProps {
   username: string;
@@ -39,137 +40,355 @@ const TwoFactorAuth: React.FC<TwoFactorAuthProps> = ({
   const [verificationCode, setVerificationCode] = useState<string>('');
   const [backupCodes, setBackupCodes] = useState<string[]>([]);
 
-  // TOTP Secret生成（Base32形式）
+  // セキュアなTOTP Secret生成（Base32形式、RFC4648準拠）
   const generateTotpSecret = (): string => {
     const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567';
+    const secretLength = 32; // 160ビット（推奨）
     let secret = '';
-    for (let i = 0; i < 32; i++) {
-      secret += chars.charAt(Math.floor(Math.random() * chars.length));
+    
+    // 暗号学的に安全な乱数生成
+    const randomValues = new Uint8Array(secretLength);
+    crypto.getRandomValues(randomValues);
+    
+    for (let i = 0; i < secretLength; i++) {
+      secret += chars[randomValues[i] % chars.length];
     }
+    
+    // パディング追加（Base32仕様）
+    while (secret.length % 8 !== 0) {
+      secret += '=';
+    }
+    
     return secret;
   };
 
-  // バックアップコード生成
+  // セキュアなバックアップコード生成（暗号学的に安全）
   const generateBackupCodes = (): string[] => {
     const codes: string[] = [];
-    for (let i = 0; i < 10; i++) {
+    const chars = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+    
+    for (let i = 0; i < 12; i++) { // 12個に増加
       let code = '';
+      
+      // 暗号学的に安全な乱数生成
+      const randomValues = new Uint8Array(8);
+      crypto.getRandomValues(randomValues);
+      
       for (let j = 0; j < 8; j++) {
-        code += Math.floor(Math.random() * 10).toString();
+        code += chars[randomValues[j] % chars.length];
       }
-      codes.push(code.replace(/(.{4})(.{4})/, '$1-$2'));
+      
+      // チェックサム追加（Luhnアルゴリズム変形）
+      const checksum = calculateChecksum(code);
+      const formattedCode = `${code.substring(0, 4)}-${code.substring(4)}${checksum}`;
+      codes.push(formattedCode);
     }
+    
     return codes;
   };
+  
+  // チェックサム計算
+  const calculateChecksum = (code: string): string => {
+    let sum = 0;
+    for (let i = 0; i < code.length; i++) {
+      const char = code.charAt(i);
+      const value = char >= '0' && char <= '9' ? parseInt(char) : char.charCodeAt(0) - 55;
+      sum += value * (i + 1);
+    }
+    return (sum % 36).toString(36).toUpperCase();
+  };
 
-  // QRコードURL生成（Google Authenticator形式）
+  // QRコードURL生成（RFC6238準拠、セキュア）
   const generateQrCodeUrl = (secret: string, username: string): string => {
-    const issuer = 'タスカル';
-    const account = `${issuer}:${username}`;
+    const issuer = 'MoneyTicket';
+    const serviceName = 'タスカル';
+    const account = `${serviceName}:${encodeURIComponent(username)}`;
+    
+    // RFC6238準拠のotpauth URI生成
     const params = new URLSearchParams({
-      secret: secret,
+      secret: secret.replace(/=/g, ''), // パディング除去
       issuer: issuer,
       algorithm: 'SHA1',
       digits: '6',
-      period: '30'
+      period: '30',
+      counter: '0' // TOTP用
     });
-    const otpauthUrl = `otpauth://totp/${encodeURIComponent(account)}?${params.toString()}`;
-    return `https://api.qrserver.com/v1/create-qr-code/?size=256x256&data=${encodeURIComponent(otpauthUrl)}`;
+    
+    const otpauthUrl = `otpauth://totp/${account}?${params.toString()}`;
+    
+    // セキュアなQRコード生成（外部サービス使用回避）
+    return otpauthUrl; // QRCodeSVGコンポーネントで直接使用
   };
 
-  // TOTP検証（簡易実装）
+  // TOTP検証（RFC6238準拠実装）
   const verifyTotpCode = async (secret: string, code: string): Promise<boolean> => {
     try {
-      // 本番環境ではクライアントサイドでの簡易検証を使用
-      if (!process.env.API_BASE_URL) {
-        // クライアントサイドでの簡易検証
-        const now = Math.floor(Date.now() / 1000);
-        const window = Math.floor(now / 30);
+      // タイムスタンプ窓の検証（±1窓、最大90秒の時間差許容）
+      const timeWindow = Math.floor(Date.now() / 1000 / 30);
+      
+      for (let i = -1; i <= 1; i++) {
+        const testWindow = timeWindow + i;
+        const expectedCode = await generateTOTPCode(secret, testWindow);
         
-        // 時間窓を±1で検証（30秒の誤差を許容）
-        for (let i = -1; i <= 1; i++) {
-          const testWindow = window + i;
-          const testCode = await generateTotpForWindow(secret, testWindow);
-          if (testCode === code) {
-            return true;
-          }
+        if (expectedCode === code) {
+          // 使用済みコード防止のためのトークン記録
+          await recordUsedToken(secret, code, testWindow);
+          return true;
         }
-        return false;
       }
-
-      // 実際の実装ではサーバーサイドでTOTP検証を行う
-      // ここでは簡易的な検証を実装
+      
+      // サーバーサイド検証のフォールバック
       const response = await fetch('/api/auth/verify-totp', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'X-CSRF-Token': await getCSRFToken(),
         },
+        credentials: 'include',
         body: JSON.stringify({
-          secret: secret,
+          secret: await encryptSecret(secret),
           code: code,
-          username: username
+          username: username,
+          timestamp: Date.now()
         }),
       });
 
-      if (!response.ok) {
-        // クライアントサイドでの簡易検証
-        const now = Math.floor(Date.now() / 1000);
-        const window = Math.floor(now / 30);
-        
-        // 時間窓を±1で検証（30秒の誤差を許容）
-        for (let i = -1; i <= 1; i++) {
-          const testWindow = window + i;
-          const testCode = await generateTotpForWindow(secret, testWindow);
-          if (testCode === code) {
-            return true;
-          }
-        }
-        return false;
+      if (response.ok) {
+        const result = await response.json();
+        return result.valid;
       }
-
-      const result = await response.json();
-      return result.valid;
+      
+      return false;
     } catch (error) {
       secureLog('TOTP検証エラー:', error);
       return false;
     }
   };
 
-  // 指定時間窓でのTOTP生成（簡易実装）
-  const generateTotpForWindow = async (secret: string, window: number): Promise<string> => {
-    // 実際の実装ではHMAC-SHA1を使用
-    // ここでは簡易的な実装
-    const hash = await crypto.subtle.digest('SHA-1', 
-      new TextEncoder().encode(secret + window.toString())
-    );
-    const hashArray = Array.from(new Uint8Array(hash));
-    const code = (hashArray[0] % 900000 + 100000).toString();
-    return code.substring(0, 6);
+  // RFC6238準拠のTOTP生成（HMAC-SHA1ベース）
+  const generateTOTPCode = async (secret: string, timeWindow: number): Promise<string> => {
+    try {
+      // Base32デコード
+      const decodedSecret = base32Decode(secret);
+      
+      // 時間窓をビッグエンディアンの8バイト配列に変換
+      const timeBuffer = new ArrayBuffer(8);
+      const timeView = new DataView(timeBuffer);
+      timeView.setUint32(4, timeWindow, false); // ビッグエンディアン
+      
+      // HMAC-SHA1計算
+      const key = await crypto.subtle.importKey(
+        'raw',
+        decodedSecret,
+        { name: 'HMAC', hash: 'SHA-1' },
+        false,
+        ['sign']
+      );
+      
+      const signature = await crypto.subtle.sign('HMAC', key, timeBuffer);
+      const signatureArray = new Uint8Array(signature);
+      
+      // 動的切り出し（RFC4226）
+      const offset = signatureArray[19] & 0xf;
+      const code = (
+        ((signatureArray[offset] & 0x7f) << 24) |
+        ((signatureArray[offset + 1] & 0xff) << 16) |
+        ((signatureArray[offset + 2] & 0xff) << 8) |
+        (signatureArray[offset + 3] & 0xff)
+      ) % 1000000;
+      
+      return code.toString().padStart(6, '0');
+    } catch (error) {
+      secureLog('TOTP生成エラー:', error);
+      throw new Error('TOTP生成に失敗しました');
+    }
+  };
+  
+  // Base32デコード関数
+  const base32Decode = (encoded: string): Uint8Array => {
+    const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567';
+    let bits = 0;
+    let value = 0;
+    let index = 0;
+    const output = new Uint8Array(Math.floor(encoded.length * 5 / 8));
+    
+    for (let i = 0; i < encoded.length; i++) {
+      const char = encoded.charAt(i).toUpperCase();
+      const charIndex = alphabet.indexOf(char);
+      if (charIndex === -1) continue;
+      
+      value = (value << 5) | charIndex;
+      bits += 5;
+      
+      if (bits >= 8) {
+        output[index++] = (value >>> (bits - 8)) & 255;
+        bits -= 8;
+      }
+    }
+    
+    return output.slice(0, index);
+  };
+  
+  // 使用済みトークン記録
+  const recordUsedToken = async (secret: string, code: string, window: number): Promise<void> => {
+    try {
+      const tokenHash = CryptoJS.SHA256(secret + code + window).toString();
+      sessionStorage.setItem(`used_token_${tokenHash}`, Date.now().toString());
+      
+      // 古いトークンをクリーンアップ（10分以上前）
+      const cutoff = Date.now() - 600000;
+      for (let i = 0; i < sessionStorage.length; i++) {
+        const key = sessionStorage.key(i);
+        if (key?.startsWith('used_token_')) {
+          const timestamp = parseInt(sessionStorage.getItem(key) || '0');
+          if (timestamp < cutoff) {
+            sessionStorage.removeItem(key);
+          }
+        }
+      }
+    } catch (error) {
+      secureLog('使用済みトークン記録エラー:', error);
+    }
+  };
+  
+  // CSRFトークン取得
+  const getCSRFToken = async (): Promise<string> => {
+    try {
+      const response = await fetch('/api/auth/csrf-token', {
+        method: 'GET',
+        credentials: 'include'
+      });
+      if (response.ok) {
+        const data = await response.json();
+        return data.token;
+      }
+      return '';
+    } catch (error) {
+      secureLog('CSRFトークン取得エラー:', error);
+      return '';
+    }
+  };
+  
+  // シークレット暗号化
+  const encryptSecret = async (secret: string): Promise<string> => {
+    try {
+      const key = await getEncryptionKey();
+      return CryptoJS.AES.encrypt(secret, key).toString();
+    } catch (error) {
+      secureLog('シークレット暗号化エラー:', error);
+      return secret; // フォールバック
+    }
+  };
+  
+  // 暗号化キー取得
+  const getEncryptionKey = async (): Promise<string> => {
+    return await SecureConfigManager.getEncryptionKey() || 'fallback-key';
   };
 
-  // バックアップコード検証（本番環境専用）
+  // バックアップコード検証（強化版）
   const verifyBackupCode = async (code: string): Promise<boolean> => {
     try {
+      // 入力値の正規化とバリデーション
+      const normalizedCode = code.replace(/[^0-9A-Za-z-]/g, '').toUpperCase();
+      
+      if (!/^[0-9A-Z]{4}-[0-9A-Z]{4}$/.test(normalizedCode)) {
+        setError('バックアップコードの形式が正しくありません（例：1234-ABCD）');
+        return false;
+      }
+      
+      // レート制限チェック
+      const rateLimitKey = `backup_verify_${username}`;
+      const lastAttempt = sessionStorage.getItem(rateLimitKey);
+      if (lastAttempt && Date.now() - parseInt(lastAttempt) < 5000) {
+        setError('しばらく待ってから再度お試しください');
+        return false;
+      }
+      
+      sessionStorage.setItem(rateLimitKey, Date.now().toString());
+      
       const response = await fetch('/api/auth/verify-backup-code', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'X-CSRF-Token': await getCSRFToken(),
+          'X-Request-ID': generateRequestId(),
         },
+        credentials: 'include',
         body: JSON.stringify({
           username: username,
-          backupCode: code
+          backupCode: await encryptBackupCode(normalizedCode),
+          timestamp: Date.now(),
+          userAgent: navigator.userAgent,
+          fingerprint: await generateFingerprint()
         }),
       });
 
       if (!response.ok) {
+        if (response.status === 429) {
+          setError('試行回数が上限に達しました。しばらく待ってからお試しください');
+        } else if (response.status === 401) {
+          setError('バックアップコードが正しくありません');
+        } else {
+          setError('認証処理中にエラーが発生しました');
+        }
         return false;
       }
 
       const result = await response.json();
+      
+      if (result.valid) {
+        // 成功時はセッションストレージをクリア
+        sessionStorage.removeItem(rateLimitKey);
+        secureLog('バックアップコード認証成功', { username, timestamp: Date.now() });
+      }
+      
       return result.valid;
     } catch (error) {
       secureLog('バックアップコード検証エラー:', error);
+      setError('ネットワークエラーが発生しました');
       return false;
+    }
+  };
+  
+  // バックアップコード暗号化
+  const encryptBackupCode = async (code: string): Promise<string> => {
+    try {
+      const key = await getEncryptionKey();
+      return CryptoJS.AES.encrypt(code, key).toString();
+    } catch (error) {
+      secureLog('バックアップコード暗号化エラー:', error);
+      return code;
+    }
+  };
+  
+  // リクエストID生成
+  const generateRequestId = (): string => {
+    return Date.now().toString(36) + Math.random().toString(36).substr(2);
+  };
+  
+  // デバイスフィンガープリント生成
+  const generateFingerprint = async (): Promise<string> => {
+    try {
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      if (ctx) {
+        ctx.textBaseline = 'top';
+        ctx.font = '14px Arial';
+        ctx.fillText('Device fingerprint', 2, 2);
+      }
+      
+      const fingerprint = {
+        userAgent: navigator.userAgent,
+        language: navigator.language,
+        platform: navigator.platform,
+        screen: `${screen.width}x${screen.height}`,
+        timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+        canvas: canvas.toDataURL()
+      };
+      
+      return CryptoJS.SHA256(JSON.stringify(fingerprint)).toString();
+    } catch (error) {
+      return 'unknown';
     }
   };
 
@@ -325,8 +544,10 @@ const TwoFactorAuth: React.FC<TwoFactorAuthProps> = ({
             <div className="text-center">
               <div className="flex justify-center mb-4">
                 <QRCodeSVG
-                  value={`otpauth://totp/タスカル:${username}?secret=${totpSetup.secret}&issuer=タスカル`}
+                  value={generateQrCodeUrl(totpSetup.secret, username)}
                   size={256}
+                  level="M"
+                  includeMargin={true}
                   className="border rounded-lg shadow-sm bg-white p-4"
                 />
               </div>

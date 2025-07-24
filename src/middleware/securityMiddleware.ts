@@ -14,76 +14,207 @@ interface ExtendedRequest extends Request {
   };
   ipAnalysis?: any;
   requestId?: string;
+  nonce?: string;
 }
 
-// セキュリティミドルウェアの設定
+// エンタープライズレベルセキュリティミドルウェアの設定
 export const setupSecurityMiddleware = (app: any) => {
-  // Helmetによる基本的なセキュリティヘッダー
+  // Helmetによる包括的なセキュリティヘッダー
   app.use(helmet({
+    // Content Security Policy (CSP) - XSS攻撃防止
     contentSecurityPolicy: {
       directives: {
         defaultSrc: ["'self'"],
         scriptSrc: [
           "'self'",
-          "'unsafe-inline'",
+          "'unsafe-inline'", // 本番環境では除去を検討
+          "'unsafe-eval'",   // 本番環境では除去を検討
+          "'strict-dynamic'",
+          "'nonce-{random}'", // 実装時にランダムnonce生成
           "https://cdn.jsdelivr.net",
           "https://cdnjs.cloudflare.com",
           "https://www.googletagmanager.com",
-          "https://www.google-analytics.com"
+          "https://www.google-analytics.com",
+          "https://js.stripe.com", // 決済処理用
+          "https://checkout.stripe.com"
         ],
         styleSrc: [
           "'self'",
           "'unsafe-inline'",
+          "'nonce-{random}'",
           "https://cdn.jsdelivr.net",
-          "https://fonts.googleapis.com"
+          "https://fonts.googleapis.com",
+          "https://cdnjs.cloudflare.com"
         ],
         fontSrc: [
           "'self'",
           "https://fonts.gstatic.com",
-          "https://cdnjs.cloudflare.com"
+          "https://cdnjs.cloudflare.com",
+          "data:"
         ],
         imgSrc: [
           "'self'",
           "data:",
           "blob:",
           "https:",
-          "*.supabase.co"
+          "*.supabase.co",
+          "https://www.google-analytics.com",
+          "https://ssl.gstatic.com"
         ],
         connectSrc: [
           "'self'",
           "https://*.supabase.co",
           "wss://*.supabase.co",
           "https://api.twilio.com",
-          "https://www.google-analytics.com"
+          "https://www.google-analytics.com",
+          "https://api.stripe.com",
+          "https://*.stripe.com"
         ],
-        mediaSrc: ["'self'"],
+        mediaSrc: ["'self'", "blob:"],
         objectSrc: ["'none'"],
         childSrc: ["'self'"],
-        frameSrc: ["'self'"],
+        frameSrc: [
+          "'self'",
+          "https://js.stripe.com",
+          "https://checkout.stripe.com",
+          "https://www.google.com" // reCAPTCHA用
+        ],
+        frameAncestors: ["'none'"], // クリックジャッキング防止
         workerSrc: ["'self'", "blob:"],
         formAction: ["'self'"],
         baseUri: ["'self'"],
         manifestSrc: ["'self'"],
-        upgradeInsecureRequests: process.env.NODE_ENV === 'production' ? [] : null
-      }
+        upgradeInsecureRequests: process.env.NODE_ENV === 'production' ? [] : null,
+        reportUri: "/api/csp-report", // CSP違反レポート収集
+        sandbox: [
+          "allow-forms",
+          "allow-same-origin",
+          "allow-scripts",
+          "allow-popups",
+          "allow-modals"
+        ]
+      },
+      reportOnly: process.env.NODE_ENV !== 'production' // 開発環境ではレポートのみ
     },
-    crossOriginEmbedderPolicy: { policy: "credentialless" },
-    referrerPolicy: { policy: "strict-origin-when-cross-origin" }
+    
+    // HTTP Strict Transport Security (HSTS)
+    hsts: {
+      maxAge: 31536000, // 1年
+      includeSubDomains: true,
+      preload: true
+    },
+    
+    // Cross-Origin Resource Policy
+    crossOriginResourcePolicy: { policy: "same-origin" },
+    
+    // Cross-Origin Embedder Policy
+    crossOriginEmbedderPolicy: { policy: "require-corp" },
+    
+    // Cross-Origin Opener Policy
+    crossOriginOpenerPolicy: { policy: "same-origin" },
+    
+    // Origin Agent Cluster
+    originAgentCluster: true,
+    
+    // Referrer Policy
+    referrerPolicy: { policy: "strict-origin-when-cross-origin" },
+    
+    // X-Content-Type-Options
+    noSniff: true,
+    
+    // X-Frame-Options
+    frameguard: { action: "deny" },
+    
+    // X-XSS-Protection (非推奨だが一部ブラウザ対応)
+    xssFilter: true,
+    
+    // X-DNS-Prefetch-Control
+    dnsPrefetchControl: { allow: false },
+    
+    // Expect-CT
+    expectCt: {
+      maxAge: 86400,
+      enforce: true,
+      reportUri: "/api/expect-ct-report"
+    }
   }));
   
-  // カスタムセキュリティヘッダー
+  // エンタープライズレベルカスタムセキュリティヘッダー
   app.use((req: Request, res: Response, next: NextFunction) => {
-    // Feature Policy / Permissions Policy
+    // Permissions Policy - 機能へのアクセス制御
     res.setHeader(
       'Permissions-Policy',
-      'camera=(), microphone=(), geolocation=(self), payment=(), usb=(), magnetometer=(), accelerometer=()'
+      [
+        'camera=()',
+        'microphone=()',
+        'geolocation=(self)',
+        'payment=(self)',
+        'usb=()',
+        'serial=()',
+        'bluetooth=()',
+        'magnetometer=()',
+        'accelerometer=()',
+        'gyroscope=()',
+        'ambient-light-sensor=()',
+        'autoplay=(self)',
+        'encrypted-media=(self)',
+        'fullscreen=(self)',
+        'picture-in-picture=()',
+        'display-capture=()',
+        'web-share=(self)',
+        'screen-wake-lock=()',
+        'nfc=()'
+      ].join(', ')
     );
     
-    // その他のセキュリティヘッダー
+    // Serverヘッダー隐蔽
+    res.removeHeader('X-Powered-By');
+    res.removeHeader('Server');
+    
+    // Clear-Site-Data (ログアウト時のみ)
+    if (req.path === '/api/auth/logout') {
+      res.setHeader('Clear-Site-Data', '"cache", "cookies", "storage", "executionContexts"');
+    }
+    
+    // 追加セキュリティヘッダー
     res.setHeader('X-Permitted-Cross-Domain-Policies', 'none');
-    res.setHeader('Expect-CT', 'enforce, max-age=86400');
     res.setHeader('X-Download-Options', 'noopen');
-    res.setHeader('X-DNS-Prefetch-Control', 'on');
+    res.setHeader('X-Content-Type-Options', 'nosniff');
+    res.setHeader('X-XSS-Protection', '1; mode=block');
+    
+    // NEL (Network Error Logging)
+    res.setHeader('NEL', JSON.stringify({
+      "report_to": "default",
+      "max_age": 31536000,
+      "include_subdomains": true
+    }));
+    
+    // Report-To API
+    res.setHeader('Report-To', JSON.stringify({
+      "group": "default",
+      "max_age": 31536000,
+      "endpoints": [{
+        "url": "/api/reports"
+      }],
+      "include_subdomains": true
+    }));
+    
+    // Feature Policy (Permissions Policyの旧版)
+    res.setHeader(
+      'Feature-Policy',
+      [
+        'camera \'none\'',
+        'microphone \'none\'',
+        'geolocation \'self\'',
+        'payment \'self\'',
+        'usb \'none\'',
+        'accelerometer \'none\'',
+        'autoplay \'self\''
+      ].join('; ')
+    );
+    
+    // セキュリティ関連レスポンスヘッダーの整合性チェック
+    validateSecurityHeaders(res);
     
     next();
   });
@@ -94,6 +225,9 @@ export const setupSecurityMiddleware = (app: any) => {
     res.setHeader('X-Request-ID', req.requestId);
     next();
   });
+  
+  // CSP nonceミドルウェア
+  app.use(cspNonceMiddleware);
   
   // IP分析ミドルウェア
   app.use(async (req: ExtendedRequest, res: Response, next: NextFunction) => {
@@ -192,22 +326,102 @@ export const setupSecurityMiddleware = (app: any) => {
     next();
   });
   
-  // エラーハンドリング
+  // セキュリティ関連レポートエンドポイント
+  app.post('/api/csp-report', express.json({ type: 'application/csp-report' }), (req: Request, res: Response) => {
+    const report = req.body;
+    ProductionLogger.warn('CSP違反レポート', {
+      report,
+      userAgent: req.get('User-Agent'),
+      ip: req.ip,
+      timestamp: new Date().toISOString()
+    });
+    res.status(204).send();
+  });
+  
+  app.post('/api/expect-ct-report', express.json(), (req: Request, res: Response) => {
+    const report = req.body;
+    ProductionLogger.warn('Expect-CT違反レポート', {
+      report,
+      userAgent: req.get('User-Agent'),
+      ip: req.ip,
+      timestamp: new Date().toISOString()
+    });
+    res.status(204).send();
+  });
+  
+  app.post('/api/reports', express.json(), (req: Request, res: Response) => {
+    const reports = req.body;
+    ProductionLogger.info('セキュリティレポート', {
+      reports,
+      userAgent: req.get('User-Agent'),
+      ip: req.ip,
+      timestamp: new Date().toISOString()
+    });
+    res.status(204).send();
+  });
+
+  // エンタープライズレベルエラーハンドリング
   app.use((err: any, req: ExtendedRequest, res: Response, next: NextFunction) => {
+    // エラー情報のサニタイズ
+    const sanitizedError = sanitizeErrorForClient(err);
+    
     if (err.code === 'EBADCSRFTOKEN') {
       res.status(403).json({
-        error: 'Invalid CSRF token',
-        message: 'セキュリティトークンが無効です。ページを更新してください。'
+        error: 'CSRF_TOKEN_INVALID',
+        message: 'セキュリティトークンが無効です。ページを更新してください。',
+        timestamp: new Date().toISOString(),
+        requestId: req.requestId
       });
     } else if (err.status === 429) {
       // レート制限エラー
       res.status(429).json({
-        error: 'Too Many Requests',
-        message: err.message || 'リクエストが多すぎます。',
-        retryAfter: res.getHeader('Retry-After')
+        error: 'RATE_LIMIT_EXCEEDED',
+        message: err.message || 'リクエストが多すぎます。しばらく待ってから再度お試しください。',
+        retryAfter: res.getHeader('Retry-After'),
+        timestamp: new Date().toISOString(),
+        requestId: req.requestId
+      });
+    } else if (err.status === 400) {
+      // 不正なリクエスト
+      res.status(400).json({
+        error: 'BAD_REQUEST',
+        message: 'リクエストの形式が正しくありません。',
+        timestamp: new Date().toISOString(),
+        requestId: req.requestId
+      });
+    } else if (err.status === 403) {
+      // アクセス拒否
+      res.status(403).json({
+        error: 'ACCESS_DENIED',
+        message: 'アクセスが拒否されました。',
+        timestamp: new Date().toISOString(),
+        requestId: req.requestId
+      });
+    } else if (err.status === 404) {
+      // リソースが見つからない
+      res.status(404).json({
+        error: 'RESOURCE_NOT_FOUND',
+        message: '要求されたリソースが見つかりません。',
+        timestamp: new Date().toISOString(),
+        requestId: req.requestId
       });
     } else {
-      next(err);
+      // その他のエラー
+      ProductionLogger.error('未処理エラー', {
+        error: sanitizedError,
+        requestId: req.requestId,
+        url: req.originalUrl,
+        method: req.method,
+        ip: req.ipAnalysis?.realIP || req.ip,
+        userAgent: req.get('User-Agent')
+      });
+      
+      res.status(500).json({
+        error: 'INTERNAL_SERVER_ERROR',
+        message: 'サーバーエラーが発生しました。しばらく待ってから再度お試しください。',
+        timestamp: new Date().toISOString(),
+        requestId: req.requestId
+      });
     }
   });
 };
@@ -263,6 +477,128 @@ export const securityChecks = {
   }
 };
 
+// セキュリティヘッダー検証
+const validateSecurityHeaders = (res: Response): void => {
+  const headers = res.getHeaders();
+  
+  // 必須セキュリティヘッダーの存在確認
+  const requiredHeaders = [
+    'x-frame-options',
+    'x-content-type-options',
+    'referrer-policy',
+    'permissions-policy'
+  ];
+  
+  for (const header of requiredHeaders) {
+    if (!headers[header]) {
+      ProductionLogger.warn(`必須セキュリティヘッダーが不足: ${header}`);
+    }
+  }
+  
+  // CSPヘッダーの構文チェック
+  const csp = headers['content-security-policy'] as string;
+  if (csp && !isValidCSP(csp)) {
+    ProductionLogger.warn('CSPヘッダーの構文が無効', { csp });
+  }
+};
+
+// CSP構文検証
+const isValidCSP = (csp: string): boolean => {
+  try {
+    // 基本的な構文チェック
+    const directives = csp.split(';').map(d => d.trim()).filter(d => d);
+    return directives.every(directive => {
+      const parts = directive.split(/\s+/);
+      return parts.length >= 1 && /^[a-z-]+$/.test(parts[0]);
+    });
+  } catch {
+    return false;
+  }
+};
+
+// クライアント向けエラー情報のサニタイズ
+const sanitizeErrorForClient = (error: any): any => {
+  // 本番環境では内部エラー詳細を隠蔽
+  if (process.env.NODE_ENV === 'production') {
+    return {
+      name: error.name || 'Error',
+      message: error.status >= 400 && error.status < 500 ? error.message : 'Internal Server Error',
+      status: error.status || 500
+    };
+  }
+  
+  // 開発環境では詳細情報を提供（機密情報は除く）
+  return {
+    name: error.name,
+    message: error.message,
+    status: error.status,
+    // スタックトレースは機密情報を含む可能性があるため慎重に
+    stack: error.stack ? error.stack.split('\n').slice(0, 5).join('\n') : undefined
+  };
+};
+
+// セキュリティイベント監視
+export const monitorSecurityEvents = (req: ExtendedRequest, res: Response): void => {
+  // 疑わしいリクエストパターンの検出
+  const suspiciousPatterns = [
+    /\.\./,                    // ディレクトリトラバーサル
+    /<script/i,               // XSS攻撃
+    /union.*select/i,         // SQLインジェクション
+    /javascript:/i,           // プロトコルハンドラー悪用
+    /%00/,                    // ヌルバイト攻撃
+    /\.\.(\/|\\)/            // パストラバーサル
+  ];
+  
+  const url = req.originalUrl || req.url;
+  const userAgent = req.get('User-Agent') || '';
+  const referer = req.get('Referer') || '';
+  
+  // リクエストURL、User-Agent、Refererをチェック
+  const targets = [url, userAgent, referer];
+  
+  for (const target of targets) {
+    for (const pattern of suspiciousPatterns) {
+      if (pattern.test(target)) {
+        ProductionLogger.warn('疑わしいリクエストパターン検出', {
+          pattern: pattern.toString(),
+          target: target.substring(0, 200), // 長すぎる場合は切り捨て
+          ip: req.ipAnalysis?.realIP || req.ip,
+          userAgent: req.get('User-Agent'),
+          requestId: req.requestId,
+          timestamp: new Date().toISOString()
+        });
+        
+        // 疑わしいリクエストにセキュリティヘッダーを追加
+        res.setHeader('X-Security-Warning', 'Suspicious pattern detected');
+        break;
+      }
+    }
+  }
+};
+
+// nonce生成関数
+export const generateNonce = (): string => {
+  const randomBytes = new Uint8Array(16);
+  crypto.getRandomValues(randomBytes);
+  return Buffer.from(randomBytes).toString('base64');
+};
+
+// CSPnonceミドルウェア
+export const cspNonceMiddleware = (req: ExtendedRequest, res: Response, next: NextFunction) => {
+  const nonce = generateNonce();
+  req.nonce = nonce;
+  res.locals.nonce = nonce;
+  
+  // CSPヘッダーのnonceを更新
+  const existingCSP = res.getHeader('Content-Security-Policy') as string;
+  if (existingCSP) {
+    const updatedCSP = existingCSP.replace(/nonce-{random}/g, `nonce-${nonce}`);
+    res.setHeader('Content-Security-Policy', updatedCSP);
+  }
+  
+  next();
+};
+
 // レート制限情報をレスポンスヘッダーに追加
 export const addRateLimitHeaders = (req: ExtendedRequest, res: Response) => {
   if (req.rateLimitInfo) {
@@ -270,4 +606,7 @@ export const addRateLimitHeaders = (req: ExtendedRequest, res: Response) => {
     res.setHeader('X-RateLimit-Remaining', req.rateLimitInfo.remaining.toString());
     res.setHeader('X-RateLimit-Reset', req.rateLimitInfo.reset.toISOString());
   }
+  
+  // セキュリティイベント監視
+  monitorSecurityEvents(req, res);
 };

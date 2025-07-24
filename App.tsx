@@ -53,29 +53,30 @@ import SkipLinks from './src/components/SkipLinks';
 import AccessibilityAnnouncer from './src/components/AccessibilityAnnouncer';
 import AccessibilitySettings from './src/components/AccessibilitySettings';
 
-// ローディングコンポーネント
+// ローディングコンポーネント（アニメーションなし）
 const LoadingSpinner = () => (
   <div style={{ 
     display: 'flex', 
     justifyContent: 'center', 
     alignItems: 'center', 
     height: '100vh',
-    background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'
+    background: '#2C3E50' // 戦闘力をイメージした深いグレー
   }}>
     <div style={{
-      width: '50px',
-      height: '50px',
-      border: '3px solid rgba(255,255,255,0.6)',
-      borderTop: '3px solid white',
-      borderRadius: '50%',
-      animation: 'spin 1s linear infinite'
-    }}></div>
-    <style>{`
-      @keyframes spin {
-        0% { transform: rotate(0deg); }
-        100% { transform: rotate(360deg); }
-      }
-    `}</style>
+      width: '60px',
+      height: '60px',
+      border: '4px solid #F39C12', // 金色のアクセント
+      borderRadius: '4px',
+      backgroundColor: '#E74C3C', // 戦闘を象徴する赤
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      color: 'white',
+      fontWeight: 'bold',
+      fontSize: '12px'
+    }}>
+      読込中
+    </div>
   </div>
 );
 
@@ -591,29 +592,11 @@ const App: React.FC = () => {
           
           <Footer onNavigateToAdminLogin={navigateToAdminLogin} />
           <style>{`
-            /* 診断フォーカスアニメーション */
+            /* 診断フォーカス効果（戦闘力テーマ） */
             .diagnosis-focus-animation {
-              animation: diagnosisFocus 1.5s ease-in-out;
-              transform-origin: center;
-            }
-            
-            @keyframes diagnosisFocus {
-              0% {
-                transform: scale(1);
-                box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-              }
-              25% {
-                transform: scale(1.05);
-                box-shadow: 0 20px 40px rgba(59, 130, 246, 0.3);
-              }
-              50% {
-                transform: scale(1.03);
-                box-shadow: 0 25px 50px rgba(59, 130, 246, 0.4);
-              }
-              100% {
-                transform: scale(1);
-                box-shadow: 0 10px 20px rgba(59, 130, 246, 0.2);
-              }
+              box-shadow: 0 10px 20px rgba(231, 76, 60, 0.3);
+              border: 2px solid #E74C3C;
+              background: linear-gradient(135deg, #2C3E50 0%, #34495E 100%);
             }
             
             /* 新しい縦型レイアウト - 視認性向上 */
@@ -628,7 +611,7 @@ const App: React.FC = () => {
               padding: 80px 20px;
               display: flex;
               justify-content: center;
-              background: linear-gradient(to bottom, #f8f9ff 0%, #ffffff 100%);
+              background: linear-gradient(to bottom, #ECF0F1 0%, #BDC3C7 50%, #95A5A6 100%);
               position: relative;
             }
             
@@ -638,8 +621,8 @@ const App: React.FC = () => {
               top: 0;
               left: 0;
               right: 0;
-              height: 1px;
-              background: linear-gradient(90deg, transparent, #e0e0e0, transparent);
+              height: 2px;
+              background: linear-gradient(90deg, transparent, #E74C3C, #F39C12, #E74C3C, transparent);
             }
             
             .additional-sections {
@@ -653,7 +636,6 @@ const App: React.FC = () => {
             .home-right-col {
               width: 100%;
               max-width: 900px;
-              transition: all 0.3s ease;
               background: transparent;
               padding: 0;
             }

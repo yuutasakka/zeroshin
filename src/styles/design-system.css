@@ -1,23 +1,25 @@
 /* タスカル デザインシステム - プロフェッショナルUIデザイン */
 
-/* === カラーパレット === */
+/* === カラーパレット - 資金調達戦闘力テーマ === */
 :root {
-  /* メインカラー */
-  --color-primary: #3174F3;
-  --color-primary-light: #5B92F5;
-  --color-primary-dark: #1E5FE1;
-  --color-primary-rgb: 49, 116, 243;
+  /* メインカラー - 戦闘を象徴する深い青 */
+  --color-primary: #2C3E50;
+  --color-primary-light: #34495E;
+  --color-primary-dark: #1A252F;
+  --color-primary-rgb: 44, 62, 80;
   
-  /* アクセントカラー */
-  --color-accent: #F5A623;
-  --color-accent-light: #F7B84D;
-  --color-accent-dark: #E89100;
-  --color-accent-rgb: 245, 166, 35;
+  /* アクセントカラー - 戦闘力の金色 */
+  --color-accent: #F39C12;
+  --color-accent-light: #F4B942;
+  --color-accent-dark: #D68910;
+  --color-accent-rgb: 243, 156, 18;
   
-  /* 背景色 */
+  /* 背景色 - 戦闘力テーマ */
   --color-bg-primary: #FFFFFF;
-  --color-bg-secondary: #F7F9FC;
-  --color-bg-tertiary: #EDF1F7;
+  --color-bg-secondary: #F8F9FA;
+  --color-bg-tertiary: #ECF0F1;
+  --color-bg-combat: #2C3E50;     /* 戦闘背景 */
+  --color-bg-combat-light: #34495E; /* 戦闘背景(明) */
   
   /* テキストカラー */
   --color-text-primary: #333333;
@@ -25,11 +27,19 @@
   --color-text-tertiary: #999999;
   --color-text-inverse: #FFFFFF;
   
-  /* その他のカラー */
-  --color-success: #10B981;
-  --color-warning: #F59E0B;
-  --color-error: #EF4444;
-  --color-info: #3B82F6;
+  /* その他のカラー - 戦闘力テーマ */
+  --color-success: #27AE60; /* 勝利の緑 */
+  --color-warning: #F39C12; /* 警告の金 */
+  --color-error: #E74C3C;   /* 戦闘の赤 */
+  --color-info: #3498DB;    /* 情報の青 */
+  
+  /* 戦闘力専用カラー */
+  --color-combat-attack: #E74C3C;   /* 攻撃力 - 赤 */
+  --color-combat-defense: #3498DB;  /* 防御力 - 青 */
+  --color-combat-mobility: #27AE60; /* 機動力 - 緑 */
+  --color-combat-gold: #F39C12;     /* ゴールド */
+  --color-combat-silver: #95A5A6;   /* シルバー */
+  --color-combat-bronze: #D4AC0D;   /* ブロンズ */
   
   /* 透明度 */
   --opacity-hover: 0.08;
