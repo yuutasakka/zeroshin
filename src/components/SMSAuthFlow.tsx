@@ -108,8 +108,8 @@ const SMSAuthFlow: React.FC<SMSAuthFlowProps> = ({
           return;
         }
 
-        // API経由でサーバーサイドでSMS送信（簡易版を使用）
-        const response = await fetch('/api/send-otp-simple', {
+        // API経由でサーバーサイドでSMS送信
+        const response = await fetch('/api/send-otp', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ phoneNumber })
@@ -161,8 +161,8 @@ const SMSAuthFlow: React.FC<SMSAuthFlowProps> = ({
       setError('');
 
       try {
-        // API経由でサーバーサイドでOTP検証（簡易版を使用）
-        const response = await fetch('/api/verify-otp-simple', {
+        // API経由でサーバーサイドでOTP検証
+        const response = await fetch('/api/verify-otp', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ phoneNumber, otp })
@@ -281,13 +281,13 @@ const SMSAuthFlow: React.FC<SMSAuthFlowProps> = ({
                 disabled={phoneNumber.length !== 11 || isLoading}
                 className={`w-full py-4 px-6 rounded-xl font-bold text-lg transition-all duration-200 focus:ring-2 focus:ring-offset-2 focus:outline-none min-h-[56px] ${
                   phoneNumber.length === 11 && !isLoading
-                    ? 'bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600 text-white shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 focus:ring-cyan-500'
+                    ? 'bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600 text-black shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 focus:ring-cyan-500'
                     : 'bg-gray-200 text-gray-400 cursor-not-allowed'
                 }`}
               >
                 {isLoading ? (
                   <div className="flex items-center justify-center space-x-2">
-                    <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                    <div className="w-5 h-5 border-2 border-black border-t-transparent rounded-full animate-spin"></div>
                     <span>送信中...</span>
                   </div>
                 ) : (

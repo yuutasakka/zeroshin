@@ -87,7 +87,7 @@ const PhoneVerificationPage: React.FC<PhoneVerificationPageProps> = ({
           
           // 独自API経由でSMS送信（本番環境のみ）
           try {
-            const response = await fetch('/api/sms/send', {
+            const response = await fetch('/api/send-otp', {
               method: 'POST',
               headers: {
                 'Content-Type': 'application/json',
@@ -196,7 +196,7 @@ const PhoneVerificationPage: React.FC<PhoneVerificationPageProps> = ({
         return;
       }
       
-      const response = await fetch('/api/sms/send', {
+      const response = await fetch('/api/send-otp', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -292,7 +292,7 @@ const PhoneVerificationPage: React.FC<PhoneVerificationPageProps> = ({
       let authSuccess = false;
       
       try {
-        const response = await fetch('/api/sms/verify', {
+        const response = await fetch('/api/verify-otp', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -463,7 +463,7 @@ const PhoneVerificationPage: React.FC<PhoneVerificationPageProps> = ({
     try {
       const normalizedPhone = normalizePhoneNumber(phoneNumber);
       
-      const response = await fetch('/api/sms/send', {
+      const response = await fetch('/api/send-otp', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
