@@ -85,7 +85,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     
     ProductionLogger.info('SMS送信リクエスト', { phoneNumber: phoneNumber.substring(0, 3) + '***', clientIP });
     
-    const result = await SMSAuthService.sendOTP(phoneNumber);
+    const result = await SMSAuthService.sendOTP(phoneNumber, clientIP);
     
     ProductionLogger.info('SMS送信結果', { success: result.success, hasError: !!result.error });
     
