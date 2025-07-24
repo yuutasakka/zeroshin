@@ -32,6 +32,7 @@ npm run create-admin-user
 3. 以下のいずれかのファイルの内容をコピー&ペースト:
    - `/supabase/sql/admin_minimal.sql` (最小限・推奨)
    - `/supabase/sql/insert_admin_simple.sql` (基本版)
+   - `/supabase/sql/admin_with_phone.sql` (phone_number必須の場合)
    - `/supabase/sql/insert_admin_user.sql` (完全版)
 4. 実行ボタンをクリック
 
@@ -108,7 +109,11 @@ admin_credentials (
      ALTER TABLE admin_credentials ADD COLUMN email VARCHAR(255);
      ```
 
-4. **テーブル構造の不整合**
+4. **phone_number NOT NULL制約エラー**
+   - phone_numberが必須の場合: `/supabase/sql/admin_with_phone.sql` を使用
+   - または電話番号なしで作成: `/supabase/sql/admin_minimal.sql` を使用
+
+5. **テーブル構造の不整合**
    - テーブル修正SQLを実行: `/supabase/sql/fix_admin_credentials.sql`
 
 ## パスワード変更方法
@@ -138,7 +143,10 @@ WHERE username = 'admin';
 
 ```
 /supabase/sql/
-├── insert_admin_user.sql     # 管理者挿入SQL
+├── admin_minimal.sql         # 最小限の管理者挿入SQL
+├── insert_admin_simple.sql  # 基本版
+├── admin_with_phone.sql      # phone_number必須版
+├── insert_admin_user.sql     # 完全版
 /scripts/
 ├── create-admin-user.ts      # 管理者作成スクリプト
 /docs/
