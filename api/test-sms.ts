@@ -47,7 +47,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     // Twilio SDKのロードテスト
     let twilio;
     try {
-      twilio = require('twilio');
+      const twilioModule = await import('twilio');
+      twilio = twilioModule.default;
       console.log('Twilio SDK loaded successfully');
     } catch (error) {
       console.error('Failed to load Twilio SDK:', error);

@@ -16,8 +16,9 @@ export class SMSAuthService {
 
     // 本番環境ではTwilio SDKを使用
     try {
-      // 静的インポートに変更（サーバーレス環境対応）
-      const twilio = require('twilio');
+      // 動的インポートに変更（サーバーレス環境対応）
+      const twilioModule = await import('twilio');
+      const twilio = twilioModule.default;
       return twilio(config.accountSid, config.authToken);
     } catch (error) {
       console.error('Twilio SDK load error:', error);
@@ -53,7 +54,7 @@ export class SMSAuthService {
         return { success: false, error: 'サービスが一時的に利用できません。しばらくしてからお試しください。' };
       }
 
-      const otp = this.generateOTP();
+      const otp = await this.generateOTP();
       
       // 環境判定とTwilio設定チェック
       const isProduction = this.isProductionEnvironment();
@@ -191,7 +192,7 @@ export class SMSAuthService {
     }
   }
 
-  private static generateOTP(): string {
+  private static async generateOTP(): Promise<string> {
     // 暗号学的に安全な乱数生成
     if (typeof crypto !== 'undefined' && crypto.getRandomValues) {
       const array = new Uint8Array(6);
@@ -199,8 +200,8 @@ export class SMSAuthService {
       return Array.from(array, byte => (byte % 10).toString()).join('');
     } else {
       // Node.js環境でのフォールバック
-      const crypto = require('crypto');
-      const bytes = crypto.randomBytes(6);
+      const { randomBytes } = await import('crypto');
+      const bytes = randomBytes(6);
       return Array.from(bytes, (byte: number) => (byte % 10).toString()).join('');
     }
   }
