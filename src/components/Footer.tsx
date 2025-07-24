@@ -105,13 +105,13 @@ const Footer: React.FC<FooterProps> = ({ onNavigateToAdminLogin }) => {
                 <a 
                   href="#diagnosis-form-section"
                   style={{
-                    color: '#CCCCCC',
+                    color: '#FFFFFF',
                     textDecoration: 'none',
                     fontSize: '14px',
                     transition: 'color 0.2s ease'
                   }}
                   onMouseEnter={(e) => e.currentTarget.style.color = '#3174F3'}
-                  onMouseLeave={(e) => e.currentTarget.style.color = '#CCCCCC'}
+                  onMouseLeave={(e) => e.currentTarget.style.color = '#FFFFFF'}
                 >
                   無料診断
                 </a>
@@ -120,13 +120,13 @@ const Footer: React.FC<FooterProps> = ({ onNavigateToAdminLogin }) => {
                 <a 
                   href="#features"
                   style={{
-                    color: '#CCCCCC',
+                    color: '#FFFFFF',
                     textDecoration: 'none',
                     fontSize: '14px',
                     transition: 'color 0.2s ease'
                   }}
                   onMouseEnter={(e) => e.currentTarget.style.color = '#3174F3'}
-                  onMouseLeave={(e) => e.currentTarget.style.color = '#CCCCCC'}
+                  onMouseLeave={(e) => e.currentTarget.style.color = '#FFFFFF'}
                 >
                   診断の特徴
                 </a>
@@ -135,13 +135,13 @@ const Footer: React.FC<FooterProps> = ({ onNavigateToAdminLogin }) => {
                 <a 
                   href="#faq"
                   style={{
-                    color: '#CCCCCC',
+                    color: '#FFFFFF',
                     textDecoration: 'none',
                     fontSize: '14px',
                     transition: 'color 0.2s ease'
                   }}
                   onMouseEnter={(e) => e.currentTarget.style.color = '#3174F3'}
-                  onMouseLeave={(e) => e.currentTarget.style.color = '#CCCCCC'}
+                  onMouseLeave={(e) => e.currentTarget.style.color = '#FFFFFF'}
                 >
                   よくある質問
                 </a>
@@ -171,13 +171,13 @@ const Footer: React.FC<FooterProps> = ({ onNavigateToAdminLogin }) => {
                 <a 
                   href="#company"
                   style={{
-                    color: '#CCCCCC',
+                    color: '#FFFFFF',
                     textDecoration: 'none',
                     fontSize: '14px',
                     transition: 'color 0.2s ease'
                   }}
                   onMouseEnter={(e) => e.currentTarget.style.color = '#3174F3'}
-                  onMouseLeave={(e) => e.currentTarget.style.color = '#CCCCCC'}
+                  onMouseLeave={(e) => e.currentTarget.style.color = '#FFFFFF'}
                 >
                   会社概要
                 </a>
@@ -186,13 +186,13 @@ const Footer: React.FC<FooterProps> = ({ onNavigateToAdminLogin }) => {
                 <a 
                   href="#contact"
                   style={{
-                    color: '#CCCCCC',
+                    color: '#FFFFFF',
                     textDecoration: 'none',
                     fontSize: '14px',
                     transition: 'color 0.2s ease'
                   }}
                   onMouseEnter={(e) => e.currentTarget.style.color = '#3174F3'}
-                  onMouseLeave={(e) => e.currentTarget.style.color = '#CCCCCC'}
+                  onMouseLeave={(e) => e.currentTarget.style.color = '#FFFFFF'}
                 >
                   お問い合わせ
                 </a>
@@ -222,13 +222,13 @@ const Footer: React.FC<FooterProps> = ({ onNavigateToAdminLogin }) => {
                 <a 
                   href="#privacy"
                   style={{
-                    color: '#CCCCCC',
+                    color: '#FFFFFF',
                     textDecoration: 'none',
                     fontSize: '14px',
                     transition: 'color 0.2s ease'
                   }}
                   onMouseEnter={(e) => e.currentTarget.style.color = '#3174F3'}
-                  onMouseLeave={(e) => e.currentTarget.style.color = '#CCCCCC'}
+                  onMouseLeave={(e) => e.currentTarget.style.color = '#FFFFFF'}
                 >
                   プライバシーポリシー
                 </a>
@@ -237,13 +237,13 @@ const Footer: React.FC<FooterProps> = ({ onNavigateToAdminLogin }) => {
                 <a 
                   href="#terms"
                   style={{
-                    color: '#CCCCCC',
+                    color: '#FFFFFF',
                     textDecoration: 'none',
                     fontSize: '14px',
                     transition: 'color 0.2s ease'
                   }}
                   onMouseEnter={(e) => e.currentTarget.style.color = '#3174F3'}
-                  onMouseLeave={(e) => e.currentTarget.style.color = '#CCCCCC'}
+                  onMouseLeave={(e) => e.currentTarget.style.color = '#FFFFFF'}
                 >
                   利用規約
                 </a>
@@ -252,13 +252,13 @@ const Footer: React.FC<FooterProps> = ({ onNavigateToAdminLogin }) => {
                 <a 
                   href="#scta"
                   style={{
-                    color: '#CCCCCC',
+                    color: '#FFFFFF',
                     textDecoration: 'none',
                     fontSize: '14px',
                     transition: 'color 0.2s ease'
                   }}
                   onMouseEnter={(e) => e.currentTarget.style.color = '#3174F3'}
-                  onMouseLeave={(e) => e.currentTarget.style.color = '#CCCCCC'}
+                  onMouseLeave={(e) => e.currentTarget.style.color = '#FFFFFF'}
                 >
                   特定商取引法に基づく表記
                 </a>
@@ -292,14 +292,14 @@ const Footer: React.FC<FooterProps> = ({ onNavigateToAdminLogin }) => {
                     onNavigateToAdminLogin();
                   }}
                   style={{
-                    color: '#CCCCCC',
+                    color: '#FFFFFF',
                     textDecoration: 'none',
                     fontSize: '14px',
                     transition: 'color 0.2s ease',
                     cursor: 'pointer'
                   }}
                   onMouseEnter={(e) => e.currentTarget.style.color = '#3174F3'}
-                  onMouseLeave={(e) => e.currentTarget.style.color = '#CCCCCC'}
+                  onMouseLeave={(e) => e.currentTarget.style.color = '#FFFFFF'}
                 >
                   管理者ログイン
                 </a>
