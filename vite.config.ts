@@ -36,8 +36,8 @@ export default defineConfig({
         ]
       },
       manifest: {
-        name: 'AI ConnectX - お金診断アプリ',
-        short_name: 'AI ConnectX',
+        name: 'タスカル - お金診断アプリ',
+        short_name: 'タスカル',
         description: 'あなたに最適な金融商品を診断します',
         theme_color: '#3b82f6',
         background_color: '#ffffff',

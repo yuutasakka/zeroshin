@@ -71,7 +71,7 @@ export const MCPFinancialAssistant: React.FC<MCPFinancialAssistantProps> = ({ cl
       id: 'welcome',
       role: 'assistant',
       content: `こんにちは！🤖
-私はAI ConnectXのAI財務アドバイザーです。
+私はタスカルのAI財務アドバイザーです。
 
 お客様の財務状況を分析して、最適なアドバイスをお届けします✨
 

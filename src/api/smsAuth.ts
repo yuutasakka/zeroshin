@@ -99,7 +99,7 @@ export class SMSAuthService {
       } else {
         // Twilio SDK使用
         const result = await (client as any).messages.create({
-          body: `【AI ConnectX】認証コード: ${otp}\n\n※5分間有効です。第三者には絶対に教えないでください。`,
+          body: `【タスカル】認証コード: ${otp}\n\n※5分間有効です。第三者には絶対に教えないでください。`,
           from: config.phoneNumber,
           to: normalizedPhone
         });
@@ -279,7 +279,7 @@ export class SMSAuthService {
       body: new URLSearchParams({
         From: client.phoneNumber,
         To: to,
-        Body: `【AI ConnectX】認証コード: ${otp}\n\n※5分間有効です。第三者には絶対に教えないでください。`
+        Body: `【タスカル】認証コード: ${otp}\n\n※5分間有効です。第三者には絶対に教えないでください。`
       })
     });
 

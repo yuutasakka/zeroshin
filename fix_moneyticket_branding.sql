@@ -1,11 +1,11 @@
 -- Fix remaining MoneyTicket branding in database
 
--- Update reasons_to_choose setting to use AI ConnectX branding
+-- Update reasons_to_choose setting to use タスカル branding
 UPDATE public.homepage_content_settings 
 SET setting_data = jsonb_set(
     setting_data, 
     '{title}', 
-    '"AI ConnectXが選ばれる理由"'
+    '"タスカルが選ばれる理由"'
 )
 WHERE setting_key = 'reasons_to_choose';
 
@@ -14,7 +14,7 @@ INSERT INTO public.homepage_content_settings (setting_key, setting_data, descrip
 VALUES (
     'reasons_to_choose',
     '{
-        "title": "AI ConnectXが選ばれる理由",
+        "title": "タスカルが選ばれる理由",
         "subtitle": "多くのお客様から信頼をいただいている、確かな実績をご紹介します",
         "reasons": [
             {
@@ -40,7 +40,7 @@ VALUES (
             }
         ]
     }',
-    'AI ConnectXが選ばれる理由セクション'
+    'タスカルが選ばれる理由セクション'
 )
 ON CONFLICT (setting_key) DO UPDATE SET
     setting_data = EXCLUDED.setting_data,
@@ -52,13 +52,13 @@ UPDATE public.homepage_content_settings
 SET setting_data = jsonb_set(
     setting_data, 
     '{title}', 
-    '"AI ConnectX"'
+    '"タスカル"'
 )
 WHERE setting_data->>'title' LIKE '%MoneyTicket%';
 
 -- Update any descriptions that might contain MoneyTicket
 UPDATE public.homepage_content_settings 
-SET description = REPLACE(description, 'MoneyTicket', 'AI ConnectX')
+SET description = REPLACE(description, 'MoneyTicket', 'タスカル')
 WHERE description ILIKE '%MoneyTicket%';
 
 -- Show the updated data

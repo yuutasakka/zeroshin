@@ -326,7 +326,7 @@ export const useReasonsToChoose = () => {
   
   // デフォルトデータをインポート（フォールバック用）
   const defaultReasonsToChooseData = {
-    title: "AI ConnectXが選ばれる理由",
+    title: "タスカルが選ばれる理由",
     subtitle: "多くのお客様から信頼をいただいている、確かな実績をご紹介します",
     reasons: [
       {

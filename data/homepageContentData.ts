@@ -58,7 +58,7 @@ export interface CTAButtonConfig {
 }
 
 export const defaultReasonsToChooseData: ReasonsToChooseData = {
-  title: "AI ConnectXが選ばれる理由",
+  title: "タスカルが選ばれる理由",
   subtitle: "多くのお客様から信頼をいただいている、確かな実績をご紹介します",
   reasons: [
     {
@@ -95,29 +95,29 @@ export const defaultFirstConsultationOffer: FirstConsultationOffer = {
 
 // デフォルトヘッダー情報
 export const defaultHeaderData: HeaderData = {
-  title: "AI ConnectX",
-  subtitle: "あなたの資産運用をプロがサポート"
+  title: "タスカル",
+  subtitle: "資金調達戦闘力診断"
 };
 
 // デフォルトメインビジュアルメッセージ
 export const defaultMainVisualData: MainVisualData = {
-  title: "あなたの理想的な未来を\n今日から始めませんか？",
-  highlightWord: "今日から始めませんか？",
-  subtitle: "経験豊富なプロフェッショナルが、あなたの人生設計に合わせた最適な資産運用プランを無料でご提案いたします。"
+  title: "30秒であなたの\n資金調達戦闘力をチェック！",
+  highlightWord: "資金調達戦闘力",
+  subtitle: "キャッシング・ファクタリング業者調査の前に自分の実力を把握しよう"
 };
 
 // デフォルトフッター情報
 export const defaultFooterData: FooterData = {
-  siteName: "AI ConnectX",
-  description: "お客様の豊かな未来を全力でサポートいたします",
-  companyInfo: "運営会社：AI ConnectX株式会社 | 金融商品取引業者 関東財務局長（金商）第12345号",
-  contactInfo: "〒150-0001 東京都渋谷区神宮前1-1-1 | TEL：0120-999-888",
-  copyright: "AI ConnectX. All rights reserved."
+  siteName: "タスカル",
+  description: "30秒であなたの資金調達戦闘力をチェック！",
+  companyInfo: "運営会社：タスカル株式会社",
+  contactInfo: "お問い合わせ：support@taskal.jp",
+  copyright: "タスカル. All rights reserved."
 };
 
 // デフォルトCTAボタン設定
 export const defaultCTAButtonConfig: CTAButtonConfig = {
-  button_text: "今すぐ無料相談を始める",
+  button_text: "無料診断を開始する",
   button_type: "scroll_to_diagnosis",
   button_url: "",
   phone_number: "0120-999-888",

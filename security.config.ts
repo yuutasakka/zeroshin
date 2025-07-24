@@ -605,7 +605,7 @@ export const secureLog = (message: string, data?: any) => {
     maskedMessage = maskedMessage.replace(regex, '$1[PROTECTED]');
   });
 
-  console.log(`[AI ConnectX Security] ${maskedMessage}`, maskedData);
+  console.log(`[タスカル Security] ${maskedMessage}`, maskedData);
 };
 
 // CSRFトークン生成

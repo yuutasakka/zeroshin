@@ -64,7 +64,7 @@ const TwoFactorAuth: React.FC<TwoFactorAuthProps> = ({
 
   // QRコードURL生成（Google Authenticator形式）
   const generateQrCodeUrl = (secret: string, username: string): string => {
-    const issuer = 'AI ConnectX';
+    const issuer = 'タスカル';
     const account = `${issuer}:${username}`;
     const params = new URLSearchParams({
       secret: secret,
@@ -273,7 +273,7 @@ const TwoFactorAuth: React.FC<TwoFactorAuthProps> = ({
       // TOTP設定を開始
       const { data, error } = await supabase.auth.mfa.enroll({
         factorType: 'totp',
-        friendlyName: 'AI ConnectX TOTP'
+        friendlyName: 'タスカル TOTP'
       });
 
       if (error) throw error;
@@ -325,7 +325,7 @@ const TwoFactorAuth: React.FC<TwoFactorAuthProps> = ({
             <div className="text-center">
               <div className="flex justify-center mb-4">
                 <QRCodeSVG
-                  value={`otpauth://totp/AI ConnectX:${username}?secret=${totpSetup.secret}&issuer=AI ConnectX`}
+                  value={`otpauth://totp/タスカル:${username}?secret=${totpSetup.secret}&issuer=タスカル`}
                   size={256}
                   className="border rounded-lg shadow-sm bg-white p-4"
                 />

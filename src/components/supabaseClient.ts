@@ -1737,7 +1737,7 @@ export class AdminSMSAuth {
       console.log(' SMS認証コード送信', {
         to: phoneNumber,
         code: smsCode,
-        message: `AI ConnectX管理者認証コード: ${smsCode} (10分間有効)`
+        message: `タスカル管理者認証コード: ${smsCode} (10分間有効)`
       });
 
       return { success: true };

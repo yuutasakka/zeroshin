@@ -74,7 +74,7 @@ function generateBackupCode() {
 // メイン処理
 async function main() {
   console.clear();
-  log(colors.bright + colors.blue, '🔐 AI ConnectX 本番環境管理者認証情報生成');
+  log(colors.bright + colors.blue, '🔐 タスカル 本番環境管理者認証情報生成');
   console.log('='.repeat(60));
   
   try {

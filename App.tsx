@@ -2,7 +2,7 @@ import React, { useState, useEffect, lazy, Suspense } from 'react';
 import ErrorBoundary from './src/components/ErrorBoundary';
 import Header from './src/components/Header';
 // 要件定義書に基づく新しいコンポーネント
-import AIConnectXHero from './src/components/AIConnectXHero';
+import TaskalHero from './src/components/TaskalHero';
 import EnhancedHero from './src/components/EnhancedHero';
 import DiagnosisForm from './src/components/DiagnosisForm';
 // DiagnosisAnswersは削除されたコンポーネントの型なので、OptimizedDiagnosisAnswersを使用
@@ -1033,7 +1033,7 @@ const App: React.FC = () => {
       <>
         <Header />
         <main>
-          <AIConnectXHero onStartDiagnosis={handleStartDiagnosis} />
+          <TaskalHero onStartDiagnosis={handleStartDiagnosis} />
           <ReliabilitySection />
           <SecurityTrustSection />
           <CallToActionSection />

@@ -1,7 +1,7 @@
 {
-  "name": "AI ConnectX - AI投資アドバイザー",
-  "short_name": "AI ConnectX",
-  "description": "あなたの資産運用を最適化するAI投資アドバイザー",
+  "name": "タスカル - 資金調達戦闘力診断",
+  "short_name": "タスカル",
+  "description": "30秒であなたの資金調達戦闘力をチェック！",
   "start_url": "/",
   "display": "standalone",
   "orientation": "portrait",
@@ -37,13 +37,13 @@
   "lang": "ja",
   "dir": "ltr",
   "scope": "/",
-  "id": "aiconectx-pwa",
+  "id": "taskal-pwa",
   "prefer_related_applications": false,
   "shortcuts": [
     {
-      "name": "投資診断を開始",
+      "name": "戦闘力診断を開始",
       "short_name": "診断開始",
-      "description": "AI投資診断を今すぐ開始",
+      "description": "資金調達戦闘力診断を今すぐ開始",
       "url": "/",
       "icons": [{ "src": "/pwa-192x192.png", "sizes": "192x192" }]
     },
@@ -56,10 +56,10 @@
     }
   ],
   "features": [
-    "AI投資アドバイス",
+    "資金調達戦闘力診断",
     "パーソナライズド診断",
     "セキュアな認証",
-    "オフライン対応"
+    "攻略本ダウンロード"
   ],
   "handle_links": "preferred",
   "launch_handler": {

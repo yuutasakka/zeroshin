@@ -137,7 +137,7 @@ const PWAInstallPrompt: React.FC = () => {
       <div className="flex items-start gap-3">
         <div className="flex-1">
           <h3 className="font-bold text-gray-900 mb-1">
-            AI ConnectXをインストール
+            タスカルをインストール
           </h3>
           <p className="text-sm text-gray-600 mb-3">
             アプリとしてインストールすると、より快適にご利用いただけます

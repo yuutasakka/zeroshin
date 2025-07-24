@@ -1,6 +1,6 @@
 {
-  "name": "AI ConnectX_洗礼されたデザイン版",
-  "description": "あなたのお金の夢を一緒に叶えるための金融相談サービス「AI ConnectX」。カンタン30秒診断であなたに合った投資プランを見つけましょう。あなたの未来を一緒に描こう♪ (AI ConnectX, a financial consultation service to help you achieve your financial dreams. Find an investment plan that's right for you with our easy 30-second diagnosis. Let's design your future together♪)",
+  "name": "タスカル_資金調達戦闘力診断",
+  "description": "30秒であなたの資金調達戦闘力をチェック！キャッシング・ファクタリング業者調査の前に自分の実力を把握しよう。攻撃力（調達ポテンシャル）・防御力（返済余力）・機動力（資金入手スピード）を診断します。",
   "requestFramePermissions": [],
   "prompt": ""
 }

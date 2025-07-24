@@ -2,11 +2,11 @@ import React, { useState, useEffect } from 'react';
 // アニメーションコンポーネントは削除されました
 import { defaultMainVisualData } from '../../data/homepageContentData';
 
-interface AIConnectXHeroProps {
+interface TaskalHeroProps {
   onStartDiagnosis: () => void;
 }
 
-const AIConnectXHero: React.FC<AIConnectXHeroProps> = ({ onStartDiagnosis }) => {
+const TaskalHero: React.FC<TaskalHeroProps> = ({ onStartDiagnosis }) => {
   const [mainVisualData, setMainVisualData] = useState(defaultMainVisualData);
 
   useEffect(() => {
@@ -413,4 +413,4 @@ const AIConnectXHero: React.FC<AIConnectXHeroProps> = ({ onStartDiagnosis }) => 
   );
 };
 
-export default AIConnectXHero; 
+export default TaskalHero; 
