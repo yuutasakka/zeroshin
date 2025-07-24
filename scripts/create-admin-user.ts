@@ -71,17 +71,47 @@ async function createAdminUser() {
 
     // 新しい管理者データを挿入
     console.log('新しい管理者データを挿入中...');
+    
+    // まず既存のテーブル構造を確認
+    const { data: tableInfo, error: tableInfoError } = await supabase
+      .from('admin_credentials')
+      .select('*')
+      .limit(1);
+    
+    if (tableInfoError) {
+      console.log('WARNING: テーブル構造確認エラー:', tableInfoError.message);
+    }
+    
+    // 基本的なデータで挿入を試行
+    let insertData: any = {
+      username: 'admin',
+      password_hash: passwordHash
+    };
+    
+    // オプショナルなカラムがある場合は追加
+    try {
+      // emailカラムが存在するかテスト挿入
+      const testInsert = await supabase
+        .from('admin_credentials')
+        .insert([{ username: 'test_check', password_hash: 'test', email: 'test@test.com' }])
+        .select();
+      
+      if (!testInsert.error) {
+        // emailカラムが存在する場合
+        insertData.email = 'admin@taskal.jp';
+        insertData.role = 'super_admin';
+        insertData.is_active = true;
+        
+        // テスト用データを削除
+        await supabase.from('admin_credentials').delete().eq('username', 'test_check');
+      }
+    } catch (e) {
+      console.log('WARNING: 拡張カラムのテストに失敗しました。基本カラムのみで作成します。');
+    }
+    
     const { data, error: insertError } = await supabase
       .from('admin_credentials')
-      .insert([
-        {
-          username: 'admin',
-          password_hash: passwordHash,
-          email: 'admin@taskal.jp',
-          role: 'super_admin',
-          is_active: true
-        }
-      ])
+      .insert([insertData])
       .select();
 
     if (insertError) {

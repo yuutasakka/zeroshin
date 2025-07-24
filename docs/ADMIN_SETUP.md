@@ -29,9 +29,13 @@ npm run create-admin-user
 
 1. Supabase管理画面にログイン
 2. SQL Editorを開く
-3. 以下のファイルの内容をコピー&ペースト:
-   `/supabase/sql/insert_admin_user.sql`
+3. 以下のいずれかのファイルの内容をコピー&ペースト:
+   - `/supabase/sql/admin_minimal.sql` (最小限・推奨)
+   - `/supabase/sql/insert_admin_simple.sql` (基本版)
+   - `/supabase/sql/insert_admin_user.sql` (完全版)
 4. 実行ボタンをクリック
+
+**注意**: テーブル構造によってはエラーが出る場合があります。その場合は `admin_minimal.sql` を使用してください。
 
 ## セキュリティ考慮事項
 
@@ -96,6 +100,16 @@ admin_credentials (
 
 2. **権限エラー**
    - Service Role Keyが正しく設定されているか確認
+
+3. **カラムが存在しないエラー (例: "column email does not exist")**
+   - 最小限のSQLを使用: `/supabase/sql/admin_minimal.sql`
+   - または既存のテーブル構造を確認してカラムを追加:
+     ```sql
+     ALTER TABLE admin_credentials ADD COLUMN email VARCHAR(255);
+     ```
+
+4. **テーブル構造の不整合**
+   - テーブル修正SQLを実行: `/supabase/sql/fix_admin_credentials.sql`
 
 ## パスワード変更方法
 
