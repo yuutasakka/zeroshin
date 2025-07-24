@@ -93,7 +93,7 @@ const SecurityTrustSection: React.FC = () => {
     loadSecurityTrustData();
   }, []);
   return (
-    <section className="py-16 md:py-20 px-4" style={{ background: '#FFFFFF' }}>
+    <section className="py-16 md:py-20 px-4" style={{ background: '#F7F9FC' }}>
       <div className="container mx-auto px-4 max-w-7xl">
         <style>{`
           .luxury-card {
