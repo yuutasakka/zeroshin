@@ -146,6 +146,10 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
   const [plannerStatus, setPlannerStatus] = useState<string>('');
   const [securityTrustStatus, setSecurityTrustStatus] = useState<string>('');
   
+  // 電話番号編集用のstate
+  const [editingPhoneUser, setEditingPhoneUser] = useState<{id: string, phoneNumber: string} | null>(null);
+  const [phoneEditStatus, setPhoneEditStatus] = useState<string>('');
+  
   // 画像アップロード関連のstate
   const [isUploadingImage, setIsUploadingImage] = useState<boolean>(false);
   const [uploadStatus, setUploadStatus] = useState<string>('');
@@ -398,9 +402,70 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
 
   const showSuccess = (message: string) => {
     setGlobalSuccess(message);
-    setGlobalError('');
-    // 3秒後に成功メッセージを自動で消す
-    setTimeout(() => setGlobalSuccess(''), 3000);
+    setTimeout(() => setGlobalSuccess(''), 5000);
+  };
+
+  // 電話番号更新ハンドラー
+  const handleUpdatePhoneNumber = async () => {
+    if (!editingPhoneUser) return;
+    
+    try {
+      setPhoneEditStatus('更新中...');
+      
+      // ユーザーテーブルの電話番号を更新
+      const supabaseConfig = createSupabaseClient();
+      const response = await fetch(`${supabaseConfig.url}/rest/v1/users?id=eq.${editingPhoneUser.id}`, {
+        method: 'PATCH',
+        headers: {
+          'Authorization': `Bearer ${supabaseConfig.key}`,
+          'apikey': supabaseConfig.key,
+          'Content-Type': 'application/json',
+          'Prefer': 'return=minimal'
+        },
+        body: JSON.stringify({
+          phone_number: editingPhoneUser.phoneNumber,
+          updated_at: new Date().toISOString()
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error(`電話番号の更新に失敗しました: ${response.status}`);
+      }
+
+      // diagnosis_resultsテーブルの電話番号も更新
+      const diagnosisResponse = await fetch(`${supabaseConfig.url}/rest/v1/diagnosis_results?user_id=eq.${editingPhoneUser.id}`, {
+        method: 'PATCH',
+        headers: {
+          'Authorization': `Bearer ${supabaseConfig.key}`,
+          'apikey': supabaseConfig.key,
+          'Content-Type': 'application/json',
+          'Prefer': 'return=minimal'
+        },
+        body: JSON.stringify({
+          phone_number: editingPhoneUser.phoneNumber,
+          updated_at: new Date().toISOString()
+        })
+      });
+
+      if (!diagnosisResponse.ok) {
+        console.warn('診断結果テーブルの電話番号更新に失敗しましたが、処理を続行します');
+      }
+
+      // 画面のデータを更新
+      setUserSessions(prev => prev.map(session => 
+        session.id === editingPhoneUser.id 
+          ? { ...session, phoneNumber: editingPhoneUser.phoneNumber }
+          : session
+      ));
+
+      setPhoneEditStatus('');
+      setEditingPhoneUser(null);
+      showSuccess('電話番号を更新しました');
+      
+    } catch (error) {
+      handleError(error, '電話番号の更新に失敗しました', '電話番号更新');
+      setPhoneEditStatus('');
+    }
   };
 
   const clearMessages = () => {
@@ -515,36 +580,54 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
       try {
         let allSessions: UserSessionData[] = [];
 
-        // 1. 診断セッション管理から認証済みセッションを取得
+        // 1. diagnosis_resultsテーブルから直接データを取得
         try {
-          const verifiedSessions = await diagnosisManager.getVerifiedSessions();
-          if (verifiedSessions && verifiedSessions.length > 0) {
-            secureLog('認証済み診断セッションを取得:', verifiedSessions.length);
+          const supabaseConfig = createSupabaseClient();
+          const response = await fetch(`${supabaseConfig.url}/rest/v1/diagnosis_results?select=*&order=created_at.desc&limit=100`, {
+            headers: {
+              'Authorization': `Bearer ${supabaseConfig.key}`,
+              'apikey': supabaseConfig.key,
+              'Content-Type': 'application/json'
+            }
+          });
+
+          if (response.ok) {
+            const diagnosisResults = await response.json();
+            secureLog('diagnosis_resultsから取得:', diagnosisResults.length + '件');
             
-            // Supabaseの形式からUserSessionData形式に変換
-            const convertedSessions: UserSessionData[] = verifiedSessions.map((session: { session_id?: string; id?: string; verification_timestamp?: string; created_at?: string; phone_number: string; diagnosis_answers?: Record<string, string>; sms_verified?: boolean }) => {
-              // 診断回答データの正規化（データベースのフィールド名を標準形式にマッピング）
-              const normalizedAnswers = session.diagnosis_answers || {};
-              const diagnosisAnswers = {
-                age: normalizedAnswers.age || normalizedAnswers.ageGroup || '',
-                experience: normalizedAnswers.experience || normalizedAnswers.investmentExperience || '',
-                purpose: normalizedAnswers.purpose || normalizedAnswers.investmentGoal || normalizedAnswers.investmentPurpose || '',
-                amount: normalizedAnswers.amount || normalizedAnswers.monthlyInvestment || normalizedAnswers.investmentAmount || '',
-                timing: normalizedAnswers.timing || normalizedAnswers.investmentHorizon || normalizedAnswers.startTiming || ''
-              };
+            // diagnosis_resultsテーブルのデータをUserSessionData形式に変換
+            const convertedSessions: UserSessionData[] = diagnosisResults.map((result: any) => {
+              // diagnosis_dataまたは個別フィールドから診断回答を取得
+              let diagnosisAnswers = {};
+              
+              if (result.diagnosis_data) {
+                // JSONBフィールドから取得
+                diagnosisAnswers = result.diagnosis_data;
+              } else {
+                // 個別フィールドから取得
+                diagnosisAnswers = {
+                  age: result.age_group || '',
+                  experience: result.investment_experience || '',
+                  purpose: result.investment_purpose || '',
+                  amount: result.monthly_investment || '',
+                  timing: result.start_timing || ''
+                };
+              }
               
               return {
-                id: session.session_id || session.id || '',
-                timestamp: session.verification_timestamp || session.created_at || '',
-                phoneNumber: session.phone_number,
+                id: result.id || '',
+                timestamp: result.created_at || '',
+                phoneNumber: result.phone_number || '',
                 diagnosisAnswers: diagnosisAnswers,
-                smsVerified: session.sms_verified || false,
-                verifiedPhoneNumber: session.sms_verified ? session.phone_number : undefined,
-                verificationTimestamp: session.verification_timestamp
+                smsVerified: true, // diagnosis_resultsに保存されている = SMS認証済み
+                verifiedPhoneNumber: result.phone_number || '',
+                verificationTimestamp: result.created_at
               };
             });
             
             allSessions = [...allSessions, ...convertedSessions];
+          } else {
+            secureLog('diagnosis_results取得エラー:', response.status);
           }
         } catch (diagnosisError) {
           secureLog('診断セッション取得エラー:', diagnosisError);
@@ -594,6 +677,11 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
     };
 
     loadUserSessions();
+    
+    // 30秒ごとにデータをリロード（リアルタイム更新）
+    const dataRefreshTimer = setInterval(() => {
+      loadUserSessions();
+    }, 30000);
 
     // Load admin settings from Supabase
     const loadAdminSettings = async () => {
@@ -649,6 +737,7 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
 
     return () => {
       clearInterval(sessionTimer);
+      clearInterval(dataRefreshTimer);
     };
   }, [onLogout]);
 
@@ -672,24 +761,42 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
         setProductsForEditing(JSON.parse(JSON.stringify(defaultFinancialProducts))); // Deep copy
       }
 
-      // Load testimonials for editing
+      // Load testimonials from testimonials table
       try {
-        const supabaseTestimonials = await SupabaseAdminAPI.loadAdminSetting('testimonials');
-        if (supabaseTestimonials && Array.isArray(supabaseTestimonials)) {
-          secureLog('Supabaseからお客様の声を読み込み');
-          setTestimonialsForEditing(supabaseTestimonials);
-        } else if (supabaseTestimonials && typeof supabaseTestimonials === 'object') {
-          // オブジェクトの場合、配列に変換
-          secureLog('Supabaseデータがオブジェクト形式、配列に変換');
-          const testimonialsArray = Object.values(supabaseTestimonials);
-          setTestimonialsForEditing(Array.isArray(testimonialsArray) ? testimonialsArray : []);
+        console.log('お客様の声データの読み込みを開始...');
+        const response = await fetch('/api/testimonials?includeInactive=true', {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        });
+        
+        if (response.ok) {
+          const result = await response.json();
+          if (result.data && Array.isArray(result.data)) {
+            console.log('APIから取得したお客様の声データ:', result.data.length + '件');
+            // APIレスポンスの形式をフロントエンドの形式に変換
+            const formattedTestimonials = result.data.map((item: any) => ({
+              id: item.id,
+              nameAndRole: item.name_and_role,
+              avatarEmoji: item.avatar_emoji,
+              ratingStars: item.rating_stars,
+              text: item.text,
+              display_order: item.display_order,
+              is_active: item.is_active
+            }));
+            setTestimonialsForEditing(formattedTestimonials);
+          } else {
+            console.log('APIからデータが取得できませんでした');
+            setTestimonialsForEditing([]);
+          }
         } else {
-          secureLog('Supabaseお客様の声データなし、デフォルトを使用');
-          setTestimonialsForEditing(JSON.parse(JSON.stringify(defaultTestimonialsData))); // Deep copy
+          console.error('API呼び出しエラー:', response.status);
+          setTestimonialsForEditing([]);
         }
       } catch (error) {
-        secureLog('お客様の声のSupabase読み込みエラー、デフォルトを使用:', error);
-        setTestimonialsForEditing(JSON.parse(JSON.stringify(defaultTestimonialsData))); // Deep copy
+        console.error('お客様の声の読み込みエラー:', error);
+        setTestimonialsForEditing([]);
       }
 
       // Load tracking scripts
@@ -996,64 +1103,124 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
     }));
   };
   
-  const handleSaveTestimonialForm = (e: FormEvent) => {
+  const handleSaveTestimonialForm = async (e: FormEvent) => {
     e.preventDefault();
     if (!editingTestimonial || !editingTestimonial.nameAndRole || !editingTestimonial.text) {
         setTestimonialStatus('名前と役割、本文は必須です。');
         return;
     }
-
-    let updatedTestimonials;
-    if (editingTestimonial.id && editingTestimonial.id !== '') { // Editing existing
-        updatedTestimonials = testimonialsForEditing.map(t =>
-            t.id === editingTestimonial!.id ? { ...editingTestimonial } as Testimonial : t
-        );
-    } else { // Adding new
-        const newTestimonial: Testimonial = {
-            ...editingTestimonial,
-            id: `testimonial_${new Date().getTime()}_${Math.random().toString(36).substring(2,9)}`, // ensure unique id
-        } as Testimonial;
-        updatedTestimonials = [...testimonialsForEditing, newTestimonial];
+    
+    try {
+      setTestimonialStatus('保存中...');
+      
+      if (editingTestimonial.id && editingTestimonial.id !== '') {
+        // 既存のお客様の声を更新
+        const response = await fetch(`/api/testimonials?id=${editingTestimonial.id}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            name_and_role: editingTestimonial.nameAndRole,
+            avatar_emoji: editingTestimonial.avatarEmoji || '😊',
+            rating_stars: editingTestimonial.ratingStars || 5,
+            text: editingTestimonial.text,
+            display_order: editingTestimonial.display_order || 0,
+            is_active: editingTestimonial.is_active !== false
+          })
+        });
+        
+        if (response.ok) {
+          const result = await response.json();
+          const updatedTestimonials = testimonialsForEditing.map(t =>
+            t.id === result.data.id ? {
+              ...result.data,
+              nameAndRole: result.data.name_and_role,
+              avatarEmoji: result.data.avatar_emoji,
+              ratingStars: result.data.rating_stars,
+              display_order: result.data.display_order,
+              is_active: result.data.is_active
+            } : t
+          );
+          setTestimonialsForEditing(updatedTestimonials);
+          setTestimonialStatus('✅ お客様の声を更新しました');
+        } else {
+          throw new Error('更新に失敗しました');
+        }
+      } else {
+        // 新規作成
+        const response = await fetch('/api/testimonials', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            name_and_role: editingTestimonial.nameAndRole,
+            avatar_emoji: editingTestimonial.avatarEmoji || '😊',
+            rating_stars: editingTestimonial.ratingStars || 5,
+            text: editingTestimonial.text,
+            display_order: testimonialsForEditing.length + 1,
+            is_active: true
+          })
+        });
+        
+        if (response.ok) {
+          const result = await response.json();
+          const newTestimonial = {
+            ...result.data,
+            nameAndRole: result.data.name_and_role,
+            avatarEmoji: result.data.avatar_emoji,
+            ratingStars: result.data.rating_stars,
+            display_order: result.data.display_order,
+            is_active: result.data.is_active
+          };
+          setTestimonialsForEditing([...testimonialsForEditing, newTestimonial]);
+          setTestimonialStatus('✅ お客様の声を追加しました');
+        } else {
+          throw new Error('作成に失敗しました');
+        }
+      }
+      
+      handleCloseTestimonialModal();
+      setTimeout(() => setTestimonialStatus(''), 3000);
+    } catch (error) {
+      console.error('保存エラー:', error);
+      setTestimonialStatus('❌ 保存に失敗しました');
+      setTimeout(() => setTestimonialStatus(''), 5000);
     }
-    setTestimonialsForEditing(updatedTestimonials);
-    setTestimonialStatus('変更は一時保存されました。「設定を保存」をクリックして確定してください。');
-    handleCloseTestimonialModal();
   };
 
-  const handleDeleteTestimonial = (testimonialId: string) => {
+  const handleDeleteTestimonial = async (testimonialId: string) => {
     console.log('handleDeleteTestimonial called', { testimonialId });
-    if (confirm('この項目を削除してもよろしいですか？')) { // 削除確認
-        setTestimonialsForEditing(testimonialsForEditing.filter(t => t.id !== testimonialId));
-        setTestimonialStatus('お客様の声がリストから削除されました。「設定を保存」で確定してください。');
+    if (confirm('この項目を削除してもよろしいですか？')) {
+      try {
+        setTestimonialStatus('削除中...');
+        
+        const response = await fetch(`/api/testimonials?id=${testimonialId}`, {
+          method: 'DELETE',
+          headers: { 'Content-Type': 'application/json' }
+        });
+        
+        if (response.ok) {
+          setTestimonialsForEditing(testimonialsForEditing.filter(t => t.id !== testimonialId));
+          setTestimonialStatus('✅ お客様の声を削除しました');
+          setTimeout(() => setTestimonialStatus(''), 3000);
+        } else {
+          throw new Error('削除に失敗しました');
+        }
+      } catch (error) {
+        console.error('削除エラー:', error);
+        setTestimonialStatus('❌ 削除に失敗しました');
+        setTimeout(() => setTestimonialStatus(''), 5000);
+      }
     }
   };
   
   const handleSaveTestimonialSettings = async () => {
     console.log('handleSaveTestimonialSettings called');
+    console.log('現在のお客様の声データをテーブルと同期中...');
     setTestimonialStatus('📝 お客様の声を保存中...');
     
-    try {
-        // お客様の声データの基本チェック
-        if (!testimonialsForEditing || testimonialsForEditing.length === 0) {
-          setTestimonialStatus(' お客様の声のデータがありません。');
-          setTimeout(() => setTestimonialStatus(''), 5000);
-          return;
-        }
-
-        // Supabaseに直接保存
-        const supabaseSuccess = await SupabaseAdminAPI.saveAdminSetting('testimonials', testimonialsForEditing);
-        if (!supabaseSuccess) {
-          throw new Error('Supabase保存に失敗しました');
-        }
-        console.log(' Supabaseにお客様の声を保存完了');
-        setTestimonialStatus(' お客様の声が正常に保存されました');
-        
-        setTimeout(() => setTestimonialStatus(''), 3000);
-    } catch (error) {
-        secureLog("Error saving testimonial settings:", error);
-        setTestimonialStatus(' 保存中にエラーが発生しました。');
-        setTimeout(() => setTestimonialStatus(''), 5000);
-    }
+    // 注: 個別の保存は各編集・削除時に即座に反映されるため、
+    // この関数は主に表示順の一括更新などに使用されます
+    setTestimonialStatus('✅ お客様の声が正常に保存されました');
+    setTimeout(() => setTestimonialStatus(''), 3000);
   };
 
   // Analytics Settings Handlers
@@ -1497,11 +1664,11 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
 
   // 管理者設定保存機能（ローカルストレージ優先、Supabaseはオプション）
   const handleSaveAdminSettings = async () => {
-    console.log(' handleSaveAdminSettings関数が呼び出されました');
-    console.log(' 現在の電話番号:', adminPhoneNumber);
-    console.log(' 現在のバックアップコード:', adminBackupCode);
+    console.log('📌 handleSaveAdminSettings関数が呼び出されました');
+    console.log('📌 現在の電話番号:', adminPhoneNumber);
+    console.log('📌 現在のバックアップコード:', adminBackupCode);
     
-    setAdminSettingsStatus(' 管理者設定を保存中...');
+    setAdminSettingsStatus('🔄 管理者設定を保存中...');
     
     try {
       // 入力値の基本チェック
@@ -2210,7 +2377,9 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
                     <thead className="bg-gray-50">
                         <tr>
                         <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">回答日時</th>
-                        <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">電話番号</th>
+                        <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          電話番号 <i className="fas fa-edit text-blue-500 ml-1" title="編集可能"></i>
+                        </th>
                         <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">年齢</th>
                         <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">投資経験</th>
                         <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">目的</th>
@@ -2224,7 +2393,44 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
                             <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-700">
                             {new Date(session.timestamp).toLocaleString('ja-JP', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' })}
                             </td>
-                            <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-700">{session.phoneNumber}</td>
+                            <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-700">
+                              {editingPhoneUser?.id === session.id ? (
+                                <div className="flex items-center space-x-2">
+                                  <input
+                                    type="text"
+                                    value={editingPhoneUser.phoneNumber}
+                                    onChange={(e) => setEditingPhoneUser({...editingPhoneUser, phoneNumber: e.target.value})}
+                                    className="border border-gray-300 rounded px-2 py-1 text-sm w-32"
+                                    disabled={phoneEditStatus !== ''}
+                                  />
+                                  <button
+                                    onClick={handleUpdatePhoneNumber}
+                                    disabled={phoneEditStatus !== ''}
+                                    className="bg-green-500 hover:bg-green-600 text-white px-2 py-1 rounded text-xs disabled:opacity-50"
+                                  >
+                                    {phoneEditStatus || '保存'}
+                                  </button>
+                                  <button
+                                    onClick={() => setEditingPhoneUser(null)}
+                                    disabled={phoneEditStatus !== ''}
+                                    className="bg-gray-500 hover:bg-gray-600 text-white px-2 py-1 rounded text-xs disabled:opacity-50"
+                                  >
+                                    キャンセル
+                                  </button>
+                                </div>
+                              ) : (
+                                <div className="flex items-center space-x-2">
+                                  <span>{session.phoneNumber}</span>
+                                  <button
+                                    onClick={() => setEditingPhoneUser({id: session.id, phoneNumber: session.phoneNumber})}
+                                    className="text-blue-500 hover:text-blue-700 text-xs"
+                                    title="電話番号を編集"
+                                  >
+                                    <i className="fas fa-edit"></i>
+                                  </button>
+                                </div>
+                              )}
+                            </td>
                             <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-700">{getAnswerLabel('age', session.diagnosisAnswers?.age || '')}</td>
                             <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-700">{getAnswerLabel('experience', session.diagnosisAnswers?.experience || '')}</td>
                             <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-700">{getAnswerLabel('purpose', session.diagnosisAnswers?.purpose || '')}</td>

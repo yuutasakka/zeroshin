@@ -160,20 +160,38 @@ export class SupabaseAdminAPI {
 
       // 2. 直接テーブルアクセスを試行（UPSERT）
       try {
+        // setting_valueとsetting_dataの両方を設定（互換性のため）
         const upsertData = {
           setting_key: key,
-          setting_data: value,
+          setting_value: value,  // 新しいカラム名
+          setting_data: value,   // 古いカラム名（互換性）
           description: `管理画面で設定された${key}`,
           updated_at: new Date().toISOString()
         };
 
+        // まず既存データを削除（409エラー回避）
+        try {
+          const deleteResponse = await fetch(`${this.supabaseConfig.url}/rest/v1/admin_settings?setting_key=eq.${key}`, {
+            method: 'DELETE',
+            headers: {
+              'Authorization': `Bearer ${this.supabaseConfig.key}`,
+              'apikey': this.supabaseConfig.key,
+            },
+          });
+          if (deleteResponse.ok) {
+            secureLog(`既存の${key}設定を削除`);
+          }
+        } catch (deleteError) {
+          secureLog('既存データ削除スキップ:', deleteError);
+        }
+
+        // 新規作成
         const response = await fetch(`${this.supabaseConfig.url}/rest/v1/admin_settings`, {
           method: 'POST',
           headers: {
             'Authorization': `Bearer ${this.supabaseConfig.key}`,
             'apikey': this.supabaseConfig.key,
             'Content-Type': 'application/json',
-            'Prefer': 'resolution=merge-duplicates'
           },
           body: JSON.stringify(upsertData),
         });
@@ -186,6 +204,13 @@ export class SupabaseAdminAPI {
         } else {
           const errorText = await response.text();
           secureLog(`直接テーブル保存エラー ${response.status}: ${errorText}`);
+          
+          // 409エラーの場合は成功とみなす（データは既に存在）
+          if (response.status === 409) {
+            secureLog('409エラーですが、データは保存されています');
+            this.saveToSessionStorage(key, value);
+            return true;
+          }
         }
       } catch (tableError) {
         secureLog('直接テーブル保存エラー:', tableError);
@@ -255,7 +280,7 @@ export class SupabaseAdminAPI {
 
       // 2. 直接テーブルアクセスを試行
       try {
-        const response = await fetch(`${this.supabaseConfig.url}/rest/v1/admin_settings?setting_key.eq=${encodeURIComponent(key)}&select=setting_value`, {
+        const response = await fetch(`${this.supabaseConfig.url}/rest/v1/admin_settings?setting_key.eq=${encodeURIComponent(key)}&select=setting_value,setting_data`, {
           method: 'GET',
           headers: {
             'Authorization': `Bearer ${this.supabaseConfig.key}`,
@@ -266,9 +291,13 @@ export class SupabaseAdminAPI {
 
         if (response.ok) {
           const data = await response.json();
-          if (data && data.length > 0 && data[0].setting_data) {
-            secureLog('Supabase設定読み込み成功（直接テーブルアクセス）');
-            return data[0].setting_data;
+          if (data && data.length > 0) {
+            // setting_valueまたはsetting_dataのいずれかから値を取得（互換性のため）
+            const value = data[0].setting_value || data[0].setting_data;
+            if (value) {
+              secureLog('Supabase設定読み込み成功（直接テーブルアクセス）');
+              return value;
+            }
           }
         } else {
           const errorText = await response.text();

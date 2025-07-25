@@ -7,6 +7,7 @@ import { secureLog } from '../../security.config';
 import { allFinancialProducts as defaultFinancialProducts } from '../../data/financialProductsData';
 import { MCPFinancialAssistant } from './MCPFinancialAssistant';
 import { measureTransition, PERF_TARGETS } from './PerformanceMonitor';
+import DownloadGuideModal from './DownloadGuideModal';
 
 import { InputValidator } from '../utils/inputValidation';
 
@@ -117,6 +118,7 @@ interface DiagnosisResultsPageProps {
 
 const DiagnosisResultsPage: React.FC<DiagnosisResultsPageProps> = ({ diagnosisData, onReturnToStart }) => {
   const [state, dispatch] = useReducer(appReducer, initialState);
+  const [showDownloadModal, setShowDownloadModal] = useState(false);
   const diagnosisManager = useMemo(() => new DiagnosisSessionManager(), []);
   const abortControllerRef = useRef<AbortController | null>(null);
   const isMountedRef = useRef(true);
@@ -1122,6 +1124,13 @@ const DiagnosisResultsPage: React.FC<DiagnosisResultsPageProps> = ({ diagnosisDa
           {/* アクションボタン */}
           <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center">
             <button
+              onClick={() => setShowDownloadModal(true)}
+              className="bg-gradient-to-r from-green-500 to-teal-600 hover:from-green-600 hover:to-teal-700 text-white font-medium py-3 px-6 rounded-lg transition-all duration-200 transform hover:scale-105 hover:shadow-lg cursor-pointer"
+            >
+              <span className="mr-2">📧</span>
+              診断結果をメールで受け取る
+            </button>
+            <button
               onClick={() => {
                 const url = window.location.href;
                 navigator.clipboard.writeText(url).then(() => {
@@ -1186,6 +1195,18 @@ const DiagnosisResultsPage: React.FC<DiagnosisResultsPageProps> = ({ diagnosisDa
             </button>
           </div>
         </div>
+        
+        {/* ダウンロードモーダル */}
+        <DownloadGuideModal
+          isOpen={showDownloadModal}
+          onClose={() => setShowDownloadModal(false)}
+          phoneNumber={sessionStorage.getItem('userPhoneNumber') || undefined}
+          diagnosisData={{
+            score: projectedAmount,
+            rank: projectedAmount >= 50000000 ? 'S' : projectedAmount >= 30000000 ? 'A' : projectedAmount >= 10000000 ? 'B' : 'C',
+            answers: restoredDiagnosisData || {}
+          }}
+        />
       </div>
       </div>
     </>

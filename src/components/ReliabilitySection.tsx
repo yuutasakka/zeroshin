@@ -72,27 +72,37 @@ const ReliabilitySection: React.FC = () => {
   useEffect(() => {
     const loadTestimonials = async () => {
       try {
-        const supabaseTestimonials = await loadTestimonialsFromSupabase();
-        if (supabaseTestimonials && supabaseTestimonials.length > 0) {
-          setTestimonials(supabaseTestimonials);
-        } else {
-          // セッションストレージからデータを取得
-          const sampleTestimonials = sessionStorage.getItem('testimonials');
-          if (sampleTestimonials) {
-            const parsedSampleTestimonials = JSON.parse(sampleTestimonials);
-            setTestimonials(parsedSampleTestimonials);
-          } else {
-            const storedTestimonials = sessionStorage.getItem('customTestimonials');
-            if (storedTestimonials) {
-              const parsedTestimonials = JSON.parse(storedTestimonials);
-              setTestimonials(parsedTestimonials);
-            } else {
-              setTestimonials(defaultTestimonialsData);
-            }
+        // APIエンドポイントから直接取得を試行
+        const response = await fetch('/api/testimonials', {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        });
+        
+        if (response.ok) {
+          const result = await response.json();
+          if (result.data && Array.isArray(result.data) && result.data.length > 0) {
+            // APIレスポンスの形式をフロントエンドの形式に変換
+            const formattedTestimonials = result.data.map((item: any) => ({
+              id: item.id,
+              nameAndRole: item.name_and_role,
+              avatarEmoji: item.avatar_emoji,
+              ratingStars: item.rating_stars,
+              text: item.text
+            }));
+            setTestimonials(formattedTestimonials);
+            secureLog(`お客様の声を${formattedTestimonials.length}件読み込みました`);
+            return;
           }
         }
+        
+        // APIが利用できない場合はデフォルトデータを使用
+        secureLog('APIが利用できないため、デフォルトデータを使用します');
+        setTestimonials(defaultTestimonialsData);
       } catch (error) {
-        secureLog('お客様の声の読み込みエラー、デフォルトデータを使用:', error);
+        secureLog('お客様の声の読み込みエラー:', error);
+        // エラーの場合もデフォルトデータを使用
         setTestimonials(defaultTestimonialsData);
       }
     };
@@ -100,88 +110,6 @@ const ReliabilitySection: React.FC = () => {
     loadTestimonials();
   }, []);
 
-  const loadTestimonialsFromSupabase = async () => {
-    try {
-      const config = createSupabaseClient();
-      
-      // Supabase設定が無効な場合はエラーを投げる
-      if (!config.url || !config.key || config.url.includes('your-project') || config.key.includes('your-anon-key')) {
-        secureLog('Supabase設定が無効です。ローカルストレージを使用します。');
-        return null;
-      }
-
-      // まずSupabaseから取得を試行
-      try {
-        const supabase = createSupabaseHelper();
-        const { data, error } = await supabase
-          .from('admin_settings')
-          .select('setting_value')
-          .eq('setting_key', 'testimonials')
-          .single();
-
-        if (!error && data?.setting_value) {
-          secureLog('Supabaseからお客様の声を正常取得');
-          return data.setting_value;
-        } else if (error) {
-          secureLog('Supabaseエラー（テーブル未作成の可能性）:', error);
-        }
-      } catch (supabaseError) {
-        secureLog('Supabaseアクセスエラー:', supabaseError);
-      }
-
-      // Supabaseから取得できない場合はローカルストレージを確認
-      secureLog('ローカルストレージからお客様の声を取得を試行');
-      
-      // 1. 管理画面で保存されたカスタムデータ
-      const customTestimonials = sessionStorage.getItem('customTestimonials');
-      if (customTestimonials) {
-        try {
-          const parsedCustom = JSON.parse(customTestimonials);
-          if (parsedCustom && parsedCustom.length > 0) {
-            secureLog('カスタムお客様の声をローカルストレージから取得');
-            return parsedCustom;
-          }
-        } catch (parseError) {
-          secureLog('カスタムお客様の声の解析エラー:', parseError);
-        }
-      }
-
-      // 2. サンプルデータ
-      const sampleTestimonials = sessionStorage.getItem('testimonials');
-      if (sampleTestimonials) {
-        try {
-          const parsedSample = JSON.parse(sampleTestimonials);
-          if (parsedSample && parsedSample.length > 0) {
-            secureLog('サンプルお客様の声をローカルストレージから取得');
-            return parsedSample;
-          }
-        } catch (parseError) {
-          secureLog('サンプルお客様の声の解析エラー:', parseError);
-        }
-      }
-
-      secureLog('ローカルストレージにもデータがありません。デフォルトデータを使用します。');
-      return null;
-    } catch (error) {
-      secureLog('お客様の声Supabase読み込みエラー:', error);
-      
-      // エラー時でもローカルストレージから取得を試行
-      try {
-        const customTestimonials = sessionStorage.getItem('customTestimonials');
-        if (customTestimonials) {
-          const parsedCustom = JSON.parse(customTestimonials);
-          if (parsedCustom && parsedCustom.length > 0) {
-            secureLog('エラー時フォールバック: カスタムお客様の声を取得');
-            return parsedCustom;
-          }
-        }
-      } catch (fallbackError) {
-        secureLog('フォールバック取得エラー:', fallbackError);
-      }
-
-      return null;
-    }
-  };
 
   return (
     <section id="reliability-section" className="py-16 md:py-20 px-4" style={{ background: '#FFFFFF' }}>

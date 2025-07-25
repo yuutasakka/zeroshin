@@ -45,12 +45,12 @@ const CallToActionSection: React.FC = () => {
             color: '#2C3E50'
           }}
         >
-          あなたの理想的な未来を<br />
-          <span style={{ color: '#F39C12' }}>今日から始めませんか？</span>
+          急な資金ニーズ<br />
+          <span style={{ color: '#F39C12' }}>今すぐ解決しませんか？</span>
         </h3>
         <p className="text-lg md:text-xl mb-8 leading-relaxed" style={{ color: '#34495E' }}>
-            経験豊富なプロフェッショナルが、あなたの人生設計に合わせた<br />
-            最適な資産運用プランを無料でご提案いたします。
+            キャッシング・ファクタリングのプロが、あなたの収支状況や緊急度に合わせて<br />
+            最適な資金調達プランを無料でご提案します。
         </p>
         
         <div className="space-y-6">
