@@ -15,14 +15,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     // 動的インポートを使用（Vercelサーバーレス環境対応）
     console.log('🔍 [send-otp] Starting imports...');
     
-    // Vercel専用のSMSAuthServiceを使用
-    const { SMSAuthService } = await import('./_lib/smsAuth');
+    // Vercel専用のSMSAuthServiceを使用 - 直接srcからインポート
+    const { SMSAuthService } = await import('../src/api/smsAuth');
     console.log('✅ [send-otp] SMSAuthService imported');
     
-    const { SecurityMiddleware } = await import('./_lib/securityMiddleware');
+    const { SecurityMiddleware } = await import('../src/api/securityMiddleware');
     console.log('✅ [send-otp] SecurityMiddleware imported');
     
-    const ProductionLogger = (await import('./_lib/productionLogger')).default;
+    const ProductionLogger = (await import('../src/utils/productionLogger')).default;
     console.log('✅ [send-otp] All imports completed');
 
     // CORS設定 - 本番環境用

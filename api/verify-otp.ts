@@ -3,9 +3,9 @@ import type { VercelRequest, VercelResponse } from '@vercel/node';
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   try {
     // 動的インポートを使用（Vercelサーバーレス環境対応）
-    const { SMSAuthService } = await import('./_lib/smsAuth');
-    const { SecurityMiddleware } = await import('./_lib/securityMiddleware');
-    const ProductionLogger = (await import('./_lib/productionLogger')).default;
+    const { SMSAuthService } = await import('../src/api/smsAuth');
+    const { SecurityMiddleware } = await import('../src/api/securityMiddleware');
+    const ProductionLogger = (await import('../src/utils/productionLogger')).default;
 
     // CORS設定 - 本番環境用
     const allowedOrigins = [
