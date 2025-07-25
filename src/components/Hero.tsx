@@ -141,16 +141,26 @@ const Hero: React.FC<HeroProps> = ({ onStartDiagnosis }) => {
 
           {/* CTA セクション */}
           <div className="flex flex-col lg:flex-row items-center justify-center gap-6 lg:gap-12">
-            <div 
-              className="inline-block mb-8"
+            <button
+              onClick={onStartDiagnosis}
+              className="btn-accent btn-pulse"
               style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                justifyContent: 'center',
                 background: 'linear-gradient(135deg, rgb(231, 76, 60) 0%, rgb(192, 57, 43) 100%)',
                 color: 'white',
-                padding: '12px 20px',
+                padding: '20px 48px',
                 borderRadius: '12px',
                 boxShadow: 'rgba(231, 76, 60, 0.3) 0px 4px 15px',
                 animation: '2s ease 0s infinite normal none running pulse',
-                transform: 'scale(0.9)'
+                border: 'none',
+                cursor: 'pointer',
+                transition: '0.3s',
+                fontSize: '18px',
+                fontWeight: 700,
+                minWidth: '280px',
+                height: '64px'
               }}
             >
               <div className="flex items-center space-x-3">
@@ -160,7 +170,7 @@ const Hero: React.FC<HeroProps> = ({ onStartDiagnosis }) => {
                   <p className="text-xs font-semibold">資金調達バイブル完全版を無料プレゼント！</p>
                 </div>
               </div>
-            </div>
+            </button>
             
             <button
               onClick={onStartDiagnosis}
@@ -181,7 +191,9 @@ const Hero: React.FC<HeroProps> = ({ onStartDiagnosis }) => {
                 boxShadow: 'rgba(44, 62, 80, 0.25) 0px 4px 16px',
                 position: 'relative',
                 overflow: 'hidden',
-                transform: 'translateY(0px)'
+                transform: 'translateY(0px)',
+                minWidth: '280px',
+                height: '64px'
               }}
             >
               無料診断を開始する
