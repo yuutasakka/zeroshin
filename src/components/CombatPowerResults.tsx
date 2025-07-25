@@ -472,6 +472,12 @@ const CombatPowerResults: React.FC<CombatPowerResultsProps> = ({ diagnosisAnswer
         onClose={() => setShowDownloadModal(false)}
         combatScore={total}
         rank={rank}
+        phoneNumber={sessionStorage.getItem('userPhoneNumber') || undefined}
+        diagnosisData={{
+          score: total,
+          rank: rank,
+          answers: diagnosisAnswers
+        }}
       />
       
       <style>{`

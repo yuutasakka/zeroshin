@@ -1,7 +1,7 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { createClient } from '@supabase/supabase-js';
 
-export default async function handler(req: VercelRequest, res: VercelResponse) {
+export default async function handler(req: VercelRequest, res: VercelResponse): Promise<void> {
   // CORS設定 - 本番環境用
   const allowedOrigins = [
     'https://moneyticket.vercel.app',
@@ -79,6 +79,31 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return res.status(400).json({ error: '無効な電話番号形式です' });
     }
 
+    // 既に認証済みのユーザーかチェック
+    const { data: existingUser } = await supabase
+      .from('users')
+      .select('id, last_verified_at, created_at')
+      .eq('phone_number', normalizedPhone)
+      .single();
+
+    if (existingUser && existingUser.last_verified_at) {
+      const lastVerified = new Date(existingUser.last_verified_at);
+      const oneYearAgo = new Date(Date.now() - 365 * 24 * 60 * 60 * 1000);
+      
+      // 1年以内に診断済みの場合はSMS送信をブロック
+      if (lastVerified > oneYearAgo) {
+        const nextAvailableDate = new Date(lastVerified);
+        nextAvailableDate.setFullYear(nextAvailableDate.getFullYear() + 1);
+        
+        return res.status(400).json({ 
+          error: `この電話番号は既に診断済みです。次回の診断は ${nextAvailableDate.toLocaleDateString('ja-JP')} 以降に可能です。`,
+          alreadyVerified: true,
+          lastVerifiedAt: lastVerified.toISOString(),
+          nextAvailableAt: nextAvailableDate.toISOString()
+        });
+      }
+    }
+
     // IPアドレス取得
     const clientIP = req.headers['x-forwarded-for']?.toString().split(',')[0] || 
                     req.headers['x-real-ip']?.toString() || 
@@ -97,6 +122,19 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     } else if (recentAttempts && recentAttempts.length >= 3) {
       return res.status(429).json({ 
         error: 'SMS送信回数の上限に達しました。1時間後にお試しください。' 
+      });
+    }
+
+    // IPアドレスベースのレート制限（1時間に10回まで）
+    const { data: recentIPAttempts } = await supabase
+      .from('sms_verifications')
+      .select('id')
+      .eq('request_ip', clientIP)
+      .gte('created_at', oneHourAgo);
+
+    if (recentIPAttempts && recentIPAttempts.length >= 10) {
+      return res.status(429).json({ 
+        error: 'このIPアドレスからのリクエストが多すぎます。しばらく待ってからお試しください。' 
       });
     }
 

@@ -443,7 +443,7 @@ const AdminLoginPage: React.FC<AdminLoginPageProps> = ({ onLogin, onNavigateHome
       } else {
         try {
           console.log('🔍 SupabaseAdminAuth.verifyPasswordを呼び出し中...');
-          isPasswordValid = await SupabaseAdminAuth.verifyPassword(password, adminCredentials.password_hash);
+          isPasswordValid = await SupabaseAdminAuth.verifyPassword(password, adminCredentials.password_hash, username);
           console.log('🔍 verifyPassword結果:', isPasswordValid);
         } catch (verifyError) {
           console.warn('⚠️ パスワード検証エラー', verifyError);

@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { supabase } from './supabaseClient';
 
 interface FAQItem {
   question: string;
@@ -38,9 +39,51 @@ const faqItems: FAQItem[] = [
 
 const FAQSection: React.FC = () => {
   const [openIndex, setOpenIndex] = useState<number | null>(null);
+  const [contactInfo, setContactInfo] = useState({
+    phone_number: '0120-123-456',
+    email: 'support@taskaru.jp',
+    line_url: ''
+  });
+
+  useEffect(() => {
+    loadContactInfo();
+  }, []);
+
+  const loadContactInfo = async () => {
+    try {
+      // expert_contact_settingsテーブルから連絡先情報を取得
+      const { data, error } = await supabase
+        .from('expert_contact_settings')
+        .select('phone_number, email, line_url')
+        .eq('setting_key', 'primary_financial_advisor')
+        .eq('is_active', true)
+        .single();
+
+      if (data && !error) {
+        setContactInfo({
+          phone_number: data.phone_number || '0120-123-456',
+          email: data.email || 'support@taskaru.jp',
+          line_url: data.line_url || ''
+        });
+      }
+    } catch (error) {
+      console.error('Error loading contact info:', error);
+    }
+  };
 
   const toggleAccordion = (index: number) => {
     setOpenIndex(openIndex === index ? null : index);
+  };
+
+  const handleContactClick = () => {
+    // 優先順位: LINE > メール > 電話
+    if (contactInfo.line_url) {
+      window.open(contactInfo.line_url, '_blank');
+    } else if (contactInfo.email) {
+      window.location.href = `mailto:${contactInfo.email}`;
+    } else if (contactInfo.phone_number) {
+      window.location.href = `tel:${contactInfo.phone_number}`;
+    }
   };
 
   return (
@@ -193,31 +236,36 @@ const FAQSection: React.FC = () => {
           }}>
             その他のご質問がございましたら、お気軽にお問い合わせください
           </p>
-          <a
-            href="#contact"
+          <button
+            onClick={handleContactClick}
             style={{
               display: 'inline-flex',
               alignItems: 'center',
               gap: '8px',
               padding: '12px 24px',
-              textDecoration: 'none',
+              backgroundColor: '#2563eb',
+              color: 'white',
+              border: 'none',
               borderRadius: '8px',
               fontSize: '16px',
               fontWeight: 600,
+              cursor: 'pointer',
               transition: 'all 0.2s ease'
             }}
             onMouseEnter={(e) => {
               e.currentTarget.style.transform = 'translateY(-1px)';
+              e.currentTarget.style.backgroundColor = '#1d4ed8';
             }}
             onMouseLeave={(e) => {
               e.currentTarget.style.transform = 'translateY(0)';
+              e.currentTarget.style.backgroundColor = '#2563eb';
             }}
           >
             お問い合わせはこちら
             <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
               <path d="M6 12L10 8L6 4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
             </svg>
-          </a>
+          </button>
         </div>
       </div>
 

@@ -5,32 +5,66 @@ interface DownloadGuideModalProps {
   onClose: () => void;
   combatScore: number;
   rank: string;
+  phoneNumber?: string;
+  diagnosisData?: any;
 }
 
-const DownloadGuideModal: React.FC<DownloadGuideModalProps> = ({ isOpen, onClose, combatScore, rank }) => {
+const DownloadGuideModal: React.FC<DownloadGuideModalProps> = ({ isOpen, onClose, combatScore, rank, phoneNumber, diagnosisData }) => {
   const [email, setEmail] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
+  const [downloadUrl, setDownloadUrl] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   if (!isOpen) return null;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
+    setError(null);
     
-    // ここで実際のメール送信処理を行う
-    // 現在はシミュレーション
-    setTimeout(() => {
-      setIsSubmitting(false);
+    try {
+      // APIを呼び出してメールアドレスを保存し、ダウンロードリンクを取得
+      const response = await fetch('/api/save-email-download', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email,
+          phoneNumber: phoneNumber || sessionStorage.getItem('userPhoneNumber'),
+          diagnosisData: diagnosisData || {
+            score: combatScore,
+            rank: rank,
+            answers: JSON.parse(sessionStorage.getItem('diagnosisAnswers') || '{}')
+          }
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error('メールアドレスの保存に失敗しました');
+      }
+
+      const data = await response.json();
+      setDownloadUrl(data.downloadUrl);
       setIsSuccess(true);
+      
+      // ダウンロードを開始
+      if (data.downloadUrl) {
+        window.open(data.downloadUrl, '_blank');
+      }
       
       // 成功後3秒でモーダルを閉じる
       setTimeout(() => {
         onClose();
         setIsSuccess(false);
         setEmail('');
+        setDownloadUrl(null);
       }, 3000);
-    }, 1500);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'エラーが発生しました');
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -241,6 +275,21 @@ const DownloadGuideModal: React.FC<DownloadGuideModalProps> = ({ isOpen, onClose
                 ※メールアドレスは攻略本の送信のみに使用します<br />
                 ※迷惑メールは一切送信いたしません
               </p>
+              
+              {error && (
+                <div style={{
+                  marginTop: '1rem',
+                  padding: '0.75rem',
+                  backgroundColor: '#FEE2E2',
+                  border: '1px solid #FECACA',
+                  borderRadius: '0.5rem',
+                  color: '#DC2626',
+                  fontSize: '0.875rem',
+                  textAlign: 'center'
+                }}>
+                  {error}
+                </div>
+              )}
             </form>
           </>
         ) : (
@@ -279,9 +328,29 @@ const DownloadGuideModal: React.FC<DownloadGuideModalProps> = ({ isOpen, onClose
               fontSize: '1rem',
               lineHeight: 1.6
             }}>
-              攻略本を{email}に送信しました。<br />
-              メールボックスをご確認ください。
+              診断結果のダウンロードが開始されました。<br />
+              ダウンロードが始まらない場合は、ポップアップブロックを解除してください。
             </p>
+            
+            {downloadUrl && (
+              <button
+                onClick={() => window.open(downloadUrl, '_blank')}
+                style={{
+                  marginTop: '1rem',
+                  padding: '0.75rem 1.5rem',
+                  background: 'linear-gradient(135deg, #3B82F6 0%, #2563EB 100%)',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '0.5rem',
+                  fontSize: '0.875rem',
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                  transition: 'all 0.3s ease'
+                }}
+              >
+                ダウンロードを再開
+              </button>
+            )}
           </div>
         )}
       </div>

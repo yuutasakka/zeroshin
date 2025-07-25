@@ -208,15 +208,34 @@ const PhoneVerificationPage: React.FC<PhoneVerificationPageProps> = ({
 
       if (!response.ok) {
         let errorMessage = `SMS送信に失敗しました (${response.status})`;
+        let isAlreadyVerified = false;
         try {
           const contentType = response.headers.get('content-type');
           if (contentType && contentType.includes('application/json')) {
             const errorData = await response.json();
             errorMessage = errorData.error || errorMessage;
+            isAlreadyVerified = errorData.alreadyVerified || false;
           }
         } catch (parseError) {
           console.error('Error parsing response:', parseError);
         }
+        
+        // 既に認証済みの場合は結果ページへ直接遷移
+        if (isAlreadyVerified) {
+          // 診断データをセッションに保存
+          const currentSession = {
+            phoneNumber: normalizedPhone,
+            diagnosisAnswers: userSession.diagnosisAnswers,
+            smsVerified: true,
+            sessionId: sessionId
+          };
+          sessionStorage.setItem('currentUserSession', JSON.stringify(currentSession));
+          
+          // 結果ページへ遷移
+          navigate('/result');
+          return;
+        }
+        
         console.error('SMS送信API失敗:', { status: response.status, statusText: response.statusText });
         throw new Error(errorMessage);
       }

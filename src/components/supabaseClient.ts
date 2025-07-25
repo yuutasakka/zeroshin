@@ -380,7 +380,7 @@ export class SupabaseAdminAuth {
   }
 
   // パスワード検証（簡易版）
-  static async verifyPassword(password: string, hash: string): Promise<boolean> {
+  static async verifyPassword(password: string, hash: string, username?: string): Promise<boolean> {
     const isProduction = process.env.NODE_ENV === 'production';
     const isDevelopment = !isProduction;
     
@@ -395,9 +395,35 @@ export class SupabaseAdminAuth {
       
       // bcryptハッシュかどうかを判定
       if (hash.startsWith('$2a$') || hash.startsWith('$2b$') || hash.startsWith('$2y$')) {
-        // ブラウザ環境ではbcryptを使用できないため、検証不可
-        console.error('bcryptハッシュの検証はサーバーサイドで実行する必要があります');
-        return false;
+        // サーバーサイドのAPIを呼び出してパスワードを検証
+        try {
+          console.log('🔐 サーバーサイドAPI呼び出し中...');
+          const response = await fetch('/api/admin/verify-password', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ 
+              username: username || 'admin',
+              password 
+            }),
+          });
+
+          console.log('🔐 API応答:', response.status, response.statusText);
+          
+          if (!response.ok) {
+            const errorText = await response.text();
+            console.error('API エラー詳細:', errorText);
+            return false;
+          }
+
+          const data = await response.json();
+          console.log('🔐 API結果:', data);
+          return data.success === true;
+        } catch (error) {
+          console.error('Password verification API error:', error);
+          return false;
+        }
       } 
       // 強化SHA-256（ソルト付き）の検証
       else if (hash.startsWith('sha256$')) {

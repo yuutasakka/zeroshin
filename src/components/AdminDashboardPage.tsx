@@ -25,6 +25,8 @@ import { useColorTheme } from './ColorThemeContext';
 import TwoFactorAuth from './TwoFactorAuth';
 // import SecurityIntegration from './SecurityIntegration'; // 非表示
 import AdminApprovalDashboard from './AdminApprovalDashboard';
+import { DuplicatePhoneDisplay } from './admin/DuplicatePhoneDisplay';
+import { DownloadTrackingDisplay } from './admin/DownloadTrackingDisplay';
 import { useDesignTemplate } from '../../src/contexts/DesignSettingsContext';
 import { DesignTemplate, designTemplates } from '../../src/types/designTypes';
 import { ImageUploadManager } from './supabaseClient';
@@ -37,7 +39,7 @@ interface AdminDashboardPageProps {
   onNavigateHome: () => void;
 }
 
-type AdminViewMode = 'userHistory' | 'productSettings' | 'testimonialSettings' | 'analyticsSettings' | 'notificationSettings' | 'legalLinksSettings' | 'adminSettings' | 'homepageContentSettings' | 'headerAndVisualSettings' | 'securitySettings' | 'expertContactSettings' | 'financialPlannersSettings' | 'approvalRequests' | 'securityTrustSettings';
+type AdminViewMode = 'userHistory' | 'productSettings' | 'testimonialSettings' | 'analyticsSettings' | 'notificationSettings' | 'legalLinksSettings' | 'adminSettings' | 'homepageContentSettings' | 'headerAndVisualSettings' | 'securitySettings' | 'expertContactSettings' | 'financialPlannersSettings' | 'approvalRequests' | 'securityTrustSettings' | 'duplicatePhones' | 'downloadTracking';
 
 interface FinancialPlanner {
   id?: number;
@@ -2121,6 +2123,18 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
                      className={`admin-nav-button px-4 py-2 rounded-md text-sm font-medium transition-colors flex items-center justify-center ${viewMode === 'approvalRequests' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}`}
                  >
                      <span>承認申請一覧</span>
+                 </button>
+                 <button 
+                     onClick={() => setViewMode('duplicatePhones')}
+                     className={`admin-nav-button px-4 py-2 rounded-md text-sm font-medium transition-colors flex items-center justify-center ${viewMode === 'duplicatePhones' ? 'bg-red-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}`}
+                 >
+                     <span>重複電話番号</span>
+                 </button>
+                 <button 
+                     onClick={() => setViewMode('downloadTracking')}
+                     className={`admin-nav-button px-4 py-2 rounded-md text-sm font-medium transition-colors flex items-center justify-center ${viewMode === 'downloadTracking' ? 'bg-purple-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}`}
+                 >
+                     <span>ダウンロード管理</span>
                  </button>
             </div>
             
@@ -4449,6 +4463,26 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
                     secureLog('承認処理完了、関連データを再読み込み');
                 }}
             />
+        )}
+
+        {viewMode === 'duplicatePhones' && (
+            <div className="bg-white p-6 md:p-8 rounded-xl shadow-2xl mb-8">
+                <h2 className="text-2xl font-bold text-gray-800 mb-6 flex items-center">
+                    <i className="fas fa-exclamation-triangle mr-3 text-red-600"></i>
+                    重複電話番号の確認
+                </h2>
+                <DuplicatePhoneDisplay />
+            </div>
+        )}
+
+        {viewMode === 'downloadTracking' && (
+            <div className="bg-white p-6 md:p-8 rounded-xl shadow-2xl mb-8">
+                <h2 className="text-2xl font-bold text-gray-800 mb-6 flex items-center">
+                    <i className="fas fa-download mr-3 text-purple-600"></i>
+                    ダウンロード管理
+                </h2>
+                <DownloadTrackingDisplay />
+            </div>
         )}
 
         {/* セキュリティ機能のモーダル */}
