@@ -3,8 +3,9 @@ import bcrypt from 'bcryptjs';
 import { createClient } from '@supabase/supabase-js';
 
 // Supabase設定
-const supabaseUrl = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.VITE_SUPABASE_URL;
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+const supabaseUrl = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.VITE_SUPABASE_URL || 'https://eqirzbuqgymrtnfmvwhq.supabase.co';
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SERVICE_KEY;
+const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVxaXJ6YnVxZ3ltcnRuZm12d2hxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzI0MTY3NzgsImV4cCI6MjA0Nzk5Mjc3OH0.s4P00R6h9L7e1G2mpPJg5EkJyxAD85_FTuVzrQqkzB8';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   // CORSヘッダーの設定
@@ -29,13 +30,24 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return res.status(400).json({ error: 'Username and password are required' });
     }
 
-    if (!supabaseUrl || !supabaseServiceKey) {
-      console.error('Missing Supabase configuration');
+    // Service RoleキーまたはAnonキーを使用
+    const supabaseKey = supabaseServiceKey || supabaseAnonKey;
+    
+    if (!supabaseUrl || !supabaseKey) {
+      console.error('Missing Supabase configuration:', {
+        hasUrl: !!supabaseUrl,
+        hasServiceKey: !!supabaseServiceKey,
+        hasAnyKey: !!supabaseKey
+      });
       return res.status(500).json({ error: 'Server configuration error' });
     }
 
-    // Service roleを使用してSupabaseクライアントを作成
-    const supabase = createClient(supabaseUrl, supabaseServiceKey);
+    // Supabaseクライアントを作成（Service roleキーが利用可能な場合はそれを使用）
+    const supabase = createClient(supabaseUrl, supabaseKey);
+    
+    console.log('Using Supabase key type:', supabaseServiceKey ? 'service_role' : 'anon');
+
+    console.log('Fetching admin credentials for username:', username);
 
     // 管理者情報を取得
     const { data: admin, error: fetchError } = await supabase
@@ -44,8 +56,24 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       .eq('username', username)
       .single();
 
-    if (fetchError || !admin) {
-      console.error('Admin fetch error:', fetchError);
+    if (fetchError) {
+      console.error('Admin fetch error:', {
+        error: fetchError,
+        username: username,
+        code: fetchError.code,
+        message: fetchError.message
+      });
+      
+      // Service roleキーが無効な場合のエラーハンドリング
+      if (fetchError.message?.includes('JWT') || fetchError.code === 'PGRST301') {
+        return res.status(500).json({ error: 'Server authentication error' });
+      }
+      
+      return res.status(401).json({ error: 'Invalid credentials' });
+    }
+
+    if (!admin) {
+      console.error('Admin not found:', username);
       return res.status(401).json({ error: 'Invalid credentials' });
     }
 
