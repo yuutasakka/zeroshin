@@ -133,11 +133,37 @@ const Hero: React.FC<HeroProps> = ({ onStartDiagnosis }) => {
             fontSize: 'clamp(0.875rem, 1.5vw, 1rem)',
             color: '#7F8C8D',
             lineHeight: 1.6,
-            marginBottom: '48px'
+            marginBottom: '24px'
           }}>
             調査前に"自分の資金調達力"を理解すれば、<br />
             無駄なく最適なサービスが選べる！
           </p>
+
+          {/* プレゼントバナー（Hero版） */}
+          <div 
+            className="inline-block mb-8"
+            style={{
+              background: 'linear-gradient(135deg, #E74C3C 0%, #C0392B 100%)',
+              color: 'white',
+              padding: '12px 20px',
+              borderRadius: '12px',
+              boxShadow: '0 4px 15px rgba(231, 76, 60, 0.3)',
+              animation: 'pulse 2s infinite',
+              transform: 'scale(0.9)'
+            }}
+          >
+            <div className="flex items-center space-x-3">
+              <i className="fas fa-gift text-yellow-300 text-xl animate-bounce"></i>
+              <div>
+                <p className="font-bold text-sm leading-tight">
+                  30秒診断完了者限定！
+                </p>
+                <p className="text-xs font-semibold">
+                  資金調達バイブル完全版を無料プレゼント！
+                </p>
+              </div>
+            </div>
+          </div>
 
           {/* CTAボタン */}
           <button
