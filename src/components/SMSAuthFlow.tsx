@@ -184,6 +184,33 @@ const SMSAuthFlow: React.FC<SMSAuthFlowProps> = ({
         
         if (isValid) {
           // 認証成功
+          
+          // Supabaseにユーザーデータを保存
+          try {
+            const saveResponse = await fetch('/api/save-user-data', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                phoneNumber: phoneNumber,
+                diagnosisAnswers: diagnosisAnswers,
+                sessionId: `sms-auth-${Date.now()}`
+              })
+            });
+
+            if (!saveResponse.ok) {
+              console.error('Failed to save user data to Supabase');
+              // エラーでも処理を続行
+            } else {
+              const saveResult = await saveResponse.json();
+              console.log('User data saved:', saveResult);
+            }
+          } catch (saveError) {
+            console.error('Error saving user data:', saveError);
+            // エラーでも処理を続行
+          }
+          
           onAuthComplete(phoneNumber);
         } else {
           setError('認証コードが正しくありません。');
