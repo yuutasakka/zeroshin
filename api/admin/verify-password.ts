@@ -82,7 +82,21 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
 
     // パスワードを検証
+    console.log('Password verification:', {
+      providedPasswordLength: password.length,
+      hashLength: admin.password_hash?.length,
+      hashPrefix: admin.password_hash?.substring(0, 10)
+    });
+    
     const isValid = await bcrypt.compare(password, admin.password_hash);
+    
+    // デバッグ: 新しいハッシュを生成して比較
+    if (!isValid && password === 'Admin123!') {
+      const newHash = await bcrypt.hash(password, 10);
+      console.log('Debug - New hash generated:', newHash);
+      console.log('Debug - Existing hash:', admin.password_hash);
+      console.log('Debug - Hash match test:', await bcrypt.compare(password, newHash));
+    }
 
     if (!isValid) {
       // ログイン失敗を記録（audit_logsに）
