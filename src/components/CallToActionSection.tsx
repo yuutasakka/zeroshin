@@ -78,7 +78,7 @@ const CallToActionSection: React.FC = () => {
         
         <div className="space-y-6">
           {/* ボタンとプレゼント文言の横並びレイアウト */}
-          <div className="flex flex-col lg:flex-row items-center justify-center gap-6 lg:gap-8">
+          <div className="flex flex-col lg:flex-row items-center justify-center gap-6 lg:gap-12">
             <button
               type="button"
               onClick={handleCTAButtonClick}
@@ -87,7 +87,8 @@ const CallToActionSection: React.FC = () => {
                 padding: '1rem 3rem',
                 fontSize: '1.125rem',
                 background: 'linear-gradient(135deg, #F39C12 0%, #D68910 100%)',
-                minWidth: '280px'
+                minWidth: '280px',
+                height: '64px'
               }}
             >
               {ctaButtonConfig.button_text}
@@ -95,20 +96,26 @@ const CallToActionSection: React.FC = () => {
             
             {/* プレゼント文言 */}
             <div 
-              className="bg-red-500 text-white px-4 py-3 rounded-lg shadow-lg transform hover:scale-105 transition-transform duration-200"
+              className="text-white rounded-lg shadow-lg transform hover:scale-105 transition-transform duration-200"
               style={{
                 background: 'linear-gradient(135deg, #E74C3C 0%, #C0392B 100%)',
                 boxShadow: '0 4px 15px rgba(231, 76, 60, 0.3)',
-                animation: 'pulse 2s infinite'
+                animation: 'pulse 2s infinite',
+                padding: '12px 20px',
+                minWidth: '280px',
+                height: '64px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center'
               }}
             >
-              <div className="flex items-center space-x-2">
+              <div className="flex items-center space-x-3">
                 <i className="fas fa-gift text-yellow-300 text-lg animate-bounce"></i>
                 <div>
-                  <p className="font-bold text-sm lg:text-base leading-tight">
+                  <p className="font-bold text-sm leading-tight">
                     30秒診断完了者限定！
                   </p>
-                  <p className="text-xs lg:text-sm font-semibold">
+                  <p className="text-xs font-semibold">
                     資金調達バイブル完全版を無料プレゼント！
                   </p>
                 </div>
