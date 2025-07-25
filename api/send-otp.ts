@@ -1,4 +1,5 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
+import { createClient } from '@supabase/supabase-js';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   // CORS設定 - 本番環境用
@@ -46,6 +47,24 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       });
     }
 
+    // Supabase設定
+    const supabaseUrl = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL;
+    const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+    if (!supabaseUrl || !supabaseServiceKey) {
+      console.error('Supabase configuration missing');
+      return res.status(500).json({ 
+        error: 'データベース接続エラー'
+      });
+    }
+
+    const supabase = createClient(supabaseUrl, supabaseServiceKey, {
+      auth: {
+        autoRefreshToken: false,
+        persistSession: false
+      }
+    });
+
     // 電話番号の正規化
     let normalizedPhone = phoneNumber.replace(/[^\d]/g, '');
     if (normalizedPhone.startsWith('0')) {
@@ -60,8 +79,56 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return res.status(400).json({ error: '無効な電話番号形式です' });
     }
 
-    // OTP生成（本番環境では一時的に保存する必要があります）
+    // IPアドレス取得
+    const clientIP = req.headers['x-forwarded-for']?.toString().split(',')[0] || 
+                    req.headers['x-real-ip']?.toString() || 
+                    'unknown';
+
+    // レート制限チェック（1時間に3回まで）
+    const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000).toISOString();
+    const { data: recentAttempts, error: rateLimitError } = await supabase
+      .from('sms_verifications')
+      .select('id')
+      .eq('phone_number', normalizedPhone)
+      .gte('created_at', oneHourAgo);
+
+    if (rateLimitError) {
+      console.error('Rate limit check error:', rateLimitError);
+    } else if (recentAttempts && recentAttempts.length >= 3) {
+      return res.status(429).json({ 
+        error: 'SMS送信回数の上限に達しました。1時間後にお試しください。' 
+      });
+    }
+
+    // OTP生成（6桁の数字）
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
+
+    // 既存のOTPを削除
+    await supabase
+      .from('sms_verifications')
+      .delete()
+      .eq('phone_number', normalizedPhone)
+      .eq('is_verified', false);
+
+    // 新しいOTPを保存（5分間有効）
+    const expiresAt = new Date(Date.now() + 5 * 60 * 1000);
+    const { error: saveError } = await supabase
+      .from('sms_verifications')
+      .insert({
+        phone_number: normalizedPhone,
+        otp_code: otp,
+        expires_at: expiresAt.toISOString(),
+        attempts: 0,
+        is_verified: false,
+        request_ip: clientIP
+      });
+
+    if (saveError) {
+      console.error('OTP save error:', saveError);
+      return res.status(500).json({ 
+        error: 'OTP保存に失敗しました' 
+      });
+    }
 
     // Twilio SDKをインポート
     const twilio = (await import('twilio')).default;
