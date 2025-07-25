@@ -86,8 +86,8 @@ export const defaultReasonsToChooseData: ReasonsToChooseData = {
 };
 
 export const defaultFirstConsultationOffer: FirstConsultationOffer = {
-  title: "初回相談限定特典",
-  description: "投資戦略ガイドブック（通常価格2,980円）を無料プレゼント中",
+  title: "診断完了特典",
+  description: "資金調達必勝バイブル（通常価格2,980円）を無料プレゼント中",
   icon: "fas fa-gift",
   backgroundColor: "rgba(212, 175, 55, 0.1)",
   borderColor: "var(--accent-gold)"

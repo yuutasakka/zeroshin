@@ -1,12 +1,10 @@
 import React from 'react';
 import { defaultFirstConsultationOffer, defaultCTAButtonConfig } from '../../data/homepageContentData';
-import { useFirstConsultationOffer, useCTAButtonConfig } from '../../src/contexts/DesignSettingsContext';
 
 const CallToActionSection: React.FC = () => {
-  const consultationOfferFromContext = useFirstConsultationOffer();
-  const ctaButtonConfigFromContext = useCTAButtonConfig();
-  const consultationOffer = consultationOfferFromContext || defaultFirstConsultationOffer;
-  const ctaButtonConfig = ctaButtonConfigFromContext || defaultCTAButtonConfig;
+  // 一時的にデフォルトデータを強制使用（キャッシング・ファクタリング対応）
+  const consultationOffer = defaultFirstConsultationOffer;
+  const ctaButtonConfig = defaultCTAButtonConfig;
 
   const handleCTAButtonClick = () => {
     switch (ctaButtonConfig.button_type) {
