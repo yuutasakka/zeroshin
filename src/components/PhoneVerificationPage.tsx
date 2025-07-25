@@ -415,28 +415,7 @@ const PhoneVerificationPage: React.FC<PhoneVerificationPageProps> = ({
           // 現在のセッションをセッションストレージに保存（一時的）
           sessionStorage.setItem('currentUserSession', JSON.stringify(updatedSession));
           
-          // Supabaseにユーザーデータを保存
-          try {
-            const saveResponse = await fetch('/api/save-user-data', {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-              },
-              body: JSON.stringify({
-                phoneNumber: normalizedPhone,
-                diagnosisAnswers: userSession.diagnosisAnswers,
-                sessionId: sessionId
-              })
-            });
-
-            if (!saveResponse.ok) {
-              // エラーでも処理を続行
-            } else {
-              const saveResult = await saveResponse.json();
-            }
-          } catch (saveError) {
-            // エラーでも処理を続行
-          }
+          // ユーザーデータの保存処理はクライアントサイドで完結
           
           // 保存確認
           const savedSession = sessionStorage.getItem('currentUserSession');

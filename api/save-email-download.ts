@@ -102,12 +102,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
       });
     }
 
-    // ダウンロードURLを生成
+    // ダウンロードURLを生成（クライアントサイドで処理）
     const baseUrl = process.env.VERCEL_URL 
       ? `https://${process.env.VERCEL_URL}`
       : origin || 'http://localhost:3000';
     
-    const downloadUrl = `${baseUrl}/api/download-result?token=${downloadToken}`;
+    // ダウンロード処理はクライアントサイドで実装
+    const downloadUrl = `${baseUrl}/download/${downloadToken}`;
 
     res.status(200).json({ 
       success: true,
