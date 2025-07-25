@@ -500,7 +500,6 @@ const TwoFactorAuth: React.FC<TwoFactorAuthProps> = ({
       setQrCodeUrl(data.totp.qr_code);
       setStep('verify');
     } catch (error) {
-      console.error('MFA設定エラー:', error);
     }
   };
 
@@ -522,7 +521,6 @@ const TwoFactorAuth: React.FC<TwoFactorAuthProps> = ({
       setStep('enabled');
       onMFAEnabled();
     } catch (error) {
-      console.error('MFA検証エラー:', error);
     }
   };
 

@@ -89,11 +89,11 @@ export default defineConfig({
     minify: 'terser',
     terserOptions: {
       compress: {
-        drop_console: false, // console.logを保持
+        drop_console: true,
         drop_debugger: true,
-        pure_funcs: [], // pure_funcsを空にして関数削除を防ぐ
+        pure_funcs: ['console.log', 'console.warn', 'console.error', 'console.debug'],
         unsafe: false,
-        passes: 1
+        passes: 2
       },
       mangle: {
         safari10: true

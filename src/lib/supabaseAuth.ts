@@ -4,7 +4,6 @@ import { createClient } from '@supabase/supabase-js';
 // 環境変数チェック（サーバーサイドでのみ実行）
 if (typeof window === 'undefined') {
   if (!process.env.VITE_SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
-    console.warn('Supabase environment variables are not set properly');
   }
 }
 

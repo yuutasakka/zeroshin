@@ -38,7 +38,6 @@ export async function POST_sendOTP(request: Request) {
       headers: { 'Content-Type': 'application/json' }
     });
   } catch (error) {
-    console.error('Send OTP error:', error);
     return new Response(JSON.stringify({ error: 'Internal server error' }), {
       status: 500,
       headers: { 'Content-Type': 'application/json' }
@@ -74,7 +73,6 @@ export async function POST_verifyOTP(request: Request) {
       headers: { 'Content-Type': 'application/json' }
     });
   } catch (error) {
-    console.error('Verify OTP error:', error);
     return new Response(JSON.stringify({ error: 'Internal server error' }), {
       status: 500,
       headers: { 'Content-Type': 'application/json' }
@@ -108,7 +106,6 @@ export async function POST_checkAuth(request: Request) {
       headers: { 'Content-Type': 'application/json' }
     });
   } catch (error) {
-    console.error('Check auth error:', error);
     return new Response(JSON.stringify({ verified: false }), {
       status: 200,
       headers: { 'Content-Type': 'application/json' }

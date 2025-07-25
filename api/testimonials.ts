@@ -40,7 +40,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
       const { data, error } = await query;
       
       if (error) {
-        console.error('Error fetching testimonials:', error);
         res.status(500).json({ error: error.message });
         return;
       }
@@ -72,7 +71,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
         .single();
       
       if (error) {
-        console.error('Error creating testimonial:', error);
         res.status(500).json({ error: error.message });
         return;
       }
@@ -99,7 +97,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
         .single();
       
       if (error) {
-        console.error('Error updating testimonial:', error);
         res.status(500).json({ error: error.message });
         return;
       }
@@ -123,7 +120,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
         .eq('id', id);
       
       if (error) {
-        console.error('Error deleting testimonial:', error);
         res.status(500).json({ error: error.message });
         return;
       }
@@ -134,7 +130,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
     
     res.status(405).json({ error: 'Method not allowed' });
   } catch (error) {
-    console.error('Testimonials API error:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 }

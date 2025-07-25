@@ -250,7 +250,6 @@ export const DashboardRealtimeProvider: React.FC<DashboardRealtimeProviderProps>
         try {
           await realtimeService.refreshMetrics();
         } catch (error) {
-          console.error('Auto refresh failed:', error);
         }
       }
     }, autoRefreshInterval);

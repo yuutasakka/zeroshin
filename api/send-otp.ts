@@ -41,7 +41,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
     const fromNumber = process.env.TWILIO_PHONE_NUMBER;
 
     if (!accountSid || !authToken || !fromNumber) {
-      console.error('Twilio configuration missing');
       return res.status(500).json({ 
         error: 'SMS送信サービスが利用できません。管理者にお問い合わせください。'
       });
@@ -52,7 +51,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
     const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
     if (!supabaseUrl || !supabaseServiceKey) {
-      console.error('Supabase configuration missing');
       return res.status(500).json({ 
         error: 'データベース接続エラー'
       });
@@ -118,7 +116,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
       .gte('created_at', oneHourAgo);
 
     if (rateLimitError) {
-      console.error('Rate limit check error:', rateLimitError);
     } else if (recentAttempts && recentAttempts.length >= 3) {
       return res.status(429).json({ 
         error: 'SMS送信回数の上限に達しました。1時間後にお試しください。' 
@@ -162,7 +159,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
       });
 
     if (saveError) {
-      console.error('OTP save error:', saveError);
       return res.status(500).json({ 
         error: 'OTP保存に失敗しました' 
       });
@@ -179,7 +175,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
       to: normalizedPhone
     });
 
-    console.log('SMS sent successfully:', message.sid);
 
     // セキュリティヘッダー設定
     res.setHeader('X-Content-Type-Options', 'nosniff');
@@ -191,7 +186,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
     res.status(200).json({ success: true });
 
   } catch (error: any) {
-    console.error('SMS送信エラー:', error);
     res.status(500).json({
       error: 'SMS送信に失敗しました',
       details: process.env.NODE_ENV === 'development' ? error.message : undefined

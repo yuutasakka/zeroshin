@@ -35,7 +35,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
     const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
     if (!supabaseUrl || !supabaseServiceKey) {
-      console.error('Supabase configuration missing');
       return res.status(500).json({ 
         error: 'データベース接続エラー'
       });
@@ -67,7 +66,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
       .single();
 
     if (fetchError || !otpRecord) {
-      console.error('OTP not found:', fetchError);
       return res.status(400).json({ 
         error: '認証コードが見つかりません。新しいコードを取得してください。' 
       });
@@ -111,13 +109,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
       .eq('id', otpRecord.id);
 
     if (updateError) {
-      console.error('OTP update error:', updateError);
       return res.status(500).json({ 
         error: '認証処理中にエラーが発生しました' 
       });
     }
 
-    console.log('OTP verification success:', { phoneNumber: normalizedPhone.substring(0, 3) + '***' });
 
     // セキュリティヘッダー設定
     res.setHeader('X-Content-Type-Options', 'nosniff');
@@ -129,7 +125,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
     res.status(200).json({ success: true });
 
   } catch (error) {
-    console.error('Verify OTP error:', error);
     res.status(500).json({ 
       success: false,
       error: 'OTP検証に失敗しました'

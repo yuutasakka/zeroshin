@@ -34,7 +34,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const supabaseKey = supabaseServiceKey || supabaseAnonKey;
     
     if (!supabaseUrl || !supabaseKey) {
-      console.error('Missing Supabase configuration:', {
+      console.log('Configuration debug:', {
         hasUrl: !!supabaseUrl,
         hasServiceKey: !!supabaseServiceKey,
         hasAnyKey: !!supabaseKey
@@ -45,9 +45,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     // Supabaseクライアントを作成（Service roleキーが利用可能な場合はそれを使用）
     const supabase = createClient(supabaseUrl, supabaseKey);
     
-    console.log('Using Supabase key type:', supabaseServiceKey ? 'service_role' : 'anon');
 
-    console.log('Fetching admin credentials for username:', username);
 
     // 管理者情報を取得
     const { data: admin, error: fetchError } = await supabase
@@ -57,7 +55,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       .single();
 
     if (fetchError) {
-      console.error('Admin fetch error:', {
+      console.log('Database fetch error:', {
         error: fetchError,
         username: username,
         code: fetchError.code,
@@ -73,7 +71,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
 
     if (!admin) {
-      console.error('Admin not found:', username);
       return res.status(401).json({ error: 'Invalid credentials' });
     }
 
@@ -82,7 +79,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
 
     // パスワードを検証
-    console.log('Password verification:', {
+    console.log('Password verification debug:', {
       providedPasswordLength: password.length,
       hashLength: admin.password_hash?.length,
       hashPrefix: admin.password_hash?.substring(0, 10)
@@ -93,9 +90,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     // デバッグ: 新しいハッシュを生成して比較
     if (!isValid && password === 'Admin123!') {
       const newHash = await bcrypt.hash(password, 10);
-      console.log('Debug - New hash generated:', newHash);
-      console.log('Debug - Existing hash:', admin.password_hash);
-      console.log('Debug - Hash match test:', await bcrypt.compare(password, newHash));
+      console.log('New hash for comparison:', newHash);
     }
 
     if (!isValid) {
@@ -134,7 +129,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     });
 
   } catch (error) {
-    console.error('Password verification error:', error);
     return res.status(500).json({ error: 'Internal server error' });
   }
 }

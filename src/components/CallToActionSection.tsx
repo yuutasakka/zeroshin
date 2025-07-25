@@ -124,7 +124,7 @@ const CallToActionSection: React.FC = () => {
           </div>
           
           <p className="text-sm" style={{ color: '#7F8C8D' }}>
-            お電話でのご相談：{ctaButtonConfig.phone_number || '0120-XXX-XXX'}（平日 9:00-18:00）
+            お電話でのご相談：{ctaButtonConfig.phone_number || 'お問い合わせフォームをご利用ください'}（平日 9:00-18:00）
           </p>
         </div>
         

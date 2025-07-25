@@ -669,7 +669,6 @@ export class EncryptionManager {
     try {
       await EncryptionManager.initialize();
     } catch (error) {
-      console.error('暗号化マネージャーの初期化に失敗:', error);
     }
   }
 })();

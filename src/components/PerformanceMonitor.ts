@@ -14,9 +14,7 @@ export function measurePageLoad(label = 'トップ画面', threshold = PERF_TARG
   window.addEventListener('load', () => {
     const endTime = performance.now();
     const loadTime = endTime - startTime;
-    console.log(`[PERF] ${label}読み込み: ${loadTime.toFixed(1)}ms`);
     if (loadTime > threshold) {
-      console.warn(`[PERF] ${label}読み込みが遅いです: ${loadTime.toFixed(1)}ms`);
     }
   });
 }
@@ -27,9 +25,7 @@ export function measureTransition(label: string, threshold: number) {
   return () => {
     const end = performance.now();
     const time = end - start;
-    console.log(`[PERF] ${label}: ${time.toFixed(1)}ms`);
     if (time > threshold) {
-      console.warn(`[PERF] ${label}が遅いです: ${time.toFixed(1)}ms`);
     }
   };
 }
@@ -40,9 +36,7 @@ export async function measureAsync(label: string, threshold: number, fn: () => P
   const result = await fn();
   const end = performance.now();
   const time = end - start;
-  console.log(`[PERF] ${label}: ${time.toFixed(1)}ms`);
   if (time > threshold) {
-    console.warn(`[PERF] ${label}が遅いです: ${time.toFixed(1)}ms`);
   }
   return result;
 } 

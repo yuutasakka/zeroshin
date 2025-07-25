@@ -64,7 +64,6 @@ export class SecureConfigManager {
 
       return !error;
     } catch (error) {
-      console.error('Failed to save secure config:', error);
       return false;
     }
   }
@@ -82,7 +81,6 @@ export class SecureConfigManager {
 
       return data.encrypted ? this.decrypt(data.config_value) : data.config_value;
     } catch (error) {
-      console.error('Failed to get secure config:', error);
       return null;
     }
   }
@@ -202,7 +200,6 @@ export class SecureConfigManager {
         encrypted: item.encrypted
       }));
     } catch (error) {
-      console.error('Failed to get all configs:', error);
       return [];
     }
   }

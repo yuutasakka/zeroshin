@@ -13,10 +13,8 @@ export const PWAUpdatePrompt: React.FC<PWAUpdatePromptProps> = ({ className = ''
     updateServiceWorker,
   } = useRegisterSW({
     onRegistered(r) {
-      console.log('PWA: Service Worker登録完了', r);
     },
     onRegisterError(error) {
-      console.error('PWA: Service Worker登録エラー', error);
     },
   });
 

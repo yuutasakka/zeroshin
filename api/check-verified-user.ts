@@ -85,7 +85,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
     });
 
   } catch (error: any) {
-    console.error('Check verified user error:', error);
     res.status(500).json({
       error: '確認処理に失敗しました',
       details: process.env.NODE_ENV === 'development' ? error.message : undefined

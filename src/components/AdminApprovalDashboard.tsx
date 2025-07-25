@@ -28,9 +28,7 @@ const AdminApprovalDashboard: React.FC<AdminApprovalDashboardProps> = ({
       // admin_registrations テーブルから pending 状態の申請を取得
       const pendingRequests = await registrationManager.getRegistrationRequests('pending');
       setApprovals(pendingRequests);
-      console.log('承認待ち申請を取得しました:', pendingRequests.length);
     } catch (err) {
-      console.error('承認待ち一覧取得エラー:', err);
       const errorMessage = err instanceof Error ? err.message : '承認待ち一覧の取得中にエラーが発生しました。';
       setError(errorMessage);
       setApprovals([]); // エラー時は空配列を設定
@@ -45,7 +43,6 @@ const AdminApprovalDashboard: React.FC<AdminApprovalDashboardProps> = ({
       setProcessing(approvalId);
       setError('');
       
-      console.log('承認処理開始:', approvalId);
       
       const result = await registrationManager.approveOrRejectRequest(
         approvalId,
@@ -54,7 +51,6 @@ const AdminApprovalDashboard: React.FC<AdminApprovalDashboardProps> = ({
         `admin_${currentAdminId}`
       );
       
-      console.log('承認処理結果:', result);
       
       if (result.success) {
         alert(result.message || '管理者申請を承認しました。');
@@ -63,10 +59,8 @@ const AdminApprovalDashboard: React.FC<AdminApprovalDashboardProps> = ({
       } else {
         const errorMessage = result.error || '承認処理に失敗しました。';
         setError(errorMessage);
-        console.error('承認処理失敗:', errorMessage);
       }
     } catch (err) {
-      console.error('承認処理エラー:', err);
       const errorMessage = err instanceof Error ? err.message : '承認処理中にエラーが発生しました。';
       setError(errorMessage);
     } finally {
@@ -85,7 +79,6 @@ const AdminApprovalDashboard: React.FC<AdminApprovalDashboardProps> = ({
       setProcessing(approvalId);
       setError('');
       
-      console.log('拒否処理開始:', approvalId, rejectionReason.trim());
       
       const result = await registrationManager.approveOrRejectRequest(
         approvalId,
@@ -94,7 +87,6 @@ const AdminApprovalDashboard: React.FC<AdminApprovalDashboardProps> = ({
         `admin_${currentAdminId}`
       );
       
-      console.log('拒否処理結果:', result);
       
       if (result.success) {
         alert(result.message || '管理者申請を拒否しました。');
@@ -105,10 +97,8 @@ const AdminApprovalDashboard: React.FC<AdminApprovalDashboardProps> = ({
       } else {
         const errorMessage = result.error || '拒否処理に失敗しました。';
         setError(errorMessage);
-        console.error('拒否処理失敗:', errorMessage);
       }
     } catch (err) {
-      console.error('拒否処理エラー:', err);
       const errorMessage = err instanceof Error ? err.message : '拒否処理中にエラーが発生しました。';
       setError(errorMessage);
     } finally {

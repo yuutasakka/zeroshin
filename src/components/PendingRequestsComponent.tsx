@@ -23,7 +23,6 @@ const PendingRequestsComponent: React.FC<PendingRequestsComponentProps> = ({ onS
       const pendingRequests = await registrationManager.getRegistrationRequests('pending');
       setRequests(pendingRequests);
     } catch (error) {
-      console.error('申請一覧読み込みエラー:', error);
       setStatusMessage('申請一覧の読み込みに失敗しました');
       setStatusType('error');
     } finally {
@@ -82,7 +81,6 @@ const PendingRequestsComponent: React.FC<PendingRequestsComponentProps> = ({ onS
         setStatusType('error');
       }
     } catch (error) {
-      console.error('申請処理エラー:', error);
       setStatusMessage('システムエラーが発生しました');
       setStatusType('error');
     } finally {

@@ -89,7 +89,6 @@ const NotificationSystem: React.FC<NotificationSystemProps> = ({ onNotificationS
         setSettings(JSON.parse(savedSettings));
       }
     } catch (error) {
-      console.error('通知設定の読み込みエラー:', error);
       onError('通知設定の読み込みに失敗しました');
     }
   };
@@ -100,7 +99,6 @@ const NotificationSystem: React.FC<NotificationSystemProps> = ({ onNotificationS
       sessionStorage.setItem('notification_settings', JSON.stringify(settings));
       onNotificationSent('通知設定が保存されました');
     } catch (error) {
-      console.error('通知設定の保存エラー:', error);
       onError('通知設定の保存に失敗しました');
     } finally {
       setIsLoading(false);
@@ -147,7 +145,6 @@ const NotificationSystem: React.FC<NotificationSystemProps> = ({ onNotificationS
         onError('通知の送信に失敗しました');
       }
     } catch (error) {
-      console.error('通知送信エラー:', error);
       onError('通知の送信中にエラーが発生しました');
     } finally {
       setIsLoading(false);
@@ -185,7 +182,6 @@ const NotificationSystem: React.FC<NotificationSystemProps> = ({ onNotificationS
 
       return { success: true };
     } catch (error) {
-      console.error('Email送信エラー:', error);
       return { success: false, message: error instanceof Error ? error.message : 'Unknown error' };
     }
   };
@@ -218,7 +214,6 @@ const NotificationSystem: React.FC<NotificationSystemProps> = ({ onNotificationS
 
       return { success: true };
     } catch (error) {
-      console.error('Slack送信エラー:', error);
       return { success: false, message: error instanceof Error ? error.message : 'Unknown error' };
     }
   };
@@ -255,7 +250,6 @@ const NotificationSystem: React.FC<NotificationSystemProps> = ({ onNotificationS
 
       return { success: true };
     } catch (error) {
-      console.error('LINE送信エラー:', error);
       return { success: false, message: error instanceof Error ? error.message : 'Unknown error' };
     }
   };
@@ -284,7 +278,6 @@ const NotificationSystem: React.FC<NotificationSystemProps> = ({ onNotificationS
 
       return { success: true };
     } catch (error) {
-      console.error('ChatWork送信エラー:', error);
       return { success: false, message: error instanceof Error ? error.message : 'Unknown error' };
     }
   };

@@ -179,7 +179,6 @@ const App: React.FC = () => {
                 setCurrentPage('adminDashboard');
               } else {
                 // 管理者でない場合は認証を拒否
-                console.warn('Unauthorized Supabase login attempt');
                 await supabase.auth.signOut();
                 setSupabaseUser(null);
                 setIsSupabaseAuth(false);
@@ -436,8 +435,6 @@ const App: React.FC = () => {
   }
 
   const handleAdminLoginSuccess = () => {
-    console.log('handleAdminLoginSuccess called', { isSupabaseAuth, currentPage });
-    
     // セッション情報を設定
     const adminSession = sessionStorage.getItem('admin_session');
     if (adminSession) {
@@ -450,9 +447,7 @@ const App: React.FC = () => {
       setIsAdminLoggedIn(true);
       setCurrentPage('adminDashboard');
       
-      console.log('Admin login state set synchronously - all session data configured');
     } else {
-      console.error('Admin session not found in sessionStorage');
       // セッションがない場合はログイン失敗として扱う
       setIsAdminLoggedIn(false);
       setCurrentPage('traditionalLogin');
@@ -462,8 +457,6 @@ const App: React.FC = () => {
   };
 
   const handleAdminLogout = async () => {
-    console.log('handleAdminLogout called');
-    
     // 全ての認証状態をクリア
     setIsAdminLoggedIn(false);
     setIsSupabaseAuth(false);
@@ -473,9 +466,7 @@ const App: React.FC = () => {
       // Supabase認証の場合
       try {
         await supabase.auth.signOut();
-        console.log('Supabase sign out completed');
       } catch (error) {
-        console.error('Supabase logout error:', error);
       }
     }
     
@@ -486,8 +477,6 @@ const App: React.FC = () => {
     sessionStorage.removeItem('admin_session_state');
     
     // 確実にログアウト状態を保証
-    console.log('All admin session data cleared');
-    
     setCurrentPage('home');
     window.scrollTo(0,0);
   };
@@ -540,8 +529,6 @@ const App: React.FC = () => {
             <div className="home-right-col">
               <DiagnosisForm
                 onComplete={(answers) => {
-                  console.log('🔍 App.tsx: 診断完了 - 回答データ:', answers);
-                  
                   // 生の回答を保存（新しい戦闘力診断用）
                   setRawDiagnosisAnswers(answers);
                   
@@ -570,7 +557,6 @@ const App: React.FC = () => {
                     investmentPreference: '',
                     financialKnowledge: ''
                   };
-                  console.log('🔍 App.tsx: 変換後の診断データ:', legacyDiagnosisData);
                   setDiagnosisData(legacyDiagnosisData);
                   
                   setCurrentPage('smsAuth');
@@ -750,7 +736,6 @@ const App: React.FC = () => {
           sessionStorage.removeItem('admin_authenticated');
         }
       } catch (error) {
-        console.error('セッション解析エラー:', error);
         // 不正なセッションデータをクリア
         sessionStorage.removeItem('admin_session');
         sessionStorage.removeItem('force_admin_logged_in');
@@ -762,19 +747,8 @@ const App: React.FC = () => {
     const actualAdminLoggedIn = isAdminLoggedIn && forceAdminLoggedIn && sessionAuth && isValidSession;
     const actualCurrentPage = actualAdminLoggedIn ? 'adminDashboard' : currentPage;
     
-    console.log('Checking admin dashboard condition:', { 
-      isAdminLoggedIn, 
-      forceAdminLoggedIn, 
-      sessionAuth,
-      isValidSession,
-      actualAdminLoggedIn, 
-      currentPage, 
-      actualCurrentPage,
-      condition: actualAdminLoggedIn && actualCurrentPage === 'adminDashboard' 
-    });
     
     if (actualAdminLoggedIn && actualCurrentPage === 'adminDashboard') {
-      console.log('Rendering AdminDashboardPage');
       try {
         return (
           <Suspense fallback={<LoadingSpinner />}>
@@ -787,7 +761,6 @@ const App: React.FC = () => {
           </Suspense>
         );
       } catch (error) {
-        console.error('AdminDashboardPage render error:', error);
         return (
           <div style={{ padding: '20px', backgroundColor: 'white', minHeight: '100vh' }}>
             <h1 style={{ color: 'red' }}>エラーが発生しました</h1>
@@ -897,7 +870,6 @@ const App: React.FC = () => {
           diagnosisAnswers={answersToUse}
           onDownloadGuide={() => {
             // 攻略本ダウンロード処理（後で実装）
-            console.log('攻略本ダウンロード開始');
             // ここでPDFダウンロードまたはメール送信フォームを表示
             alert('攻略本のダウンロードリンクをメールで送信します。');
           }}

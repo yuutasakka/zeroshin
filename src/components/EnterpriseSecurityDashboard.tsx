@@ -43,7 +43,6 @@ const EnterpriseSecurityDashboard: React.FC<DashboardProps> = ({
       setThreatAssessment(threatData);
       setSecurityPolicy(policyData);
     } catch (error) {
-      console.error('ダッシュボードデータ取得エラー:', error);
     } finally {
       setLoading(false);
     }
@@ -491,7 +490,6 @@ const AuditLogTab: React.FC = () => {
         });
         setAuditEvents(events);
       } catch (error) {
-        console.error('監査ログ取得エラー:', error);
       } finally {
         setLoading(false);
       }

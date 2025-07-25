@@ -136,7 +136,6 @@ const RegistrationRequestPage: React.FC<RegistrationRequestPageProps> = ({ onNav
       }
 
     } catch (error) {
-      console.error('申請送信エラー:', error);
       setSubmitStatus('error');
       setSubmitMessage('システムエラーが発生しました。時間をおいて再度お試しください。');
     } finally {

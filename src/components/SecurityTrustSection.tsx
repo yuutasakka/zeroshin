@@ -51,7 +51,6 @@ const SecurityTrustSection: React.FC = () => {
         if (!supabaseConfig.url || !supabaseConfig.key || 
             supabaseConfig.url.includes('your-project') || 
             supabaseConfig.key.includes('your-anon-key')) {
-          console.log('Supabase設定が無効、デフォルトデータを使用');
           return;
         }
 
@@ -78,15 +77,11 @@ const SecurityTrustSection: React.FC = () => {
               display_order: item.display_order
             }));
             setSecurityData(formattedData);
-            console.log('安心・安全への取り組みデータをSupabaseから読み込み:', formattedData);
           }
         } else if (response.status === 400) {
-          console.log('security_trust_settingsテーブルが存在しません - デフォルトデータを使用');
         } else {
-          console.log(`Supabase取得エラー: ${response.status} ${response.statusText}`);
         }
       } catch (error) {
-        console.error('安心・安全への取り組みデータ取得エラー:', error);
       }
     };
 

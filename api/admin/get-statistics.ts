@@ -142,7 +142,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
     });
 
   } catch (error) {
-    console.error('Get statistics error:', error);
     res.status(500).json({ 
       error: '統計情報の取得に失敗しました'
     });

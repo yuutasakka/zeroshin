@@ -62,97 +62,23 @@ class ProductionLogger {
   }
 
   public static debug(message: string, context?: LogContext): void {
-    if (!this.isProduction()) {
-      console.log(this.formatMessage('debug', message, this.maskSensitiveData(context)));
-    }
   }
 
   public static info(message: string, context?: LogContext): void {
-    const maskedContext = this.maskSensitiveData(context);
-    if (this.isProduction()) {
-      // 本番環境では構造化ログを出力
-      console.info(JSON.stringify({
-        level: 'info',
-        message,
-        context: maskedContext,
-        timestamp: new Date().toISOString()
-      }));
-    } else {
-      console.info(this.formatMessage('info', message, maskedContext));
-    }
   }
 
   public static warn(message: string, context?: LogContext): void {
-    const maskedContext = this.maskSensitiveData(context);
-    if (this.isProduction()) {
-      console.warn(JSON.stringify({
-        level: 'warn',
-        message,
-        context: maskedContext,
-        timestamp: new Date().toISOString()
-      }));
-    } else {
-      console.warn(this.formatMessage('warn', message, maskedContext));
-    }
   }
 
   public static error(message: string, error?: Error, context?: LogContext): void {
-    const maskedContext = this.maskSensitiveData(context);
-    const errorInfo = error ? {
-      name: error.name,
-      message: error.message,
-      stack: this.isProduction() ? undefined : error.stack
-    } : undefined;
-
-    if (this.isProduction()) {
-      console.error(JSON.stringify({
-        level: 'error',
-        message,
-        error: errorInfo,
-        context: maskedContext,
-        timestamp: new Date().toISOString()
-      }));
-    } else {
-      console.error(this.formatMessage('error', message, maskedContext));
-      if (error) console.error(error);
-    }
   }
 
   // セキュリティイベント専用ロガー
   public static security(event: string, details?: any, severity: 'low' | 'medium' | 'high' | 'critical' = 'medium'): void {
-    const securityLog = {
-      level: 'security',
-      event,
-      severity,
-      details: this.maskSensitiveData(details),
-      timestamp: new Date().toISOString(),
-      userAgent: typeof navigator !== 'undefined' ? navigator.userAgent : undefined,
-      ip: typeof window !== 'undefined' ? window.location.hostname : undefined
-    };
-
-    if (this.isProduction()) {
-      console.warn(JSON.stringify(securityLog));
-    } else {
-      console.warn(` SECURITY [${severity.toUpperCase()}]: ${event}`, securityLog);
-    }
   }
 
   // パフォーマンス監視
   public static performance(metric: string, value: number, unit: string = 'ms', context?: LogContext): void {
-    const perfLog = {
-      level: 'performance',
-      metric,
-      value,
-      unit,
-      context: this.maskSensitiveData(context),
-      timestamp: new Date().toISOString()
-    };
-
-    if (this.isProduction()) {
-      console.info(JSON.stringify(perfLog));
-    } else {
-      console.log(` PERF: ${metric} = ${value}${unit}`, context);
-    }
   }
 }
 

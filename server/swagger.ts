@@ -57,7 +57,6 @@ export function setupSwagger(app: express.Application): void {
     res.redirect('/api-docs');
   });
 
-  console.log('📚 API Documentation available at: http://localhost:3000/api-docs');
 }
 
 /**
@@ -147,7 +146,6 @@ export function setupMockEndpoints(app: express.Application): void {
     });
   });
 
-  console.log('🔧 Mock API endpoints are available for development');
 }
 
 /**

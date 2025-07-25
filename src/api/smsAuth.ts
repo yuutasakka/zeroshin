@@ -21,7 +21,6 @@ export class SMSAuthService {
       const twilio = twilioModule.default;
       return twilio(config.accountSid, config.authToken);
     } catch (error) {
-      console.error('Twilio SDK load error:', error);
       // Twilio SDKが利用できない場合はHTTP API直接使用
       return {
         accountSid: config.accountSid,
@@ -49,7 +48,6 @@ export class SMSAuthService {
         }
         // レート制限チェック成功
       } catch (rateLimitError: any) {
-        console.error('⚠️ レート制限チェック失敗:', rateLimitError?.message);
         // セキュリティ上、レート制限チェック失敗時は処理を停止
         return { success: false, error: 'サービスが一時的に利用できません。しばらくしてからお試しください。' };
       }
@@ -67,16 +65,6 @@ export class SMSAuthService {
       const hasTwilioConfig = config.accountSid && config.authToken && config.phoneNumber;
       
       if (!hasTwilioConfig) {
-        console.error('🚫 Twilio設定が不完全です', {
-          hasAccountSid: !!config.accountSid,
-          hasAuthToken: !!config.authToken,
-          hasPhoneNumber: !!config.phoneNumber,
-          config: {
-            accountSid: config.accountSid ? `${config.accountSid.substring(0, 4)}...` : 'なし',
-            authToken: config.authToken ? `${config.authToken.substring(0, 4)}...` : 'なし',
-            phoneNumber: config.phoneNumber || 'なし'
-          }
-        });
         return { success: false, error: 'SMS送信サービスが利用できません。管理者にお問い合わせください。' };
       }
 
@@ -90,7 +78,6 @@ export class SMSAuthService {
         await this.saveOTPToDatabase(normalizedPhone, otp, expiresAt, ipAddress);
         // OTPデータベース保存成功
       } catch (dbError: any) {
-        console.error('⚠️ OTPデータベース保存失敗（継続）:', dbError?.message);
         // データベース保存失敗でもSMS送信は継続
       }
       
@@ -113,12 +100,6 @@ export class SMSAuthService {
 
       return { success: true };
     } catch (error: any) {
-      console.error('💥 SMS送信エラー詳細:', {
-        error: error?.message || 'Unknown error',
-        stack: process.env.NODE_ENV === 'development' ? (error?.stack || 'No stack trace') : 'Stack trace hidden in production',
-        phoneNumber: this.maskPhoneNumber(phoneNumber),
-        hasConfig: !!(process.env.TWILIO_ACCOUNT_SID && process.env.TWILIO_AUTH_TOKEN && process.env.TWILIO_PHONE_NUMBER)
-      });
       return { success: false, error: `SMS送信に失敗しました: ${error?.message || 'Unknown error'}` };
     }
   }
@@ -136,7 +117,6 @@ export class SMSAuthService {
         storedOTP = await this.getOTPFromDatabase(normalizedPhone);
         // OTPデータベース取得成功
       } catch (dbError: any) {
-        console.error('⚠️ OTPデータベース取得失敗:', dbError?.message);
         // 開発環境でもOTPバイパスは無効化（セキュリティ上の理由）
         // 固定OTPは絶対に使用しない
         return { success: false, error: 'OTP verification failed' };
@@ -149,10 +129,6 @@ export class SMSAuthService {
         return { success: false, error: 'OTP not found or expired' };
       }
       
-      // 本番環境では詳細ログを出力しない
-      if (!isProduction) {
-        console.log('🔍 OTP検証中...');
-      }
 
       // 試行回数チェック（5回まで）
       if (storedOTP.attempts >= 5) {
@@ -164,18 +140,12 @@ export class SMSAuthService {
         // 失敗回数をカウント
         await this.incrementOTPAttempts(normalizedPhone);
         const remainingAttempts = 5 - (storedOTP.attempts + 1);
-        if (!isProduction) {
-          console.log(`❌ OTP検証失敗: 残り${remainingAttempts}回`);
-        }
         return { 
           success: false, 
           error: `認証コードが正しくありません。残り${remainingAttempts}回入力できます。` 
         };
       }
       
-      if (!isProduction) {
-        console.log('✅ OTP検証成功');
-      }
 
       // 期限チェック
       if (new Date() > storedOTP.expiresAt) {
@@ -187,7 +157,6 @@ export class SMSAuthService {
       
       return { success: true };
     } catch (error) {
-      console.error('OTP verification failed:', error);
       return { success: false, error: 'Verification failed' };
     }
   }
@@ -267,11 +236,6 @@ export class SMSAuthService {
   private static async sendSMSDirectAPI(client: any, to: string, otp: string): Promise<void> {
     const auth = Buffer.from(`${client.accountSid}:${client.authToken}`).toString('base64');
     
-    console.log('🌐 Twilio Direct API呼び出し', {
-      url: `https://api.twilio.com/2010-04-01/Accounts/${client.accountSid}/Messages.json`,
-      from: client.phoneNumber,
-      to: to
-    });
     
     const response = await fetch(`https://api.twilio.com/2010-04-01/Accounts/${client.accountSid}/Messages.json`, {
       method: 'POST',
@@ -286,25 +250,13 @@ export class SMSAuthService {
       })
     });
 
-    console.log('📡 Twilio API応答', {
-      status: response.status,
-      statusText: response.statusText,
-      ok: response.ok
-    });
 
     if (!response.ok) {
       const errorData = await response.text();
-      console.error('❌ Twilio API エラー詳細:', errorData);
       throw new Error(`Twilio API error: ${response.status} ${errorData}`);
     }
     
     const result = await response.json();
-    console.log('📤 Twilio Direct API送信完了', { 
-      sid: result.sid, 
-      status: result.status,
-      error_code: result.error_code,
-      error_message: result.error_message
-    });
   }
 
   // OTPをデータベースに保存
@@ -394,7 +346,6 @@ export class SMSAuthService {
         .rpc('check_sms_rate_limit', { phone: phoneNumber });
 
       if (phoneError) {
-        console.error('Phone rate limit check failed:', phoneError);
         return false;
       }
 
@@ -447,7 +398,6 @@ export class SMSAuthService {
 
       return true;
     } catch (error) {
-      console.error('Rate limit check failed:', error);
       return false; // エラーの場合は安全側に倒す
     }
   }

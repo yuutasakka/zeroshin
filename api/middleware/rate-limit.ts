@@ -56,7 +56,6 @@ export async function checkRateLimit(
 
     if (error && error.code === '42P01') {
       // テーブルが存在しない場合
-      console.warn('Rate limits table does not exist');
       return { allowed: true, remaining: maxRequests, resetAt: new Date() };
     }
 
@@ -87,7 +86,6 @@ export async function checkRateLimit(
     return { allowed: true, remaining: remaining - 1, resetAt };
 
   } catch (error) {
-    console.error('Rate limit check error:', error);
     // エラーの場合は制限なし（フェイルオープン）
     return { allowed: true, remaining: maxRequests, resetAt: new Date() };
   }

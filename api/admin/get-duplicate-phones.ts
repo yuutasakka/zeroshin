@@ -50,7 +50,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
       .order('created_at', { ascending: false });
 
     if (error) {
-      console.error('Diagnosis fetch error:', error);
       return res.status(500).json({ error: 'データ取得エラー' });
     }
 
@@ -117,7 +116,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
     });
 
   } catch (error) {
-    console.error('Get duplicate phones error:', error);
     res.status(500).json({ 
       error: '重複電話番号の取得に失敗しました'
     });

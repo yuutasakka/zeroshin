@@ -226,7 +226,6 @@ const AdminLoginPage: React.FC<AdminLoginPageProps> = ({ onLogin, onNavigateHome
         .single();
 
       if (registrationError) {
-        console.error('Supabase登録エラー:', registrationError);
         
         // 409 エラーは通常、重複するメールアドレスを意味します
         if (registrationError.code === '23505' || registrationError.message?.includes('duplicate')) {
@@ -342,7 +341,7 @@ const AdminLoginPage: React.FC<AdminLoginPageProps> = ({ onLogin, onNavigateHome
       return;
     }
     
-    console.log('🔐 入力確認', {
+    console.log('Login attempt details:', {
       username: sanitizedUsername,
       passwordLength: password.length,
       passwordContainsSpecialChar: /[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]/.test(password)
@@ -375,11 +374,9 @@ const AdminLoginPage: React.FC<AdminLoginPageProps> = ({ onLogin, onNavigateHome
           failedAttempts: adminCredentials?.failed_attempts
         });
       } catch (supabaseError) {
-        console.warn('Supabase接続エラー、ローカルフォールバックを使用', supabaseError);
         
         // ローカルフォールバックは本番環境では無効化
         if (process.env.NODE_ENV === 'development') {
-          console.warn('開発環境のため、ローカル認証は無効です');
         }
       }
       
@@ -427,7 +424,7 @@ const AdminLoginPage: React.FC<AdminLoginPageProps> = ({ onLogin, onNavigateHome
       // セキュリティ強化: 適切なパスワード検証を実行
       let isPasswordValid = false;
       
-      console.log('🔑 パスワード検証開始', {
+      console.log('Password verification attempt:', {
         sanitizedUsername,
         passwordLength: password.length,
         useLocalFallback,
@@ -438,15 +435,11 @@ const AdminLoginPage: React.FC<AdminLoginPageProps> = ({ onLogin, onNavigateHome
       // パスワード検証
       if (useLocalFallback) {
         // ローカルフォールバック時はエラー
-        console.log('❌ ローカルフォールバックはサポートされていません');
         isPasswordValid = false;
       } else {
         try {
-          console.log('🔍 SupabaseAdminAuth.verifyPasswordを呼び出し中...');
           isPasswordValid = await SupabaseAdminAuth.verifyPassword(password, adminCredentials.password_hash, username);
-          console.log('🔍 verifyPassword結果:', isPasswordValid);
         } catch (verifyError) {
-          console.warn('⚠️ パスワード検証エラー', verifyError);
           isPasswordValid = false;
         }
       }
@@ -469,7 +462,6 @@ const AdminLoginPage: React.FC<AdminLoginPageProps> = ({ onLogin, onNavigateHome
             await SupabaseAdminAuth.updateFailedAttempts(sanitizedUsername, newAttempts);
           }
         } catch (updateError) {
-          console.warn('失敗回数の更新エラー:', updateError);
         }
         
         setLoading(false);
@@ -493,9 +485,9 @@ const AdminLoginPage: React.FC<AdminLoginPageProps> = ({ onLogin, onNavigateHome
       setIsLocked(false);
       setLockoutTime(null);
 
-      console.log('Secure authentication completed');
       
       // 認証成功時のみログイン完了
+      console.log('Login successful');
       onLogin();
     } catch (error) {
       setError('ログイン処理中にエラーが発生しました。しばらく待ってから再試行してください。');

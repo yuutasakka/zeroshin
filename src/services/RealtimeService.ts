@@ -283,7 +283,6 @@ class RealtimeService {
         try {
           callback(data);
         } catch (error) {
-          console.error('Realtime subscriber error:', error);
         }
       });
     }
@@ -386,7 +385,6 @@ class RealtimeService {
 
       this.notifySubscribers('metrics', this.metrics);
     } catch (error) {
-      console.error('Error refreshing metrics:', error);
       this.createAlert({
         severity: 'error',
         message: 'メトリクスの更新に失敗しました',

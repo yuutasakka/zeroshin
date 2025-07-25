@@ -97,7 +97,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
       .single();
 
     if (saveError) {
-      console.error('Email download save error:', saveError);
       return res.status(500).json({ 
         error: 'データ保存に失敗しました' 
       });
@@ -119,7 +118,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
     });
 
   } catch (error: any) {
-    console.error('Save email download error:', error);
     res.status(500).json({
       error: 'データ保存に失敗しました',
       details: process.env.NODE_ENV === 'development' ? error.message : undefined

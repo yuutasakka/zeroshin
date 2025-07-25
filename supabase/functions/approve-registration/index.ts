@@ -67,7 +67,6 @@ async function sendNotificationEmail(
   const sendgridApiKey = Deno.env.get("SENDGRID_API_KEY");
   
   if (!sendgridApiKey) {
-    console.warn("SendGrid APIキーが未設定のため、メール送信をスキップします");
     return;
   }
 
@@ -156,26 +155,19 @@ Email: support@aiconectx.co.jp
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error("SendGrid メール送信エラー:", response.status, errorText);
-    } else {
-      console.log("メール送信成功:", email);
     }
   } catch (error) {
-    console.error("メール送信例外:", error);
   }
 }
 
 // ログ記録関数
 function logInfo(message: string, data?: any) {
-  console.log(`[INFO] ${new Date().toISOString()} - ${message}`, data ? JSON.stringify(data, null, 2) : '');
 }
 
 function logError(message: string, error?: any) {
-  console.error(`[ERROR] ${new Date().toISOString()} - ${message}`, error);
 }
 
 function logWarn(message: string, data?: any) {
-  console.warn(`[WARN] ${new Date().toISOString()} - ${message}`, data ? JSON.stringify(data, null, 2) : '');
 }
 
 serve(async (req) => {
@@ -274,7 +266,6 @@ serve(async (req) => {
       });
 
       if (authError) {
-        console.error('ユーザー作成エラー:', authError);
         return new Response(
           JSON.stringify({ 
             success: false, 
@@ -304,7 +295,6 @@ serve(async (req) => {
           .eq('id', userId);
 
         if (profileError) {
-          console.error('プロファイル更新エラー:', profileError);
         }
 
         // ユーザーロールを追加
@@ -318,7 +308,6 @@ serve(async (req) => {
           });
 
         if (roleError) {
-          console.error('ロール設定エラー:', roleError);
         }
       }
     }
@@ -335,7 +324,6 @@ serve(async (req) => {
       .eq('id', requestId);
 
     if (updateError) {
-      console.error('申請ステータス更新エラー:', updateError);
       return new Response(
         JSON.stringify({ 
           success: false, 
@@ -364,7 +352,6 @@ serve(async (req) => {
       });
 
     if (logError) {
-      console.error('アクティビティログ記録エラー:', logError);
     }
 
     // メール通知を送信
@@ -377,7 +364,6 @@ serve(async (req) => {
         adminNotes
       );
     } catch (emailError) {
-      console.error('メール送信エラー:', emailError);
       // メール送信エラーは処理を停止させない
     }
 
@@ -399,7 +385,6 @@ serve(async (req) => {
     );
 
   } catch (error) {
-    console.error('Edge Function実行エラー:', error);
     return new Response(
       JSON.stringify({ 
         success: false, 

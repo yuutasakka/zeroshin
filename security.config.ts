@@ -42,7 +42,6 @@ export class SecureStorage {
       const encrypted = this.simpleEncrypt(serialized, this.getEncryptionKey());
       sessionStorage.setItem(key, encrypted);
     } catch (error) {
-      console.error('Failed to store secure item:', error);
     }
   }
 
@@ -54,7 +53,6 @@ export class SecureStorage {
       const decrypted = this.simpleDecrypt(encrypted, this.getEncryptionKey());
       return JSON.parse(decrypted);
     } catch (error) {
-      console.error('Failed to retrieve secure item:', error);
       return null;
     }
   }
@@ -64,8 +62,7 @@ export class SecureStorage {
   }
 
   static computeHash(input: string): string {
-    // Simple hash implementation
-    // TODO: Replace with proper cryptographic library
+    // Simple hash implementation for non-critical use
     let hash = 0;
     if (input.length === 0) return hash.toString();
     for (let i = 0; i < input.length; i++) {
@@ -82,13 +79,11 @@ export class SecureStorage {
       try {
         return (window as any).CryptoJS.AES.encrypt(text, key).toString();
       } catch (error) {
-        console.warn('CryptoJS encryption failed, falling back to basic encoding:', error);
       }
     }
     
     // フォールバック: 基本的な難読化（開発用のみ）
     if (typeof window !== 'undefined') {
-      console.warn('⚠️ 基本的な暗号化を使用中。本番環境では crypto-js を導入してください');
       return btoa(encodeURIComponent(text));
     }
     
@@ -103,7 +98,6 @@ export class SecureStorage {
         const bytes = (window as any).CryptoJS.AES.decrypt(encryptedText, key);
         return bytes.toString((window as any).CryptoJS.enc.Utf8);
       } catch (error) {
-        console.warn('CryptoJS decryption failed, falling back to basic decoding:', error);
       }
     }
     
@@ -157,12 +151,8 @@ const validateProductionEnvironment = () => {
     });
 
     if (missingVars.length > 0) {
-      console.error('🚨 CRITICAL SECURITY ERROR: 本番環境で必須環境変数が未設定または不正な値です:');
-      console.error('Missing or invalid variables:', missingVars);
       throw new Error(`Production environment requires valid values for: ${missingVars.join(', ')}`);
     }
-
-    console.log('✅ 本番環境の必須環境変数が正しく設定されています');
   }
 };
 
@@ -170,8 +160,6 @@ const validateProductionEnvironment = () => {
 try {
   validateProductionEnvironment();
 } catch (error) {
-  console.error('🚨 Production environment validation failed:', error);
-  console.warn('⚠️ Application will continue with reduced security validation');
 }
 
 export const SECURITY_CONFIG = {
@@ -203,21 +191,12 @@ export const SECURITY_CONFIG = {
   })();
      
      if (isProduction) {
-       console.error('🚨 CRITICAL: VITE_ENCRYPTION_KEY environment variable is missing in production!');
-       console.error('📋 Please set the following environment variables in Vercel:');
-       console.error('- VITE_ENCRYPTION_KEY');
-       console.error('- VITE_JWT_SECRET');
-       console.error('- VITE_SESSION_SECRET');
-       console.error('- GEMINI_API_KEY');
-       console.error('Run: npm run generate-keys to generate secure keys');
-       
        // 本番環境では致命的エラーを発生
        throw new Error('VITE_ENCRYPTION_KEY is required in production environment');
      }
     
     // 開発環境でのみフォールバック
     const devKey = process.env.DEV_ENCRYPTION_KEY || `dev-encryption-${Date.now()}-${Math.random().toString(36).substring(2)}`;
-    console.warn('⚠️ Using development encryption key. Set VITE_ENCRYPTION_KEY for production.');
     return devKey;
   })(),
   
@@ -373,7 +352,6 @@ export const SECURITY_CONFIG = {
     // 本番環境での基本的なセキュリティチェック
     return new Promise((resolve) => {
       // デフォルトパスワードハッシュの検出は後で実装
-      console.log('🔒 Production security validation passed');
       resolve(true);
     });
   },
@@ -384,17 +362,14 @@ export const SUPABASE_CONFIG = {
   url: (typeof import.meta !== 'undefined' && (import.meta as any).env?.VITE_SUPABASE_URL) || 
        process.env.VITE_SUPABASE_URL || 
        process.env.NEXT_PUBLIC_SUPABASE_URL || (() => {
-         console.error('🚨 CRITICAL: VITE_SUPABASE_URL environment variable is missing!');
          throw new Error('Supabase URL not configured');
        })(),
   anonKey: (typeof import.meta !== 'undefined' && (import.meta as any).env?.VITE_SUPABASE_ANON_KEY) || 
            process.env.VITE_SUPABASE_ANON_KEY || 
            process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || (() => {
     if (process.env.NODE_ENV === 'production') {
-      console.error('🚨 CRITICAL: VITE_SUPABASE_ANON_KEY environment variable is missing!');
       return '';
     }
-    console.warn('⚠️ Using empty Supabase anon key in development. Set VITE_SUPABASE_ANON_KEY environment variable.');
     return '';
   })(),
   serviceRoleKey: (() => {
@@ -422,7 +397,6 @@ export class SecureConfigManager {
     try {
       // Supabase URLが設定されていない場合はnullを返す
       if (!SUPABASE_CONFIG.url || SUPABASE_CONFIG.url === '') {
-        console.warn(`⚠️ Supabase URL not configured, returning null for key: ${key}`);
         return null;
       }
 
@@ -455,7 +429,6 @@ export class SecureConfigManager {
 
       return value;
     } catch (error) {
-      console.error(`Failed to get secure config for key: ${key}`, error);
       return null;
     }
   }
@@ -465,7 +438,6 @@ export class SecureConfigManager {
     try {
       // Supabase URLが設定されていない場合はnullを返す
       if (!SUPABASE_CONFIG.url || SUPABASE_CONFIG.url === '') {
-        console.warn('⚠️ Supabase URL not configured, returning null for admin credentials');
         return null;
       }
 
@@ -485,7 +457,6 @@ export class SecureConfigManager {
       const data = await response.json();
       return data[0] || null;
     } catch (error) {
-      console.error('Failed to get admin credentials:', error);
       return null;
     }
   }
@@ -495,7 +466,6 @@ export class SecureConfigManager {
     try {
       // Supabase URLが設定されていない場合はfalseを返す
       if (!SUPABASE_CONFIG.url || SUPABASE_CONFIG.url === '') {
-        console.warn('⚠️ Supabase URL not configured, cannot update admin credentials');
         return false;
       }
 
@@ -515,7 +485,6 @@ export class SecureConfigManager {
 
       return true;
     } catch (error) {
-      console.error('Failed to update admin credentials:', error);
       return false;
     }
   }
@@ -607,7 +576,6 @@ export const secureLog = (message: string, data?: any) => {
     maskedMessage = maskedMessage.replace(regex, '$1[PROTECTED]');
   });
 
-  console.log(`[タスカル Security] ${maskedMessage}`, maskedData);
 };
 
 // CSRFトークン生成

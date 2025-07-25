@@ -78,7 +78,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
     const { data: downloads, count, error } = await query;
 
     if (error) {
-      console.error('Download stats fetch error:', error);
       return res.status(500).json({ error: 'データ取得エラー' });
     }
 
@@ -124,7 +123,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
     });
 
   } catch (error) {
-    console.error('Get download stats error:', error);
     res.status(500).json({ 
       error: 'ダウンロード統計の取得に失敗しました'
     });

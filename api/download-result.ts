@@ -62,7 +62,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
       .eq('id', downloadData.id);
 
     if (updateError) {
-      console.error('Download flag update error:', updateError);
       // エラーが発生してもダウンロードは継続
     }
 
@@ -79,7 +78,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
     res.status(200).send(htmlContent);
 
   } catch (error: any) {
-    console.error('Download result error:', error);
     res.status(500).json({
       error: 'ダウンロードに失敗しました',
       details: process.env.NODE_ENV === 'development' ? error.message : undefined

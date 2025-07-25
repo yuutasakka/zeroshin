@@ -175,7 +175,6 @@ export class SecurityMiddleware {
         .update(sessionToken + Date.now().toString())
         .digest('hex');
     } catch (error) {
-      console.error('CSRF token generation failed:', error);
       throw new Error('Failed to generate CSRF token');
     }
   }
@@ -191,7 +190,6 @@ export class SecurityMiddleware {
       const crypto = require('crypto');
       return crypto.randomBytes(32).toString('hex');
     } catch (error) {
-      console.error('Session token generation failed:', error);
       throw new Error('Failed to generate session token');
     }
   }

@@ -828,6 +828,5 @@ export class EnterpriseSecurityManager {
 if (typeof window === 'undefined') {
   // 環境変数からカスタムポリシーを読み込み
   EnterpriseSecurityManager.initialize().catch(error => {
-    console.error('Failed to initialize Enterprise Security Manager:', error);
   });
 }

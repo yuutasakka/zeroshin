@@ -106,7 +106,6 @@ const PhoneVerificationPage: React.FC<PhoneVerificationPageProps> = ({
                   errorMessage = errorData.error || errorMessage;
                 }
               } catch (parseError) {
-                console.error('Error parsing response:', parseError);
               }
               throw new Error(errorMessage);
             }
@@ -120,7 +119,6 @@ const PhoneVerificationPage: React.FC<PhoneVerificationPageProps> = ({
                 throw new Error('Invalid response format');
               }
             } catch (parseError) {
-              console.error('Error parsing successful response:', parseError);
               throw new Error('レスポンスの解析に失敗しました');
             }
             
@@ -131,7 +129,6 @@ const PhoneVerificationPage: React.FC<PhoneVerificationPageProps> = ({
             setIsInitialSMSSent(true); // 送信済みフラグを設定
             setCountdown(60);
           } catch (smsError: any) {
-            console.error('SMS送信エラー:', smsError);
             throw new Error(smsError.message || 'SMS送信に失敗しました。電話番号を確認してもう一度お試しください。');
           }
           
@@ -217,7 +214,6 @@ const PhoneVerificationPage: React.FC<PhoneVerificationPageProps> = ({
             isAlreadyVerified = errorData.alreadyVerified || false;
           }
         } catch (parseError) {
-          console.error('Error parsing response:', parseError);
         }
         
         // 既に認証済みの場合は結果ページへ直接遷移
@@ -236,7 +232,6 @@ const PhoneVerificationPage: React.FC<PhoneVerificationPageProps> = ({
           return;
         }
         
-        console.error('SMS送信API失敗:', { status: response.status, statusText: response.statusText });
         throw new Error(errorMessage);
       }
 
@@ -331,9 +326,7 @@ const PhoneVerificationPage: React.FC<PhoneVerificationPageProps> = ({
               errorMessage = errorData.error || errorMessage;
             }
           } catch (parseError) {
-            console.error('Error parsing response:', parseError);
           }
-          console.error('OTP認証API失敗:', { status: response.status, statusText: response.statusText });
           handleFailedAttempt();
           throw new Error(errorMessage);
         }
@@ -347,7 +340,6 @@ const PhoneVerificationPage: React.FC<PhoneVerificationPageProps> = ({
             throw new Error('Invalid response format');
           }
         } catch (parseError) {
-          console.error('Error parsing successful response:', parseError);
           handleFailedAttempt();
           throw new Error('レスポンスの解析に失敗しました');
         }
@@ -359,7 +351,6 @@ const PhoneVerificationPage: React.FC<PhoneVerificationPageProps> = ({
         
         authSuccess = result.success;
       } catch (smsError: any) {
-        console.error('SMS認証例外:', smsError);
         if (!smsError.message?.includes('認証コード')) {
           handleFailedAttempt();
         }
@@ -386,7 +377,6 @@ const PhoneVerificationPage: React.FC<PhoneVerificationPageProps> = ({
                 const parsedData = JSON.parse(storedDiagnosisData);
                 diagnosisAnswers = parsedData;
               } catch (e) {
-                console.error(' sessionStorageからの診断データ取得に失敗:', e);
               }
             }
           }
@@ -440,14 +430,11 @@ const PhoneVerificationPage: React.FC<PhoneVerificationPageProps> = ({
             });
 
             if (!saveResponse.ok) {
-              console.error('Failed to save user data to Supabase');
               // エラーでも処理を続行
             } else {
               const saveResult = await saveResponse.json();
-              console.log('User data saved:', saveResult);
             }
           } catch (saveError) {
-            console.error('Error saving user data:', saveError);
             // エラーでも処理を続行
           }
           
@@ -480,7 +467,6 @@ const PhoneVerificationPage: React.FC<PhoneVerificationPageProps> = ({
           }
 
         } catch (sessionError) {
-          console.error(' 認証後のシステムエラー:', sessionError);
           throw new Error('認証は成功しましたが、システムエラーが発生しました。管理者にお問い合わせください。');
         }
       }
@@ -527,9 +513,7 @@ const PhoneVerificationPage: React.FC<PhoneVerificationPageProps> = ({
             errorMessage = errorData.error || errorMessage;
           }
         } catch (parseError) {
-          console.error('Error parsing response:', parseError);
         }
-        console.error('SMS送信API失敗:', { status: response.status, statusText: response.statusText });
         throw new Error(errorMessage);
       }
 

@@ -67,7 +67,6 @@ const FAQSection: React.FC = () => {
         });
       }
     } catch (error) {
-      console.error('Error loading contact info:', error);
     }
   };
 

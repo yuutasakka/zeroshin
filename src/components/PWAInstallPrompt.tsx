@@ -82,7 +82,6 @@ const PWAInstallPrompt: React.FC = () => {
       setShowInstallPrompt(false);
       setHasSeenPrompt(true);
     } catch (error) {
-      console.error('Error installing PWA:', error);
     }
   };
 

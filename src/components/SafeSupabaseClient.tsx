@@ -76,7 +76,6 @@ export const SupabaseProvider: React.FC<SupabaseProviderProps> = ({ children }) 
           .limit(0);
 
         if (testError && testError.message.includes('relation') === false) {
-          console.warn('Supabase connection test failed:', testError);
           setError('Supabaseへの接続に失敗しました');
           setIsConnected(false);
         } else {
@@ -85,7 +84,6 @@ export const SupabaseProvider: React.FC<SupabaseProviderProps> = ({ children }) 
           setError(null);
         }
       } catch (initError) {
-        console.error('Supabase initialization error:', initError);
         setError('Supabaseの初期化に失敗しました');
         setIsConnected(false);
       }

@@ -7,12 +7,8 @@ export const createSupabaseClient = () => {
   const key = SUPABASE_CONFIG.anonKey;
   
   // デバッグ情報をログ出力
-  console.log('🔍 Supabase Client Configuration:');
-  console.log('URL:', url ? 'SET' : 'NOT SET');
-  console.log('Anon Key:', key ? `SET (${key.length} chars)` : 'NOT SET');
   
   if (!url || !key) {
-    console.error('🚨 Supabase configuration incomplete:', { url: !!url, key: !!key });
   }
   
   return {

@@ -172,12 +172,10 @@ export function hasCryptoJS(): boolean {
 
 // localStorage機能を無効化（セキュリティのため）
 export function safeGetLocalStorage(key: string): string | null {
-  console.warn('localStorage機能は無効化されています（セキュリティのため）');
   return null;
 }
 
 export function safeSetLocalStorage(key: string, value: string): boolean {
-  console.warn('localStorage機能は無効化されています（セキュリティのため）');
   return false;
 }
 

@@ -77,7 +77,6 @@ const SMSAuthFlow: React.FC<SMSAuthFlowProps> = ({
       
       return false;
     } catch (error) {
-      console.error('認証確認エラー:', error);
       return false;
     }
   };
@@ -200,14 +199,11 @@ const SMSAuthFlow: React.FC<SMSAuthFlowProps> = ({
             });
 
             if (!saveResponse.ok) {
-              console.error('Failed to save user data to Supabase');
               // エラーでも処理を続行
             } else {
               const saveResult = await saveResponse.json();
-              console.log('User data saved:', saveResult);
             }
           } catch (saveError) {
-            console.error('Error saving user data:', saveError);
             // エラーでも処理を続行
           }
           

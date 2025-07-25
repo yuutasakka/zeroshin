@@ -201,16 +201,12 @@ const initializeTwilio = async () => {
 
     client = twilio(accountSid, authToken);
     logger.info('Twilio設定確認完了');
-    console.log('✅ Twilio設定確認完了');
   } catch (error) {
     logger.error('Twilio初期化エラー', error);
-    console.error('❌ Twilio初期化に失敗:', error);
     
     // 開発環境では警告のみ、本番環境では終了
     if (NODE_ENV === 'production') {
       process.exit(1);
-    } else {
-      console.warn('🚧 開発環境: Twilio初期化失敗');
     }
   }
 };
@@ -365,8 +361,6 @@ app.post('/api/sms/send', smsLimiter, phoneValidation, async (req: Request, res:
         ip: clientIP
       });
 
-      console.log(`SMS送信成功: [電話番号非表示] (SID: ${smsResult.sid})`);
-
       return res.json({
         success: true,
         message: 'SMS認証コードを送信しました',
@@ -394,7 +388,6 @@ app.post('/api/sms/send', smsLimiter, phoneValidation, async (req: Request, res:
       ip: req.ip
     });
 
-    console.error('SMS送信エラー:', error);
     
     res.status(500).json({
       error: 'SMS送信に失敗しました',
@@ -477,8 +470,6 @@ app.post('/api/sms/verify', authLimiter, verificationValidation, async (req: Req
         phoneNumber: normalizedPhoneNumber,
         ip: clientIP
       });
-
-      console.log(`認証成功: ${normalizedPhoneNumber}`);
       
       return res.json({
         success: true,
@@ -505,7 +496,6 @@ app.post('/api/sms/verify', authLimiter, verificationValidation, async (req: Req
       ip: req.ip
     });
 
-    console.error('認証エラー:', error);
     res.status(500).json({
       error: '認証処理に失敗しました'
     });
@@ -549,12 +539,10 @@ app.use((err: Error, req: express.Request, res: express.Response, next: express.
 
 // 終了時のクリーンアップ
 process.on('SIGTERM', () => {
-  console.log('SIGTERM received, shutting down gracefully');
   process.exit(0);
 });
 
 process.on('SIGINT', () => {
-  console.log('SIGINT received, shutting down gracefully');
   process.exit(0);
 });
 
@@ -565,7 +553,6 @@ const startServer = async () => {
     try {
       await initializeTwilio();
     } catch (twilioError) {
-      console.warn('🚧 Twilioの初期化をスキップして続行:', twilioError instanceof Error ? twilioError.message : twilioError);
     }
     
     // APIバージョニングミドルウェア
@@ -584,13 +571,9 @@ const startServer = async () => {
         environment: NODE_ENV,
         port: PORT
       });
-      console.log(`🚀 セキュア認証サーバーが http://localhost:${PORT} で起動しました`);
-      console.log(`🔒 セキュリティ機能: Helmet, CORS制限, レート制限, 入力検証, IPアドレス制限, ログ記録`);
-      console.log(`📚 API仕様書: http://localhost:${PORT}/api-docs`);
     });
   } catch (error) {
     logger.error('サーバー起動エラー', error);
-    console.error('サーバー起動に失敗しました:', error);
     process.exit(1);
   }
 };

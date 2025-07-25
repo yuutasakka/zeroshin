@@ -21,22 +21,18 @@ export const useOfflineStorage = () => {
 
   // オフライン機能を無効化 - セキュリティのため
   const saveOfflineData = () => {
-    console.warn('オフライン機能は無効化されています（セキュリティのため）');
     return false;
   };
 
   const getOfflineData = () => {
-    console.warn('オフライン機能は無効化されています（セキュリティのため）');
     return null;
   };
 
   const clearOfflineData = () => {
-    console.warn('オフライン機能は無効化されています（セキュリティのため）');
     return false;
   };
 
   const syncOfflineData = async () => {
-    console.warn('オフライン機能は無効化されています（セキュリティのため）');
     return false;
   };
 

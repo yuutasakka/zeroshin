@@ -85,7 +85,6 @@ export const captureException = (error: Error, context?: Record<string, any>) =>
       },
     });
   } else {
-    console.error('Error captured:', error, context);
   }
 };
 

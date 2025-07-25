@@ -34,7 +34,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
     const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
     if (!supabaseUrl || !supabaseServiceKey) {
-      console.error('Supabase configuration missing');
       return res.status(500).json({ 
         error: 'データベース接続エラー'
       });
@@ -70,7 +69,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
       .single();
 
     if (userError) {
-      console.error('User save error:', userError);
       throw new Error('ユーザー情報の保存に失敗しました');
     }
 
@@ -87,12 +85,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
         });
 
       if (diagnosisError) {
-        console.error('Diagnosis save error:', diagnosisError);
         // 診断データの保存に失敗してもユーザー登録は成功とする
       }
     }
 
-    console.log('User data saved successfully:', userData.id);
 
     res.status(200).json({ 
       success: true,
@@ -100,7 +96,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
     });
 
   } catch (error: any) {
-    console.error('Save user data error:', error);
     res.status(500).json({
       error: 'データ保存に失敗しました',
       details: process.env.NODE_ENV === 'development' ? error.message : undefined

@@ -80,7 +80,6 @@ const AdminPasswordResetPage: React.FC<AdminPasswordResetPageProps> = ({ onNavig
         setError(result.error || 'メール送信に失敗しました。');
       }
     } catch (error) {
-      console.error('メール送信エラー:', error);
       setError('メール送信中にエラーが発生しました。');
     } finally {
       setIsEmailSending(false);
@@ -129,7 +128,6 @@ const AdminPasswordResetPage: React.FC<AdminPasswordResetPageProps> = ({ onNavig
         setError(result.error || 'パスワード更新に失敗しました。');
       }
     } catch (error) {
-      console.error('パスワード更新エラー:', error);
       setError('パスワード更新中にエラーが発生しました。');
     } finally {
       setIsResetting(false);

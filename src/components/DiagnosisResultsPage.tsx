@@ -158,7 +158,6 @@ const DiagnosisResultsPage: React.FC<DiagnosisResultsPageProps> = ({ diagnosisDa
         return parsedDirect;
       }
     } catch (error) {
-      console.error(' 診断データ復元エラー:', error);
     }
 
     // フォールバック: デフォルトデータ
