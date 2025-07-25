@@ -139,69 +139,57 @@ const Hero: React.FC<HeroProps> = ({ onStartDiagnosis }) => {
             無駄なく最適なサービスが選べる！
           </p>
 
-          {/* プレゼントバナー（Hero版） */}
-          <div 
-            className="inline-block mb-8"
-            style={{
-              background: 'linear-gradient(135deg, #E74C3C 0%, #C0392B 100%)',
-              color: 'white',
-              padding: '12px 20px',
-              borderRadius: '12px',
-              boxShadow: '0 4px 15px rgba(231, 76, 60, 0.3)',
-              animation: 'pulse 2s infinite',
-              transform: 'scale(0.9)'
-            }}
-          >
-            <div className="flex items-center space-x-3">
-              <i className="fas fa-gift text-yellow-300 text-xl animate-bounce"></i>
-              <div>
-                <p className="font-bold text-sm leading-tight">
-                  30秒診断完了者限定！
-                </p>
-                <p className="text-xs font-semibold">
-                  資金調達バイブル完全版を無料プレゼント！
-                </p>
+          {/* CTA セクション */}
+          <div className="flex flex-col lg:flex-row items-center justify-center gap-6 lg:gap-12">
+            <div 
+              className="inline-block mb-8"
+              style={{
+                background: 'linear-gradient(135deg, rgb(231, 76, 60) 0%, rgb(192, 57, 43) 100%)',
+                color: 'white',
+                padding: '12px 20px',
+                borderRadius: '12px',
+                boxShadow: 'rgba(231, 76, 60, 0.3) 0px 4px 15px',
+                animation: '2s ease 0s infinite normal none running pulse',
+                transform: 'scale(0.9)'
+              }}
+            >
+              <div className="flex items-center space-x-3">
+                <i className="fas fa-gift text-yellow-300 text-xl animate-bounce"></i>
+                <div>
+                  <p className="font-bold text-sm leading-tight">30秒診断完了者限定！</p>
+                  <p className="text-xs font-semibold">資金調達バイブル完全版を無料プレゼント！</p>
+                </div>
               </div>
             </div>
+            
+            <button
+              onClick={onStartDiagnosis}
+              className="btn-accent btn-pulse"
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '12px',
+                padding: '20px 48px',
+                fontSize: '18px',
+                fontWeight: 700,
+                backgroundColor: 'rgb(44, 62, 80)',
+                color: 'rgb(255, 255, 255)',
+                border: 'none',
+                borderRadius: '12px',
+                cursor: 'pointer',
+                transition: '0.3s',
+                boxShadow: 'rgba(44, 62, 80, 0.25) 0px 4px 16px',
+                position: 'relative',
+                overflow: 'hidden',
+                transform: 'translateY(0px)'
+              }}
+            >
+              無料診断を開始する
+              <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                <path d="M7 5L12 10L7 15" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+            </button>
           </div>
-
-          {/* CTAボタン */}
-          <button
-            onClick={onStartDiagnosis}
-            className="btn-accent btn-pulse"
-            style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: '12px',
-              padding: '20px 48px',
-              fontSize: '18px',
-              fontWeight: 700,
-              backgroundColor: '#2C3E50',
-              color: '#FFFFFF',
-              border: 'none',
-              borderRadius: '12px',
-              cursor: 'pointer',
-              transition: 'all 0.3s ease',
-              boxShadow: '0 4px 16px rgba(44, 62, 80, 0.25)',
-              position: 'relative',
-              overflow: 'hidden'
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.backgroundColor = '#1A252F';
-              e.currentTarget.style.transform = 'translateY(-2px)';
-              e.currentTarget.style.boxShadow = '0 6px 20px rgba(44, 62, 80, 0.35)';
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.backgroundColor = '#2C3E50';
-              e.currentTarget.style.transform = 'translateY(0)';
-              e.currentTarget.style.boxShadow = '0 4px 16px rgba(44, 62, 80, 0.25)';
-            }}
-          >
-            無料診断を開始する
-            <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-              <path d="M7 5L12 10L7 15" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-            </svg>
-          </button>
 
           {/* 信頼性指標 */}
           <div style={{
