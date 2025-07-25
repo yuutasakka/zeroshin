@@ -4,7 +4,7 @@ import { defaultTestimonialsData } from '../../data/testimonialsData';
 import { defaultReasonsToChooseData } from '../../data/homepageContentData';
 import { secureLog } from '../../security.config';
 import { createSupabaseClient } from './adminUtils';
-import { useReasonsToChoose, useDesignTemplate } from '../../src/contexts/DesignSettingsContext';
+import { useDesignTemplate } from '../../src/contexts/DesignSettingsContext';
 
 const createSupabaseHelper = () => {
   const config = createSupabaseClient();
@@ -55,14 +55,8 @@ const createSupabaseHelper = () => {
 const ReliabilitySection: React.FC = () => {
   const [testimonials, setTestimonials] = useState<Testimonial[]>([]);
   const [isClient, setIsClient] = useState(false);
-  const reasonsDataFromContext = useReasonsToChoose();
-  const originalReasonsData = reasonsDataFromContext || defaultReasonsToChooseData;
-  
-  // fas fa-usersアイコンを持つ項目を除外
-  const reasonsData = {
-    ...originalReasonsData,
-    reasons: originalReasonsData.reasons.filter(reason => reason.iconClass !== 'fas fa-users')
-  };
+  // 一時的にデフォルトデータを強制使用（キャッシング・ファクタリング対応）
+  const reasonsData = defaultReasonsToChooseData;
   const { templateConfig } = useDesignTemplate();
   
   useEffect(() => {

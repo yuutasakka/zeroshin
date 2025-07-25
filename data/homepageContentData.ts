@@ -69,17 +69,17 @@ export const defaultReasonsToChooseData: ReasonsToChooseData = {
       animationDelay: "0s"
     },
     {
-      iconClass: "fas fa-users",
-      title: "提携FP数",
-      value: "1,500+",
-      description: "全国の優秀な専門家ネットワーク",
+      iconClass: "fas fa-chart-line",
+      title: "診断／相談実績",
+      value: "2,500+",
+      description: "豊富な経験に基づく、あなたに最適な資金調達プランを提案",
       animationDelay: "0.5s"
     },
     {
-      iconClass: "fas fa-trophy",
-      title: "相談実績",
-      value: "2,500+",
-      description: "豊富な経験に基づく最適なご提案",
+      iconClass: "fas fa-clock",
+      title: "スピード診断",
+      value: "30秒",
+      description: "診断完了から結果表示までわずか30秒。無駄なく次の一手へ導く",
       animationDelay: "1s"
     }
   ]
