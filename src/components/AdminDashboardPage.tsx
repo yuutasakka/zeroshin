@@ -675,9 +675,14 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, onNav
       // Load testimonials for editing
       try {
         const supabaseTestimonials = await SupabaseAdminAPI.loadAdminSetting('testimonials');
-        if (supabaseTestimonials) {
+        if (supabaseTestimonials && Array.isArray(supabaseTestimonials)) {
           secureLog('Supabaseからお客様の声を読み込み');
           setTestimonialsForEditing(supabaseTestimonials);
+        } else if (supabaseTestimonials && typeof supabaseTestimonials === 'object') {
+          // オブジェクトの場合、配列に変換
+          secureLog('Supabaseデータがオブジェクト形式、配列に変換');
+          const testimonialsArray = Object.values(supabaseTestimonials);
+          setTestimonialsForEditing(Array.isArray(testimonialsArray) ? testimonialsArray : []);
         } else {
           secureLog('Supabaseお客様の声データなし、デフォルトを使用');
           setTestimonialsForEditing(JSON.parse(JSON.stringify(defaultTestimonialsData))); // Deep copy
