@@ -1,7 +1,33 @@
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import CryptoJS from 'crypto-js';
 
-// Supabase設定 - 複数の環境変数ソースをサポート
+// Supabase設定 - 動的ロード対応
+let supabaseUrl = '';
+let supabaseAnonKey = '';
+let configLoaded = false;
+let configPromise: Promise<void> | null = null;
+
+// サーバーから設定を取得
+const loadConfig = async () => {
+  if (configLoaded) return;
+  
+  try {
+    const response = await fetch('/api/public-config');
+    if (response.ok) {
+      const config = await response.json();
+      supabaseUrl = config.supabaseUrl || '';
+      supabaseAnonKey = config.supabaseAnonKey || '';
+      configLoaded = true;
+    }
+  } catch (error) {
+    console.error('Failed to load config from server:', error);
+    // フォールバック: 環境変数から取得
+    supabaseUrl = getEnvVar('VITE_SUPABASE_URL', '');
+    supabaseAnonKey = getEnvVar('VITE_SUPABASE_ANON_KEY', '');
+  }
+};
+
+// 環境変数取得のヘルパー（フォールバック用）
 const getEnvVar = (viteVar: string, fallback: string) => {
   // 1. import.meta.env (Vite development and build)
   if (typeof import.meta !== 'undefined' && import.meta && (import.meta as any).env) {
@@ -30,33 +56,25 @@ const getEnvVar = (viteVar: string, fallback: string) => {
   return fallback;
 };
 
-const supabaseUrl = getEnvVar('VITE_SUPABASE_URL', '');
+// 設定ロードの初期化
+if (typeof window !== 'undefined') {
+  configPromise = loadConfig();
+} else {
+  // サーバーサイドでは環境変数を直接使用
+  supabaseUrl = getEnvVar('VITE_SUPABASE_URL', '');
+  supabaseAnonKey = getEnvVar('VITE_SUPABASE_ANON_KEY', '');
+  configLoaded = true;
+}
 
-// セキュリティ向上: 本番環境ではハードコードされたキーを削除
-const supabaseAnonKey = (() => {
-  const key = getEnvVar('VITE_SUPABASE_ANON_KEY', '');
-  
-  // 本番環境での機密情報チェック
-  const isProduction = typeof window !== 'undefined' && 
-    window.location.hostname !== 'localhost' && 
-    window.location.hostname !== '127.0.0.1';
-  
-  if (isProduction && !key) {
-    // アプリケーション全体のクラッシュを防ぐため、エラーを返すが続行
-    return 'missing-key-will-cause-limited-functionality';
+
+// Supabaseクライアントの作成（動的ロード対応）
+const createSupabaseClient = async () => {
+  // 設定がロードされるまで待機
+  if (configPromise) {
+    await configPromise;
   }
   
-  if (!key && !isProduction) {
-    return 'dev-fallback-key';
-  }
-  
-  return key;
-})();
-
-
-// Supabaseクライアントの作成（セキュリティ向上のためフォールバック処理を追加）
-const createSupabaseClient = () => {
-  if (!supabaseUrl || supabaseUrl.includes('your-project')) {
+  if (!supabaseUrl || supabaseUrl.includes('your-project') || !supabaseAnonKey) {
     // フォールバッククライアントを返す（機能は制限される）
     return {
       from: () => ({
@@ -84,7 +102,18 @@ const createSupabaseClient = () => {
   return createClient(supabaseUrl, supabaseAnonKey);
 };
 
-export const supabase = createSupabaseClient();
+// 設定がロードされた後にSupabaseクライアントを初期化
+let supabase: any;
+
+export const getSupabaseClient = async () => {
+  if (!supabase) {
+    supabase = await createSupabaseClient();
+  }
+  return supabase;
+};
+
+// 後方互換性のためのエクスポート（非推奨）
+export { supabase };
 
 // 管理者認証情報の型定義
 export interface AdminCredentials {

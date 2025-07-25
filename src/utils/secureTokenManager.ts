@@ -1,7 +1,15 @@
 // エンタープライズレベルのJWTトークン管理システム
 import CryptoJS from 'crypto-js';
-import { SecureConfigManager } from '../api/secureConfig';
+// import { SecureConfigManager } from '../api/secureConfig'; // サーバーサイドでのみ使用可能
 import { secureLog } from '../../security.config';
+
+// クライアントサイド用の代替実装
+const SecureConfigManager = {
+  getJWTSecret: async () => {
+    console.warn('JWTの署名検証はサーバーサイドで行う必要があります');
+    return '';
+  }
+};
 
 export interface TokenPair {
   accessToken: string;

@@ -1,7 +1,19 @@
 // エンタープライズレベル暗号化管理システム
 import CryptoJS from 'crypto-js';
-import { SecureConfigManager } from '../api/secureConfig';
+// import { SecureConfigManager } from '../api/secureConfig'; // サーバーサイドでのみ使用可能
 import { secureLog } from '../../security.config';
+
+// クライアントサイド用の代替実装
+const SecureConfigManager = {
+  getMasterEncryptionKey: async () => {
+    // クライアントサイドではマスターキーを使用しない
+    console.warn('クライアントサイドでの暗号化は推奨されません');
+    return null;
+  },
+  setMasterEncryptionKey: async (key: string) => {
+    console.warn('クライアントサイドでキーを設定することはできません');
+  }
+};
 
 export interface EncryptionConfig {
   algorithm: 'AES-256-GCM' | 'AES-256-CBC' | 'AES-256-CTR';

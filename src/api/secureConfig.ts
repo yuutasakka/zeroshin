@@ -1,4 +1,10 @@
 // セキュア設定API - サーバーサイドのみ
+// 警告: このファイルはクライアントサイドにインポートされてはいけません
+
+if (typeof window !== 'undefined') {
+  throw new Error('セキュリティエラー: secureConfig.tsはサーバーサイドでのみ使用可能です');
+}
+
 import { supabaseAdmin } from '../lib/supabaseAuth';
 import crypto from 'crypto';
 

@@ -2,8 +2,37 @@ import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import { VitePWA } from 'vite-plugin-pwa';
 
+// 機密情報がビルドに含まれないようにするためのプラグイン
+const secretsProtectionPlugin = () => {
+  return {
+    name: 'secrets-protection',
+    transform(code: string, id: string) {
+      // 機密情報のパターンを検出
+      const secretPatterns = [
+        /JWT_SECRET/gi,
+        /SESSION_SECRET/gi,
+        /TWILIO_AUTH_TOKEN/gi,
+        /ENCRYPTION_KEY/gi,
+        /CSRF_SECRET/gi,
+        /SERVICE_ROLE_KEY/gi,
+        /GEMINI_API_KEY/gi,
+        /ADMIN_PASSWORD/gi,
+        /process\.env\.(?!VITE_|NODE_ENV|MODE)/g
+      ];
+      
+      for (const pattern of secretPatterns) {
+        if (pattern.test(code) && !id.includes('node_modules')) {
+          console.warn(`\x1b[33m⚠️  警告: ファイル ${id} に機密情報への参照が含まれています\x1b[0m`);
+        }
+      }
+      return null;
+    }
+  };
+};
+
 export default defineConfig({
   plugins: [
+    secretsProtectionPlugin(),
     react(),
     VitePWA({
       registerType: 'autoUpdate',
@@ -79,7 +108,16 @@ export default defineConfig({
     }
   },
   define: {
-    'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV || 'production')
+    'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV || 'production'),
+    // 以下の環境変数はクライアントに露出させない
+    'process.env.JWT_SECRET': JSON.stringify(undefined),
+    'process.env.SESSION_SECRET': JSON.stringify(undefined),
+    'process.env.TWILIO_AUTH_TOKEN': JSON.stringify(undefined),
+    'process.env.ENCRYPTION_KEY': JSON.stringify(undefined),
+    'process.env.CSRF_SECRET': JSON.stringify(undefined),
+    'process.env.SUPABASE_SERVICE_ROLE_KEY': JSON.stringify(undefined),
+    'process.env.GEMINI_API_KEY': JSON.stringify(undefined),
+    'process.env.ADMIN_PASSWORD_HASH': JSON.stringify(undefined)
   },
   optimizeDeps: {
     exclude: ['mock-aws-s3', 'aws-sdk', 'nock', '@mapbox/node-pre-gyp']
