@@ -124,7 +124,7 @@ const Hero: React.FC<HeroProps> = ({ onStartDiagnosis }) => {
             maxWidth: '600px',
             margin: '0 auto 32px'
           }}>
-            先に戦闘力を把握してから、<br className="mobile-only" />
+            先に資金調達力を把握してから、<br className="desktop-break" />
             キャッシング・ファクタリングの業者調査へ
           </p>
 
@@ -266,11 +266,17 @@ const Hero: React.FC<HeroProps> = ({ onStartDiagnosis }) => {
           .mobile-only {
             display: block;
           }
+          .desktop-break {
+            display: none;
+          }
         }
 
         @media (min-width: 769px) {
           .mobile-only {
             display: none;
+          }
+          .desktop-break {
+            display: block;
           }
         }
       `}</style>
