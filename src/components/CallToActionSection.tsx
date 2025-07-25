@@ -35,6 +35,31 @@ const CallToActionSection: React.FC = () => {
 
   return (
     <section id="cta-section" className="py-16 px-4 text-center" style={{ background: '#FFFFFF' }}>
+      <style>{`
+        @keyframes pulse {
+          0%, 100% {
+            opacity: 1;
+            transform: scale(1);
+          }
+          50% {
+            opacity: 0.9;
+            transform: scale(1.02);
+          }
+        }
+        .animate-bounce {
+          animation: bounce 1s infinite;
+        }
+        @keyframes bounce {
+          0%, 100% {
+            transform: translateY(-25%);
+            animation-timing-function: cubic-bezier(0.8, 0, 1, 1);
+          }
+          50% {
+            transform: translateY(0);
+            animation-timing-function: cubic-bezier(0, 0, 0.2, 1);
+          }
+        }
+      `}</style>
       <div className="max-w-4xl mx-auto">
         <h3 
           className="text-2xl md:text-4xl lg:text-5xl mb-6 font-bold leading-tight"
@@ -52,19 +77,44 @@ const CallToActionSection: React.FC = () => {
         </p>
         
         <div className="space-y-6">
-          <button
-            type="button"
-            onClick={handleCTAButtonClick}
-            className="btn btn-gradient text-lg"
-            style={{
-              padding: '1rem 3rem',
-              fontSize: '1.125rem',
-              background: 'linear-gradient(135deg, #F39C12 0%, #D68910 100%)',
-              minWidth: '280px'
-            }}
-          >
-            {ctaButtonConfig.button_text}
-          </button>
+          {/* ボタンとプレゼント文言の横並びレイアウト */}
+          <div className="flex flex-col lg:flex-row items-center justify-center gap-6 lg:gap-8">
+            <button
+              type="button"
+              onClick={handleCTAButtonClick}
+              className="btn btn-gradient text-lg"
+              style={{
+                padding: '1rem 3rem',
+                fontSize: '1.125rem',
+                background: 'linear-gradient(135deg, #F39C12 0%, #D68910 100%)',
+                minWidth: '280px'
+              }}
+            >
+              {ctaButtonConfig.button_text}
+            </button>
+            
+            {/* プレゼント文言 */}
+            <div 
+              className="bg-red-500 text-white px-4 py-3 rounded-lg shadow-lg transform hover:scale-105 transition-transform duration-200"
+              style={{
+                background: 'linear-gradient(135deg, #E74C3C 0%, #C0392B 100%)',
+                boxShadow: '0 4px 15px rgba(231, 76, 60, 0.3)',
+                animation: 'pulse 2s infinite'
+              }}
+            >
+              <div className="flex items-center space-x-2">
+                <i className="fas fa-gift text-yellow-300 text-lg animate-bounce"></i>
+                <div>
+                  <p className="font-bold text-sm lg:text-base leading-tight">
+                    30秒診断完了者限定！
+                  </p>
+                  <p className="text-xs lg:text-sm font-semibold">
+                    資金調達バイブル完全版を無料プレゼント！
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
           
           <p className="text-sm" style={{ color: '#7F8C8D' }}>
             お電話でのご相談：{ctaButtonConfig.phone_number || '0120-XXX-XXX'}（平日 9:00-18:00）
