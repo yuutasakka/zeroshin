@@ -59,7 +59,7 @@ export const DownloadTrackingDisplay: React.FC = () => {
       }
       
       const token = sessionStorage.getItem('adminToken');
-      const response = await fetch(`/api/admin/get-download-stats?${params}`, {
+      const response = await fetch(`/api/admin?action=get-download-stats&${params}`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }

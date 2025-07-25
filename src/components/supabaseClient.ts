@@ -384,7 +384,7 @@ export class SupabaseAdminAuth {
       if (hash.startsWith('$2a$') || hash.startsWith('$2b$') || hash.startsWith('$2y$')) {
         // サーバーサイドのAPIを呼び出してパスワードを検証
         try {
-          const response = await fetch('/api/admin/verify-password', {
+          const response = await fetch('/api/admin?action=verify-password', {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',

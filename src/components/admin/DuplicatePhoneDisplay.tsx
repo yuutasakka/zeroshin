@@ -41,7 +41,7 @@ export const DuplicatePhoneDisplay: React.FC = () => {
       setError(null);
       
       const token = sessionStorage.getItem('adminToken');
-      const response = await fetch('/api/admin/get-duplicate-phones', {
+      const response = await fetch('/api/admin?action=get-duplicate-phones', {
         headers: {
           'Authorization': `Bearer ${token}`
         }
