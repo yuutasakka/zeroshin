@@ -17,7 +17,7 @@ import {
   CTAButtonConfig,
   defaultCTAButtonConfig
 } from '../../data/homepageContentData';
-import { SECURITY_CONFIG, secureLog } from '../../security.config';
+import { SECURITY_CONFIG, secureLog } from '../config/clientSecurity';
 import { SupabaseAdminAPI, SecureStorage, createSupabaseClient } from './adminUtils';
 import { diagnosisManager } from './supabaseClient';
 import { resetToSampleData } from '../../data/sampleData';

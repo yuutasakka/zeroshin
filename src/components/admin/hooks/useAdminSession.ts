@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { SecureStorage } from '../../adminUtils';
-import { secureLog } from '@/security.config';
+import { secureLog } from '@/config/clientSecurity';
 
 interface AdminSession {
   userId: string;

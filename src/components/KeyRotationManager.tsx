@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { SecureConfigManager, secureLog } from '../../security.config';
+import { SecureConfigManager, secureLog } from '../config/clientSecurity';
 
 interface KeyRotationManagerProps {
   onClose: () => void;

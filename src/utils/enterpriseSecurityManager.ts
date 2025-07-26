@@ -5,7 +5,7 @@ import { PasswordSecurityManager } from './passwordSecurityManager';
 import { EncryptionManager, SensitiveDataType } from './encryptionManager';
 import { InputValidator, ValidationRule, ValidationResult } from './inputValidation';
 import { SecurityAuditLogger, SecurityEventType, SecurityEventSeverity } from './securityAuditLogger';
-import { secureLog } from '../../security.config';
+import { secureLog } from '../config/clientSecurity';
 
 export interface SecurityPolicy {
   authentication: {

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Testimonial } from '../../types';
 import { defaultTestimonialsData } from '../../data/testimonialsData';
 import { defaultReasonsToChooseData } from '../../data/homepageContentData';
-import { secureLog } from '../../security.config';
+import { secureLog } from '../config/clientSecurity';
 import { createSupabaseClient } from './adminUtils';
 import { useDesignTemplate } from '../../src/contexts/DesignSettingsContext';
 

@@ -29,7 +29,10 @@
       "Bash(npx tsc:*)",
       "Bash(npm run lint)",
       "Bash(npm run type-check:*)",
-      "Bash(node:*)"
+      "Bash(node:*)",
+      "Bash(./update-imports.sh)",
+      "Bash(mkdir:*)",
+      "Bash(mv:*)"
     ],
     "deny": []
   }

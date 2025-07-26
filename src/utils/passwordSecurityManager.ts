@@ -1,7 +1,7 @@
 // エンタープライズレベルパスワードセキュリティ管理システム
 import bcrypt from 'bcrypt';
 import CryptoJS from 'crypto-js';
-import { secureLog } from '../../security.config';
+import { secureLog } from '../config/clientSecurity';
 
 export interface PasswordPolicy {
   minLength: number;
@@ -529,8 +529,8 @@ export class PasswordSecurityManager {
    * ペッパー追加
    */
   private static async addPepper(password: string): Promise<string> {
-    // 実装では環境変数からペッパーを取得
-    const pepper = process.env.PASSWORD_PEPPER || 'default-pepper-change-in-production';
+    // クライアントサイドではペッパーを使用しない（サーバーサイドで処理）
+    const pepper = 'client-side-pepper';
     return CryptoJS.SHA256(password + pepper).toString();
   }
   

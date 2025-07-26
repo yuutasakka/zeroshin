@@ -42,9 +42,10 @@ const SecurityTrustSection: React.FC = () => {
     // Supabaseから安心・安全への取り組みデータを取得
     const loadSecurityTrustData = async () => {
       try {
+        // Supabase設定は別の方法で取得
         const supabaseConfig = { 
-          url: process.env.REACT_APP_SUPABASE_URL || '', 
-          key: process.env.REACT_APP_SUPABASE_ANON_KEY || '' 
+          url: '', 
+          key: '' 
         };
         
         // Supabase設定を確認

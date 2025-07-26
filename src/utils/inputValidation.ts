@@ -1,6 +1,6 @@
 // エンタープライズレベル入力検証・サニタイゼーションシステム
 import CryptoJS from 'crypto-js';
-import { secureLog } from '../../security.config';
+import { secureLog } from '../config/clientSecurity';
 
 export interface ValidationRule {
   type: 'required' | 'minLength' | 'maxLength' | 'pattern' | 'custom';

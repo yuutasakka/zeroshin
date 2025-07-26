@@ -1,7 +1,7 @@
 // エンタープライズレベルセッション管理システム
 import CryptoJS from 'crypto-js';
 // import { SecureConfigManager } from '../api/secureConfig'; // サーバーサイドでのみ使用可能
-import { secureLog } from '../../security.config';
+import { secureLog } from '../config/clientSecurity';
 import { SecureTokenManager, TokenPair } from './secureTokenManager';
 
 // クライアントサイド用の代替実装

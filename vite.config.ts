@@ -139,9 +139,13 @@ export default defineConfig({
     },
     chunkSizeWarningLimit: 300,
     rollupOptions: {
-      external: ['mock-aws-s3', 'aws-sdk', 'nock', '@mapbox/node-pre-gyp'],
+      external: ['mock-aws-s3', 'aws-sdk', 'nock', '@mapbox/node-pre-gyp', /^\.\/server\//],
       output: {
         manualChunks: (id) => {
+          // src/api/ と src/lib/supabaseAuth.ts をクライアントビルドから除外
+          if (id.includes('src/api/') || id.includes('src/lib/supabaseAuth')) {
+            return null; // ビルドから除外
+          }
           if (id.includes('node_modules')) {
             if (id.includes('react') || id.includes('react-dom')) {
               return 'vendor-react';

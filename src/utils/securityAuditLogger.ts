@@ -1,5 +1,5 @@
 // エンタープライズレベルセキュリティ監査ログシステム
-import { secureLog } from '../../security.config';
+import { secureLog } from '../config/clientSecurity';
 import CryptoJS from 'crypto-js';
 
 export type SecurityEventType = 
@@ -142,7 +142,7 @@ export class SecurityAuditLogger {
         geolocation: await this.resolveGeolocation(actor.ipAddress),
         metadata: {
           environment: process.env.NODE_ENV || 'development',
-          version: process.env.APP_VERSION || '1.0.0',
+          version: '1.0.0',
           checksum: await this.calculateEventChecksum(eventId, timestamp, type, action)
         }
       };

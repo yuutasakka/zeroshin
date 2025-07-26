@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { SECURITY_CONFIG } from '../../security.config';
+import { SECURITY_CONFIG } from '../config/clientSecurity';
 
 interface SecurityValidationResult {
   isValid: boolean;

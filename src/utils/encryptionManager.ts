@@ -1,7 +1,7 @@
 // エンタープライズレベル暗号化管理システム
 import CryptoJS from 'crypto-js';
 // import { SecureConfigManager } from '../api/secureConfig'; // サーバーサイドでのみ使用可能
-import { secureLog } from '../../security.config';
+import { secureLog } from '../config/clientSecurity';
 
 // クライアントサイド用の代替実装
 const SecureConfigManager = {

@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { createSupabaseClient } from './adminUtils';
-import { secureLog } from '../../security.config';
+import { secureLog } from '../config/clientSecurity';
 
 // XSS攻撃防止のためのサニタイゼーション関数
 const sanitizeInput = (input: string): string => {

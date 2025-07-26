@@ -1,6 +1,6 @@
 // 管理画面用のヘルパー関数
 
-import { secureLog } from '@/security.config';
+import { secureLog } from '@/config/clientSecurity';
 
 /**
  * 共通エラー処理ヘルパー

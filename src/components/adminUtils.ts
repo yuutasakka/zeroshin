@@ -1,5 +1,5 @@
 import CryptoJS from 'crypto-js';
-import { SECURITY_CONFIG, SUPABASE_CONFIG, secureLog } from '../../security.config';
+import { CLIENT_SECURITY_CONFIG as SECURITY_CONFIG, SUPABASE_CONFIG, secureLog } from '../config/clientSecurity';
 
 // Supabaseクライアント設定（Environment変数優先、フォールバック対応）
 export const createSupabaseClient = () => {
@@ -19,15 +19,15 @@ export const createSupabaseClient = () => {
 
 // セキュアなストレージ管理
 export class SecureStorage {
-  private static encryptionKey = SECURITY_CONFIG.ENCRYPTION_KEY;
+  // クライアントサイドでは暗号化を使用しない
+  private static encryptionKey = '';
 
   static encrypt(data: any): string {
     try {
-      const jsonString = JSON.stringify(data);
-      const encrypted = CryptoJS.AES.encrypt(jsonString, this.encryptionKey || '').toString();
-      return encrypted;
+      // クライアントサイドでは暗号化せずにそのまま保存
+      return JSON.stringify(data);
     } catch (error) {
-      secureLog('暗号化エラー:', error);
+      secureLog('シリアライズエラー:', error);
       return '';
     }
   }
@@ -35,11 +35,10 @@ export class SecureStorage {
   static decrypt(encryptedData: string): any {
     try {
       if (!encryptedData) return null;
-      const decrypted = CryptoJS.AES.decrypt(encryptedData, this.encryptionKey || '');
-      const jsonString = decrypted.toString(CryptoJS.enc.Utf8);
-      return JSON.parse(jsonString);
+      // クライアントサイドでは暗号化されていないのでそのままパース
+      return JSON.parse(encryptedData);
     } catch (error) {
-      secureLog('復号化エラー:', error);
+      secureLog('パースエラー:', error);
       return null;
     }
   }

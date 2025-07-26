@@ -3,7 +3,7 @@ import { DiagnosisFormState, FinancialProduct, Company, RecommendedProductWithRe
 import { assetProjectionData, AgeGroup, InvestmentAmountKey } from '../../data/assetProjectionData';
 import { createSupabaseClient } from './adminUtils';
 import { DiagnosisSessionManager } from './supabaseClient';
-import { secureLog } from '../../security.config';
+import { secureLog } from '../config/clientSecurity';
 import { allFinancialProducts as defaultFinancialProducts } from '../../data/financialProductsData';
 import { MCPFinancialAssistant } from './MCPFinancialAssistant';
 import { measureTransition, PERF_TARGETS } from './PerformanceMonitor';

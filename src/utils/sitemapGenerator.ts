@@ -124,7 +124,7 @@ ${this.urls.map(url => this.generateUrlXML(url)).join('\n')}
 
 // CLIから実行できるようにエクスポート
 if (require.main === module) {
-  const baseUrl = process.env.SITE_URL || 'https://moneyticket.com';
+  const baseUrl = 'https://moneyticket.com';
   const sitemap = SitemapGenerator.generateDynamicSitemap(baseUrl);
   const outputPath = path.join(__dirname, '../../public/sitemap.xml');
   

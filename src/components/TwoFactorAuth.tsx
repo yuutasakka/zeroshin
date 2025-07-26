@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { SecureConfigManager, secureLog, SECURITY_CONFIG } from '../../security.config';
+import { SecureConfigManager, secureLog, SECURITY_CONFIG } from '../config/clientSecurity';
 import { supabase } from './supabaseClient';
 import { QRCodeSVG } from 'qrcode.react';
 import CryptoJS from 'crypto-js';

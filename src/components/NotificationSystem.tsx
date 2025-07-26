@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { NotificationSettings, EmailNotificationConfig, SlackNotificationConfig, LineNotificationConfig, ChatWorkNotificationConfig } from '../../types';
-import { SECURITY_CONFIG } from '../../security.config';
+import { SECURITY_CONFIG } from '../config/clientSecurity';
 
 interface NotificationSystemProps {
   onNotificationSent: (message: string) => void;

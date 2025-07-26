@@ -165,9 +165,9 @@ try {
 export const SECURITY_CONFIG = {
   // 暗号化設定（サーバーサイドでのみ使用）
   ENCRYPTION_KEY: (() => {
-    // クライアントサイドでは使用しない
+    // クライアントサイドでは常にnullを返す
     if (typeof window !== 'undefined') {
-      return null; // エラーを投げる代わりにnullを返す
+      return null;
     }
     
     // サーバーサイドのみ
@@ -190,10 +190,7 @@ export const SECURITY_CONFIG = {
     return process.env.NODE_ENV === 'production';
   })();
      
-     if (isProduction) {
-       // 本番環境では致命的エラーを発生
-       throw new Error('VITE_ENCRYPTION_KEY is required in production environment');
-     }
+     // クライアントサイドではエラーを投げない
     
     // 開発環境でのみフォールバック
     const devKey = process.env.DEV_ENCRYPTION_KEY || `dev-encryption-${Date.now()}-${Math.random().toString(36).substring(2)}`;

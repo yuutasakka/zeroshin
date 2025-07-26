@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { SupabaseAdminAuth, supabase } from './supabaseClient';
-import { secureLog, SecureStorage } from '../../security.config';
+import { secureLog, SecureStorage } from '../config/clientSecurity';
 
 // セキュリティ強化のための入力サニタイゼーション
 const sanitizeInput = (input: string): string => {

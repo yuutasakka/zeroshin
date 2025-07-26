@@ -1,7 +1,7 @@
 // 依存関係セキュリティスキャナー・自動アップデートシステム
 import { execSync } from 'child_process';
 import { readFileSync, writeFileSync } from 'fs';
-import { secureLog } from '../../security.config';
+import { secureLog } from '../config/clientSecurity';
 import { SecurityAuditLogger } from './securityAuditLogger';
 
 export interface VulnerabilityReport {

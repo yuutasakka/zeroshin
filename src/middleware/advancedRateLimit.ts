@@ -4,18 +4,8 @@ import Redis from 'ioredis';
 import { Request, Response } from 'express';
 import crypto from 'crypto';
 
-// Redis接続の設定
-const redisClient = new Redis({
-  host: process.env.REDIS_HOST || 'localhost',
-  port: parseInt(process.env.REDIS_PORT || '6379'),
-  password: process.env.REDIS_PASSWORD,
-  db: parseInt(process.env.REDIS_DB || '0'),
-  retryStrategy: (times: number) => {
-    const delay = Math.min(times * 50, 2000);
-    return delay;
-  },
-  enableOfflineQueue: false
-});
+// Redis接続の設定（クライアントサイドでは使用しない）
+const redisClient = null as any; // クライアントサイドではRedisを使用しない
 
 // IPアドレスとデバイスフィンガープリントを組み合わせたキー生成
 const generateKey = (req: Request): string => {
