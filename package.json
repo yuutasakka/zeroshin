@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "npm run check-env && npm run security-check && vite build",
+    "build": "npm run check-env && npm run security-check && vite build && node build-security.mjs",
     "preview": "vite preview",
     "security-check": "node env-check.js",
     "check-env": "node env-check.js",

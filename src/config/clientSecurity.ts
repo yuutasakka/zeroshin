@@ -17,10 +17,8 @@ export const CLIENT_SECURITY_CONFIG = {
   SECURITY_INTEGRATIONS: {},
   SECURITY_APIS: {},
   
-  // nullを返す関数
-  ENCRYPTION_KEY: null,
-  JWT_SECRET: null,
-  SESSION_SECRET: null
+  // セキュリティ設定のプレースホルダー
+  // 実際の値はサーバーサイドでのみ管理
 };
 
 // SECURITY_CONFIGエイリアス（互換性のため）

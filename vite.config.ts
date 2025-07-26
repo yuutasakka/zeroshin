@@ -1,4 +1,4 @@
-import { defineConfig } from 'vite';
+import { defineConfig, loadEnv } from 'vite';
 import react from '@vitejs/plugin-react';
 import { VitePWA } from 'vite-plugin-pwa';
 
@@ -30,7 +30,11 @@ const secretsProtectionPlugin = () => {
   };
 };
 
-export default defineConfig({
+export default defineConfig(({ mode }) => {
+  // 環境変数をロード（VITE_プレフィックスのみ）
+  const env = loadEnv(mode, process.cwd(), 'VITE_');
+  
+  return {
   plugins: [
     secretsProtectionPlugin(),
     react(),
@@ -110,14 +114,19 @@ export default defineConfig({
   define: {
     'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV || 'production'),
     // 以下の環境変数はクライアントに露出させない
-    'process.env.JWT_SECRET': JSON.stringify(undefined),
-    'process.env.SESSION_SECRET': JSON.stringify(undefined),
-    'process.env.TWILIO_AUTH_TOKEN': JSON.stringify(undefined),
-    'process.env.ENCRYPTION_KEY': JSON.stringify(undefined),
-    'process.env.CSRF_SECRET': JSON.stringify(undefined),
-    'process.env.SUPABASE_SERVICE_ROLE_KEY': JSON.stringify(undefined),
-    'process.env.GEMINI_API_KEY': JSON.stringify(undefined),
-    'process.env.ADMIN_PASSWORD_HASH': JSON.stringify(undefined)
+    'process.env.JWT_SECRET': '""',
+    'process.env.SESSION_SECRET': '""',
+    'process.env.TWILIO_AUTH_TOKEN': '""',
+    'process.env.ENCRYPTION_KEY': '""',
+    'process.env.CSRF_SECRET': '""',
+    'process.env.SUPABASE_SERVICE_ROLE_KEY': '""',
+    'process.env.GEMINI_API_KEY': '""',
+    'process.env.ADMIN_PASSWORD_HASH': '""',
+    // VITE_プレフィックスでも機密情報は空文字列に
+    'import.meta.env.VITE_JWT_SECRET': '""',
+    'import.meta.env.VITE_SESSION_SECRET': '""',
+    'import.meta.env.VITE_ENCRYPTION_KEY': '""',
+    'import.meta.env.VITE_SUPABASE_SERVICE_ROLE_KEY': '""'
   },
   optimizeDeps: {
     exclude: ['mock-aws-s3', 'aws-sdk', 'nock', '@mapbox/node-pre-gyp']
@@ -178,5 +187,5 @@ export default defineConfig({
         tryCatchDeoptimization: false
       }
     }
-  }
+  };
 });
