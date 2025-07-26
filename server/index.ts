@@ -13,6 +13,8 @@ import * as path from 'path';
 import { randomBytes } from 'crypto';
 import { SecureConfigManager, SECURITY_CONFIG } from '../security.config';
 import { setupSwagger, setupMockEndpoints, apiVersioning } from './swagger';
+import { comprehensiveSecurityHeaders, productionSecurityHeaders, developmentSecurityHeaders } from './security/comprehensive-headers';
+import { DataEncryption, DatabaseEncryption, encryptionMiddleware } from './security/data-encryption';
 
 // 環境変数を読み込み (.env.local を優先)
 dotenv.config({ path: '.env.local' });
@@ -47,6 +49,12 @@ if (!JWT_SECRET) {
 // セキュリティヘッダーの設定（本番環境では厳格化）
 const isProduction = NODE_ENV === 'production';
 
+// 包括的なセキュリティヘッダーを適用
+app.use(comprehensiveSecurityHeaders(
+  isProduction ? productionSecurityHeaders : developmentSecurityHeaders
+));
+
+// Helmetの追加設定（互換性のため）
 app.use(helmet({
   contentSecurityPolicy: {
     directives: {
