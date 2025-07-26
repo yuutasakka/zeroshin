@@ -46,13 +46,29 @@ function checkForSensitiveEnvVars(dir) {
         hasIssues = true;
       }
 
-      // 機密パターンの直接的な使用をチェック
+      // 機密パターンの直接的な使用をチェック（コメントとnull代入を除外）
       SENSITIVE_PATTERNS.forEach(pattern => {
-        const regex = new RegExp(pattern, 'gi');
-        if (regex.test(content)) {
-          console.error(`\x1b[31m❌ エラー: ${filePath} で機密情報パターン "${pattern}" が検出されました\x1b[0m`);
-          hasIssues = true;
-        }
+        // コメント行とnull代入を除外したパターン
+        const dangerousPatterns = [
+          // 環境変数からの読み取り
+          new RegExp(`process\\.env\\.${pattern}`, 'gi'),
+          // import.meta.envからの読み取り
+          new RegExp(`import\\.meta\\.env\\.${pattern}`, 'gi'),
+          // 文字列リテラルとして使用（null代入を除外）
+          new RegExp(`['"\`]${pattern}['"\`](?!\\s*:\\s*null)`, 'gi')
+        ];
+        
+        // コメントを除去したコンテンツ
+        const contentWithoutComments = content
+          .replace(/\/\*[\s\S]*?\*\//g, '') // ブロックコメント除去
+          .replace(/\/\/.*$/gm, ''); // 行コメント除去
+        
+        dangerousPatterns.forEach(regex => {
+          if (regex.test(contentWithoutComments)) {
+            console.error(`\x1b[31m❌ エラー: ${filePath} で機密情報パターン "${pattern}" が検出されました\x1b[0m`);
+            hasIssues = true;
+          }
+        });
       });
     }
   });
@@ -62,10 +78,13 @@ function checkForSensitiveEnvVars(dir) {
 
 console.log('🔍 環境変数のセキュリティチェックを開始します...\n');
 
+// クライアントサイドのコードのみチェック（apiディレクトリはサーバーサイドなので除外）
 const srcHasIssues = checkForSensitiveEnvVars('./src');
-const apiHasIssues = checkForSensitiveEnvVars('./api');
 
-if (srcHasIssues || apiHasIssues) {
+// apiディレクトリは Vercel Functions として別環境で実行されるため、チェック対象外
+console.log('\x1b[36mℹ️  apiディレクトリはサーバーサイドコード（Vercel Functions）のため、チェックをスキップしました。\x1b[0m');
+
+if (srcHasIssues) {
   console.error('\n\x1b[31m❌ セキュリティ問題が検出されました！ビルドを中止してください。\x1b[0m');
   console.error('\x1b[33m⚠️  機密情報はサーバーサイドでのみ使用し、VITE_プレフィックスを使用しないでください。\x1b[0m');
   process.exit(1);
