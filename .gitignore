@@ -68,3 +68,27 @@ debug_*.js
 *.sln
 *.sw?
 .vercel
+
+# Cursor editor
+.cursor/
+*.cursor
+
+# Temporary and backup files
+*.tmp
+*.temp
+*.bak
+*.backup
+*.swp
+*.swo
+*~
+thumbs.db
+Thumbs.db
+
+# OS specific files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Desktop.ini
