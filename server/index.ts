@@ -462,10 +462,21 @@ app.post('/api/sms/verify', authLimiter, verificationValidation, async (req: Req
       
       // JWTトークンを生成（動的シークレット使用）
       const jwtSecret = await SecureConfigManager.getJWTSecret();
+      // JWTトークンの生成（有効期限を短縮）
       const token = jwt.sign(
-        { phoneNumber: normalizedPhoneNumber, verified: true, ip: clientIP },
+        { 
+          phoneNumber: normalizedPhoneNumber, 
+          verified: true, 
+          ip: clientIP,
+          iat: Math.floor(Date.now() / 1000),
+          exp: Math.floor(Date.now() / 1000) + (15 * 60) // 15分
+        },
         jwtSecret,
-        { expiresIn: '1h' }
+        { 
+          algorithm: 'HS256',
+          audience: 'moneyticket-app',
+          issuer: 'moneyticket-auth'
+        }
       );
 
       logger.info('SMS認証成功', {
