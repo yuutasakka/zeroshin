@@ -10,11 +10,8 @@ export class SecureStorage {
   private static getEncryptionKey(): string {
     // クライアントサイドでの環境変数取得
     if (typeof window !== 'undefined') {
-      // Vite環境変数の取得
-      if (typeof import.meta !== 'undefined' && (import.meta as any).env) {
-        const key = (import.meta as any).env.VITE_ENCRYPTION_KEY;
-        if (key) return key;
-      }
+      // クライアントサイドではセキュリティキーを使用しない
+      // VITE_プレフィックスの機密情報は露出するため削除
       
       // フォールバック: セッション固有キー
       const sessionKey = sessionStorage.getItem('app_encryption_key');

@@ -32,7 +32,9 @@
       "Bash(node:*)",
       "Bash(./update-imports.sh)",
       "Bash(mkdir:*)",
-      "Bash(mv:*)"
+      "Bash(mv:*)",
+      "WebFetch(domain:docs.anthropic.com)",
+      "Bash(touch:*)"
     ],
     "deny": []
   }
