@@ -1,6 +1,7 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App';
+import { suppressDevelopmentErrors } from './src/utils/errorSuppression';
 // import './src/utils/productionLogger'; // 本番環境でのログ無効化
 // import { initSentry } from './src/utils/sentry';
 // import { setupServiceWorker } from './src/utils/registerSW';
@@ -14,8 +15,10 @@ import App from './App';
 //   setupServiceWorker();
 // }
 
-// WebSocket接続を制御（開発・本番両方で適用）
-// 一時的に無効化してデバッグ
+// 開発環境でのエラー抑制
+if (process.env.NODE_ENV === 'development') {
+  suppressDevelopmentErrors();
+}
 
 const rootElement = document.getElementById('root');
 if (!rootElement) {
