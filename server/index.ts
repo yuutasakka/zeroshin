@@ -523,9 +523,10 @@ app.use('*', (req: Request, res: Response) => {
 
 // エラーハンドリングミドルウェア
 app.use((err: Error, req: express.Request, res: express.Response, next: express.NextFunction) => {
+  // スタックトレースはログにのみ記録（レスポンスには含めない）
   logger.error('Unhandled error', {
     error: err.message,
-    stack: err.stack,
+    stack: NODE_ENV === 'development' ? err.stack : undefined,
     url: req.url,
     method: req.method,
     ip: req.ip
@@ -533,7 +534,9 @@ app.use((err: Error, req: express.Request, res: express.Response, next: express.
 
   res.status(500).json({
     error: 'Internal server error',
-    message: NODE_ENV === 'development' ? err.message : 'サーバーエラーが発生しました'
+    message: 'サーバーエラーが発生しました。しばらく待ってから再度お試しください。',
+    // 開発環境でもスタックトレースは含めない（セキュリティ強化）
+    details: NODE_ENV === 'development' ? err.message : undefined
   });
 });
 

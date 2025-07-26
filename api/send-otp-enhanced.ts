@@ -278,7 +278,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
       } else {
         return res.status(500).json({ 
           error: 'SMS送信に失敗しました',
-          details: twilioError.message
+          // 本番環境ではエラー詳細を隠蔽
+          details: process.env.NODE_ENV === 'development' ? twilioError.message : undefined
         });
       }
     }

@@ -106,6 +106,7 @@ class ErrorBoundary extends Component<Props, State> {
           
           {/* 開発環境でのみエラー詳細を表示 */}
           {(typeof window !== 'undefined' && 
+            process.env.NODE_ENV === 'development' &&
             (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
            ) && this.state.error && (
             <details style={{ marginTop: '20px', textAlign: 'left' }}>
