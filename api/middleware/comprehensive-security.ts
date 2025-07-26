@@ -141,11 +141,11 @@ function setSecurityHeaders(req: VercelRequest, res: VercelResponse): void {
   // CSP（Content Security Policy）
   const cspDirectives = [
     "default-src 'self'",
-    "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.google.com https://www.gstatic.com",
+    "script-src 'self' 'unsafe-inline' https://www.google.com https://www.gstatic.com https://cdn.jsdelivr.net",
     "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
     "font-src 'self' https://fonts.gstatic.com",
     "img-src 'self' data: https: blob:",
-    "connect-src 'self' https://*.supabase.co https://api.twilio.com",
+    "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://api.twilio.com",
     "frame-src 'self' https://www.google.com",
     "object-src 'none'",
     "base-uri 'self'",

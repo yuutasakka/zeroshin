@@ -27,14 +27,16 @@ export const setupSecurityMiddleware = (app: any) => {
         defaultSrc: ["'self'"],
         scriptSrc: [
           "'self'",
-          "'unsafe-inline'", // 本番環境では除去を検討
-          "'unsafe-eval'",   // 本番環境では除去を検討
+          "'unsafe-inline'", // React開発に必要
+          // "'unsafe-eval'", // セキュリティ向上のため削除
           "'strict-dynamic'",
           "'nonce-{random}'", // 実装時にランダムnonce生成
           "https://cdn.jsdelivr.net",
           "https://cdnjs.cloudflare.com",
           "https://www.googletagmanager.com",
           "https://www.google-analytics.com",
+          "https://www.google.com", // reCAPTCHA
+          "https://www.gstatic.com", // reCAPTCHA
           "https://js.stripe.com", // 決済処理用
           "https://checkout.stripe.com"
         ],
