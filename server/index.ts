@@ -315,7 +315,8 @@ app.post('/api/sms/send', smsLimiter, phoneValidation, async (req: Request, res:
     const existing = verificationCodes.get(normalizedPhoneNumber);
     if (existing && existing.attempts >= 3) {
       logger.warn('SMS送信: 試行回数上限', {
-        phoneNumber: normalizedPhoneNumber,
+        // 電話番号は最後の4桁のみ記録
+        phoneNumberLast4: normalizedPhoneNumber.slice(-4),
         attempts: existing.attempts,
         ip: clientIP
       });
@@ -356,7 +357,8 @@ app.post('/api/sms/send', smsLimiter, phoneValidation, async (req: Request, res:
       });
 
       logger.info('SMS送信成功', {
-        phoneNumber: normalizedPhoneNumber,
+        // 電話番号は最後の4桁のみ記録（プライバシー保護）
+        phoneNumberLast4: normalizedPhoneNumber.slice(-4),
         messageSid: smsResult.sid,
         ip: clientIP
       });
