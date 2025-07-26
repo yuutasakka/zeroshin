@@ -341,11 +341,7 @@ const AdminLoginPage: React.FC<AdminLoginPageProps> = ({ onLogin, onNavigateHome
       return;
     }
     
-    console.log('Login attempt details:', {
-      username: sanitizedUsername,
-      passwordLength: password.length,
-      passwordContainsSpecialChar: /[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]/.test(password)
-    });
+    // デバッグログを削除（本番環境向け）
 
     try {
       secureLog('監査ログ記録開始');
@@ -424,13 +420,7 @@ const AdminLoginPage: React.FC<AdminLoginPageProps> = ({ onLogin, onNavigateHome
       // セキュリティ強化: 適切なパスワード検証を実行
       let isPasswordValid = false;
       
-      console.log('Password verification attempt:', {
-        sanitizedUsername,
-        passwordLength: password.length,
-        useLocalFallback,
-        hasAdminCredentials: !!adminCredentials,
-        passwordHash: adminCredentials?.password_hash?.substring(0, 20) + '...'
-      });
+      // デバッグログを削除（本番環境向け）
       
       // パスワード検証
       if (useLocalFallback) {
@@ -487,7 +477,6 @@ const AdminLoginPage: React.FC<AdminLoginPageProps> = ({ onLogin, onNavigateHome
 
       
       // 認証成功時のみログイン完了
-      console.log('Login successful');
       onLogin();
     } catch (error) {
       setError('ログイン処理中にエラーが発生しました。しばらく待ってから再試行してください。');

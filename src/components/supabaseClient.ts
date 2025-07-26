@@ -1553,10 +1553,9 @@ export class AdminEmailAuth {
 
       // メール送信（本番環境では実際のメール送信サービスを使用）
       // TODO: 実際のメール送信サービスを実装
-      console.log('Verification email would be sent to:', {
-        to: credentials.email,
-        verificationUrl: `${window.location.origin}/admin/verify-email?token=${data.verification_token}`
-      });
+      if (process.env.NODE_ENV === 'development') {
+        secureLog('Verification email would be sent to:', credentials.email);
+      }
 
       return { 
         success: true, 
@@ -1694,11 +1693,9 @@ export class AdminSMSAuth {
 
       // SMS送信（本番環境では実際のSMS送信サービスを使用）
       // TODO: 実際のSMS送信サービスを実装
-      console.log('SMS code would be sent to:', {
-        to: phoneNumber,
-        code: smsCode,
-        message: `タスカル管理者認証コード: ${smsCode} (10分間有効)`
-      });
+      if (process.env.NODE_ENV === 'development') {
+        secureLog('SMS code would be sent to:', phoneNumber);
+      }
 
       return { success: true };
     } catch (error) {

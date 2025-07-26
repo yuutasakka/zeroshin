@@ -268,13 +268,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
         to: normalizedPhone
       });
 
-      console.log('SMS sent successfully:', message.sid);
+      // SMS送信成功（本番環境ではログ出力しない）
     } catch (twilioError: any) {
       console.error('Twilio send error:', twilioError);
       
       // Twilioエラーの場合でもOTPは保存されているので、開発環境では成功とする
       if (process.env.NODE_ENV !== 'production') {
-        console.log('Development mode: Skipping actual SMS send');
+        // 開発モード: 実際のSMS送信をスキップ
       } else {
         return res.status(500).json({ 
           error: 'SMS送信に失敗しました',
