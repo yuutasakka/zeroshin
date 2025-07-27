@@ -662,14 +662,29 @@ const PhoneVerificationPage: React.FC<PhoneVerificationPageProps> = ({
 
               {/* プライバシーポリシー・利用規約同意チェックボックス */}
               <div className="flex items-start space-x-3 mt-4">
-                <input
-                  type="checkbox"
-                  id="terms-agreement"
-                  checked={agreedToTerms}
-                  onChange={(e) => setAgreedToTerms(e.target.checked)}
-                  className="mt-1 w-4 h-4 text-emerald-600 bg-gray-100 border-gray-300 rounded focus:ring-emerald-500 focus:ring-2"
-                />
-                <label htmlFor="terms-agreement" className="text-sm text-gray-700 leading-relaxed">
+                <div className="relative flex items-center">
+                  <input
+                    type="checkbox"
+                    id="terms-agreement"
+                    checked={agreedToTerms}
+                    onChange={(e) => setAgreedToTerms(e.target.checked)}
+                    className="sr-only"
+                  />
+                  <div className={`w-5 h-5 border-2 rounded flex items-center justify-center cursor-pointer transition-all duration-200 ${
+                    agreedToTerms 
+                      ? 'bg-emerald-500 border-emerald-500' 
+                      : 'bg-white border-gray-300 hover:border-emerald-400'
+                  }`}
+                  onClick={() => setAgreedToTerms(!agreedToTerms)}
+                  >
+                    {agreedToTerms && (
+                      <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                      </svg>
+                    )}
+                  </div>
+                </div>
+                <label htmlFor="terms-agreement" className="text-sm text-gray-700 leading-relaxed cursor-pointer" onClick={() => setAgreedToTerms(!agreedToTerms)}>
                   <a href="/privacy-policy" target="_blank" className="text-emerald-600 hover:text-emerald-800 underline">プライバシーポリシー</a>
                   および
                   <a href="/terms-of-service" target="_blank" className="text-emerald-600 hover:text-emerald-800 underline">利用規約</a>
