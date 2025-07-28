@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { DiagnosisAnswers } from './DiagnosisFlow';
 import { measureAsync, PERF_TARGETS } from './PerformanceMonitor';
+import { useCSRF, csrfFetch } from '../hooks/useCSRF';
 
 interface SMSAuthFlowProps {
   diagnosisAnswers: DiagnosisAnswers;
@@ -23,6 +24,9 @@ const SMSAuthFlow: React.FC<SMSAuthFlowProps> = ({
   const [canResend, setCanResend] = useState(true);
   const [resendCount, setResendCount] = useState(0);
   const [agreedToTerms, setAgreedToTerms] = useState(false);
+
+  // CSRF保護
+  const { csrfToken, isLoading: csrfLoading, addCSRFHeaders, refreshToken } = useCSRF();
 
   // OTPタイマー（5分）
   useEffect(() => {
@@ -94,6 +98,13 @@ const SMSAuthFlow: React.FC<SMSAuthFlowProps> = ({
         return;
       }
 
+      // CSRFトークンの確認
+      if (!csrfToken) {
+        setError('セキュリティトークンの取得に失敗しました。ページを再読み込みしてください。');
+        await refreshToken();
+        return;
+      }
+
       setIsLoading(true);
       setError('');
 
@@ -113,12 +124,12 @@ const SMSAuthFlow: React.FC<SMSAuthFlowProps> = ({
           return;
         }
 
-        // API経由でサーバーサイドでSMS送信
-        const response = await fetch('/api/send-otp', {
+        // CSRF保護付きでAPI経由SMS送信
+        const response = await csrfFetch('/api/send-otp', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: addCSRFHeaders(),
           body: JSON.stringify({ phoneNumber })
-        });
+        }, csrfToken);
         
         if (!response.ok) {
           const { error } = await response.json();
@@ -162,16 +173,23 @@ const SMSAuthFlow: React.FC<SMSAuthFlowProps> = ({
         return;
       }
 
+      // CSRFトークンの確認
+      if (!csrfToken) {
+        setError('セキュリティトークンの取得に失敗しました。ページを再読み込みしてください。');
+        await refreshToken();
+        return;
+      }
+
       setIsLoading(true);
       setError('');
 
       try {
-        // API経由でサーバーサイドでOTP検証
-        const response = await fetch('/api/verify-otp', {
+        // CSRF保護付きでAPI経由OTP検証
+        const response = await csrfFetch('/api/verify-otp', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: addCSRFHeaders(),
           body: JSON.stringify({ phoneNumber, otp })
-        });
+        }, csrfToken);
         
         if (!response.ok) {
           const { error } = await response.json();
@@ -285,7 +303,7 @@ const SMSAuthFlow: React.FC<SMSAuthFlowProps> = ({
               
               <button
                 onClick={handleSendSMS}
-                disabled={phoneNumber.length !== 11 || isLoading || !agreedToTerms}
+                disabled={phoneNumber.length !== 11 || isLoading || csrfLoading || !agreedToTerms || !csrfToken}
                 className={`w-full py-4 px-6 rounded-xl font-bold text-lg transition-all duration-200 focus:ring-2 focus:ring-offset-2 focus:outline-none min-h-[56px] ${
                   phoneNumber.length === 11 && !isLoading && agreedToTerms
                     ? 'bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600 text-black shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 focus:ring-cyan-500'
@@ -369,7 +387,7 @@ const SMSAuthFlow: React.FC<SMSAuthFlowProps> = ({
               {/* Verify Button */}
               <button
                 onClick={() => handleVerify(otpInput)}
-                disabled={otpInput.length !== 6 || isLoading}
+                disabled={otpInput.length !== 6 || isLoading || csrfLoading || !csrfToken}
                 className={`w-full py-4 px-6 rounded-xl font-bold text-lg transition-all duration-200 focus:ring-2 focus:ring-offset-2 focus:outline-none min-h-[56px] ${
                   otpInput.length === 6 && !isLoading
                     ? 'bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 focus:ring-blue-500'
@@ -389,7 +407,7 @@ const SMSAuthFlow: React.FC<SMSAuthFlowProps> = ({
               {/* Resend Button */}
               <button
                 onClick={handleResendOTP}
-                disabled={!canResend || resendCount >= 3 || isLoading}
+                disabled={!canResend || resendCount >= 3 || isLoading || csrfLoading || !csrfToken}
                 className={`w-full py-3 px-6 rounded-xl font-medium text-base transition-all duration-200 focus:ring-2 focus:ring-offset-2 focus:outline-none ${
                   canResend && resendCount < 3 && !isLoading
                     ? 'bg-white border-2 border-gray-300 text-gray-700 hover:bg-gray-50 hover:border-gray-400 focus:ring-gray-500'

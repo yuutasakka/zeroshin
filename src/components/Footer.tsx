@@ -1,10 +1,8 @@
 import React from 'react';
 
-interface FooterProps {
-  onNavigateToAdminLogin: () => void;
-}
+interface FooterProps {}
 
-const Footer: React.FC<FooterProps> = ({ onNavigateToAdminLogin }) => {
+const Footer: React.FC<FooterProps> = () => {
   const currentYear = new Date().getFullYear();
 
   return (
@@ -266,46 +264,7 @@ const Footer: React.FC<FooterProps> = ({ onNavigateToAdminLogin }) => {
             </ul>
           </div>
 
-          {/* その他 */}
-          <div>
-            <h4 style={{
-              fontSize: '16px',
-              fontWeight: 700,
-              marginBottom: '20px',
-              color: '#FFFFFF'
-            }}>
-              その他
-            </h4>
-            <ul style={{
-              listStyle: 'none',
-              padding: 0,
-              margin: 0,
-              display: 'flex',
-              flexDirection: 'column',
-              gap: '12px'
-            }}>
-              <li>
-                <a 
-                  href="#admin"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    onNavigateToAdminLogin();
-                  }}
-                  style={{
-                    color: '#FFFFFF',
-                    textDecoration: 'none',
-                    fontSize: '14px',
-                    transition: 'color 0.2s ease',
-                    cursor: 'pointer'
-                  }}
-                  onMouseEnter={(e) => e.currentTarget.style.color = '#3174F3'}
-                  onMouseLeave={(e) => e.currentTarget.style.color = '#FFFFFF'}
-                >
-                  管理者ログイン
-                </a>
-              </li>
-            </ul>
-          </div>
+          {/* 管理者関連のセクションを完全削除 */}
         </div>
 
         {/* 下線 */}
