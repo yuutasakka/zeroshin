@@ -1,5 +1,6 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { v4 as uuidv4 } from 'uuid';
+import { storeOTPInCookie } from '../utils/otpStorage';
 
 // Twilio設定（セキュア）
 const getTwilioConfig = () => {
@@ -196,12 +197,31 @@ export default async function handler(
       });
     }
 
-    // OTPをストレージに保存
-    otpStore.set(normalizedPhone, {
+    const otpData = {
       otp: otp,
       expiresAt: expiresAt.getTime(),
       attempts: 0
-    });
+    };
+
+    // メモリストレージとクッキーの両方に保存（Vercel対応）
+    otpStore.set(normalizedPhone, otpData);
+    
+    try {
+      storeOTPInCookie(res, normalizedPhone, otpData);
+    } catch (cookieError) {
+      console.error('Failed to store OTP in cookie:', cookieError);
+      // クッキー保存失敗時はメモリストレージのみで継続
+    }
+
+    // デバッグ用：開発環境でストレージの内容を確認
+    if (process.env.NODE_ENV === 'development') {
+      console.log('OTP stored:', {
+        phone: normalizedPhone,
+        otp: otp,
+        expiresAt: expiresAt.toISOString(),
+        memoryStoreSize: otpStore.size
+      });
+    }
 
     res.status(200).json({
       success: true,

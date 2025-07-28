@@ -1,4 +1,5 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
+import { getOTPFromCookie, removeOTPFromCookie, updateOTPInCookie } from '../utils/otpStorage';
 
 // OTP一時保存（send-otpと同じ構造）
 interface OTPData {
@@ -73,10 +74,21 @@ export default async function handler(
                     req.headers['x-real-ip'] as string ||
                     'unknown';
 
-    // 保存されたOTPデータを取得
-    const storedOTPData = otpStore.get(normalizedPhone);
+    // 保存されたOTPデータを取得（メモリとクッキーの両方から試行）
+    let storedOTPData = otpStore.get(normalizedPhone);
+    
+    // メモリに無い場合はクッキーから取得
+    if (!storedOTPData) {
+      storedOTPData = getOTPFromCookie(req, normalizedPhone);
+    }
     
     if (!storedOTPData) {
+      console.error('OTP not found for phone:', {
+        phone: normalizedPhone.substring(0, 3) + '****',
+        memoryStoreSize: otpStore.size,
+        hasCookie: !!req.cookies?._otp_data
+      });
+      
       return res.status(400).json({ 
         error: 'OTP not found or expired',
         code: 'OTP_NOT_FOUND'
@@ -86,6 +98,7 @@ export default async function handler(
     // 有効期限チェック
     if (Date.now() > storedOTPData.expiresAt) {
       otpStore.delete(normalizedPhone);
+      removeOTPFromCookie(res, req, normalizedPhone);
       return res.status(400).json({ 
         error: 'OTP has expired',
         code: 'OTP_EXPIRED'
@@ -95,6 +108,7 @@ export default async function handler(
     // 試行回数チェック（5回まで）
     if (storedOTPData.attempts >= 5) {
       otpStore.delete(normalizedPhone);
+      removeOTPFromCookie(res, req, normalizedPhone);
       return res.status(429).json({ 
         error: 'Too many attempts',
         code: 'TOO_MANY_ATTEMPTS'
@@ -108,6 +122,12 @@ export default async function handler(
       // 失敗回数を増加
       storedOTPData.attempts += 1;
       otpStore.set(normalizedPhone, storedOTPData);
+      
+      try {
+        updateOTPInCookie(res, req, normalizedPhone, storedOTPData);
+      } catch (updateError) {
+        console.error('Failed to update OTP attempts in cookie:', updateError);
+      }
       
       console.log('OTP verification failed:', {
         phone: normalizedPhone.substring(0, 3) + '****' + normalizedPhone.substring(7),
@@ -125,6 +145,7 @@ export default async function handler(
 
     // 認証成功 - OTPを削除
     otpStore.delete(normalizedPhone);
+    removeOTPFromCookie(res, req, normalizedPhone);
 
     console.log('OTP verification development info:', {
       phone: normalizedPhone,

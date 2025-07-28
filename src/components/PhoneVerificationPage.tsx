@@ -674,8 +674,8 @@ const PhoneVerificationPage: React.FC<PhoneVerificationPageProps> = ({
                     <div 
                       className={`w-6 h-6 border-2 rounded-md flex items-center justify-center cursor-pointer transition-all duration-200 shadow-sm ${
                         agreedToTerms 
-                          ? 'bg-emerald-500 border-emerald-500 shadow-emerald-200' 
-                          : 'bg-white border-gray-400 hover:border-emerald-500 hover:shadow-md'
+                          ? 'bg-blue-500 border-blue-500 shadow-blue-200' 
+                          : 'bg-white border-gray-400 hover:border-blue-500 hover:shadow-md'
                       }`}
                       onClick={() => setAgreedToTerms(!agreedToTerms)}
                     >

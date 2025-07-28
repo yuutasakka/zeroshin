@@ -48,14 +48,6 @@ export const useCSRF = (): UseCSRFResult => {
       setCsrfToken(data.csrfToken);
       setTokenData(data);
 
-      // ローカルストレージにも保存（セッション用）
-      if (typeof window !== 'undefined') {
-        sessionStorage.setItem('csrfTokenData', JSON.stringify({
-          ...data,
-          fetchedAt: Date.now()
-        }));
-      }
-
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Unknown error occurred';
       setError(errorMessage);
@@ -96,35 +88,8 @@ export const useCSRF = (): UseCSRFResult => {
 
   // 初期化とトークンの自動更新
   useEffect(() => {
-    // ページ読み込み時の処理
-    const initializeCSRF = async () => {
-      // セッションストレージからの復元を試行
-      if (typeof window !== 'undefined') {
-        const storedData = sessionStorage.getItem('csrfTokenData');
-        if (storedData) {
-          try {
-            const parsed = JSON.parse(storedData);
-            const now = Date.now();
-            const age = now - parsed.fetchedAt;
-            
-            // 5分以内のデータは有効とみなす
-            if (age < 300000) {
-              setCsrfToken(parsed.csrfToken);
-              setTokenData(parsed);
-              setIsLoading(false);
-              return;
-            }
-          } catch (err) {
-            console.warn('Failed to parse stored CSRF data:', err);
-          }
-        }
-      }
-
-      // 新しいトークンを取得
-      await fetchCSRFToken();
-    };
-
-    initializeCSRF();
+    // 新しいトークンを取得
+    fetchCSRFToken();
   }, [fetchCSRFToken]);
 
   // トークンの自動更新（有効期限の80%で更新）
