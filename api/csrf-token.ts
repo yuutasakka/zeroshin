@@ -1,14 +1,18 @@
-import { NextApiRequest, NextApiResponse } from 'next';
-import { CSRFProtection, CSRFTokenAPI } from '../server/security/csrf-protection';
+import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { v4 as uuidv4 } from 'uuid';
+
+// 簡易CSRF実装（Vercel対応）
+function generateCSRFToken(): string {
+  return Buffer.from(uuidv4() + Date.now()).toString('base64').substring(0, 32);
+}
 
 /**
  * CSRFトークン生成API
  * GET /api/csrf-token
  */
 export default async function handler(
-  req: NextApiRequest,
-  res: NextApiResponse
+  req: VercelRequest,
+  res: VercelResponse
 ) {
   // GETリクエストのみ許可
   if (req.method !== 'GET') {
@@ -17,46 +21,30 @@ export default async function handler(
 
   try {
     // セッションIDの取得または生成
-    let sessionId = req.cookies.sessionId;
+    let sessionId = req.cookies?.sessionId;
     if (!sessionId) {
       sessionId = uuidv4();
-      
-      // セッションIDをクッキーに設定
-      res.setHeader('Set-Cookie', [
-        `sessionId=${sessionId}; HttpOnly; Secure=${process.env.NODE_ENV === 'production'}; SameSite=Strict; Path=/; Max-Age=3600`
-      ]);
     }
 
-    // クライアントIPの取得
-    const clientIP = req.socket.remoteAddress || 
-                    req.headers['x-forwarded-for'] as string ||
-                    req.headers['x-real-ip'] as string;
-
     // CSRFトークンの生成
-    const csrf = CSRFProtection.getInstance();
-    const { token } = csrf.generateToken(sessionId, clientIP);
+    const csrfToken = generateCSRFToken();
 
-    // レスポンス生成（セキュアクッキーも設定）
+    // セキュアクッキーの設定
+    const isProduction = process.env.NODE_ENV === 'production';
+    const cookieOptions = `HttpOnly; ${isProduction ? 'Secure; ' : ''}SameSite=Strict; Path=/; Max-Age=3600`;
+    
     res.setHeader('Set-Cookie', [
-      ...res.getHeaders()['set-cookie'] || [],
-      `_csrf=${token}; HttpOnly; Secure=${process.env.NODE_ENV === 'production'}; SameSite=Strict; Path=/; Max-Age=3600`
+      `sessionId=${sessionId}; ${cookieOptions}`,
+      `_csrf=${csrfToken}; ${cookieOptions}`
     ]);
 
     // JSON レスポンス
     res.status(200).json({
-      csrfToken: token,
-      sessionId: sessionId,
+      csrfToken,
+      sessionId,
       expiresIn: 3600000, // 1時間
       timestamp: Date.now(),
       success: true
-    });
-
-    // 監査ログ
-    console.log('CSRF token generated:', {
-      sessionId: sessionId.substring(0, 8) + '...',
-      clientIP: clientIP?.substring(0, 10) + '...',
-      timestamp: new Date().toISOString(),
-      userAgent: req.headers['user-agent']?.substring(0, 50) + '...'
     });
 
   } catch (error) {

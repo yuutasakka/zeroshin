@@ -1,15 +1,22 @@
-import { NextApiRequest, NextApiResponse } from 'next';
-import { validateCSRFForAPI } from '../server/security/csrf-protection';
-import { supabase } from '../src/components/supabaseClient';
+import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { v4 as uuidv4 } from 'uuid';
+
+// 簡易CSRF検証（Vercel対応）
+function validateCSRF(req: VercelRequest): boolean {
+  const csrfToken = req.headers['x-csrf-token'] as string;
+  const cookieToken = req.cookies?._csrf;
+  
+  // 基本的な検証: ヘッダーとクッキーのトークンが一致するか
+  return csrfToken && cookieToken && csrfToken === cookieToken;
+}
 
 /**
  * SMS OTP送信API（CSRF保護付き）
  * POST /api/send-otp
  */
 export default async function handler(
-  req: NextApiRequest,
-  res: NextApiResponse
+  req: VercelRequest,
+  res: VercelResponse
 ) {
   // POSTリクエストのみ許可
   if (req.method !== 'POST') {
@@ -18,22 +25,10 @@ export default async function handler(
 
   try {
     // CSRFトークンの検証
-    const sessionId = req.cookies.sessionId || req.headers['x-session-id'] as string;
-    
-    if (!sessionId) {
-      return res.status(400).json({ error: 'Session ID required' });
-    }
-
-    const csrfValidation = await validateCSRFForAPI(req as any, sessionId);
-    if (!csrfValidation.success) {
-      console.warn('SMS OTP CSRF validation failed:', {
-        sessionId: sessionId.substring(0, 8) + '...',
-        ip: req.socket.remoteAddress,
-        error: csrfValidation.error
-      });
-      
+    if (!validateCSRF(req)) {
+      console.warn('SMS OTP CSRF validation failed');
       return res.status(403).json({ 
-        error: csrfValidation.error,
+        error: 'CSRF token validation failed',
         code: 'CSRF_INVALID'
       });
     }
@@ -52,8 +47,7 @@ export default async function handler(
     }
 
     // クライアントIPの取得（レート制限用）
-    const clientIP = req.socket.remoteAddress || 
-                    req.headers['x-forwarded-for'] as string ||
+    const clientIP = req.headers['x-forwarded-for'] as string ||
                     req.headers['x-real-ip'] as string ||
                     'unknown';
 
@@ -72,7 +66,6 @@ export default async function handler(
     console.log('SMS OTP sent:', {
       phone: normalizedPhone.substring(0, 3) + '****' + normalizedPhone.substring(7),
       ip: clientIP.substring(0, 10) + '...',
-      sessionId: sessionId.substring(0, 8) + '...',
       timestamp: new Date().toISOString()
     });
 

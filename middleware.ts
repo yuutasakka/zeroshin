@@ -1,11 +1,19 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
-import crypto from 'crypto';
-import { csrfMiddleware } from './server/security/csrf-protection';
 
 // 管理画面の動的パスを生成（環境変数ベース）
 const ADMIN_PATH_SECRET = process.env.ADMIN_PATH_SECRET || 'default-secret';
-const ADMIN_PATH_HASH = crypto.createHash('sha256').update(ADMIN_PATH_SECRET).digest('hex').substring(0, 16);
+// Edge Runtime対応: 簡易ハッシュ生成
+function simpleHash(str: string): string {
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) {
+    const char = str.charCodeAt(i);
+    hash = ((hash << 5) - hash) + char;
+    hash = hash & hash; // 32bit整数に変換
+  }
+  return Math.abs(hash).toString(16).substring(0, 16);
+}
+const ADMIN_PATH_HASH = simpleHash(ADMIN_PATH_SECRET);
 const ADMIN_PATH = `/admin-${ADMIN_PATH_HASH}`;
 
 // Basic認証の設定
@@ -15,18 +23,7 @@ const BASIC_AUTH_PASS = process.env.BASIC_AUTH_PASS || 'secure-password';
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  // CSRF保護の適用（API経由の重要な操作のみ）
-  const csrfProtectedPaths = ['/api/send-otp', '/api/verify-otp', '/api/admin-login'];
-  if (csrfProtectedPaths.some(path => pathname.startsWith(path))) {
-    const csrfResponse = csrfMiddleware({
-      excludePaths: ['/api/csrf-token'], // CSRFトークン取得は除外
-      methods: ['POST', 'PUT', 'DELETE', 'PATCH']
-    })(request);
-    
-    if (csrfResponse && csrfResponse instanceof NextResponse) {
-      return csrfResponse;
-    }
-  }
+  // CSRF保護はAPIレベルで実装（middleware.tsではスキップ）
 
   // 管理画面パスの確認
   if (pathname.startsWith(ADMIN_PATH)) {

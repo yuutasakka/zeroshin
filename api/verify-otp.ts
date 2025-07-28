@@ -1,13 +1,20 @@
-import { NextApiRequest, NextApiResponse } from 'next';
-import { validateCSRFForAPI } from '../server/security/csrf-protection';
+import type { VercelRequest, VercelResponse } from '@vercel/node';
+
+// 簡易CSRF検証（Vercel対応）
+function validateCSRF(req: VercelRequest): boolean {
+  const csrfToken = req.headers['x-csrf-token'] as string;
+  const cookieToken = req.cookies?._csrf;
+  
+  return csrfToken && cookieToken && csrfToken === cookieToken;
+}
 
 /**
  * OTP検証API（CSRF保護付き）
  * POST /api/verify-otp
  */
 export default async function handler(
-  req: NextApiRequest,
-  res: NextApiResponse
+  req: VercelRequest,
+  res: VercelResponse
 ) {
   // POSTリクエストのみ許可
   if (req.method !== 'POST') {
@@ -16,22 +23,10 @@ export default async function handler(
 
   try {
     // CSRFトークンの検証
-    const sessionId = req.cookies.sessionId || req.headers['x-session-id'] as string;
-    
-    if (!sessionId) {
-      return res.status(400).json({ error: 'Session ID required' });
-    }
-
-    const csrfValidation = await validateCSRFForAPI(req as any, sessionId);
-    if (!csrfValidation.success) {
-      console.warn('OTP verification CSRF validation failed:', {
-        sessionId: sessionId.substring(0, 8) + '...',
-        ip: req.socket.remoteAddress,
-        error: csrfValidation.error
-      });
-      
+    if (!validateCSRF(req)) {
+      console.warn('OTP verification CSRF validation failed');
       return res.status(403).json({ 
-        error: csrfValidation.error,
+        error: 'CSRF token validation failed',
         code: 'CSRF_INVALID'
       });
     }
@@ -55,8 +50,7 @@ export default async function handler(
     }
 
     // クライアントIPの取得
-    const clientIP = req.socket.remoteAddress || 
-                    req.headers['x-forwarded-for'] as string ||
+    const clientIP = req.headers['x-forwarded-for'] as string ||
                     req.headers['x-real-ip'] as string ||
                     'unknown';
 
@@ -82,7 +76,6 @@ export default async function handler(
     console.log('OTP verification successful:', {
       phone: normalizedPhone.substring(0, 3) + '****' + normalizedPhone.substring(7),
       ip: clientIP.substring(0, 10) + '...',
-      sessionId: sessionId.substring(0, 8) + '...',
       timestamp: new Date().toISOString()
     });
 
