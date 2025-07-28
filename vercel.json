@@ -9,9 +9,31 @@
     "GENERATE_SOURCEMAP": "false",
     "VITE_DEBUG": "false"
   },
+  "functions": {
+    "api/send-otp.ts": {
+      "runtime": "@vercel/node",
+      "maxDuration": 30
+    },
+    "api/verify-otp.ts": {
+      "runtime": "@vercel/node",
+      "maxDuration": 30
+    },
+    "api/csrf-token.ts": {
+      "runtime": "@vercel/node",
+      "maxDuration": 10
+    },
+    "api/admin-login.ts": {
+      "runtime": "@vercel/node",
+      "maxDuration": 30
+    }
+  },
   "rewrites": [
     {
-      "source": "/((?!assets/|manifest\\.webmanifest|sw\\.js|workbox-.*).*)",
+      "source": "/api/(.*)",
+      "destination": "/api/$1"
+    },
+    {
+      "source": "/((?!api/|assets/|manifest\\.webmanifest|sw\\.js|workbox-.*).*)",
       "destination": "/index.html"
     }
   ],

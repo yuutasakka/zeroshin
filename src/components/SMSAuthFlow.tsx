@@ -132,10 +132,32 @@ const SMSAuthFlow: React.FC<SMSAuthFlowProps> = ({
         }, csrfToken);
         
         if (!response.ok) {
-          const { error } = await response.json();
-          throw new Error(error || 'SMS送信に失敗しました');
+          let errorMessage = 'SMS送信に失敗しました';
+          try {
+            const responseText = await response.text();
+            console.log('SMS API Error Response:', responseText);
+            
+            // JSONパース試行
+            const errorData = JSON.parse(responseText);
+            errorMessage = errorData.error || errorMessage;
+          } catch (parseError) {
+            console.error('Failed to parse error response:', parseError);
+            errorMessage = `サーバーエラー (${response.status})`;
+          }
+          throw new Error(errorMessage);
         }
         
+        // 成功レスポンスの解析
+        let smsResult;
+        try {
+          const responseText = await response.text();
+          smsResult = JSON.parse(responseText);
+        } catch (parseError) {
+          console.error('Failed to parse SMS success response:', parseError);
+          // 成功時でもパースエラーの場合は処理を続行
+          smsResult = { success: true };
+        }
+
         // 成功時の処理
         setStep('otp');
         setRemainingTime(300); // 5分
@@ -192,11 +214,30 @@ const SMSAuthFlow: React.FC<SMSAuthFlowProps> = ({
         }, csrfToken);
         
         if (!response.ok) {
-          const { error } = await response.json();
-          throw new Error(error || '認証に失敗しました');
+          let errorMessage = '認証に失敗しました';
+          try {
+            const responseText = await response.text();
+            console.log('OTP Verify API Error Response:', responseText);
+            
+            // JSONパース試行
+            const errorData = JSON.parse(responseText);
+            errorMessage = errorData.error || errorMessage;
+          } catch (parseError) {
+            console.error('Failed to parse verify error response:', parseError);
+            errorMessage = `認証サーバーエラー (${response.status})`;
+          }
+          throw new Error(errorMessage);
         }
         
-        const result = await response.json();
+        let result;
+        try {
+          const responseText = await response.text();
+          result = JSON.parse(responseText);
+        } catch (parseError) {
+          console.error('Failed to parse verify success response:', parseError);
+          throw new Error('レスポンスの解析に失敗しました');
+        }
+        
         const isValid = result.success;
         
         if (isValid) {

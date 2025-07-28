@@ -43,7 +43,14 @@ export const useCSRF = (): UseCSRFResult => {
         throw new Error(`CSRF token fetch failed: ${response.status}`);
       }
 
-      const data: CSRFTokenData = await response.json();
+      let data: CSRFTokenData;
+      try {
+        const responseText = await response.text();
+        data = JSON.parse(responseText);
+      } catch (parseError) {
+        console.error('Failed to parse CSRF token response:', parseError);
+        throw new Error('CSRFトークンの解析に失敗しました');
+      }
       
       setCsrfToken(data.csrfToken);
       setTokenData(data);
