@@ -1,5 +1,86 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { getOTPFromCookie, removeOTPFromCookie, updateOTPInCookie } from '../utils/otpStorage';
+import crypto from 'crypto';
+
+// OTP Cookie管理（インライン実装）
+const ENCRYPTION_KEY = process.env.OTP_ENCRYPTION_KEY || 'default-otp-encryption-key-32bytes';
+
+function decryptOTP(encryptedData: string): string {
+  try {
+    const parts = encryptedData.split(':');
+    if (parts.length !== 2) {
+      throw new Error('Invalid encrypted data format');
+    }
+    const encrypted = parts[1];
+    const decipher = crypto.createDecipher('aes-256-cbc', ENCRYPTION_KEY);
+    let decrypted = decipher.update(encrypted, 'hex', 'utf8');
+    decrypted += decipher.final('utf8');
+    return decrypted;
+  } catch (error) {
+    console.error('Decryption error:', error);
+    throw new Error('Failed to decrypt OTP data');
+  }
+}
+
+function getOTPFromCookie(req: VercelRequest, phoneNumber: string): OTPData | null {
+  try {
+    const otpCookie = req.cookies?._otp_data;
+    if (!otpCookie) {
+      return null;
+    }
+    const decrypted = decryptOTP(otpCookie);
+    const data = JSON.parse(decrypted);
+    return data[phoneNumber] || null;
+  } catch (error) {
+    console.error('Failed to retrieve OTP from cookie:', error);
+    return null;
+  }
+}
+
+function removeOTPFromCookie(res: VercelResponse, req: VercelRequest, phoneNumber: string): void {
+  try {
+    const otpCookie = req.cookies?._otp_data;
+    if (!otpCookie) {
+      return;
+    }
+    const isProduction = process.env.NODE_ENV === 'production';
+    const cookieOptions = `HttpOnly; ${isProduction ? 'Secure; ' : ''}SameSite=Strict; Path=/; Max-Age=0`;
+    res.setHeader('Set-Cookie', `_otp_data=; ${cookieOptions}`);
+  } catch (error) {
+    console.error('Failed to remove OTP from cookie:', error);
+  }
+}
+
+function encryptOTP(text: string): string {
+  try {
+    const iv = crypto.randomBytes(16);
+    const cipher = crypto.createCipher('aes-256-cbc', ENCRYPTION_KEY);
+    let encrypted = cipher.update(text, 'utf8', 'hex');
+    encrypted += cipher.final('hex');
+    return iv.toString('hex') + ':' + encrypted;
+  } catch (error) {
+    console.error('Encryption error:', error);
+    throw new Error('Failed to encrypt OTP data');
+  }
+}
+
+function updateOTPInCookie(res: VercelResponse, req: VercelRequest, phoneNumber: string, otpData: OTPData): void {
+  try {
+    const otpCookie = req.cookies?._otp_data;
+    if (!otpCookie) {
+      throw new Error('OTP cookie not found');
+    }
+    const decrypted = decryptOTP(otpCookie);
+    const data = JSON.parse(decrypted);
+    data[phoneNumber] = otpData;
+    const encrypted = encryptOTP(JSON.stringify(data));
+    const isProduction = process.env.NODE_ENV === 'production';
+    const cookieOptions = `HttpOnly; ${isProduction ? 'Secure; ' : ''}SameSite=Strict; Path=/; Max-Age=300`;
+    res.setHeader('Set-Cookie', `_otp_data=${encrypted}; ${cookieOptions}`);
+  } catch (error) {
+    console.error('Failed to update OTP in cookie:', error);
+    throw new Error('Failed to update OTP data');
+  }
+}
 
 // OTP一時保存（send-otpと同じ構造）
 interface OTPData {

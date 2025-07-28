@@ -1,6 +1,41 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { v4 as uuidv4 } from 'uuid';
-import { storeOTPInCookie } from '../utils/otpStorage';
+import crypto from 'crypto';
+
+// OTP Cookie管理（インライン実装）
+interface OTPData {
+  otp: string;
+  expiresAt: number;
+  attempts: number;
+}
+
+const ENCRYPTION_KEY = process.env.OTP_ENCRYPTION_KEY || 'default-otp-encryption-key-32bytes';
+
+function encryptOTP(text: string): string {
+  try {
+    const iv = crypto.randomBytes(16);
+    const cipher = crypto.createCipher('aes-256-cbc', ENCRYPTION_KEY);
+    let encrypted = cipher.update(text, 'utf8', 'hex');
+    encrypted += cipher.final('hex');
+    return iv.toString('hex') + ':' + encrypted;
+  } catch (error) {
+    console.error('Encryption error:', error);
+    throw new Error('Failed to encrypt OTP data');
+  }
+}
+
+function storeOTPInCookie(res: VercelResponse, phoneNumber: string, otpData: OTPData): void {
+  try {
+    const dataToStore = { [phoneNumber]: otpData };
+    const encrypted = encryptOTP(JSON.stringify(dataToStore));
+    const isProduction = process.env.NODE_ENV === 'production';
+    const cookieOptions = `HttpOnly; ${isProduction ? 'Secure; ' : ''}SameSite=Strict; Path=/; Max-Age=300`;
+    res.setHeader('Set-Cookie', `_otp_data=${encrypted}; ${cookieOptions}`);
+  } catch (error) {
+    console.error('Failed to store OTP in cookie:', error);
+    throw new Error('Failed to store OTP data');
+  }
+}
 
 // Twilio設定（セキュア）
 const getTwilioConfig = () => {
