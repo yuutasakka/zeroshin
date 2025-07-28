@@ -14,7 +14,8 @@ const ENCRYPTION_KEY = process.env.OTP_ENCRYPTION_KEY || 'default-otp-encryption
 function encryptOTP(text: string): string {
   try {
     const iv = crypto.randomBytes(16);
-    const cipher = crypto.createCipher('aes-256-cbc', ENCRYPTION_KEY);
+    const key = crypto.createHash('sha256').update(ENCRYPTION_KEY).digest();
+    const cipher = crypto.createCipheriv('aes-256-cbc', key, iv);
     let encrypted = cipher.update(text, 'utf8', 'hex');
     encrypted += cipher.final('hex');
     return iv.toString('hex') + ':' + encrypted;
@@ -239,15 +240,20 @@ export default async function handler(
       attempts: 0
     };
 
-    // メモリストレージとクッキーの両方に保存（Vercel対応）
-    otpStore.set(normalizedPhone, otpData);
-    
+    // Vercel環境ではメモリストレージが共有されないため、クッキーのみで保存
     try {
       storeOTPInCookie(res, normalizedPhone, otpData);
+      console.log('OTP stored in encrypted cookie for:', normalizedPhone.substring(0, 3) + '****');
     } catch (cookieError) {
       console.error('Failed to store OTP in cookie:', cookieError);
-      // クッキー保存失敗時はメモリストレージのみで継続
+      return res.status(500).json({
+        error: 'OTP保存に失敗しました',
+        code: 'STORAGE_ERROR'
+      });
     }
+    
+    // メモリストレージは参考程度（Vercelでは共有されない）
+    otpStore.set(normalizedPhone, otpData);
 
     // デバッグ用：開発環境でストレージの内容を確認
     if (process.env.NODE_ENV === 'development') {

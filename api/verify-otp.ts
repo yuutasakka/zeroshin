@@ -10,8 +10,10 @@ function decryptOTP(encryptedData: string): string {
     if (parts.length !== 2) {
       throw new Error('Invalid encrypted data format');
     }
+    const iv = Buffer.from(parts[0], 'hex');
     const encrypted = parts[1];
-    const decipher = crypto.createDecipher('aes-256-cbc', ENCRYPTION_KEY);
+    const key = crypto.createHash('sha256').update(ENCRYPTION_KEY).digest();
+    const decipher = crypto.createDecipheriv('aes-256-cbc', key, iv);
     let decrypted = decipher.update(encrypted, 'hex', 'utf8');
     decrypted += decipher.final('utf8');
     return decrypted;
@@ -53,7 +55,8 @@ function removeOTPFromCookie(res: VercelResponse, req: VercelRequest, phoneNumbe
 function encryptOTP(text: string): string {
   try {
     const iv = crypto.randomBytes(16);
-    const cipher = crypto.createCipher('aes-256-cbc', ENCRYPTION_KEY);
+    const key = crypto.createHash('sha256').update(ENCRYPTION_KEY).digest();
+    const cipher = crypto.createCipheriv('aes-256-cbc', key, iv);
     let encrypted = cipher.update(text, 'utf8', 'hex');
     encrypted += cipher.final('hex');
     return iv.toString('hex') + ':' + encrypted;
@@ -155,19 +158,32 @@ export default async function handler(
                     req.headers['x-real-ip'] as string ||
                     'unknown';
 
-    // 保存されたOTPデータを取得（メモリとクッキーの両方から試行）
-    let storedOTPData = otpStore.get(normalizedPhone);
+    // デバッグ: クッキーの詳細を確認
+    console.log('Cookie debug info:', {
+      phone: normalizedPhone.substring(0, 3) + '****',
+      hasCookie: !!req.cookies?._otp_data,
+      cookieLength: req.cookies?._otp_data?.length || 0,
+      cookiePreview: req.cookies?._otp_data?.substring(0, 20) + '...' || 'none',
+      allCookies: Object.keys(req.cookies || {})
+    });
+
+    // 保存されたOTPデータを取得（Vercelではクッキーのみ有効）
+    let storedOTPData = getOTPFromCookie(req, normalizedPhone);
     
-    // メモリに無い場合はクッキーから取得
+    // フォールバック: メモリからも確認（通常は無効）
     if (!storedOTPData) {
-      storedOTPData = getOTPFromCookie(req, normalizedPhone);
+      storedOTPData = otpStore.get(normalizedPhone);
+      if (storedOTPData) {
+        console.log('Found OTP in memory (unexpected in Vercel)');
+      }
     }
     
     if (!storedOTPData) {
       console.error('OTP not found for phone:', {
         phone: normalizedPhone.substring(0, 3) + '****',
         memoryStoreSize: otpStore.size,
-        hasCookie: !!req.cookies?._otp_data
+        hasCookie: !!req.cookies?._otp_data,
+        cookieKeys: Object.keys(req.cookies || {})
       });
       
       return res.status(400).json({ 
