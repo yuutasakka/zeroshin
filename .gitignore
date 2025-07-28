@@ -38,6 +38,9 @@ credentials.json
 secrets.json
 config.json
 supabase.config.ts
+twilio.config.ts
+twilio.credentials.json
+sms.config.ts
 
 # Sensitive data files
 admin_credentials.json
