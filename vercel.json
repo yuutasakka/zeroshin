@@ -9,6 +9,11 @@
     "GENERATE_SOURCEMAP": "false",
     "VITE_DEBUG": "false"
   },
+  "functions": {
+    "api/*.ts": {
+      "runtime": "nodejs18.x"
+    }
+  },
   "rewrites": [
     {
       "source": "/((?!api/|assets/|manifest\\.webmanifest|sw\\.js|workbox-.*).*)",
@@ -39,6 +44,14 @@
         {
           "key": "Access-Control-Allow-Origin",
           "value": "*"
+        },
+        {
+          "key": "Access-Control-Allow-Methods",
+          "value": "GET, OPTIONS"
+        },
+        {
+          "key": "Access-Control-Allow-Headers",
+          "value": "Content-Type"
         }
       ]
     },

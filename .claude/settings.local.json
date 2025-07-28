@@ -40,7 +40,8 @@
       "Bash(npm ls:*)",
       "Bash(npm view:*)",
       "Bash(npm install:*)",
-      "Bash(vercel:*)"
+      "Bash(vercel:*)",
+      "Bash(curl:*)"
     ],
     "deny": []
   }
