@@ -321,35 +321,48 @@ const SMSAuthFlow: React.FC<SMSAuthFlowProps> = ({
               </button>
 
               {/* 利用規約・プライバシーポリシー同意チェックボックス */}
-              <div className="flex items-start space-x-3">
-                <div className="relative flex items-center">
-                  <input
-                    type="checkbox"
-                    id="terms-agreement-sms"
-                    checked={agreedToTerms}
-                    onChange={(e) => setAgreedToTerms(e.target.checked)}
-                    className="sr-only"
-                  />
-                  <div className={`w-5 h-5 border-2 rounded flex items-center justify-center cursor-pointer transition-all duration-200 ${
-                    agreedToTerms 
-                      ? 'bg-cyan-500 border-cyan-500' 
-                      : 'bg-white border-gray-300 hover:border-cyan-400'
-                  }`}
-                  onClick={() => setAgreedToTerms(!agreedToTerms)}
-                  >
-                    {agreedToTerms && (
-                      <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-                      </svg>
-                    )}
+              <div className="w-full bg-gray-50 rounded-lg p-4 border-2 border-gray-200">
+                <div className="flex items-start space-x-3">
+                  <div className="relative flex items-center mt-0.5">
+                    <input
+                      type="checkbox"
+                      id="terms-agreement-sms"
+                      checked={agreedToTerms}
+                      onChange={(e) => setAgreedToTerms(e.target.checked)}
+                      className="sr-only"
+                    />
+                    <div 
+                      className={`w-6 h-6 border-2 rounded-md flex items-center justify-center cursor-pointer transition-all duration-200 shadow-sm ${
+                        agreedToTerms 
+                          ? 'bg-cyan-500 border-cyan-500 shadow-cyan-200' 
+                          : 'bg-white border-gray-400 hover:border-cyan-500 hover:shadow-md'
+                      }`}
+                      onClick={() => setAgreedToTerms(!agreedToTerms)}
+                    >
+                      {agreedToTerms && (
+                        <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                        </svg>
+                      )}
+                    </div>
                   </div>
+                  <label 
+                    htmlFor="terms-agreement-sms" 
+                    className="text-sm text-gray-800 leading-relaxed cursor-pointer flex-1 font-medium" 
+                    onClick={() => setAgreedToTerms(!agreedToTerms)}
+                  >
+                    <a href="/privacy-policy" target="_blank" className="text-cyan-600 hover:text-cyan-800 underline font-semibold">プライバシーポリシー</a>
+                    および
+                    <a href="/terms-of-service" target="_blank" className="text-cyan-600 hover:text-cyan-800 underline font-semibold">利用規約</a>
+                    に同意します
+                  </label>
                 </div>
-                <label htmlFor="terms-agreement-sms" className="text-sm text-gray-700 leading-relaxed cursor-pointer" onClick={() => setAgreedToTerms(!agreedToTerms)}>
-                  <a href="/privacy-policy" target="_blank" className="text-cyan-600 hover:text-cyan-800 underline">プライバシーポリシー</a>
-                  および
-                  <a href="/terms-of-service" target="_blank" className="text-cyan-600 hover:text-cyan-800 underline">利用規約</a>
-                  に同意します
-                </label>
+                {!agreedToTerms && (
+                  <div className="mt-2 text-xs text-red-600 flex items-center space-x-1">
+                    <span>⚠️</span>
+                    <span>同意にチェックを入れてください</span>
+                  </div>
+                )}
               </div>
             </div>
           )}
