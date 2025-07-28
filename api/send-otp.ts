@@ -1,6 +1,30 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { v4 as uuidv4 } from 'uuid';
 
+// Twilio設定
+const accountSid = process.env.TWILIO_ACCOUNT_SID;
+const authToken = process.env.TWILIO_AUTH_TOKEN;
+const twilioPhoneNumber = process.env.TWILIO_PHONE_NUMBER;
+
+// OTP一時保存（メモリ内、本番環境ではRedisなど使用）
+interface OTPData {
+  otp: string;
+  expiresAt: number;
+  attempts: number;
+}
+
+// グローバルストレージ（Vercel Functions間で共有）
+declare global {
+  var otpStore: Map<string, OTPData> | undefined;
+}
+
+// グローバルストレージの初期化
+if (!global.otpStore) {
+  global.otpStore = new Map<string, OTPData>();
+}
+
+const otpStore = global.otpStore;
+
 // 簡易CSRF検証（Vercel対応）
 function validateCSRF(req: VercelRequest): boolean {
   const csrfToken = req.headers['x-csrf-token'] as string;
@@ -55,24 +79,96 @@ export default async function handler(
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
     const expiresAt = new Date(Date.now() + 300000); // 5分後
 
-    // 開発環境ではコンソールに出力
-    console.log('Development SMS OTP:', {
-      phone: normalizedPhone,
-      otp: otp,
-      expires: expiresAt
-    });
+    // 国際電話番号形式に変換（日本の電話番号）
+    const internationalPhone = '+81' + normalizedPhone.substring(1);
+
+    // Twilio SMS送信
+    let smsSuccess = false;
+    let smsError = null;
+
+    if (accountSid && authToken && twilioPhoneNumber) {
+      try {
+        // Twilio REST APIを使用してSMS送信
+        const twilioUrl = `https://api.twilio.com/2010-04-01/Accounts/${accountSid}/Messages.json`;
+        const auth = Buffer.from(`${accountSid}:${authToken}`).toString('base64');
+        
+        const response = await fetch(twilioUrl, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Basic ${auth}`,
+            'Content-Type': 'application/x-www-form-urlencoded',
+          },
+          body: new URLSearchParams({
+            From: twilioPhoneNumber,
+            To: internationalPhone,
+            Body: `【タスカル】認証コード: ${otp}\n\nこのコードは5分間有効です。第三者には絶対に教えないでください。`,
+          }),
+        });
+
+        if (response.ok) {
+          const twilioResponse = await response.json();
+          smsSuccess = true;
+          console.log('Twilio SMS sent successfully:', {
+            sid: twilioResponse.sid,
+            phone: normalizedPhone.substring(0, 3) + '****' + normalizedPhone.substring(7),
+            status: twilioResponse.status
+          });
+        } else {
+          const errorData = await response.json();
+          smsError = errorData.message || 'Twilio API error';
+          console.error('Twilio SMS failed:', {
+            status: response.status,
+            error: errorData
+          });
+        }
+      } catch (twilioErr: any) {
+        smsError = twilioErr.message || 'SMS送信エラー';
+        console.error('Twilio SMS error:', twilioErr);
+      }
+    } else {
+      console.warn('Twilio credentials not configured');
+      smsError = 'SMS設定が不完全です';
+    }
+
+    // 開発環境またはSMS失敗時はコンソールに出力
+    if (process.env.NODE_ENV !== 'production' || !smsSuccess) {
+      console.log('Development SMS OTP:', {
+        phone: normalizedPhone,
+        otp: otp,
+        expires: expiresAt,
+        smsSuccess,
+        smsError
+      });
+    }
 
     // 成功ログ
-    console.log('SMS OTP sent:', {
+    console.log('SMS OTP processing:', {
       phone: normalizedPhone.substring(0, 3) + '****' + normalizedPhone.substring(7),
       ip: clientIP.substring(0, 10) + '...',
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
+      twilioSuccess: smsSuccess
+    });
+
+    // 本番環境でSMS送信に失敗した場合はエラーを返す
+    if (process.env.NODE_ENV === 'production' && !smsSuccess) {
+      return res.status(500).json({
+        error: smsError || 'SMS送信に失敗しました',
+        code: 'SMS_SEND_FAILED'
+      });
+    }
+
+    // OTPをストレージに保存
+    otpStore.set(normalizedPhone, {
+      otp: otp,
+      expiresAt: expiresAt.getTime(),
+      attempts: 0
     });
 
     res.status(200).json({
       success: true,
-      message: 'OTP sent successfully',
-      expiresIn: 300000 // 5分
+      message: smsSuccess ? 'SMS sent successfully' : 'OTP generated (development mode)',
+      expiresIn: 300000, // 5分
+      twilioEnabled: !!smsSuccess
     });
 
   } catch (error) {
