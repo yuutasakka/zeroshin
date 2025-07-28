@@ -137,26 +137,8 @@ const DiagnosisResultsPage: React.FC<DiagnosisResultsPageProps> = ({ diagnosisDa
     }
 
 
-    // propsのデータが不完全な場合、sessionStorageから復元を試行
+    // ローカルストレージ使用禁止 - propsからの直接データのみ使用
     try {
-      const currentSession = sessionStorage.getItem('currentUserSession');
-      
-      if (currentSession) {
-        const sessionData = JSON.parse(currentSession);
-        
-        if (sessionData.diagnosisAnswers && Object.keys(sessionData.diagnosisAnswers).length > 0) {
-          return sessionData.diagnosisAnswers;
-        } else {
-        }
-      } else {
-      }
-
-      // 他のsessionStorageキーも確認
-      const diagnosisDataDirect = sessionStorage.getItem('diagnosisData');
-      if (diagnosisDataDirect) {
-        const parsedDirect = JSON.parse(diagnosisDataDirect);
-        return parsedDirect;
-      }
     } catch (error) {
     }
 
@@ -446,9 +428,8 @@ const DiagnosisResultsPage: React.FC<DiagnosisResultsPageProps> = ({ diagnosisDa
       
       try {
         
-        const currentSession = sessionStorage.getItem('currentUserSession');
-        
-        if (!currentSession) {
+        // ローカルストレージ使用禁止 - 認証状態はpropsのみで管理
+        if (!state.isAuthorized) {
           const errorMsg = '認証情報が見つかりません。診断を最初からやり直してください。';
           dispatch({ type: 'SET_AUTH_ERROR', payload: errorMsg });
           dispatch({ type: 'SET_DEBUG_INFO', payload: 'sessionStorage に currentUserSession が存在しません' });
@@ -508,15 +489,7 @@ const DiagnosisResultsPage: React.FC<DiagnosisResultsPageProps> = ({ diagnosisDa
             };
             
             
-            // 復元したデータをセッションストレージに保存
-            sessionStorage.setItem('diagnosisData', JSON.stringify(restoredDiagnosisData));
-            
-            // セッションデータも更新
-            const updatedSessionData = {
-              ...sessionData,
-              diagnosisAnswers: dbAnswers
-            };
-            sessionStorage.setItem('currentUserSession', JSON.stringify(updatedSessionData));
+            // ローカルストレージ使用禁止 - データは既にメモリ内で管理されている
             
           }
         }
@@ -1199,7 +1172,7 @@ const DiagnosisResultsPage: React.FC<DiagnosisResultsPageProps> = ({ diagnosisDa
         <DownloadGuideModal
           isOpen={showDownloadModal}
           onClose={() => setShowDownloadModal(false)}
-          phoneNumber={sessionStorage.getItem('userPhoneNumber') || undefined}
+          phoneNumber={undefined}
           diagnosisData={{
             score: projectedAmount,
             rank: projectedAmount >= 50000000 ? 'S' : projectedAmount >= 30000000 ? 'A' : projectedAmount >= 10000000 ? 'B' : 'C',

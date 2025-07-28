@@ -20,7 +20,7 @@ function generateCSRFToken(): string {
 export default async function handler(
   req: VercelRequest,
   res: VercelResponse
-) {
+): Promise<void> {
   debugLog('CSRF token request received', { method: req.method, url: req.url });
   
   // CORSヘッダーを設定

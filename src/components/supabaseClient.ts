@@ -463,36 +463,9 @@ export class SupabaseAdminAuth {
 // 診断履歴管理クラス
 export class DiagnosisSessionManager {
   private supabase: SupabaseClient;
-  private readonly STORAGE_KEY = 'diagnosis_sessions_backup';
 
   constructor() {
     this.supabase = supabase;
-  }
-
-  // セッションストレージのバックアップ機能
-  private getLocalSessions(): any[] {
-    try {
-      const stored = sessionStorage.getItem(this.STORAGE_KEY);
-      return stored ? JSON.parse(stored) : [];
-    } catch (error) {
-      return [];
-    }
-  }
-
-  private saveToLocalStorage(session: any): void {
-    try {
-      const sessions = this.getLocalSessions();
-      const existingIndex = sessions.findIndex(s => s.session_id === session.session_id);
-      
-      if (existingIndex >= 0) {
-        sessions[existingIndex] = session;
-      } else {
-        sessions.push(session);
-      }
-      
-      sessionStorage.setItem(this.STORAGE_KEY, JSON.stringify(sessions));
-    } catch (error) {
-    }
   }
 
   // Supabaseが利用可能かチェック

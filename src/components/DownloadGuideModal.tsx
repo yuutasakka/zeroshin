@@ -32,11 +32,11 @@ const DownloadGuideModal: React.FC<DownloadGuideModalProps> = ({ isOpen, onClose
         },
         body: JSON.stringify({
           email,
-          phoneNumber: phoneNumber || sessionStorage.getItem('userPhoneNumber'),
+          phoneNumber: phoneNumber || '',
           diagnosisData: diagnosisData || {
             score: combatScore,
             rank: rank,
-            answers: JSON.parse(sessionStorage.getItem('diagnosisAnswers') || '{}')
+            answers: diagnosisData?.answers || {}
           }
         })
       });

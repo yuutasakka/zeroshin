@@ -369,16 +369,9 @@ const PhoneVerificationPage: React.FC<PhoneVerificationPageProps> = ({
           // 診断回答データの確認と修正
           let diagnosisAnswers = userSession.diagnosisAnswers || {};
           
-          // 空の診断回答の場合、sessionStorageから取得を試行
+          // 診断回答が空の場合はエラー
           if (Object.keys(diagnosisAnswers).length === 0) {
-            const storedDiagnosisData = sessionStorage.getItem('diagnosisData');
-            if (storedDiagnosisData) {
-              try {
-                const parsedData = JSON.parse(storedDiagnosisData);
-                diagnosisAnswers = parsedData;
-              } catch (e) {
-              }
-            }
+            throw new Error('診断回答データが見つかりません。診断からやり直してください。');
           }
 
           // 確実なデータ保存のため、API経由でSupabaseに保存
@@ -443,8 +436,7 @@ const PhoneVerificationPage: React.FC<PhoneVerificationPageProps> = ({
           };
 
 
-          // 現在のセッションをセッションストレージに保存（一時的）
-          sessionStorage.setItem('currentUserSession', JSON.stringify(updatedSession));
+          // セッションデータはメモリ内のみで管理（ローカルストレージ使用禁止）
           
           // ユーザーデータの保存処理はクライアントサイドで完結
           
