@@ -43,7 +43,7 @@ function validateCSRF(req: VercelRequest): boolean {
   const cookieToken = req.cookies?._csrf;
   
   // 基本的な検証: ヘッダーとクッキーのトークンが一致するか
-  return csrfToken && cookieToken && csrfToken === cookieToken;
+  return !!(csrfToken && cookieToken && csrfToken === cookieToken);
 }
 
 /**
@@ -212,7 +212,7 @@ export default async function handler(
 
   } catch (error) {
     console.error('Send OTP API error:', error);
-    res.status(500).json({ 
+    return res.status(500).json({ 
       error: 'Internal server error',
       code: 'INTERNAL_ERROR'
     });

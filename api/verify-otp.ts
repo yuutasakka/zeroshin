@@ -24,7 +24,7 @@ function validateCSRF(req: VercelRequest): boolean {
   const csrfToken = req.headers['x-csrf-token'] as string;
   const cookieToken = req.cookies?._csrf;
   
-  return csrfToken && cookieToken && csrfToken === cookieToken;
+  return !!(csrfToken && cookieToken && csrfToken === cookieToken);
 }
 
 /**
@@ -148,7 +148,7 @@ export default async function handler(
 
   } catch (error) {
     console.error('Verify OTP API error:', error);
-    res.status(500).json({ 
+    return res.status(500).json({ 
       error: 'Internal server error',
       code: 'INTERNAL_ERROR'
     });

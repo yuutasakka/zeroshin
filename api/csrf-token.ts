@@ -49,7 +49,7 @@ export default async function handler(
 
   } catch (error) {
     console.error('CSRF token generation error:', error);
-    res.status(500).json({ 
+    return res.status(500).json({ 
       error: 'Internal server error',
       success: false 
     });
