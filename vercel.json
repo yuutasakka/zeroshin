@@ -9,11 +9,6 @@
     "GENERATE_SOURCEMAP": "false",
     "VITE_DEBUG": "false"
   },
-  "functions": {
-    "api/*.ts": {
-      "runtime": "nodejs18.x"
-    }
-  },
   "rewrites": [
     {
       "source": "/((?!api/|assets/|manifest\\.webmanifest|sw\\.js|workbox-.*).*)",
