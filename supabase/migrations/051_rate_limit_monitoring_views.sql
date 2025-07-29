@@ -44,13 +44,13 @@ SELECT
   phone_number,
   verification_code,
   created_at,
-  created_at + INTERVAL '5 minutes' AS expires_at,
-  EXTRACT(EPOCH FROM (created_at + INTERVAL '5 minutes' - NOW()))::INT AS ttl_seconds,
+  created_at + INTERVAL '60 seconds' AS expires_at,
+  EXTRACT(EPOCH FROM (created_at + INTERVAL '60 seconds' - NOW()))::INT AS ttl_seconds,
   is_verified,
   attempts,
   CASE 
     WHEN is_verified THEN 'USED'
-    WHEN NOW() > created_at + INTERVAL '5 minutes' THEN 'EXPIRED'
+    WHEN NOW() > created_at + INTERVAL '60 seconds' THEN 'EXPIRED'
     ELSE 'ACTIVE'
   END AS status
 FROM sms_verifications
@@ -138,7 +138,7 @@ SELECT
     NULLIF(COUNT(*), 0) * 100, 
     2
   ) AS success_rate,
-  COUNT(CASE WHEN NOT is_verified AND NOW() > created_at + INTERVAL '5 minutes' THEN 1 END) AS expired_otps,
+  COUNT(CASE WHEN NOT is_verified AND NOW() > created_at + INTERVAL '60 seconds' THEN 1 END) AS expired_otps,
   MIN(created_at) AS period_start,
   MAX(created_at) AS period_end
 FROM sms_verifications

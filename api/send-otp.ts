@@ -1,4 +1,5 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
+import { phoneNumberValidator } from '../server/services/phoneNumberValidation';
 import { v4 as uuidv4 } from 'uuid';
 import crypto from 'crypto';
 
@@ -114,11 +115,86 @@ export default async function handler(
       return res.status(400).json({ error: 'Phone number is required' });
     }
 
-    // 電話番号の正規化と検証
-    const normalizedPhone = phoneNumber.replace(/\D/g, '');
-    if (!/^(090|080|070)\d{8}$/.test(normalizedPhone)) {
-      return res.status(400).json({ error: 'Invalid phone number format' });
+    // Twilio Lookup APIによる高度な電話番号検証
+    let validationResult;
+    try {
+      validationResult = await phoneNumberValidator.validatePhoneNumber(phoneNumber);
+      
+      if (!validationResult.isValid) {
+        console.warn('Phone validation failed:', {
+          phone: phoneNumber.substring(0, 3) + '****',
+          errors: validationResult.errors,
+          timestamp: new Date().toISOString()
+        });
+        
+        return res.status(400).json({ 
+          error: 'Invalid phone number',
+          details: validationResult.errors.length > 0 
+            ? validationResult.errors[0] 
+            : 'Phone number validation failed'
+        });
+      }
+      
+      // SMS送信可能性チェック
+      const smsCheck = await phoneNumberValidator.canSendSMS(phoneNumber);
+      if (!smsCheck.canSend) {
+        console.warn('SMS sending blocked:', {
+          phone: phoneNumber.substring(0, 3) + '****',
+          reason: smsCheck.reason,
+          lineType: validationResult.lineType,
+          riskScore: validationResult.riskScore,
+          timestamp: new Date().toISOString()
+        });
+        
+        return res.status(400).json({
+          error: 'Cannot send SMS to this number',
+          reason: smsCheck.reason,
+          details: validationResult.lineType === 'landline' 
+            ? '固定電話番号にはSMSを送信できません。携帯電話番号をご入力ください。'
+            : smsCheck.reason === 'VoIP number may not reliably receive SMS'
+            ? 'VoIP番号はSMSを正常に受信できない可能性があります。'
+            : 'この番号にはSMSを送信できません。'
+        });
+      }
+      
+      // 警告ログ出力
+      if (validationResult.warnings.length > 0) {
+        console.warn('Phone validation warnings:', {
+          phone: phoneNumber.substring(0, 3) + '****',
+          warnings: validationResult.warnings,
+          lineType: validationResult.lineType,
+          carrier: validationResult.carrier,
+          riskScore: validationResult.riskScore
+        });
+      }
+      
+    } catch (validationError) {
+      console.error('Phone validation service error:', validationError);
+      
+      // フォールバックとして基本的な検証を実行
+      const normalizedPhone = phoneNumber.replace(/\D/g, '');
+      if (!/^(090|080|070)\d{8}$/.test(normalizedPhone)) {
+        return res.status(400).json({ 
+          error: 'Invalid phone number format',
+          details: 'Please enter a valid Japanese mobile number'
+        });
+      }
+      
+      // 検証サービスエラー時のフォールバック結果を作成
+      validationResult = {
+        isValid: true,
+        normalizedE164: '+81' + normalizedPhone.substring(1),
+        isJapanese: true,
+        canReceiveSMS: true,
+        riskScore: 30, // フォールバック時は中リスク
+        errors: [],
+        warnings: ['Phone validation service unavailable - using basic validation'],
+        lineType: 'mobile' // 基本パターンマッチからmobileと推定
+      };
     }
+    
+    // 検証済みの正規化された電話番号を使用
+    const normalizedPhone = validationResult.normalizedE164.replace('+81', '0');
 
     // クライアントIPの取得（レート制限用）
     const clientIP = req.headers['x-forwarded-for'] as string ||
@@ -127,10 +203,10 @@ export default async function handler(
 
     // OTPの生成（6桁）
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
-    const expiresAt = new Date(Date.now() + 300000); // 5分後
+    const expiresAt = new Date(Date.now() + 60000); // 60秒後
 
-    // 国際電話番号形式に変換（日本の電話番号）
-    const internationalPhone = '+81' + normalizedPhone.substring(1);
+    // 検証済みE.164形式を使用
+    const internationalPhone = validationResult.normalizedE164;
 
     // Twilio SMS送信（セキュア実装）
     let smsSuccess = false;
@@ -163,7 +239,7 @@ export default async function handler(
           body: new URLSearchParams({
             From: twilioConfig.phoneNumber!,
             To: internationalPhone,
-            Body: `【タスカル】認証コード: ${otp}\n\nこのコードは5分間有効です。第三者には絶対に教えないでください。`,
+            Body: `【タスカル】認証コード: ${otp}\n\nこのコードは60秒間有効です。第三者には絶対に教えないでください。`,
           }),
         });
 
@@ -268,8 +344,14 @@ export default async function handler(
     res.status(200).json({
       success: true,
       message: smsSuccess ? 'SMS sent successfully' : 'OTP generated (development mode)',
-      expiresIn: 300000, // 5分
-      twilioEnabled: !!smsSuccess
+      expiresIn: 60000, // 60秒
+      twilioEnabled: !!smsSuccess,
+      phoneValidation: {
+        lineType: validationResult.lineType,
+        carrier: validationResult.carrier,
+        riskScore: validationResult.riskScore,
+        warnings: validationResult.warnings
+      }
     });
 
   } catch (error) {

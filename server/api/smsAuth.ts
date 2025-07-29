@@ -1,6 +1,7 @@
 // SMS認証API - サーバーサイドのみ
 // import { SecureConfigManager } from './secureConfig'; // 直接環境変数アクセスに変更
 import { supabaseAdmin } from '../lib/supabaseAuth';
+import { phoneNumberValidator } from '../services/phoneNumberValidation';
 
 export class SMSAuthService {
   private static async getTwilioClient() {
@@ -33,12 +34,28 @@ export class SMSAuthService {
 
   static async sendOTP(phoneNumber: string, ipAddress?: string): Promise<{ success: boolean; error?: string }> {
     try {
-      // 電話番号の正規化
-      const normalizedPhone = this.normalizePhoneNumber(phoneNumber);
+      // Twilio Lookup APIによる高度な電話番号検証
+      const validationResult = await phoneNumberValidator.validatePhoneNumber(phoneNumber);
       
-      if (!this.validatePhoneNumber(normalizedPhone)) {
-        return { success: false, error: 'Invalid phone number format' };
+      if (!validationResult.isValid) {
+        return { 
+          success: false, 
+          error: 'Invalid phone number',
+          details: validationResult.errors[0] || 'Phone number validation failed'
+        };
       }
+      
+      // SMS送信可能性チェック
+      const smsCheck = await phoneNumberValidator.canSendSMS(phoneNumber);
+      if (!smsCheck.canSend) {
+        return {
+          success: false,
+          error: 'Cannot send SMS to this number',
+          reason: smsCheck.reason
+        };
+      }
+      
+      const normalizedPhone = validationResult.normalizedE164;
 
       // レート制限チェック（電話番号 + IP アドレス）
       try {
