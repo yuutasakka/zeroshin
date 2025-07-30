@@ -1,7 +1,7 @@
 {
-  "name": "タスカル - 資金調達力診断",
-  "short_name": "タスカル",
-  "description": "30秒であなたの資金調達力をチェック！",
+  "name": "Zero神 - ムダ遣い診断",
+  "short_name": "Zero神",
+  "description": "30秒であなたのムダ遣い度をチェック！節約の神になろう",
   "start_url": "/",
   "display": "standalone",
   "orientation": "portrait",
@@ -33,17 +33,17 @@
       "purpose": "maskable"
     }
   ],
-  "categories": ["finance", "business", "productivity"],
+  "categories": ["lifestyle", "finance", "productivity"],
   "lang": "ja",
   "dir": "ltr",
   "scope": "/",
-  "id": "taskal-pwa",
+  "id": "zeroshin-pwa",
   "prefer_related_applications": false,
   "shortcuts": [
     {
-      "name": "戦闘力診断を開始",
+      "name": "ムダ遣い診断を開始",
       "short_name": "診断開始",
-      "description": "資金調達力診断を今すぐ開始",
+      "description": "ムダ遣い診断を今すぐ開始",
       "url": "/",
       "icons": [{ "src": "/pwa-192x192.png", "sizes": "192x192" }]
     },
@@ -56,10 +56,10 @@
     }
   ],
   "features": [
-    "資金調達力診断",
-    "パーソナライズド診断",
-    "セキュアな認証",
-    "攻略本ダウンロード"
+    "ムダ遣い診断",
+    "パーソナライズド節約アドバイス",
+    "LINE認証",
+    "節約ガイドダウンロード"
   ],
   "handle_links": "preferred",
   "launch_handler": {

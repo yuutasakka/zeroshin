@@ -14,17 +14,17 @@ interface SEOHeadProps {
 }
 
 export const SEOHead: React.FC<SEOHeadProps> = ({
-  title = 'タスカル - お金診断アプリ',
-  description = 'あなたに最適な金融商品を診断します。簡単な質問に答えるだけで、プロのファイナンシャルアドバイザーが厳選した金融商品をご提案。',
-  keywords = '金融商品,資産運用,投資診断,お金診断,ファイナンシャルプランニング,資産形成,投資信託,NISA',
+  title = 'Zero神 - ムダ陃い診断アプリ',
+  description = 'あなたのムダ陃い度を診断して節約の神になろう。簡単な質問に答えるだけで、個別の節約アドバイスと改善提案をご提供。',
+  keywords = 'ムダ陃い診断,節約,家計管理,支出見直し,貯金,ライフスタイル,ファイナンシャルプランニング,コスパ',
   image = '/pwa-512x512.png',
-  url = typeof window !== 'undefined' ? window.location.href : 'https://taskal.jp',
+  url = typeof window !== 'undefined' ? window.location.href : 'https://zeroshin.vercel.app',
   type = 'website',
-  author = 'タスカル Team',
+  author = 'Zero神 Team',
   publishedTime,
   modifiedTime
 }) => {
-  const siteName = 'タスカル';
+  const siteName = 'Zero神';
   const twitterHandle = '@aiconectx';
   
   // 構造化データ - Organization

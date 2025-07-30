@@ -59,7 +59,7 @@ const Footer: React.FC<FooterProps> = () => {
               fontWeight: 700,
               margin: 0
             }}>
-              タスカル
+              Zero神
             </h3>
           </div>
           <p style={{
@@ -279,7 +279,7 @@ const Footer: React.FC<FooterProps> = () => {
             color: '#999999',
             margin: 0
           }}>
-            © {currentYear} タスカル Inc. All rights reserved.
+            © {currentYear} Zero神 Inc. All rights reserved.
           </p>
         </div>
       </div>

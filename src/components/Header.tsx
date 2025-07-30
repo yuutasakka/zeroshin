@@ -60,7 +60,7 @@ const Header: React.FC = () => {
             margin: 0,
             letterSpacing: '-0.02em'
           }}>
-            タスカル
+            Zero神
           </h1>
         </a>
 

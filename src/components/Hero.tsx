@@ -109,7 +109,7 @@ const Hero: React.FC<HeroProps> = ({ onStartDiagnosis }) => {
               display: 'inline-block',
               animation: 'highlight 2s ease-in-out infinite'
             }}>
-              "資金調達力"
+              "ムダ遣い度"
             </span>
             <br />
             をチェック！
@@ -124,8 +124,8 @@ const Hero: React.FC<HeroProps> = ({ onStartDiagnosis }) => {
             maxWidth: '600px',
             margin: '0 auto 32px'
           }}>
-            先に資金調達力を把握してから、<br className="desktop-break" />
-            キャッシング・ファクタリングの業者調査へ
+            ムダ陃いを見つけて節約の神になろう！<br className="desktop-break" />
+            個別アドバイスで理想の家計へ
           </p>
 
           {/* 追加説明 */}
@@ -135,8 +135,8 @@ const Hero: React.FC<HeroProps> = ({ onStartDiagnosis }) => {
             lineHeight: 1.6,
             marginBottom: '24px'
           }}>
-            調査前に"自分の資金調達力"を理解すれば、<br />
-            無駄なく最適なサービスが選べる！
+            診断で"自分のムダ陃いパターン"を理解すれば、<br />
+            効率的に節約できて貯金が増える！
           </p>
 
           {/* CTA セクション */}
@@ -167,7 +167,7 @@ const Hero: React.FC<HeroProps> = ({ onStartDiagnosis }) => {
                 <i className="fas fa-gift text-yellow-300 text-xl animate-bounce"></i>
                 <div>
                   <p className="font-bold text-sm leading-tight">30秒診断完了者限定！</p>
-                  <p className="text-xs font-semibold">資金調達バイブル完全版を無料プレゼント！</p>
+                  <p className="text-xs font-semibold">節約攻略ガイド完全版を無料プレゼント！</p>
                 </div>
               </div>
             </button>
