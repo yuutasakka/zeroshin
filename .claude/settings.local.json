@@ -41,7 +41,8 @@
       "Bash(npm view:*)",
       "Bash(npm install:*)",
       "Bash(vercel:*)",
-      "Bash(curl:*)"
+      "Bash(curl:*)",
+      "Bash(cat:*)"
     ],
     "deny": []
   }

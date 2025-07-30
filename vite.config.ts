@@ -69,9 +69,9 @@ export default defineConfig(({ mode }) => {
           ]
         },
         manifest: {
-          name: 'タスカル - お金診断アプリ',
-          short_name: 'タスカル',
-          description: 'あなたに最適な金融商品を診断します',
+          name: 'Zero神 - ムダ遣い診断アプリ',
+          short_name: 'Zero神',
+          description: 'あなたのムダ遣い度を診断して節約の神になろう',
           theme_color: '#3b82f6',
           background_color: '#ffffff',
           display: 'standalone',

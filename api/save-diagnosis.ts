@@ -1,129 +1,115 @@
-import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { createClient } from '@supabase/supabase-js';
+import { VercelRequest, VercelResponse } from '@vercel/node';
+import jwt from 'jsonwebtoken';
+import { supabase } from '../src/components/supabaseClient';
+import { calculateWasteScore, getWasteDiagnosisResult } from '../data/wasteDiagnosisResults';
 
-// CSRF検証（簡易実装）
-function validateCSRF(req: VercelRequest): boolean {
-  const csrfToken = req.headers['x-csrf-token'] as string;
-  const cookieToken = req.cookies?._csrf;
-  return !!(csrfToken && cookieToken && csrfToken === cookieToken);
-}
-
-/**
- * 診断データ保存API
- * POST /api/save-diagnosis
- */
-export default async function handler(
-  req: VercelRequest,
-  res: VercelResponse
-): Promise<void> {
-  // CORSヘッダーを設定
+export default async function handler(req: VercelRequest, res: VercelResponse) {
+  // CORS設定
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, X-CSRF-Token');
-  
-  // OPTIONSリクエストの処理
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+
   if (req.method === 'OPTIONS') {
     return res.status(200).end();
   }
 
-  // POSTリクエストのみ許可
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
   try {
-    // CSRFトークンの検証
-    if (!validateCSRF(req)) {
-      console.warn('Save diagnosis CSRF validation failed');
-      return res.status(403).json({ 
-        error: 'CSRF token validation failed',
-        code: 'CSRF_INVALID'
-      });
-    }
+    const { userId, answers, score, result, timestamp } = req.body;
 
-    const { phoneNumber, diagnosisAnswers } = req.body;
-
-    // 入力値の検証
-    if (!phoneNumber || !diagnosisAnswers) {
+    // 入力データの検証
+    if (!userId || !answers || typeof score !== 'number' || !result) {
       return res.status(400).json({ 
-        error: 'Phone number and diagnosis answers are required' 
+        error: '必要なパラメータが不足しています',
+        required: ['userId', 'answers', 'score', 'result']
       });
     }
 
-    // 電話番号の正規化と検証
-    const normalizedPhone = phoneNumber.replace(/\D/g, '');
-    if (!/^(090|080|070)\d{8}$/.test(normalizedPhone)) {
-      return res.status(400).json({ 
-        error: 'Invalid phone number format' 
-      });
-    }
+    // スコアの再計算（セキュリティ目的）
+    const recalculatedScore = calculateWasteScore(answers);
+    const diagnosisResult = getWasteDiagnosisResult(recalculatedScore);
 
-    // Supabase設定
-    const supabaseUrl = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL;
-    const supabaseKey = process.env.VITE_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY;
+    // セッションIDを生成
+    const sessionId = `waste_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
 
-    if (!supabaseUrl || !supabaseKey) {
-      console.error('Missing Supabase configuration');
-      return res.status(500).json({
-        error: 'Database configuration not found',
-        code: 'CONFIG_MISSING'
-      });
-    }
-
-    // Supabaseクライアント作成
-    const supabase = createClient(supabaseUrl, supabaseKey);
-
-    // セッションIDの生成
-    const sessionId = `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-
-    // 国際電話番号形式に変換（+81形式）
-    const internationalPhone = '+81' + normalizedPhone.substring(1);
-
-    // 診断セッションデータの作成
-    const sessionData = {
-      phone_number: internationalPhone,
-      diagnosis_answers: diagnosisAnswers,
-      session_id: sessionId,
-      sms_verified: true, // API経由での保存は認証済み前提
-      verification_status: 'verified',
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString()
-    };
-
-    // Supabaseにデータを保存
-    const { data, error } = await supabase
-      .from('diagnosis_sessions')
-      .insert(sessionData)
+    // 診断結果をデータベースに保存
+    const { data: savedResult, error: saveError } = await supabase
+      .from('waste_diagnosis_results')
+      .insert({
+        line_user_id: userId,
+        session_id: sessionId,
+        answers: answers,
+        score: recalculatedScore,
+        result_level: diagnosisResult.level,
+        potential_monthly_savings: diagnosisResult.potentialSavings.monthly,
+        potential_yearly_savings: diagnosisResult.potentialSavings.yearly,
+        recommendations: {
+          title: diagnosisResult.recommendations.title,
+          items: diagnosisResult.recommendations.items,
+          tips: diagnosisResult.tips,
+          motivation: diagnosisResult.motivation
+        },
+        created_at: new Date().toISOString()
+      })
       .select()
       .single();
 
-    if (error) {
-      console.error('Supabase insert error:', error);
-      return res.status(500).json({
-        error: 'Failed to save diagnosis data',
-        code: 'DATABASE_ERROR',
-        details: process.env.NODE_ENV === 'development' ? error.message : undefined
+    if (saveError) {
+      console.error('診断結果保存エラー:', saveError);
+      return res.status(500).json({ 
+        error: '診断結果の保存に失敗しました',
+        details: process.env.NODE_ENV === 'development' ? saveError : undefined
       });
     }
 
-    // 成功レスポンス
-    res.status(200).json({
+    // ユーザーの最終ログイン時刻を更新
+    await supabase
+      .from('line_users')
+      .update({ 
+        last_login: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      })
+      .eq('line_user_id', userId);
+
+    // 統計情報を取得（オプション）
+    const { data: userStats } = await supabase
+      .from('waste_diagnosis_results')
+      .select('id, score, result_level, created_at')
+      .eq('line_user_id', userId)
+      .order('created_at', { ascending: false })
+      .limit(5);
+
+    return res.json({
       success: true,
-      sessionId: sessionId,
-      message: 'Diagnosis data saved successfully',
+      message: '診断結果を保存しました',
       data: {
-        id: data.id,
-        sessionId: sessionId,
-        phoneNumber: normalizedPhone,
-        saved_at: new Date().toISOString()
+        id: savedResult.id,
+        sessionId: savedResult.session_id,
+        score: savedResult.score,
+        resultLevel: savedResult.result_level,
+        potentialSavings: {
+          monthly: savedResult.potential_monthly_savings,
+          yearly: savedResult.potential_yearly_savings
+        },
+        createdAt: savedResult.created_at
+      },
+      stats: {
+        totalDiagnoses: userStats?.length || 0,
+        previousResults: userStats?.slice(1) || [], // 最新を除く過去の結果
+        averageScore: userStats?.length > 0 
+          ? userStats.reduce((sum, item) => sum + parseFloat(item.score), 0) / userStats.length 
+          : null
       }
     });
 
   } catch (error) {
-    console.error('Save diagnosis API error:', error);
+    console.error('診断結果保存処理エラー:', error);
     return res.status(500).json({ 
-      error: 'Internal server error',
-      code: 'INTERNAL_ERROR'
+      error: '診断結果保存処理中にエラーが発生しました',
+      details: process.env.NODE_ENV === 'development' ? error : undefined
     });
   }
 }

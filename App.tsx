@@ -13,7 +13,9 @@ type DiagnosisAnswers = {
   timing: string;
   phone?: string;
 };
-import SMSAuthFlow from './src/components/SMSAuthFlow';
+import LineAuthFlow from './src/components/LineAuthFlow';
+import WasteDiagnosisForm from './src/components/WasteDiagnosisForm';
+import WasteDiagnosisResults from './src/components/WasteDiagnosisResults';
 import ReliabilitySection from './src/components/ReliabilitySection';
 import SecurityTrustSection from './src/components/SecurityTrustSection';
 import CallToActionSection from './src/components/CallToActionSection';
