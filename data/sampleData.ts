@@ -108,30 +108,30 @@ export const sampleLegalLinks: LegalLink[] = [
   }
 ];
 
-// タスカルを選ぶ理由のサンプルデータ
+// Zero神を選ぶ理由のサンプルデータ
 export const sampleReasonsToChoose: ReasonsToChooseData = {
-  title: "タスカルが選ばれる理由",
-  subtitle: "あなたに最適な資金調達をサポートする3つの強み",
+  title: "Zero神が選ばれる理由",
+  subtitle: "あなたに最適な節約診断をサポートする3つの強み",
   reasons: [
     {
       iconClass: "fas fa-bullseye",
       title: "パーソナライズされた診断",
       value: "100%",
-      description: "AI技術と金融の専門知識を組み合わせ、あなたの事業に最適な資金調達方法を提案します",
+      description: "AI技術と節約の専門知識を組み合わせ、あなたに最適なムダ遣い削減方法を提案します",
       animationDelay: "0s"
     },
     {
       iconClass: "fas fa-shield-alt",
       title: "業界最高水準のセキュリティ",
       value: "100%",
-      description: "金融機関レベルのセキュリティシステムで、お客様の大切な事業情報を守ります",
+      description: "金融機関レベルのセキュリティシステムで、お客様の大切な個人情報を守ります",
       animationDelay: "0.5s"
     },
     {
       iconClass: "fas fa-phone",
       title: "充実したサポート体制",
       value: "24/7",
-      description: "経験豊富な資金調達アドバイザーが、個人事業主から法人まで丁寧にサポートします",
+      description: "経験豊富な節約アドバイザーが、すべての世代の方に丁寧にサポートします",
       animationDelay: "1s"
     }
   ]
@@ -140,7 +140,7 @@ export const sampleReasonsToChoose: ReasonsToChooseData = {
 // 初回相談特典のサンプルデータ
 export const sampleFirstConsultationOffer: FirstConsultationOffer = {
   title: "初回相談無料キャンペーン",
-  description: "タスカルの専門アドバイザーが、あなたの診断結果を詳しく解説し、最適な資金調達戦略をご提案します。詳細な診断結果の解説（30分）、個別資金調達戦略の提案、リスク管理アドバイス、融資制度の活用方法、継続サポートプランのご案内を無料で行います。",
+  description: "Zero神の専門アドバイザーが、あなたの診断結果を詳しく解説し、最適な節約戦略をご提案します。詳細な診断結果の解説（30分）、個別節約戦略の提案、家計管理アドバイス、節約制度の活用方法、継続サポートプランのご案内を無料で行います。",
   icon: "fas fa-gift",
   backgroundColor: "rgba(34, 197, 94, 0.1)",
   borderColor: "var(--accent-gold)"
@@ -148,24 +148,24 @@ export const sampleFirstConsultationOffer: FirstConsultationOffer = {
 
 // ヘッダーデータのサンプル
 export const sampleHeaderData: HeaderData = {
-  title: "タスカル",
-  subtitle: "あなたの資金調達パートナー"
+  title: "Zero神",
+  subtitle: "あなたの節約パートナー"
 };
 
 // メインビジュアルデータのサンプル
 export const sampleMainVisualData: MainVisualData = {
-  title: "あなたに最適な資金調達方法を見つけよう",
+  title: "あなたに最適なムダ遣い削減方法を見つけよう",
   highlightWord: "最適",
-  subtitle: "3分の簡単診断で、あなたの事業規模、業種、資金需要、返済能力に基づいた最適な資金調達方法をご提案。個人事業主から法人まで、誰でも安心して利用できる資金調達をサポートします。"
+  subtitle: "3分の簡単診断で、あなたの支出パターン、生活スタイル、節約意識、貯金目標に基づいた最適なムダ遣い削減方法をご提案。すべての世代の方が安心して利用できる節約をサポートします。"
 };
 
 // フッターデータのサンプル
 export const sampleFooterData: FooterData = {
-  siteName: "タスカル",
-  description: "AI技術と金融の専門知識を組み合わせ、あなたの事業資金調達を成功に導く信頼できるパートナーです。一人ひとりに最適な資金調達戦略をご提案し、安心できる事業成長をサポートいたします。",
-  contactInfo: "電話: 0120-123-456 | メール: info@taskal.co.jp",
+  siteName: "Zero神",
+  description: "AI技術と節約の専門知識を組み合わせ、あなたのムダ遣い削減を成功に導く信頼できるパートナーです。一人ひとりに最適な節約戦略をご提案し、安心できる家計改善をサポートいたします。",
+  contactInfo: "電話: 0120-123-456 | メール: info@zeroshin.co.jp",
   companyInfo: "〒100-0001 東京都千代田区千代田1-1-1 | 平日 9:00-18:00",
-  copyright: "© 2024 タスカル株式会社. All rights reserved."
+  copyright: "© 2024 Zero神 Inc. All rights reserved."
 };
 
 // 通知設定のサンプルデータ
@@ -174,16 +174,16 @@ export const sampleNotificationSettings = {
     enabled: true,
     smtpServer: "smtp.gmail.com",
     smtpPort: "587",
-    smtpUser: "notifications@taskal.co.jp",
+    smtpUser: "notifications@zeroshin.co.jp",
     smtpPassword: "[SMTP_PASSWORD_PLACEHOLDER]", // 本番環境では環境変数で管理
-    fromEmail: "notifications@taskal.co.jp",
-    fromName: "タスカル通知システム"
+    fromEmail: "notifications@zeroshin.co.jp",
+    fromName: "Zero神通知システム"
   },
   slack: {
     enabled: false,
     webhookUrl: "https://hooks.slack.com/services/YOUR/SLACK/WEBHOOK",
     channel: "#notifications",
-    username: "タスカル Bot"
+    username: "Zero神 Bot"
   },
   line: {
     enabled: false,

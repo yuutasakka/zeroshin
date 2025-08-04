@@ -1,0 +1,236 @@
+# Zero神 本番環境 Docker Compose
+version: '3.8'
+
+services:
+  # Nginx (リバースプロキシ・静的ファイル配信)
+  zeroshin-web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: production
+      args:
+        BUILD_DATE: ${BUILD_DATE:-}
+        VCS_REF: ${VCS_REF:-}
+        VERSION: ${VERSION:-1.0.0}
+    container_name: zeroshin-web
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./docker/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./ssl:/etc/ssl:ro
+      - web-logs:/var/log/nginx
+    environment:
+      - NGINX_HOST=${DOMAIN:-localhost}
+      - NGINX_PORT=80
+    restart: unless-stopped
+    networks:
+      - zeroshin-network
+    depends_on:
+      - zeroshin-api
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:80/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # API サーバー
+  zeroshin-api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: server
+      args:
+        BUILD_DATE: ${BUILD_DATE:-}
+        VCS_REF: ${VCS_REF:-}
+        VERSION: ${VERSION:-1.0.0}
+    container_name: zeroshin-api
+    expose:
+      - "3000"
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+      - SUPABASE_URL=${SUPABASE_URL}
+      - SUPABASE_SERVICE_ROLE_KEY=${SUPABASE_SERVICE_ROLE_KEY}
+      - LINE_CHANNEL_ID=${LINE_CHANNEL_ID}
+      - LINE_CHANNEL_SECRET=${LINE_CHANNEL_SECRET}
+      - JWT_SECRET=${JWT_SECRET}
+      - TWILIO_ACCOUNT_SID=${TWILIO_ACCOUNT_SID}
+      - TWILIO_AUTH_TOKEN=${TWILIO_AUTH_TOKEN}
+      - TWILIO_PHONE_NUMBER=${TWILIO_PHONE_NUMBER}
+      - REDIS_URL=redis://zeroshin-redis:6379
+      - LOG_LEVEL=${LOG_LEVEL:-info}
+    volumes:
+      - api-logs:/app/logs
+    restart: unless-stopped
+    networks:
+      - zeroshin-network
+    depends_on:
+      - redis
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('http').get('http://localhost:3000/health', (res) => { process.exit(res.statusCode === 200 ? 0 : 1); })"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    deploy:
+      replicas: 2
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 512M
+        reservations:
+          cpus: '0.5'
+          memory: 256M
+
+  # Redis (セッション管理・キャッシュ)
+  zeroshin-redis:
+    image: redis:7-alpine
+    container_name: zeroshin-redis
+    expose:
+      - "6379"
+    volumes:
+      - redis-data:/data
+      - ./docker/redis-prod.conf:/usr/local/etc/redis/redis.conf:ro
+    command: redis-server /usr/local/etc/redis/redis.conf
+    restart: unless-stopped
+    networks:
+      - zeroshin-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "5m"
+        max-file: "2"
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 256M
+        reservations:
+          cpus: '0.25'
+          memory: 128M
+
+  # Monitoring - Prometheus
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: zeroshin-prometheus
+    expose:
+      - "9090"
+    volumes:
+      - ./docker/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus-data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+      - '--storage.tsdb.retention.time=200h'
+      - '--web.enable-lifecycle'
+    restart: unless-stopped
+    networks:
+      - zeroshin-network
+
+  # Monitoring - Grafana
+  grafana:
+    image: grafana/grafana:latest
+    container_name: zeroshin-grafana
+    expose:
+      - "3001"
+    volumes:
+      - grafana-data:/var/lib/grafana
+      - ./docker/grafana/provisioning:/etc/grafana/provisioning:ro
+    environment:
+      - GF_SECURITY_ADMIN_USER=${GRAFANA_USER:-admin}
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_PASSWORD:-admin123}
+      - GF_USERS_ALLOW_SIGN_UP=false
+    restart: unless-stopped
+    networks:
+      - zeroshin-network
+    depends_on:
+      - prometheus
+
+  # Log aggregation - Fluentd
+  fluentd:
+    image: fluent/fluentd:v1.16-debian-1
+    container_name: zeroshin-fluentd
+    expose:
+      - "24224"
+    volumes:
+      - ./docker/fluentd.conf:/fluentd/etc/fluent.conf:ro
+      - fluentd-logs:/fluentd/log
+    restart: unless-stopped
+    networks:
+      - zeroshin-network
+
+  # セキュリティスキャン
+  trivy:
+    image: aquasec/trivy:latest
+    container_name: zeroshin-security-scan
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - trivy-cache:/root/.cache
+    command: 
+      - server
+      - --listen
+      - 0.0.0.0:4954
+    expose:
+      - "4954"
+    restart: unless-stopped
+    networks:
+      - zeroshin-network
+
+volumes:
+  redis-data:
+    driver: local
+  web-logs:
+    driver: local
+  api-logs:
+    driver: local
+  prometheus-data:
+    driver: local
+  grafana-data:
+    driver: local
+  fluentd-logs:
+    driver: local
+  trivy-cache:
+    driver: local
+
+networks:
+  zeroshin-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16
+
+# Swarm mode設定（Docker Swarm使用時）
+x-common-deploy: &common-deploy
+  restart_policy:
+    condition: on-failure
+    delay: 5s
+    max_attempts: 3
+  update_config:
+    parallelism: 1
+    delay: 10s
+    failure_action: rollback
+    monitor: 60s
+  rollback_config:
+    parallelism: 1
+    delay: 10s
+    failure_action: pause
+    monitor: 60s

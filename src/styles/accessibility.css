@@ -1,88 +1,229 @@
-/* アクセシビリティ CSS */
+/* Zero神 Accessibility Enhancements */
+/* Following Atlassian Design System accessibility guidelines */
 
-/* スクリーンリーダー専用コンテンツ */
+/* === Focus Management === */
+
+/* Enhanced focus indicators */
+:focus-visible {
+  outline: 2px solid var(--ds-border-focused);
+  outline-offset: 2px;
+  border-radius: var(--ds-border-radius-100);
+}
+
+/* Remove outline for mouse users, keep for keyboard users */
+:focus:not(:focus-visible) {
+  outline: none;
+}
+
+/* High contrast focus for critical elements */
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible {
+  outline: 3px solid var(--ds-border-focused);
+  outline-offset: 2px;
+  box-shadow: 0 0 0 2px var(--ds-surface), 0 0 0 4px var(--ds-border-focused);
+}
+
+/* === Screen Reader Support === */
+
+/* Visually hidden but accessible to screen readers */
 .sr-only {
+  position: absolute !important;
+  width: 1px !important;
+  height: 1px !important;
+  padding: 0 !important;
+  margin: -1px !important;
+  overflow: hidden !important;
+  clip: rect(0, 0, 0, 0) !important;
+  white-space: nowrap !important;
+  border: 0 !important;
+}
+
+/* Skip links for keyboard navigation */
+.skip-link {
   position: absolute;
-  width: 1px;
-  height: 1px;
-  padding: 0;
-  margin: -1px;
-  overflow: hidden;
-  clip: rect(0, 0, 0, 0);
-  white-space: nowrap;
-  border-width: 0;
+  top: -40px;
+  left: 6px;
+  background: var(--ds-surface-overlay);
+  color: var(--ds-text-highest);
+  padding: var(--ds-space-100) var(--ds-space-200);
+  border-radius: var(--ds-border-radius-100);
+  text-decoration: none;
+  font-weight: var(--ds-font-weight-medium);
+  z-index: var(--ds-elevation-tooltip);
+  border: 2px solid var(--ds-border-focused);
+  transition: top var(--ds-motion-duration-quick) var(--ds-motion-easing-standard);
 }
 
-/* フォーカス時にスクリーンリーダー専用コンテンツを表示 */
-.sr-only:focus,
-.focus-within\:not-sr-only:focus-within .sr-only {
-  position: static;
-  width: auto;
-  height: auto;
-  padding: inherit;
-  margin: inherit;
-  overflow: visible;
-  clip: auto;
-  white-space: normal;
+.skip-link:focus {
+  top: 6px;
 }
 
-/* キーボードユーザー向けのフォーカススタイル */
-.keyboard-user *:focus,
-.keyboard-user *:focus-visible {
-  outline: 2px solid #3b82f6 !important;
-  outline-offset: 2px !important;
+/* === Color and Contrast === */
+
+/* Ensure sufficient contrast for semantic colors */
+:root {
+  /* High contrast variants for accessibility */
+  --zs-color-zero-god-accessible: #005B41;
+  --zs-color-savings-hero-accessible: #003F8C;
+  --zs-color-budget-warrior-accessible: #CC8B00;
+  --zs-color-spender-alert-accessible: #CC6600;
+  --zs-color-waste-danger-accessible: #BF2600;
 }
 
-/* 高コントラストモード */
-.high-contrast {
-  --text-color: #000000;
-  --bg-color: #ffffff;
-  --link-color: #0000ff;
-  --border-color: #000000;
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  :root {
+    --zs-color-zero-god: var(--zs-color-zero-god-accessible);
+    --zs-color-savings-hero: var(--zs-color-savings-hero-accessible);
+    --zs-color-budget-warrior: var(--zs-color-budget-warrior-accessible);
+    --zs-color-spender-alert: var(--zs-color-spender-alert-accessible);
+    --zs-color-waste-danger: var(--zs-color-waste-danger-accessible);
+    
+    /* Increase border visibility */
+    --ds-border: #6B778C;
+    --ds-border-input: #42526E;
+    
+    /* Enhance text contrast */
+    --ds-text-medium: var(--ds-text-high);
+    --ds-text-low: var(--ds-text-medium);
+  }
+  
+  /* Stronger shadows for better element separation */
+  [style*="box-shadow"],
+  .shadow {
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3) !important;
+  }
 }
 
+/* === Motion and Animation === */
 
-.high-contrast a {
-  text-decoration: underline !important;
+/* Respect reduced motion preferences */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+  
+  /* Disable floating animations specifically */
+  [style*="animation: float"],
+  .animate-float {
+    animation: none !important;
+  }
+  
+  /* Keep essential loading animations but make them faster */
+  [role="progressbar"] *,
+  .loading-spinner * {
+    animation-duration: 0.5s !important;
+  }
 }
 
-.high-contrast button {
-  border: 2px solid var(--border-color) !important;
+/* === Touch and Mobile Accessibility === */
+
+/* Ensure minimum touch target size (44px x 44px) */
+button,
+a,
+input[type="button"],
+input[type="submit"],
+input[type="reset"],
+input[type="checkbox"],
+input[type="radio"],
+select {
+  min-height: 44px;
+  min-width: 44px;
 }
 
-/* アニメーション軽減 */
-.reduce-motion *,
-.reduce-motion *::before,
-.reduce-motion *::after {
-  animation-duration: 0.01ms !important;
-  animation-iteration-count: 1 !important;
-  transition-duration: 0.01ms !important;
-  scroll-behavior: auto !important;
+/* Exception for inline elements with adequate spacing */
+.inline-link,
+.text-link {
+  min-height: auto;
+  min-width: auto;
 }
 
-/* フォントサイズ調整 */
-.font-size-small {
-  --font-scale: 0.875;
+/* Ensure adequate spacing between interactive elements */
+button + button,
+a + a,
+input + input,
+button + a,
+a + button {
+  margin-left: var(--ds-space-100);
 }
 
-.font-size-medium {
-  --font-scale: 1;
+/* === Text Readability === */
+
+/* Improved line height for better readability */
+p,
+li,
+td,
+th {
+  line-height: 1.6;
 }
 
-.font-size-large {
-  --font-scale: 1.25;
+/* Prevent text from being too wide on large screens */
+.readable-width {
+  max-width: 70ch;
 }
 
-[data-font-size="small"] {
-  font-size: calc(1rem * 0.875);
+/* Better text spacing */
+h1, h2, h3, h4, h5, h6 {
+  margin-bottom: var(--ds-space-200);
+  line-height: 1.3;
 }
 
-[data-font-size="large"] {
-  font-size: calc(1rem * 1.25);
+p {
+  margin-bottom: var(--ds-space-200);
 }
 
-/* ライブリージョンのスタイル */
+/* === Form Accessibility === */
+
+/* Associate labels with form controls */
+label {
+  display: block;
+  margin-bottom: var(--ds-space-075);
+  font-weight: var(--ds-font-weight-medium);
+  color: var(--ds-text-high);
+}
+
+/* Required field indicators */
+.required::after {
+  content: " *";
+  color: var(--zs-color-waste-danger);
+  font-weight: var(--ds-font-weight-bold);
+}
+
+/* Error state styling */
+.error,
+[aria-invalid="true"] {
+  border-color: var(--zs-color-waste-danger) !important;
+  box-shadow: 0 0 0 2px rgba(222, 53, 11, 0.2);
+}
+
+.error-message {
+  color: var(--zs-color-waste-danger);
+  font-size: var(--ds-font-size-075);
+  margin-top: var(--ds-space-050);
+}
+
+/* Success state styling */
+.success,
+[aria-invalid="false"] {
+  border-color: var(--zs-color-zero-god) !important;
+}
+
+/* === ARIA Live Regions === */
+
 [aria-live] {
+  position: relative;
+}
+
+/* Announcements for screen readers */
+.sr-announcement {
   position: absolute;
   left: -10000px;
   width: 1px;
@@ -90,218 +231,86 @@
   overflow: hidden;
 }
 
-/* フォーカストラップ用のスタイル */
-.focus-trap {
+/* === Interactive Element States === */
+
+/* Disabled state styling */
+[disabled],
+[aria-disabled="true"] {
+  opacity: 0.6;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+/* Loading state for interactive elements */
+[aria-busy="true"] {
+  cursor: progress;
   position: relative;
 }
 
-.focus-trap::before,
-.focus-trap::after {
-  content: '';
+[aria-busy="true"]::after {
+  content: "";
   position: absolute;
-  width: 0;
-  height: 0;
-}
-
-/* スキップリンクのスタイル */
-.skip-link {
-  position: absolute;
-  top: -40px;
-  left: 6px;
-  background: #000;
-  color: #fff;
-  padding: 8px;
-  text-decoration: none;
-  z-index: 1000;
-  border-radius: 4px;
-}
-
-.skip-link:focus {
-  top: 6px;
-}
-
-/* カスタムフォーカスリング */
-.focus-ring {
-  --ring-offset-shadow: 0 0 0 var(--ring-offset-width, 2px) var(--ring-offset-color, #fff);
-  --ring-shadow: 0 0 0 calc(2px + var(--ring-offset-width, 2px)) var(--ring-color, #3b82f6);
-  box-shadow: var(--ring-offset-shadow), var(--ring-shadow), var(--shadow, 0 0 #0000);
-}
-
-/* アクセシブルなリンクスタイル */
-a:focus-visible {
-  outline: 2px solid #3b82f6;
-  outline-offset: 2px;
-  border-radius: 2px;
-}
-
-/* ボタンのアクセシブルスタイル */
-button:focus-visible,
-input[type="submit"]:focus-visible,
-input[type="button"]:focus-visible {
-  outline: 2px solid #3b82f6;
-  outline-offset: 2px;
-}
-
-/* フォーム要素のアクセシブルスタイル */
-input:focus-visible,
-select:focus-visible,
-textarea:focus-visible {
-  outline: 2px solid #3b82f6;
-  outline-offset: 2px;
-  border-color: #3b82f6;
-}
-
-/* エラー状態のスタイル */
-[aria-invalid="true"] {
-  border-color: #ef4444 !important;
-  box-shadow: 0 0 0 1px #ef4444;
-}
-
-/* 必須フィールドのマーク */
-[aria-required="true"]::after {
-  content: " *";
-  color: #ef4444;
-}
-
-/* ツールチップのアクセシブルスタイル */
-[role="tooltip"] {
-  background: #1f2937;
-  color: #f9fafb;
-  padding: 4px 8px;
-  border-radius: 4px;
-  font-size: 0.875rem;
-  max-width: 200px;
-  z-index: 1000;
-}
-
-/* モーダルのアクセシブルスタイル */
-[role="dialog"] {
-  position: fixed;
   top: 50%;
   left: 50%;
-  transform: translate(-50%, -50%);
-  max-height: 90vh;
-  overflow-y: auto;
+  width: 16px;
+  height: 16px;
+  margin: -8px 0 0 -8px;
+  border: 2px solid transparent;
+  border-top: 2px solid currentColor;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
 }
 
-/* ローディング状態のアクセシブルスタイル */
-[aria-busy="true"] {
-  cursor: wait;
-  opacity: 0.6;
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
 }
 
-/* テーブルのアクセシブルスタイル */
+/* === Tables === */
+
+/* Improve table accessibility */
 table {
   border-collapse: collapse;
+  width: 100%;
 }
 
 th {
   text-align: left;
+  background-color: var(--ds-background-neutral-subtlest);
+  font-weight: var(--ds-font-weight-semibold);
+  border-bottom: 2px solid var(--ds-border);
 }
 
-th, td {
-  border: 1px solid #d1d5db;
-  padding: 8px 12px;
+td,
+th {
+  padding: var(--ds-space-150);
+  border-bottom: 1px solid var(--ds-border);
 }
 
-/* プログレスバーのスタイル */
-[role="progressbar"] {
-  background: #e5e7eb;
-  border-radius: 9999px;
-  overflow: hidden;
+/* Zebra striping for better readability */
+tbody tr:nth-child(even) {
+  background-color: var(--ds-background-neutral-subtlest);
 }
 
-/* アラートのスタイル */
-[role="alert"] {
-  padding: 12px;
-  border-radius: 6px;
-  border-left: 4px solid #ef4444;
-  background: #fef2f2;
-  color: #991b1b;
-}
+/* === Print Styles === */
 
-[role="status"] {
-  padding: 12px;
-  border-radius: 6px;
-  border-left: 4px solid #3b82f6;
-  background: #eff6ff;
-  color: #1e40af;
-}
-
-/* タブのアクセシブルスタイル */
-[role="tablist"] {
-  display: flex;
-  border-bottom: 1px solid #d1d5db;
-}
-
-[role="tab"] {
-  padding: 8px 16px;
-  border: none;
-  background: transparent;
-  cursor: pointer;
-  position: relative;
-}
-
-[role="tab"][aria-selected="true"] {
-  background: #f3f4f6;
-  border-bottom: 2px solid #3b82f6;
-}
-
-[role="tab"]:focus-visible {
-  outline: 2px solid #3b82f6;
-  outline-offset: -2px;
-}
-
-/* メニューのアクセシブルスタイル */
-[role="menu"] {
-  background: #fff;
-  border: 1px solid #d1d5db;
-  border-radius: 6px;
-  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
-  padding: 4px 0;
-}
-
-[role="menuitem"] {
-  display: block;
-  width: 100%;
-  padding: 8px 12px;
-  text-align: left;
-  background: transparent;
-  border: none;
-  cursor: pointer;
-}
-
-[role="menuitem"]:hover,
-[role="menuitem"]:focus {
-  background: #f3f4f6;
-}
-
-/* Windows High Contrast Mode対応 */
-@media (prefers-contrast: high) {
-  * {
-    border-color: ButtonText !important;
-  }
-  
-  button {
-    border: 1px solid ButtonText !important;
-  }
-}
-
-/* 印刷時のアクセシビリティ */
 @media print {
-  .sr-only {
-    position: static !important;
-    width: auto !important;
-    height: auto !important;
-    clip: auto !important;
-    overflow: visible !important;
+  /* Ensure good contrast in print */
+  * {
+    background: white !important;
+    color: black !important;
+    box-shadow: none !important;
   }
   
+  /* Show URLs for links */
   a[href]::after {
     content: " (" attr(href) ")";
   }
   
-  abbr[title]::after {
-    content: " (" attr(title) ")";
+  /* Avoid breaking inside important elements */
+  h1, h2, h3, h4, h5, h6,
+  .no-break {
+    break-inside: avoid;
   }
 }

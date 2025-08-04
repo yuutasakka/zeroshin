@@ -23,7 +23,15 @@
     "monitor:dashboard": "npm run monitor dashboard",
     "monitor:status": "npm run monitor status",
     "monitor:anomalies": "npm run monitor anomalies",
-    "monitor:cleanup": "npm run monitor cleanup"
+    "monitor:cleanup": "npm run monitor cleanup",
+    "docker:dev": "./docker-scripts.sh dev",
+    "docker:build": "./docker-scripts.sh deploy",
+    "docker:prod": "./docker-scripts.sh deploy prod",
+    "docker:stop": "./docker-scripts.sh stop",
+    "docker:clean": "./docker-scripts.sh clean",
+    "docker:logs": "./docker-scripts.sh logs",
+    "docker:status": "./docker-scripts.sh status",
+    "docker:security": "./docker-scripts.sh security"
   },
   "dependencies": {
     "@emotion/react": "^11.13.0",

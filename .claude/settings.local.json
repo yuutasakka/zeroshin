@@ -42,7 +42,12 @@
       "Bash(npm install:*)",
       "Bash(vercel:*)",
       "Bash(curl:*)",
-      "Bash(cat:*)"
+      "Bash(cat:*)",
+      "WebFetch(domain:atlassian.design)",
+      "Bash(git clone:*)",
+      "Bash(python3 -m pip install:*)",
+      "Bash(python3:*)",
+      "Bash(git remote set-url:*)"
     ],
     "deny": []
   }

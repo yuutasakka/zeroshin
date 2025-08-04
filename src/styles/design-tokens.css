@@ -1,0 +1,238 @@
+/* Zero神 Design System - Atlassian inspired Design Tokens */
+
+:root {
+  /* === Color Foundations === */
+  
+  /* Brand Colors - Zero神テーマ */
+  --ds-surface-sunken: #F7F8F9;
+  --ds-surface: #FFFFFF;
+  --ds-surface-raised: #FFFFFF;
+  --ds-surface-overlay: #FFFFFF;
+  
+  /* Brand Primary - 節約神カラー */
+  --ds-background-brand-subtlest: #E3FCEF;
+  --ds-background-brand-subtle: #ABF5D1;
+  --ds-background-brand-bold: #00875A;
+  --ds-background-brand-bolder: #006644;
+  --ds-background-brand-boldest: #164B35;
+  
+  --ds-text-brand: #006644;
+  --ds-icon-brand: #00875A;
+  --ds-border-brand: #00875A;
+  
+  /* Accent Colors - 警告・エラー・成功 */
+  --ds-background-accent-yellow-subtlest: #FFFAE6;
+  --ds-background-accent-yellow-subtle: #F8E6A0;
+  --ds-background-accent-yellow-bold: #FFAB00;
+  
+  --ds-background-accent-red-subtlest: #FFEBE6;
+  --ds-background-accent-red-subtle: #FFBDAD;
+  --ds-background-accent-red-bold: #DE350B;
+  
+  --ds-background-accent-blue-subtlest: #DEEBFF;
+  --ds-background-accent-blue-subtle: #B3D4FF;
+  --ds-background-accent-blue-bold: #0052CC;
+  
+  /* Neutral Colors */
+  --ds-background-neutral-subtlest: #F4F5F7;
+  --ds-background-neutral-subtle: #DFE1E6;
+  --ds-background-neutral: #B3BAC5;
+  --ds-background-neutral-bold: #7A869A;
+  --ds-background-neutral-hovered: #F4F5F7;
+  --ds-background-neutral-pressed: #DFE1E6;
+  
+  --ds-text-highest: #172B4D;
+  --ds-text-high: #42526E;
+  --ds-text-medium: #6B778C;
+  --ds-text-low: #97A0AF;
+  --ds-text-lowest: #C1C7D0;
+  --ds-text-inverse: #FFFFFF;
+  
+  --ds-text-disabled: #A5ADBA;
+  --ds-text-placeholder: #97A0AF;
+  
+  /* Interactive States */
+  --ds-background-input: #FAFBFC;
+  --ds-background-input-hovered: #EBECF0;
+  --ds-background-input-pressed: #DFE1E6;
+  
+  --ds-border: #DFE1E6;
+  --ds-border-focused: #4C9AFF;
+  --ds-border-input: #DFE1E6;
+  --ds-border-disabled: #F4F5F7;
+  
+  /* === Typography === */
+  
+  /* Font Families */
+  --ds-font-family-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Noto Sans', 'Ubuntu', 'Droid Sans', 'Helvetica Neue', sans-serif;
+  --ds-font-family-mono: 'SFMono-Medium', 'SF Mono', 'Segoe UI Mono', 'Roboto Mono', 'Ubuntu Mono', Menlo, Consolas, Courier, monospace;
+  
+  /* Font Weights */
+  --ds-font-weight-regular: 400;
+  --ds-font-weight-medium: 500;
+  --ds-font-weight-semibold: 600;
+  --ds-font-weight-bold: 700;
+  
+  /* Font Sizes */
+  --ds-font-size-050: 11px;
+  --ds-font-size-075: 12px;
+  --ds-font-size-100: 14px;
+  --ds-font-size-200: 16px;
+  --ds-font-size-300: 20px;
+  --ds-font-size-400: 24px;
+  --ds-font-size-500: 29px;
+  --ds-font-size-600: 35px;
+  
+  /* Line Heights */
+  --ds-font-lineheight-100: 16px;
+  --ds-font-lineheight-200: 20px;
+  --ds-font-lineheight-300: 24px;
+  --ds-font-lineheight-400: 28px;
+  --ds-font-lineheight-500: 32px;
+  --ds-font-lineheight-600: 40px;
+  
+  /* === Spacing === */
+  
+  --ds-space-025: 2px;
+  --ds-space-050: 4px;
+  --ds-space-075: 6px;
+  --ds-space-100: 8px;
+  --ds-space-150: 12px;
+  --ds-space-200: 16px;
+  --ds-space-250: 20px;
+  --ds-space-300: 24px;
+  --ds-space-400: 32px;
+  --ds-space-500: 40px;
+  --ds-space-600: 48px;
+  --ds-space-800: 64px;
+  --ds-space-1000: 80px;
+  
+  /* === Border Radius === */
+  
+  --ds-border-radius-050: 2px;
+  --ds-border-radius-100: 3px;
+  --ds-border-radius-200: 6px;
+  --ds-border-radius-300: 8px;
+  --ds-border-radius-400: 12px;
+  --ds-border-radius-circle: 50%;
+  
+  /* === Shadows === */
+  
+  --ds-shadow-raised: 0px 1px 1px rgba(9, 30, 66, 0.25), 0px 0px 1px rgba(9, 30, 66, 0.31);
+  --ds-shadow-overlay: 0px 8px 12px rgba(9, 30, 66, 0.15), 0px 0px 1px rgba(9, 30, 66, 0.31);
+  
+  /* === Motion === */
+  
+  --ds-motion-duration-instant: 0ms;
+  --ds-motion-duration-immediate: 100ms;
+  --ds-motion-duration-quick: 150ms;
+  --ds-motion-duration-moderate: 300ms;
+  --ds-motion-duration-slow: 400ms;
+  
+  --ds-motion-easing-standard: cubic-bezier(0.2, 0, 0, 1);
+  --ds-motion-easing-accelerate: cubic-bezier(0.3, 0, 1, 1);
+  --ds-motion-easing-decelerate: cubic-bezier(0, 0, 0.3, 1);
+  
+  /* === Z-Index === */
+  
+  --ds-elevation-surface-sunken: 100;
+  --ds-elevation-surface: 200;
+  --ds-elevation-surface-raised: 300;
+  --ds-elevation-surface-overlay: 400;
+  --ds-elevation-dialog: 500;
+  --ds-elevation-layer: 600;
+  --ds-elevation-blanket: 700;
+  --ds-elevation-modal: 800;
+  --ds-elevation-flag: 900;
+  --ds-elevation-spotlight: 1000;
+  --ds-elevation-tooltip: 8000;
+}
+
+/* === Dark Mode Support === */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --ds-surface-sunken: #161A1D;
+    --ds-surface: #1D2125;
+    --ds-surface-raised: #22272B;
+    --ds-surface-overlay: #282E33;
+    
+    --ds-background-brand-subtlest: #164B35;
+    --ds-background-brand-subtle: #006644;
+    --ds-background-brand-bold: #00875A;
+    --ds-background-brand-bolder: #4BCE97;
+    --ds-background-brand-boldest: #7EE2B8;
+    
+    --ds-text-highest: #B6C2CF;
+    --ds-text-high: #9FADBC;
+    --ds-text-medium: #8590A2;
+    --ds-text-low: #738496;
+    --ds-text-lowest: #454F59;
+    
+    --ds-background-input: #22272B;
+    --ds-background-input-hovered: #282E33;
+    --ds-background-input-pressed: #2C333A;
+    
+    --ds-border: #A1BDD914;
+    --ds-border-focused: #85B8FF;
+    --ds-border-input: #A6C5E229;
+  }
+}
+
+/* === Responsive Breakpoints === */
+:root {
+  --ds-breakpoint-xs: 0;
+  --ds-breakpoint-sm: 30rem;   /* 480px */
+  --ds-breakpoint-md: 48rem;   /* 768px */
+  --ds-breakpoint-lg: 64rem;   /* 1024px */ 
+  --ds-breakpoint-xl: 90rem;   /* 1440px */
+}
+
+/* === Semantic Color Tokens - Zero神 Context === */
+:root {
+  /* Zero神 特有のセマンティックカラー */
+  --zs-color-savings-success: var(--ds-background-brand-bold);
+  --zs-color-savings-warning: var(--ds-background-accent-yellow-bold);
+  --zs-color-savings-danger: var(--ds-background-accent-red-bold);
+  --zs-color-savings-info: var(--ds-background-accent-blue-bold);
+  
+  /* レベル別カラー */
+  --zs-color-zero-god: #00875A;        /* Zero神 */
+  --zs-color-savings-hero: #0052CC;    /* 節約ヒーロー */
+  --zs-color-budget-warrior: #FFAB00;  /* 予算戦士 */
+  --zs-color-spender-alert: #FF8B00;   /* 支出アラート */
+  --zs-color-waste-danger: #DE350B;    /* ムダ遣いデンジャー */
+}
+
+/* === Focus Management === */
+:focus-visible {
+  outline: 2px solid var(--ds-border-focused);
+  outline-offset: 2px;
+}
+
+/* === Reduced Motion Support === */
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --ds-motion-duration-instant: 0ms;
+    --ds-motion-duration-immediate: 0ms;
+    --ds-motion-duration-quick: 0ms;
+    --ds-motion-duration-moderate: 0ms;
+    --ds-motion-duration-slow: 0ms;
+  }
+  
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* === High Contrast Mode Support === */
+@media (forced-colors: active) {
+  :root {
+    --ds-surface: Canvas;
+    --ds-text-highest: CanvasText;
+    --ds-border: CanvasText;
+    --ds-border-focused: Highlight;
+  }
+}

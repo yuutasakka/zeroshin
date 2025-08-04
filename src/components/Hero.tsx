@@ -1,4 +1,9 @@
 import React, { useEffect, useState } from 'react';
+import AtlassianButton from './ui/AtlassianButton';
+import AtlassianTypography from './ui/AtlassianTypography';
+import '../styles/design-tokens.css';
+import '../styles/accessibility.css';
+import '../styles/responsive.css';
 
 interface HeroProps {
   onStartDiagnosis: () => void;
@@ -12,20 +17,24 @@ const Hero: React.FC<HeroProps> = ({ onStartDiagnosis }) => {
   }, []);
 
   return (
-    <section style={{
+    <section
+      className="hero-section"
+      aria-labelledby="hero-title"
+      role="banner"
+      style={{
       minHeight: '100vh',
-      background: 'linear-gradient(135deg, #FFFFFF 0%, #F8FAFC 100%)',
+      background: 'linear-gradient(135deg, var(--ds-surface) 0%, var(--ds-surface-sunken) 100%)',
       position: 'relative',
       overflow: 'hidden',
       display: 'flex',
       alignItems: 'center',
-      paddingTop: '80px'
+      paddingTop: 'var(--ds-space-1000)'
     }}>
       {/* 背景パターン */}
       <div style={{
         position: 'absolute',
         inset: 0,
-        backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%232C3E50' fill-opacity='0.02'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
+        backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23172B4D' fill-opacity='0.02'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
         opacity: 0.3
       }} />
 
@@ -37,7 +46,7 @@ const Hero: React.FC<HeroProps> = ({ onStartDiagnosis }) => {
         width: '400px',
         height: '400px',
         borderRadius: '50%',
-        background: 'radial-gradient(circle, rgba(44, 62, 80, 0.05) 0%, transparent 70%)',
+        background: 'radial-gradient(circle, rgba(23, 43, 77, 0.05) 0%, transparent 70%)',
         animation: 'float 6s ease-in-out infinite'
       }} />
       <div style={{
@@ -47,16 +56,16 @@ const Hero: React.FC<HeroProps> = ({ onStartDiagnosis }) => {
         width: '500px',
         height: '500px',
         borderRadius: '50%',
-        background: 'radial-gradient(circle, rgba(243, 156, 18, 0.05) 0%, transparent 70%)',
+        background: 'radial-gradient(circle, rgba(255, 171, 0, 0.05) 0%, transparent 70%)',
         animation: 'float 8s ease-in-out infinite reverse'
       }} />
 
-      <div className="container" style={{
+      <div className="container hero-content" style={{
         position: 'relative',
         zIndex: 1,
         maxWidth: '1200px',
         margin: '0 auto',
-        padding: '0 16px',
+        padding: '0 var(--ds-space-200)',
         textAlign: 'center'
       }}>
         {/* メインコンテンツ */}
@@ -65,47 +74,53 @@ const Hero: React.FC<HeroProps> = ({ onStartDiagnosis }) => {
           margin: '0 auto',
           opacity: isVisible ? 1 : 0,
           transform: isVisible ? 'translateY(0)' : 'translateY(20px)',
-          transition: 'all 0.8s ease-out'
+          transition: `all var(--ds-motion-duration-slow) var(--ds-motion-easing-decelerate)`
         }}>
           {/* バッジ */}
           <div style={{
             display: 'inline-flex',
             alignItems: 'center',
-            gap: '8px',
-            padding: '8px 16px',
-            backgroundColor: '#2C3E50',
-            borderRadius: '999px',
-            marginBottom: '24px'
+            gap: 'var(--ds-space-100)',
+            padding: 'var(--ds-space-100) var(--ds-space-200)',
+            backgroundColor: 'var(--ds-text-highest)',
+            borderRadius: 'var(--ds-border-radius-circle)',
+            marginBottom: 'var(--ds-space-300)'
           }}>
             <span style={{
               display: 'inline-block',
-              width: '8px',
-              height: '8px',
-              backgroundColor: '#FFFFFF',
+              width: 'var(--ds-space-100)',
+              height: 'var(--ds-space-100)',
+              backgroundColor: 'var(--ds-text-inverse)',
               borderRadius: '50%',
               animation: 'pulse 2s ease-in-out infinite'
             }} />
-            <span style={{
-              fontSize: '14px',
-              fontWeight: 700,
-              color: '#FFFFFF'
-            }}>
+            <AtlassianTypography 
+              variant="body-small" 
+              color="inverse" 
+              weight="bold"
+            >
               30秒で診断完了
-            </span>
+            </AtlassianTypography>
           </div>
 
           {/* キャッチコピー */}
-          <h1 style={{
-            fontSize: 'clamp(2rem, 5vw, 3.5rem)',
-            fontWeight: 700,
-            color: '#2C3E50',
-            lineHeight: 1.2,
-            marginBottom: '24px',
-            letterSpacing: '-0.02em'
-          }}>
+          <AtlassianTypography 
+            variant="h800" 
+            color="highest" 
+            weight="bold" 
+            as="h1"
+            className="hero-title"
+            testId="hero-title"
+            style={{
+              fontSize: 'clamp(2rem, 5vw, 3.5rem)',
+              lineHeight: 1.2,
+              marginBottom: 'var(--ds-space-300)',
+              letterSpacing: '-0.02em'
+            }}
+          >
             あなたの
             <span style={{
-              color: '#F39C12',
+              color: 'var(--zs-color-budget-warrior)',
               display: 'inline-block',
               animation: 'highlight 2s ease-in-out infinite'
             }}>
@@ -113,141 +128,157 @@ const Hero: React.FC<HeroProps> = ({ onStartDiagnosis }) => {
             </span>
             <br />
             をチェック！
-          </h1>
+          </AtlassianTypography>
 
           {/* サブテキスト */}
-          <p style={{
-            fontSize: 'clamp(1rem, 2vw, 1.25rem)',
-            color: '#34495E',
-            lineHeight: 1.6,
-            marginBottom: '32px',
-            maxWidth: '600px',
-            margin: '0 auto 32px'
-          }}>
-            ムダ陃いを見つけて節約の神になろう！<br className="desktop-break" />
+          <AtlassianTypography 
+            variant="h500" 
+            color="high" 
+            as="p"
+            className="hero-subtitle readable-width"
+            style={{
+              fontSize: 'clamp(1rem, 2vw, 1.25rem)',
+              lineHeight: 1.6,
+              marginBottom: 'var(--ds-space-400)',
+              maxWidth: '600px',
+              margin: `0 auto var(--ds-space-400)`
+            }}
+          >
+            ムダ遣いを見つけて節約の神になろう！<br className="desktop-break" />
             個別アドバイスで理想の家計へ
-          </p>
+          </AtlassianTypography>
 
           {/* 追加説明 */}
-          <p style={{
-            fontSize: 'clamp(0.875rem, 1.5vw, 1rem)',
-            color: '#7F8C8D',
-            lineHeight: 1.6,
-            marginBottom: '24px'
-          }}>
-            診断で"自分のムダ陃いパターン"を理解すれば、<br />
+          <AtlassianTypography 
+            variant="body" 
+            color="medium" 
+            as="p"
+            style={{
+              fontSize: 'clamp(0.875rem, 1.5vw, 1rem)',
+              lineHeight: 1.6,
+              marginBottom: 'var(--ds-space-300)'
+            }}
+          >
+            診断で"自分のムダ遣いパターン"を理解すれば、<br />
             効率的に節約できて貯金が増える！
-          </p>
+          </AtlassianTypography>
 
           {/* CTA セクション */}
-          <div className="flex flex-col lg:flex-row items-center justify-center gap-6 lg:gap-12">
-            <button
+          <div 
+            className="hero-buttons"
+            style={{
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: 'var(--ds-space-300)',
+              '@media (min-width: 1024px)': {
+                flexDirection: 'row',
+                gap: 'var(--ds-space-600)'
+              }
+            }}
+          >
+            <AtlassianButton
+              appearance="danger"
               onClick={onStartDiagnosis}
-              className="btn-accent btn-pulse"
+              className="btn-hero"
+              aria-label="30秒診断完了者限定特典付きで無料診断を開始"
               style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                background: 'linear-gradient(135deg, rgb(231, 76, 60) 0%, rgb(192, 57, 43) 100%)',
-                color: 'white',
-                padding: '20px 48px',
-                borderRadius: '12px',
-                boxShadow: 'rgba(231, 76, 60, 0.3) 0px 4px 15px',
-                animation: '2s ease 0s infinite normal none running pulse',
-                border: 'none',
-                cursor: 'pointer',
-                transition: '0.3s',
-                fontSize: '18px',
-                fontWeight: 700,
                 minWidth: '280px',
-                height: '64px'
+                height: '64px',
+                fontSize: '18px',
+                padding: 'var(--ds-space-250) var(--ds-space-600)',
+                animation: '2s ease 0s infinite normal none running pulse'
               }}
             >
-              <div className="flex items-center space-x-3">
-                <i className="fas fa-gift text-yellow-300 text-xl animate-bounce"></i>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--ds-space-150)' }}>
+                <span style={{ fontSize: '20px' }}>🎁</span>
                 <div>
-                  <p className="font-bold text-sm leading-tight">30秒診断完了者限定！</p>
-                  <p className="text-xs font-semibold">節約攻略ガイド完全版を無料プレゼント！</p>
+                  <div style={{ fontSize: '14px', fontWeight: 'bold', lineHeight: 1.2 }}>30秒診断完了者限定！</div>
+                  <div style={{ fontSize: '12px', fontWeight: '600', lineHeight: 1.2 }}>節約攻略ガイド完全版を無料プレゼント！</div>
                 </div>
               </div>
-            </button>
+            </AtlassianButton>
             
-            <button
+            <AtlassianButton
+              appearance="primary"
               onClick={onStartDiagnosis}
-              className="btn-accent btn-pulse"
+              className="btn-hero"
+              aria-label="無料でムダ遣い診断を開始する"
+              iconAfter={
+                <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+                  <path d="M7 5L12 10L7 15" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+              }
               style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: '12px',
-                padding: '20px 48px',
-                fontSize: '18px',
-                fontWeight: 700,
-                backgroundColor: 'rgb(44, 62, 80)',
-                color: 'rgb(255, 255, 255)',
-                border: 'none',
-                borderRadius: '12px',
-                cursor: 'pointer',
-                transition: '0.3s',
-                boxShadow: 'rgba(44, 62, 80, 0.25) 0px 4px 16px',
-                position: 'relative',
-                overflow: 'hidden',
-                transform: 'translateY(0px)',
                 minWidth: '280px',
-                height: '64px'
+                height: '64px',
+                fontSize: '18px'
               }}
             >
               無料診断を開始する
-              <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-                <path d="M7 5L12 10L7 15" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-              </svg>
-            </button>
+            </AtlassianButton>
           </div>
 
           {/* 信頼性指標 */}
-          <div style={{
-            display: 'flex',
-            justifyContent: 'center',
-            gap: '32px',
-            marginTop: '64px',
-            flexWrap: 'wrap'
-          }}>
-            <div style={{
+          <div 
+            className="trust-indicators"
+            role="list"
+            aria-label="サービスの信頼性指標"
+            style={{
               display: 'flex',
-              alignItems: 'center',
-              gap: '8px',
-              color: '#34495E',
-              fontSize: '14px'
-            }}>
-              <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-                <path d="M10 2L12.5 7.5L18 8L14 12L15 18L10 15.5L5 18L6 12L2 8L7.5 7.5L10 2Z" fill="#F39C12" stroke="#F39C12" strokeWidth="1.5" strokeLinejoin="round"/>
+              justifyContent: 'center',
+              gap: 'var(--ds-space-400)',
+              marginTop: 'var(--ds-space-800)',
+              flexWrap: 'wrap'
+            }}
+          >
+            <div 
+              role="listitem"
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 'var(--ds-space-100)'
+              }}
+            >
+              <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+                <path d="M10 2L12.5 7.5L18 8L14 12L15 18L10 15.5L5 18L6 12L2 8L7.5 7.5L10 2Z" fill="var(--zs-color-budget-warrior)" stroke="var(--zs-color-budget-warrior)" strokeWidth="1.5" strokeLinejoin="round"/>
               </svg>
-              <span>5万人以上が診断</span>
+              <AtlassianTypography variant="body-small" color="high">
+                5万人以上が診断
+              </AtlassianTypography>
             </div>
-            <div style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '8px',
-              color: '#34495E',
-              fontSize: '14px'
-            }}>
-              <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-                <path d="M10 1C14.9706 1 19 5.02944 19 10C19 14.9706 14.9706 19 10 19C5.02944 19 1 14.9706 1 10C1 5.02944 5.02944 1 10 1Z" stroke="#2C3E50" strokeWidth="1.5"/>
-                <path d="M7 10L9 12L13 8" stroke="#2C3E50" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+            <div 
+              role="listitem"
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 'var(--ds-space-100)'
+              }}
+            >
+              <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+                <path d="M10 1C14.9706 1 19 5.02944 19 10C19 14.9706 14.9706 19 10 19C5.02944 19 1 14.9706 1 10C1 5.02944 5.02944 1 10 1Z" stroke="var(--ds-text-highest)" strokeWidth="1.5"/>
+                <path d="M7 10L9 12L13 8" stroke="var(--ds-text-highest)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
               </svg>
-              <span>完全無料・匿名OK</span>
+              <AtlassianTypography variant="body-small" color="high">
+                完全無料・匿名OK
+              </AtlassianTypography>
             </div>
-            <div style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '8px',
-              color: '#34495E',
-              fontSize: '14px'
-            }}>
-              <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-                <path d="M10 2V10L14 14" stroke="#27AE60" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                <circle cx="10" cy="10" r="9" stroke="#27AE60" strokeWidth="1.5"/>
+            <div 
+              role="listitem"
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 'var(--ds-space-100)'
+              }}
+            >
+              <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+                <path d="M10 2V10L14 14" stroke="var(--zs-color-zero-god)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                <circle cx="10" cy="10" r="9" stroke="var(--zs-color-zero-god)" strokeWidth="1.5"/>
               </svg>
-              <span>30秒で結果表示</span>
+              <AtlassianTypography variant="body-small" color="high">
+                30秒で結果表示
+              </AtlassianTypography>
             </div>
           </div>
         </div>
@@ -261,9 +292,9 @@ const Hero: React.FC<HeroProps> = ({ onStartDiagnosis }) => {
           pointerEvents: 'none'
         }}>
           <svg width="300" height="300" viewBox="0 0 300 300" fill="none">
-            <circle cx="150" cy="150" r="100" stroke="#2C3E50" strokeWidth="2" strokeDasharray="5 5" opacity="0.3"/>
-            <circle cx="150" cy="150" r="70" stroke="#F39C12" strokeWidth="2" strokeDasharray="5 5" opacity="0.3"/>
-            <circle cx="150" cy="150" r="40" stroke="#27AE60" strokeWidth="2" strokeDasharray="5 5" opacity="0.3"/>
+            <circle cx="150" cy="150" r="100" stroke="var(--ds-text-highest)" strokeWidth="2" strokeDasharray="5 5" opacity="0.3"/>
+            <circle cx="150" cy="150" r="70" stroke="var(--zs-color-budget-warrior)" strokeWidth="2" strokeDasharray="5 5" opacity="0.3"/>
+            <circle cx="150" cy="150" r="40" stroke="var(--zs-color-zero-god)" strokeWidth="2" strokeDasharray="5 5" opacity="0.3"/>
           </svg>
         </div>
       </div>

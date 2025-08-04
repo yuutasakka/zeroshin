@@ -1,0 +1,172 @@
+# Zero神 開発環境 Docker Compose
+version: '3.8'
+
+services:
+  # フロントエンド開発サーバー
+  zeroshin-dev:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: development
+      args:
+        BUILD_DATE: ${BUILD_DATE:-}
+        VCS_REF: ${VCS_REF:-}
+        VERSION: ${VERSION:-dev}
+    container_name: zeroshin-dev
+    ports:
+      - "5173:5173"
+    volumes:
+      - .:/app
+      - /app/node_modules
+    environment:
+      - NODE_ENV=development
+      - VITE_SUPABASE_URL=${VITE_SUPABASE_URL}
+      - VITE_SUPABASE_ANON_KEY=${VITE_SUPABASE_ANON_KEY}
+      - VITE_LINE_CHANNEL_ID=${VITE_LINE_CHANNEL_ID}
+      - VITE_APP_ENV=development
+    restart: unless-stopped
+    networks:
+      - zeroshin-network
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:5173"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # API サーバー（開発用）
+  zeroshin-api-dev:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: server
+      args:
+        BUILD_DATE: ${BUILD_DATE:-}
+        VCS_REF: ${VCS_REF:-}
+        VERSION: ${VERSION:-dev}
+    container_name: zeroshin-api-dev
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./api:/app/api
+      - ./server:/app/server
+    environment:
+      - NODE_ENV=development
+      - PORT=3000
+      - SUPABASE_URL=${SUPABASE_URL}
+      - SUPABASE_SERVICE_ROLE_KEY=${SUPABASE_SERVICE_ROLE_KEY}
+      - LINE_CHANNEL_ID=${LINE_CHANNEL_ID}
+      - LINE_CHANNEL_SECRET=${LINE_CHANNEL_SECRET}
+      - JWT_SECRET=${JWT_SECRET:-dev-secret-key}
+      - TWILIO_ACCOUNT_SID=${TWILIO_ACCOUNT_SID}
+      - TWILIO_AUTH_TOKEN=${TWILIO_AUTH_TOKEN}
+      - TWILIO_PHONE_NUMBER=${TWILIO_PHONE_NUMBER}
+    restart: unless-stopped
+    networks:
+      - zeroshin-network
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('http').get('http://localhost:3000/health', (res) => { process.exit(res.statusCode === 200 ? 0 : 1); })"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # Redis（セッション管理・キャッシュ用）
+  redis:
+    image: redis:7-alpine
+    container_name: zeroshin-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+      - ./docker/redis.conf:/usr/local/etc/redis/redis.conf
+    command: redis-server /usr/local/etc/redis/redis.conf
+    restart: unless-stopped
+    networks:
+      - zeroshin-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # PostgreSQL（ローカル開発用データベース）
+  postgres:
+    image: postgres:15-alpine
+    container_name: zeroshin-postgres
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_DB=zeroshin_dev
+      - POSTGRES_USER=zeroshin
+      - POSTGRES_PASSWORD=password123
+      - POSTGRES_INITDB_ARGS=--encoding=UTF-8 --locale=C
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ./database/setup.sql:/docker-entrypoint-initdb.d/setup.sql
+    restart: unless-stopped
+    networks:
+      - zeroshin-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U zeroshin -d zeroshin_dev"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # pgAdmin（データベース管理UI）
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: zeroshin-pgadmin
+    ports:
+      - "8080:80"
+    environment:
+      - PGADMIN_DEFAULT_EMAIL=admin@zeroshin.local
+      - PGADMIN_DEFAULT_PASSWORD=admin123
+      - PGADMIN_CONFIG_SERVER_MODE=False
+    volumes:
+      - pgadmin-data:/var/lib/pgadmin
+    restart: unless-stopped
+    networks:
+      - zeroshin-network
+    depends_on:
+      - postgres
+
+  # Mailhog（メールテスト用）
+  mailhog:
+    image: mailhog/mailhog:latest
+    container_name: zeroshin-mailhog
+    ports:
+      - "1025:1025"  # SMTP
+      - "8025:8025"  # Web UI
+    restart: unless-stopped
+    networks:
+      - zeroshin-network
+
+  # File watcher（ファイル変更監視）
+  filewatcher:
+    image: node:20-alpine
+    container_name: zeroshin-filewatcher
+    volumes:
+      - .:/app
+    working_dir: /app
+    command: >
+      sh -c "
+      npm install -g chokidar-cli &&
+      echo 'File watcher started - watching for changes...' &&
+      chokidar 'src/**/*' 'api/**/*' --ignore node_modules --ignore .git -c 'echo \"{time} - {path} was {event}\"'
+      "
+    restart: unless-stopped
+    networks:
+      - zeroshin-network
+
+volumes:
+  redis-data:
+    driver: local
+  postgres-data:
+    driver: local
+  pgadmin-data:
+    driver: local
+
+networks:
+  zeroshin-network:
+    driver: bridge
