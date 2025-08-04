@@ -45,6 +45,13 @@ const DownloadGuideModal: React.FC<DownloadGuideModalProps> = ({ isOpen, onClose
         throw new Error('メールアドレスの保存に失敗しました');
       }
 
+      // Content-Typeチェック
+      const contentType = response.headers.get('content-type');
+      if (!contentType || !contentType.includes('application/json')) {
+        const textData = await response.text();
+        throw new Error(`Invalid response format: ${textData.substring(0, 100)}`);
+      }
+
       const data = await response.json();
       setDownloadUrl(data.downloadUrl);
       setIsSuccess(true);

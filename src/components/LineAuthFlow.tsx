@@ -54,6 +54,13 @@ const LineAuthFlow: React.FC<LineAuthFlowProps> = ({
         },
       });
 
+      // Content-Typeチェック
+      const contentType = response.headers.get('content-type');
+      if (!contentType || !contentType.includes('application/json')) {
+        const textData = await response.text();
+        throw new Error(`Invalid response format: ${textData.substring(0, 100)}`);
+      }
+
       const data = await response.json();
 
       if (!response.ok) {
@@ -81,6 +88,13 @@ const LineAuthFlow: React.FC<LineAuthFlowProps> = ({
         },
         body: JSON.stringify({ code, state }),
       });
+
+      // Content-Typeチェック
+      const contentType = response.headers.get('content-type');
+      if (!contentType || !contentType.includes('application/json')) {
+        const textData = await response.text();
+        throw new Error(`Invalid response format: ${textData.substring(0, 100)}`);
+      }
 
       const data = await response.json();
 

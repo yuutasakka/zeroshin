@@ -23,19 +23,19 @@ const Hero: React.FC<HeroProps> = ({ onStartDiagnosis }) => {
       role="banner"
       style={{
       minHeight: '100vh',
-      background: 'linear-gradient(135deg, var(--ds-surface) 0%, var(--ds-surface-sunken) 100%)',
+      background: 'linear-gradient(135deg, var(--color-bg-primary) 0%, var(--color-bg-secondary) 100%)',
       position: 'relative',
       overflow: 'hidden',
       display: 'flex',
       alignItems: 'center',
-      paddingTop: 'var(--ds-space-1000)'
+      paddingTop: 'var(--spacing-20)'
     }}>
       {/* 背景パターン */}
       <div style={{
         position: 'absolute',
         inset: 0,
-        backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23172B4D' fill-opacity='0.02'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
-        opacity: 0.3
+        backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%231E40AF' fill-opacity='0.03'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
+        opacity: 0.4
       }} />
 
       {/* 装飾的な円 */}
@@ -46,7 +46,7 @@ const Hero: React.FC<HeroProps> = ({ onStartDiagnosis }) => {
         width: '400px',
         height: '400px',
         borderRadius: '50%',
-        background: 'radial-gradient(circle, rgba(23, 43, 77, 0.05) 0%, transparent 70%)',
+        background: 'radial-gradient(circle, rgba(30, 64, 175, 0.08) 0%, transparent 70%)',
         animation: 'float 6s ease-in-out infinite'
       }} />
       <div style={{
@@ -56,7 +56,7 @@ const Hero: React.FC<HeroProps> = ({ onStartDiagnosis }) => {
         width: '500px',
         height: '500px',
         borderRadius: '50%',
-        background: 'radial-gradient(circle, rgba(255, 171, 0, 0.05) 0%, transparent 70%)',
+        background: 'radial-gradient(circle, rgba(14, 165, 233, 0.06) 0%, transparent 70%)',
         animation: 'float 8s ease-in-out infinite reverse'
       }} />
 
@@ -65,7 +65,7 @@ const Hero: React.FC<HeroProps> = ({ onStartDiagnosis }) => {
         zIndex: 1,
         maxWidth: '1200px',
         margin: '0 auto',
-        padding: '0 var(--ds-space-200)',
+        padding: '0 var(--spacing-4)',
         textAlign: 'center'
       }}>
         {/* メインコンテンツ */}
@@ -74,29 +74,29 @@ const Hero: React.FC<HeroProps> = ({ onStartDiagnosis }) => {
           margin: '0 auto',
           opacity: isVisible ? 1 : 0,
           transform: isVisible ? 'translateY(0)' : 'translateY(20px)',
-          transition: `all var(--ds-motion-duration-slow) var(--ds-motion-easing-decelerate)`
+          transition: 'all var(--transition-slow) ease-out'
         }}>
           {/* バッジ */}
           <div style={{
             display: 'inline-flex',
             alignItems: 'center',
-            gap: 'var(--ds-space-100)',
-            padding: 'var(--ds-space-100) var(--ds-space-200)',
-            backgroundColor: 'var(--ds-text-highest)',
-            borderRadius: 'var(--ds-border-radius-circle)',
-            marginBottom: 'var(--ds-space-300)'
+            gap: 'var(--spacing-2)',
+            padding: 'var(--spacing-2) var(--spacing-4)',
+            backgroundColor: 'var(--color-primary)',
+            borderRadius: 'var(--radius-full)',
+            marginBottom: 'var(--spacing-6)'
           }}>
             <span style={{
               display: 'inline-block',
-              width: 'var(--ds-space-100)',
-              height: 'var(--ds-space-100)',
-              backgroundColor: 'var(--ds-text-inverse)',
+              width: 'var(--spacing-2)',
+              height: 'var(--spacing-2)',
+              backgroundColor: 'var(--color-text-inverse)',
               borderRadius: '50%',
               animation: 'pulse 2s ease-in-out infinite'
             }} />
             <AtlassianTypography 
               variant="body-small" 
-              color="inverse" 
+              style={{ color: 'var(--color-text-inverse)' }} 
               weight="bold"
             >
               30秒で診断完了
@@ -106,7 +106,6 @@ const Hero: React.FC<HeroProps> = ({ onStartDiagnosis }) => {
           {/* キャッチコピー */}
           <AtlassianTypography 
             variant="h800" 
-            color="highest" 
             weight="bold" 
             as="h1"
             className="hero-title"
@@ -114,14 +113,15 @@ const Hero: React.FC<HeroProps> = ({ onStartDiagnosis }) => {
             style={{
               fontSize: 'clamp(2rem, 5vw, 3.5rem)',
               lineHeight: 1.2,
-              marginBottom: 'var(--ds-space-300)',
+              marginBottom: 'var(--spacing-6)',
               letterSpacing: '-0.02em',
-              textAlign: 'center'
+              textAlign: 'center',
+              color: 'var(--color-text-primary)'
             }}
           >
             あなたの
             <span style={{
-              color: 'var(--zs-color-budget-warrior)',
+              color: 'var(--color-accent)',
               display: 'inline-block',
               animation: 'highlight 2s ease-in-out infinite'
             }}>
@@ -134,16 +134,16 @@ const Hero: React.FC<HeroProps> = ({ onStartDiagnosis }) => {
           {/* サブテキスト */}
           <AtlassianTypography 
             variant="h500" 
-            color="high" 
             as="p"
             className="hero-subtitle readable-width"
             style={{
               fontSize: 'clamp(1rem, 2vw, 1.25rem)',
               lineHeight: 1.6,
-              marginBottom: 'var(--ds-space-400)',
+              marginBottom: 'var(--spacing-8)',
               maxWidth: '600px',
-              margin: `0 auto var(--ds-space-400)`,
-              textAlign: 'center'
+              margin: `0 auto var(--spacing-8)`,
+              textAlign: 'center',
+              color: 'var(--color-text-secondary)'
             }}
           >
             ムダ遣いを見つけて節約の神になろう！<br className="desktop-break" />
@@ -153,13 +153,13 @@ const Hero: React.FC<HeroProps> = ({ onStartDiagnosis }) => {
           {/* 追加説明 */}
           <AtlassianTypography 
             variant="body" 
-            color="medium" 
             as="p"
             style={{
               fontSize: 'clamp(0.875rem, 1.5vw, 1rem)',
               lineHeight: 1.6,
-              marginBottom: 'var(--ds-space-300)',
-              textAlign: 'center'
+              marginBottom: 'var(--spacing-6)',
+              textAlign: 'center',
+              color: 'var(--color-text-tertiary)'
             }}
           >
             診断で"自分のムダ遣いパターン"を理解すれば、<br />
@@ -174,10 +174,10 @@ const Hero: React.FC<HeroProps> = ({ onStartDiagnosis }) => {
               flexDirection: 'column',
               alignItems: 'center',
               justifyContent: 'center',
-              gap: 'var(--ds-space-300)',
+              gap: 'var(--spacing-6)',
               '@media (min-width: 1024px)': {
                 flexDirection: 'row',
-                gap: 'var(--ds-space-600)'
+                gap: 'var(--spacing-12)'
               }
             }}
           >
@@ -190,11 +190,11 @@ const Hero: React.FC<HeroProps> = ({ onStartDiagnosis }) => {
                 minWidth: '280px',
                 height: '64px',
                 fontSize: '18px',
-                padding: 'var(--ds-space-250) var(--ds-space-600)',
+                padding: 'var(--spacing-4) var(--spacing-8)',
                 animation: '2s ease 0s infinite normal none running pulse'
               }}
             >
-              <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--ds-space-150)' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--spacing-3)' }}>
                 <span style={{ fontSize: '20px' }}>🎁</span>
                 <div>
                   <div style={{ fontSize: '14px', fontWeight: 'bold', lineHeight: 1.2 }}>30秒診断完了者限定！</div>
@@ -231,8 +231,8 @@ const Hero: React.FC<HeroProps> = ({ onStartDiagnosis }) => {
             style={{
               display: 'flex',
               justifyContent: 'center',
-              gap: 'var(--ds-space-400)',
-              marginTop: 'var(--ds-space-800)',
+              gap: 'var(--spacing-8)',
+              marginTop: 'var(--spacing-16)',
               flexWrap: 'wrap'
             }}
           >
@@ -241,13 +241,13 @@ const Hero: React.FC<HeroProps> = ({ onStartDiagnosis }) => {
               style={{
                 display: 'flex',
                 alignItems: 'center',
-                gap: 'var(--ds-space-100)'
+                gap: 'var(--spacing-2)'
               }}
             >
               <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true">
-                <path d="M10 2L12.5 7.5L18 8L14 12L15 18L10 15.5L5 18L6 12L2 8L7.5 7.5L10 2Z" fill="var(--zs-color-budget-warrior)" stroke="var(--zs-color-budget-warrior)" strokeWidth="1.5" strokeLinejoin="round"/>
+                <path d="M10 2L12.5 7.5L18 8L14 12L15 18L10 15.5L5 18L6 12L2 8L7.5 7.5L10 2Z" fill="var(--color-accent)" stroke="var(--color-accent)" strokeWidth="1.5" strokeLinejoin="round"/>
               </svg>
-              <AtlassianTypography variant="body-small" color="high">
+              <AtlassianTypography variant="body-small" style={{ color: 'var(--color-text-primary)' }}>
                 5万人以上が診断
               </AtlassianTypography>
             </div>
@@ -256,14 +256,14 @@ const Hero: React.FC<HeroProps> = ({ onStartDiagnosis }) => {
               style={{
                 display: 'flex',
                 alignItems: 'center',
-                gap: 'var(--ds-space-100)'
+                gap: 'var(--spacing-2)'
               }}
             >
               <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true">
-                <path d="M10 1C14.9706 1 19 5.02944 19 10C19 14.9706 14.9706 19 10 19C5.02944 19 1 14.9706 1 10C1 5.02944 5.02944 1 10 1Z" stroke="var(--ds-text-highest)" strokeWidth="1.5"/>
-                <path d="M7 10L9 12L13 8" stroke="var(--ds-text-highest)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                <path d="M10 1C14.9706 1 19 5.02944 19 10C19 14.9706 14.9706 19 10 19C5.02944 19 1 14.9706 1 10C1 5.02944 5.02944 1 10 1Z" stroke="var(--color-primary)" strokeWidth="1.5"/>
+                <path d="M7 10L9 12L13 8" stroke="var(--color-primary)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
               </svg>
-              <AtlassianTypography variant="body-small" color="high">
+              <AtlassianTypography variant="body-small" style={{ color: 'var(--color-text-primary)' }}>
                 完全無料・匿名OK
               </AtlassianTypography>
             </div>
@@ -272,14 +272,14 @@ const Hero: React.FC<HeroProps> = ({ onStartDiagnosis }) => {
               style={{
                 display: 'flex',
                 alignItems: 'center',
-                gap: 'var(--ds-space-100)'
+                gap: 'var(--spacing-2)'
               }}
             >
               <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true">
-                <path d="M10 2V10L14 14" stroke="var(--zs-color-zero-god)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                <circle cx="10" cy="10" r="9" stroke="var(--zs-color-zero-god)" strokeWidth="1.5"/>
+                <path d="M10 2V10L14 14" stroke="var(--color-primary)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                <circle cx="10" cy="10" r="9" stroke="var(--color-primary)" strokeWidth="1.5"/>
               </svg>
-              <AtlassianTypography variant="body-small" color="high">
+              <AtlassianTypography variant="body-small" style={{ color: 'var(--color-text-primary)' }}>
                 30秒で結果表示
               </AtlassianTypography>
             </div>
@@ -295,9 +295,9 @@ const Hero: React.FC<HeroProps> = ({ onStartDiagnosis }) => {
           pointerEvents: 'none'
         }}>
           <svg width="300" height="300" viewBox="0 0 300 300" fill="none">
-            <circle cx="150" cy="150" r="100" stroke="var(--ds-text-highest)" strokeWidth="2" strokeDasharray="5 5" opacity="0.3"/>
-            <circle cx="150" cy="150" r="70" stroke="var(--zs-color-budget-warrior)" strokeWidth="2" strokeDasharray="5 5" opacity="0.3"/>
-            <circle cx="150" cy="150" r="40" stroke="var(--zs-color-zero-god)" strokeWidth="2" strokeDasharray="5 5" opacity="0.3"/>
+            <circle cx="150" cy="150" r="100" stroke="var(--color-text-tertiary)" strokeWidth="2" strokeDasharray="5 5" opacity="0.3"/>
+            <circle cx="150" cy="150" r="70" stroke="var(--color-accent)" strokeWidth="2" strokeDasharray="5 5" opacity="0.3"/>
+            <circle cx="150" cy="150" r="40" stroke="var(--color-primary)" strokeWidth="2" strokeDasharray="5 5" opacity="0.3"/>
           </svg>
         </div>
       </div>

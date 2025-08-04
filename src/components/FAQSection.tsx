@@ -157,7 +157,7 @@ const FAQSection: React.FC = () => {
                 <span style={{
                   fontSize: '18px',
                   fontWeight: 600,
-                  color: '#333333',
+                  color: 'var(--color-text-primary)',
                   flex: 1,
                   paddingRight: '16px'
                 }}>
@@ -186,7 +186,7 @@ const FAQSection: React.FC = () => {
                   >
                     <path
                       d="M4 6L8 10L12 6"
-                      stroke={openIndex === index ? '#FFFFFF' : '#666666'}
+                      stroke={openIndex === index ? 'var(--color-text-inverse)' : 'var(--color-text-secondary)'}
                       strokeWidth="2"
                       strokeLinecap="round"
                       strokeLinejoin="round"
@@ -208,7 +208,7 @@ const FAQSection: React.FC = () => {
                 }}>
                   <p style={{
                     fontSize: '16px',
-                    color: '#666666',
+                    color: 'var(--color-text-secondary)',
                     lineHeight: 1.8,
                     margin: 0
                   }}>

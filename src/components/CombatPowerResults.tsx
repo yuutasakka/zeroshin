@@ -163,14 +163,14 @@ const CombatPowerResults: React.FC<CombatPowerResultsProps> = ({ diagnosisAnswer
           <h1 style={{
             fontSize: 'clamp(2rem, 4vw, 2.5rem)',
             fontWeight: 700,
-            color: '#333333',
+            color: 'var(--color-text-primary)',
             marginBottom: '8px'
           }}>
             診断結果
           </h1>
           <p style={{
             fontSize: '18px',
-            color: '#666666'
+            color: 'var(--color-text-secondary)'
           }}>
             あなたの資金調達力
           </p>
@@ -267,24 +267,24 @@ const CombatPowerResults: React.FC<CombatPowerResultsProps> = ({ diagnosisAnswer
               })}
               
               {/* ラベル */}
-              <text x="150" y="30" textAnchor="middle" fill="#333333" fontSize="14" fontWeight="600">
+              <text x="150" y="30" textAnchor="middle" fill="var(--color-text-primary)" fontSize="14" fontWeight="600">
                 攻撃力
               </text>
-              <text x="260" y="220" textAnchor="middle" fill="#333333" fontSize="14" fontWeight="600">
+              <text x="260" y="220" textAnchor="middle" fill="var(--color-text-primary)" fontSize="14" fontWeight="600">
                 防御力
               </text>
-              <text x="40" y="220" textAnchor="middle" fill="#333333" fontSize="14" fontWeight="600">
+              <text x="40" y="220" textAnchor="middle" fill="var(--color-text-primary)" fontSize="14" fontWeight="600">
                 機動力
               </text>
               
               {/* スコア表示 */}
-              <text x="150" y="70" textAnchor="middle" fill="#666666" fontSize="12">
+              <text x="150" y="70" textAnchor="middle" fill="var(--color-text-secondary)" fontSize="12">
                 {Math.round(subScores.attackPower)}
               </text>
-              <text x="230" y="190" textAnchor="middle" fill="#666666" fontSize="12">
+              <text x="230" y="190" textAnchor="middle" fill="var(--color-text-secondary)" fontSize="12">
                 {Math.round(subScores.defensePower)}
               </text>
-              <text x="70" y="190" textAnchor="middle" fill="#666666" fontSize="12">
+              <text x="70" y="190" textAnchor="middle" fill="var(--color-text-secondary)" fontSize="12">
                 {Math.round(subScores.mobility)}
               </text>
             </svg>
@@ -299,37 +299,37 @@ const CombatPowerResults: React.FC<CombatPowerResultsProps> = ({ diagnosisAnswer
             margin: '0 auto'
           }}>
             <div>
-              <div style={{ fontSize: '12px', color: '#999999', marginBottom: '4px' }}>
+              <div style={{ fontSize: '12px', color: 'var(--color-text-tertiary)', marginBottom: '4px' }}>
                 攻撃力
               </div>
-              <div style={{ fontSize: '20px', fontWeight: 700, color: '#333333' }}>
+              <div style={{ fontSize: '20px', fontWeight: 700, color: 'var(--color-text-primary)' }}>
                 {Math.round(subScores.attackPower)}
               </div>
-              <div style={{ fontSize: '12px', color: '#666666' }}>
+              <div style={{ fontSize: '12px', color: 'var(--color-text-secondary)' }}>
                 調達ポテンシャル
               </div>
             </div>
             
             <div>
-              <div style={{ fontSize: '12px', color: '#999999', marginBottom: '4px' }}>
+              <div style={{ fontSize: '12px', color: 'var(--color-text-tertiary)', marginBottom: '4px' }}>
                 防御力
               </div>
-              <div style={{ fontSize: '20px', fontWeight: 700, color: '#333333' }}>
+              <div style={{ fontSize: '20px', fontWeight: 700, color: 'var(--color-text-primary)' }}>
                 {Math.round(subScores.defensePower)}
               </div>
-              <div style={{ fontSize: '12px', color: '#666666' }}>
+              <div style={{ fontSize: '12px', color: 'var(--color-text-secondary)' }}>
                 返済余力
               </div>
             </div>
             
             <div>
-              <div style={{ fontSize: '12px', color: '#999999', marginBottom: '4px' }}>
+              <div style={{ fontSize: '12px', color: 'var(--color-text-tertiary)', marginBottom: '4px' }}>
                 機動力
               </div>
-              <div style={{ fontSize: '20px', fontWeight: 700, color: '#333333' }}>
+              <div style={{ fontSize: '20px', fontWeight: 700, color: 'var(--color-text-primary)' }}>
                 {Math.round(subScores.mobility)}
               </div>
-              <div style={{ fontSize: '12px', color: '#666666' }}>
+              <div style={{ fontSize: '12px', color: 'var(--color-text-secondary)' }}>
                 資金入手スピード
               </div>
             </div>
@@ -348,14 +348,14 @@ const CombatPowerResults: React.FC<CombatPowerResultsProps> = ({ diagnosisAnswer
           <h3 style={{
             fontSize: '20px',
             fontWeight: 700,
-            color: '#333333',
+            color: 'var(--color-text-primary)',
             marginBottom: '16px'
           }}>
             総合評価
           </h3>
           <p style={{
             fontSize: '16px',
-            color: '#666666',
+            color: 'var(--color-text-secondary)',
             lineHeight: 1.8,
             margin: 0
           }}>
@@ -375,7 +375,7 @@ const CombatPowerResults: React.FC<CombatPowerResultsProps> = ({ diagnosisAnswer
           <h3 style={{
             fontSize: '20px',
             fontWeight: 700,
-            color: '#333333',
+            color: 'var(--color-text-primary)',
             marginBottom: '16px',
             display: 'flex',
             alignItems: 'center',
@@ -399,7 +399,7 @@ const CombatPowerResults: React.FC<CombatPowerResultsProps> = ({ diagnosisAnswer
           <ul style={{
             paddingLeft: '20px',
             margin: 0,
-            color: '#666666',
+            color: 'var(--color-text-secondary)',
             fontSize: '16px',
             lineHeight: 2
           }}>
@@ -457,10 +457,10 @@ const CombatPowerResults: React.FC<CombatPowerResultsProps> = ({ diagnosisAnswer
           <div style={{
             marginTop: '24px',
             fontSize: '16px',
-            color: '#666666',
+            color: 'var(--color-text-secondary)',
             lineHeight: 1.6
           }}>
-            <strong style={{ color: '#333333' }}>完全無料</strong>のPDFマニュアル<br />
+            <strong style={{ color: 'var(--color-text-primary)' }}>完全無料</strong>のPDFマニュアル<br />
             5分で読める資金調達の成功法則
           </div>
         </div>

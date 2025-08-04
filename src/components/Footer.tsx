@@ -7,8 +7,8 @@ const Footer: React.FC<FooterProps> = () => {
 
   return (
     <footer style={{
-      backgroundColor: 'var(--color-secondary)',
-      color: 'var(--color-text-inverse)',
+      backgroundColor: 'var(--color-bg-secondary)',
+      color: 'var(--color-text-primary)',
       padding: '60px 20px 40px',
       marginTop: '80px'
     }}>
@@ -64,7 +64,7 @@ const Footer: React.FC<FooterProps> = () => {
           </div>
           <p style={{
             fontSize: '16px',
-            color: '#CCCCCC',
+            color: 'var(--color-text-tertiary)',
             lineHeight: 1.6,
             maxWidth: '600px',
             margin: '0 auto'
@@ -87,7 +87,7 @@ const Footer: React.FC<FooterProps> = () => {
               fontSize: '16px',
               fontWeight: 700,
               marginBottom: '20px',
-              color: '#FFFFFF'
+              color: 'var(--color-text-primary)'
             }}>
               サービス
             </h4>
@@ -103,13 +103,13 @@ const Footer: React.FC<FooterProps> = () => {
                 <a 
                   href="#diagnosis-form-section"
                   style={{
-                    color: 'var(--color-text-inverse)',
+                    color: 'var(--color-text-primary)',
                     textDecoration: 'none',
                     fontSize: '14px',
                     transition: 'color 0.2s ease'
                   }}
-                  onMouseEnter={(e) => e.currentTarget.style.color = '#3174F3'}
-                  onMouseLeave={(e) => e.currentTarget.style.color = '#FFFFFF'}
+                  onMouseEnter={(e) => e.currentTarget.style.color = 'var(--color-primary)'}
+                  onMouseLeave={(e) => e.currentTarget.style.color = 'var(--color-text-primary)'}
                 >
                   無料診断
                 </a>
@@ -118,13 +118,13 @@ const Footer: React.FC<FooterProps> = () => {
                 <a 
                   href="#features"
                   style={{
-                    color: 'var(--color-text-inverse)',
+                    color: 'var(--color-text-primary)',
                     textDecoration: 'none',
                     fontSize: '14px',
                     transition: 'color 0.2s ease'
                   }}
-                  onMouseEnter={(e) => e.currentTarget.style.color = '#3174F3'}
-                  onMouseLeave={(e) => e.currentTarget.style.color = '#FFFFFF'}
+                  onMouseEnter={(e) => e.currentTarget.style.color = 'var(--color-primary)'}
+                  onMouseLeave={(e) => e.currentTarget.style.color = 'var(--color-text-primary)'}
                 >
                   診断の特徴
                 </a>
@@ -133,13 +133,13 @@ const Footer: React.FC<FooterProps> = () => {
                 <a 
                   href="#faq"
                   style={{
-                    color: 'var(--color-text-inverse)',
+                    color: 'var(--color-text-primary)',
                     textDecoration: 'none',
                     fontSize: '14px',
                     transition: 'color 0.2s ease'
                   }}
-                  onMouseEnter={(e) => e.currentTarget.style.color = '#3174F3'}
-                  onMouseLeave={(e) => e.currentTarget.style.color = '#FFFFFF'}
+                  onMouseEnter={(e) => e.currentTarget.style.color = 'var(--color-primary)'}
+                  onMouseLeave={(e) => e.currentTarget.style.color = 'var(--color-text-primary)'}
                 >
                   よくある質問
                 </a>
@@ -153,7 +153,7 @@ const Footer: React.FC<FooterProps> = () => {
               fontSize: '16px',
               fontWeight: 700,
               marginBottom: '20px',
-              color: '#FFFFFF'
+              color: 'var(--color-text-primary)'
             }}>
               会社情報
             </h4>
@@ -169,13 +169,13 @@ const Footer: React.FC<FooterProps> = () => {
                 <a 
                   href="#company"
                   style={{
-                    color: 'var(--color-text-inverse)',
+                    color: 'var(--color-text-primary)',
                     textDecoration: 'none',
                     fontSize: '14px',
                     transition: 'color 0.2s ease'
                   }}
-                  onMouseEnter={(e) => e.currentTarget.style.color = '#3174F3'}
-                  onMouseLeave={(e) => e.currentTarget.style.color = '#FFFFFF'}
+                  onMouseEnter={(e) => e.currentTarget.style.color = 'var(--color-primary)'}
+                  onMouseLeave={(e) => e.currentTarget.style.color = 'var(--color-text-primary)'}
                 >
                   会社概要
                 </a>
@@ -184,13 +184,13 @@ const Footer: React.FC<FooterProps> = () => {
                 <a 
                   href="#contact"
                   style={{
-                    color: 'var(--color-text-inverse)',
+                    color: 'var(--color-text-primary)',
                     textDecoration: 'none',
                     fontSize: '14px',
                     transition: 'color 0.2s ease'
                   }}
-                  onMouseEnter={(e) => e.currentTarget.style.color = '#3174F3'}
-                  onMouseLeave={(e) => e.currentTarget.style.color = '#FFFFFF'}
+                  onMouseEnter={(e) => e.currentTarget.style.color = 'var(--color-primary)'}
+                  onMouseLeave={(e) => e.currentTarget.style.color = 'var(--color-text-primary)'}
                 >
                   お問い合わせ
                 </a>
@@ -204,7 +204,7 @@ const Footer: React.FC<FooterProps> = () => {
               fontSize: '16px',
               fontWeight: 700,
               marginBottom: '20px',
-              color: '#FFFFFF'
+              color: 'var(--color-text-primary)'
             }}>
               法的情報
             </h4>
@@ -220,13 +220,13 @@ const Footer: React.FC<FooterProps> = () => {
                 <a 
                   href="#privacy"
                   style={{
-                    color: 'var(--color-text-inverse)',
+                    color: 'var(--color-text-primary)',
                     textDecoration: 'none',
                     fontSize: '14px',
                     transition: 'color 0.2s ease'
                   }}
-                  onMouseEnter={(e) => e.currentTarget.style.color = '#3174F3'}
-                  onMouseLeave={(e) => e.currentTarget.style.color = '#FFFFFF'}
+                  onMouseEnter={(e) => e.currentTarget.style.color = 'var(--color-primary)'}
+                  onMouseLeave={(e) => e.currentTarget.style.color = 'var(--color-text-primary)'}
                 >
                   プライバシーポリシー
                 </a>
@@ -235,13 +235,13 @@ const Footer: React.FC<FooterProps> = () => {
                 <a 
                   href="#terms"
                   style={{
-                    color: 'var(--color-text-inverse)',
+                    color: 'var(--color-text-primary)',
                     textDecoration: 'none',
                     fontSize: '14px',
                     transition: 'color 0.2s ease'
                   }}
-                  onMouseEnter={(e) => e.currentTarget.style.color = '#3174F3'}
-                  onMouseLeave={(e) => e.currentTarget.style.color = '#FFFFFF'}
+                  onMouseEnter={(e) => e.currentTarget.style.color = 'var(--color-primary)'}
+                  onMouseLeave={(e) => e.currentTarget.style.color = 'var(--color-text-primary)'}
                 >
                   利用規約
                 </a>
@@ -250,13 +250,13 @@ const Footer: React.FC<FooterProps> = () => {
                 <a 
                   href="#scta"
                   style={{
-                    color: 'var(--color-text-inverse)',
+                    color: 'var(--color-text-primary)',
                     textDecoration: 'none',
                     fontSize: '14px',
                     transition: 'color 0.2s ease'
                   }}
-                  onMouseEnter={(e) => e.currentTarget.style.color = '#3174F3'}
-                  onMouseLeave={(e) => e.currentTarget.style.color = '#FFFFFF'}
+                  onMouseEnter={(e) => e.currentTarget.style.color = 'var(--color-primary)'}
+                  onMouseLeave={(e) => e.currentTarget.style.color = 'var(--color-text-primary)'}
                 >
                   特定商取引法に基づく表記
                 </a>
@@ -269,14 +269,14 @@ const Footer: React.FC<FooterProps> = () => {
 
         {/* 下線 */}
         <div style={{
-          borderTop: '1px solid #555555',
+          borderTop: '1px solid var(--color-bg-tertiary)',
           paddingTop: '32px',
           textAlign: 'center'
         }}>
           {/* コピーライト */}
           <p style={{
             fontSize: '14px',
-            color: '#999999',
+            color: 'var(--color-text-secondary)',
             margin: 0
           }}>
             © {currentYear} Zero神 Inc. All rights reserved.

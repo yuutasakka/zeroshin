@@ -356,7 +356,7 @@ const AdminLoginPage: React.FC<AdminLoginPageProps> = ({ onLogin, onNavigateHome
 
       // ローカルフォールバック機能
       let adminCredentials = null;
-      let useLocalFallback = false;
+      const useLocalFallback = false;
       
       try {
         secureLog('管理者認証情報取得開始', { username: sanitizedUsername });

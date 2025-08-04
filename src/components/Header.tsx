@@ -154,7 +154,7 @@ const Header: React.FC = () => {
             display: 'block',
             width: '24px',
             height: '2px',
-            backgroundColor: '#333333',
+            backgroundColor: 'var(--color-text-primary)',
             marginBottom: '4px',
             transition: 'all 0.3s ease',
             transform: isMobileMenuOpen ? 'rotate(45deg) translateY(6px)' : 'none'
@@ -163,7 +163,7 @@ const Header: React.FC = () => {
             display: 'block',
             width: '24px',
             height: '2px',
-            backgroundColor: '#333333',
+            backgroundColor: 'var(--color-text-primary)',
             marginBottom: '4px',
             transition: 'all 0.3s ease',
             opacity: isMobileMenuOpen ? 0 : 1
@@ -172,7 +172,7 @@ const Header: React.FC = () => {
             display: 'block',
             width: '24px',
             height: '2px',
-            backgroundColor: '#333333',
+            backgroundColor: 'var(--color-text-primary)',
             transition: 'all 0.3s ease',
             transform: isMobileMenuOpen ? 'rotate(-45deg) translateY(-6px)' : 'none'
           }}></span>

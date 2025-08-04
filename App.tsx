@@ -1,4 +1,4 @@
-import React, { useState, useEffect, lazy, Suspense } from 'react';
+import React, { useState, useEffect } from 'react';
 import ErrorBoundary from './src/components/ErrorBoundary';
 import Header from './src/components/Header';
 // 要件定義書に基づく新しいコンポーネント
@@ -28,8 +28,7 @@ import FAQSection from './src/components/FAQSection';
 
 // 基本コンポーネント（即時読み込み）
 import { OneTimeUsageNotice } from './src/components/OneTimeUsageNotice';
-import { supabase } from './src/components/supabaseClient';
-import type { User } from '@supabase/supabase-js';
+// supabaseインポートは使用されていない - 削除済み
 import { ColorThemeProvider } from './src/components/ColorThemeContext';
 import { DesignSettingsProvider } from './src/contexts/DesignSettingsContext';
 import TemplateStyleProvider from './src/components/TemplateStyleProvider';
