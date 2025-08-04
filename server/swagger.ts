@@ -22,7 +22,7 @@ const customCss = `
 // Swagger UIのオプション
 const options = {
   customCss,
-  customSiteTitle: "タスカル API Documentation",
+  customSiteTitle: "Zero神 API Documentation",
   customfavIcon: "/favicon.ico",
   swaggerOptions: {
     persistAuthorization: true,
@@ -81,11 +81,12 @@ export function setupMockEndpoints(app: express.Application): void {
         }
       }
     },
-    '/v1/sms/send-code': {
+    '/v1/line/auth': {
       success: true,
-      message: '認証コードを送信しました'
+      authUrl: 'https://access.line.me/oauth2/v2.1/authorize...',
+      state: 'random-state-token'
     },
-    '/v1/sms/verify-code': {
+    '/v1/line/callback': {
       success: true,
       verified: true,
       message: '認証成功'

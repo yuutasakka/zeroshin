@@ -102,7 +102,7 @@ const FAQSection: React.FC = () => {
           <h2 style={{
             fontSize: 'clamp(2rem, 4vw, 2.5rem)',
             fontWeight: 700,
-            color: '#2C3E50',
+            color: 'var(--color-secondary)',
             marginBottom: '16px'
           }}>
             よくある質問
@@ -170,7 +170,7 @@ const FAQSection: React.FC = () => {
                   width: '32px',
                   height: '32px',
                   borderRadius: '50%',
-                  backgroundColor: openIndex === index ? '#3174F3' : '#F7F9FC',
+                  backgroundColor: openIndex === index ? 'var(--color-primary)' : '#F7F9FC',
                   transition: 'all 0.3s ease',
                   flexShrink: 0
                 }}>

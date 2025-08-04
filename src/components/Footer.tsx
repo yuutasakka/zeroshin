@@ -7,8 +7,8 @@ const Footer: React.FC<FooterProps> = () => {
 
   return (
     <footer style={{
-      backgroundColor: '#333333',
-      color: '#FFFFFF',
+      backgroundColor: 'var(--color-secondary)',
+      color: 'var(--color-text-inverse)',
       padding: '60px 20px 40px',
       marginTop: '80px'
     }}>
@@ -31,7 +31,7 @@ const Footer: React.FC<FooterProps> = () => {
             <div style={{
               width: '40px',
               height: '40px',
-              backgroundColor: '#3174F3',
+              backgroundColor: 'var(--color-primary)',
               borderRadius: '12px',
               display: 'flex',
               alignItems: 'center',
@@ -103,7 +103,7 @@ const Footer: React.FC<FooterProps> = () => {
                 <a 
                   href="#diagnosis-form-section"
                   style={{
-                    color: '#FFFFFF',
+                    color: 'var(--color-text-inverse)',
                     textDecoration: 'none',
                     fontSize: '14px',
                     transition: 'color 0.2s ease'
@@ -118,7 +118,7 @@ const Footer: React.FC<FooterProps> = () => {
                 <a 
                   href="#features"
                   style={{
-                    color: '#FFFFFF',
+                    color: 'var(--color-text-inverse)',
                     textDecoration: 'none',
                     fontSize: '14px',
                     transition: 'color 0.2s ease'
@@ -133,7 +133,7 @@ const Footer: React.FC<FooterProps> = () => {
                 <a 
                   href="#faq"
                   style={{
-                    color: '#FFFFFF',
+                    color: 'var(--color-text-inverse)',
                     textDecoration: 'none',
                     fontSize: '14px',
                     transition: 'color 0.2s ease'
@@ -169,7 +169,7 @@ const Footer: React.FC<FooterProps> = () => {
                 <a 
                   href="#company"
                   style={{
-                    color: '#FFFFFF',
+                    color: 'var(--color-text-inverse)',
                     textDecoration: 'none',
                     fontSize: '14px',
                     transition: 'color 0.2s ease'
@@ -184,7 +184,7 @@ const Footer: React.FC<FooterProps> = () => {
                 <a 
                   href="#contact"
                   style={{
-                    color: '#FFFFFF',
+                    color: 'var(--color-text-inverse)',
                     textDecoration: 'none',
                     fontSize: '14px',
                     transition: 'color 0.2s ease'
@@ -220,7 +220,7 @@ const Footer: React.FC<FooterProps> = () => {
                 <a 
                   href="#privacy"
                   style={{
-                    color: '#FFFFFF',
+                    color: 'var(--color-text-inverse)',
                     textDecoration: 'none',
                     fontSize: '14px',
                     transition: 'color 0.2s ease'
@@ -235,7 +235,7 @@ const Footer: React.FC<FooterProps> = () => {
                 <a 
                   href="#terms"
                   style={{
-                    color: '#FFFFFF',
+                    color: 'var(--color-text-inverse)',
                     textDecoration: 'none',
                     fontSize: '14px',
                     transition: 'color 0.2s ease'
@@ -250,7 +250,7 @@ const Footer: React.FC<FooterProps> = () => {
                 <a 
                   href="#scta"
                   style={{
-                    color: '#FFFFFF',
+                    color: 'var(--color-text-inverse)',
                     textDecoration: 'none',
                     fontSize: '14px',
                     transition: 'color 0.2s ease'

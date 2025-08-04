@@ -30,7 +30,7 @@ const Header: React.FC = () => {
       zIndex: 50,
       backgroundColor: 'rgba(255, 255, 255, 0.98)',
       backdropFilter: 'blur(20px)',
-      borderBottom: '1px solid #E5E7EB',
+      borderBottom: '1px solid var(--color-bg-tertiary)',
       boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.1)',
     }}>
       <div className="container" style={{
@@ -50,13 +50,13 @@ const Header: React.FC = () => {
             display: 'flex',
             alignItems: 'center',
             textDecoration: 'none',
-            color: '#333333'
+            color: 'var(--color-text-primary)' // ロゴリンクの色
           }}
         >
           <h1 style={{
             fontSize: '24px',
             fontWeight: 700,
-            color: '#F39C12',
+            color: 'var(--color-accent)',
             margin: 0,
             letterSpacing: '-0.02em'
           }}>
@@ -73,28 +73,28 @@ const Header: React.FC = () => {
           <a 
             href="#faq" 
             style={{
-              color: '#333333',
+              color: 'var(--color-text-primary)',
               textDecoration: 'none',
               fontSize: '16px',
               fontWeight: 500,
               transition: 'color 0.2s ease'
             }}
-            onMouseEnter={(e) => e.currentTarget.style.color = '#3174F3'}
-            onMouseLeave={(e) => e.currentTarget.style.color = '#333333'}
+            onMouseEnter={(e) => e.currentTarget.style.color = 'var(--color-primary)'}
+            onMouseLeave={(e) => e.currentTarget.style.color = 'var(--color-text-primary)'}
           >
             FAQ
           </a>
           <a 
             href="#contact" 
             style={{
-              color: '#333333',
+              color: 'var(--color-text-primary)',
               textDecoration: 'none',
               fontSize: '16px',
               fontWeight: 500,
               transition: 'color 0.2s ease'
             }}
-            onMouseEnter={(e) => e.currentTarget.style.color = '#3174F3'}
-            onMouseLeave={(e) => e.currentTarget.style.color = '#333333'}
+            onMouseEnter={(e) => e.currentTarget.style.color = 'var(--color-primary)'}
+            onMouseLeave={(e) => e.currentTarget.style.color = 'var(--color-text-primary)'}
           >
             お問い合わせ
           </a>
@@ -187,7 +187,7 @@ const Header: React.FC = () => {
           left: 0,
           right: 0,
           backgroundColor: '#FFFFFF',
-          borderBottom: '1px solid #E5E7EB',
+          borderBottom: '1px solid var(--color-bg-tertiary)',
           boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
           animation: 'slideDown 0.3s ease-out'
         }}>
@@ -201,7 +201,7 @@ const Header: React.FC = () => {
               onClick={() => setIsMobileMenuOpen(false)}
               style={{
                 padding: '16px',
-                color: '#333333',
+                color: 'var(--color-text-primary)',
                 textDecoration: 'none',
                 fontSize: '16px',
                 fontWeight: 500,
@@ -218,7 +218,7 @@ const Header: React.FC = () => {
               onClick={() => setIsMobileMenuOpen(false)}
               style={{
                 padding: '16px',
-                color: '#333333',
+                color: 'var(--color-text-primary)',
                 textDecoration: 'none',
                 fontSize: '16px',
                 fontWeight: 500,

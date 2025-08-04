@@ -61,7 +61,7 @@ const NotificationSystem: React.FC<NotificationSystemProps> = ({ onNotificationS
       enabled: false,
       webhookUrl: '',
       channel: '#general',
-      username: 'タスカル'
+      username: 'Zero神'
     },
     lineNotifications: {
       enabled: false,
@@ -154,7 +154,7 @@ const NotificationSystem: React.FC<NotificationSystemProps> = ({ onNotificationS
   const sendEmailNotification = async (notification: DiagnosisNotification): Promise<{ success: boolean; message?: string }> => {
     try {
       const emailConfig = settings.emailNotifications;
-      const subject = `[タスカル] ${getNotificationTitle(notification.type)}`;
+      const subject = `[Zero神] ${getNotificationTitle(notification.type)}`;
       const body = formatNotificationMessage(notification);
 
       // 実際の実装では、バックエンドAPIまたはSMTPサービスを使用

@@ -151,13 +151,13 @@ const ReliabilitySection: React.FC = () => {
           .stats-card:hover {
             transform: translateY(-4px);
             box-shadow: 0 8px 30px rgba(44, 62, 80, 0.1) !important;
-            border-color: #F39C12 !important;
+            border-color: var(--color-accent) !important;
           }
           
           .stats-number {
             font-size: 2.5rem;
             font-weight: 800;
-            color: #F39C12;
+            color: var(--color-accent);
             margin-bottom: 0.5rem;
           }
           
@@ -211,7 +211,7 @@ const ReliabilitySection: React.FC = () => {
           }
         `}</style>
         <div className="text-center mb-16">
-          <h3 className="text-3xl md:text-4xl lg:text-5xl mb-6 font-bold leading-tight" style={{ color: '#2C3E50' }}>
+          <h3 className="text-3xl md:text-4xl lg:text-5xl mb-6 font-bold leading-tight" style={{ color: 'var(--color-secondary)' }}>
             {reasonsData.title}
           </h3>
           <p className="text-lg md:text-xl max-w-2xl mx-auto leading-relaxed" style={{ color: '#34495E' }}>
@@ -228,14 +228,14 @@ const ReliabilitySection: React.FC = () => {
           {reasonsData.reasons.map((reason, index) => (
             <div key={reason.title} className={`stats-card ${templateConfig?.styles.sections.layout === 'timeline' ? 'timeline-item' : ''}`} style={{ animationDelay: reason.animationDelay }}>
               <div className="stats-number">{reason.value}</div>
-              <h4 className="text-xl font-semibold mb-2" style={{ color: '#2C3E50' }}>{reason.title}</h4>
+              <h4 className="text-xl font-semibold mb-2" style={{ color: 'var(--color-secondary)' }}>{reason.title}</h4>
               <p style={{ color: '#34495E' }}>{reason.description}</p>
             </div>
           ))}
         </div>
         
         <div className="mb-16">
-          <h4 className="text-2xl md:text-3xl font-bold text-center mb-12" style={{ color: '#2C3E50' }}>お客様の声</h4>
+          <h4 className="text-2xl md:text-3xl font-bold text-center mb-12" style={{ color: 'var(--color-secondary)' }}>お客様の声</h4>
           {testimonials.length > 0 ? (
             <div className="grid md:grid-cols-2 gap-8" style={{ 
               display: 'grid', 
@@ -247,16 +247,16 @@ const ReliabilitySection: React.FC = () => {
                   <div className="flex items-center mb-4">
                     <div 
                       className="w-12 h-12 rounded-full flex items-center justify-center mr-4 text-xl"
-                      style={{ background: '#F39C12', color: 'white'}}
+                      style={{ background: 'var(--color-accent)', color: 'var(--color-text-inverse)'}}
                       aria-hidden="true"
                     >
                       {testimonial.avatarEmoji}
                     </div>
                     <div>
-                      <p className="font-semibold" style={{color: '#2C3E50'}}>
+                      <p className="font-semibold" style={{color: 'var(--color-secondary)'}}>
                         {testimonial.nameAndRole}
                       </p>
-                      <div style={{color: '#F39C12'}}>
+                      <div style={{color: 'var(--color-accent)'}}>
                         {'★'.repeat(testimonial.ratingStars || 5)}{'☆'.repeat(5 - (testimonial.ratingStars || 5))}
                       </div>
                     </div>

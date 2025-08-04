@@ -5,7 +5,7 @@
 ## 🛡️ 実装されたCSRF保護
 
 ### 1. システム概要
-- **対象機能**: 電話番号認証（SMS送信・OTP検証）、管理画面ログイン
+- **対象機能**: 電話番号認証（LINE認証開始・LINE認証コールバック）、管理画面ログイン
 - **トークンベース**: HMACによる署名付きトークン
 - **セッション連携**: セッションIDとの紐付け
 - **IP制限**: クライアントIPアドレスとの照合（オプション）
@@ -66,10 +66,10 @@ validateToken(sessionId: string, providedToken: string, clientIP?: string): bool
 const { csrfToken, addCSRFHeaders, refreshToken } = useCSRF();
 
 // 使用例
-const response = await csrfFetch('/api/send-otp', {
+const response = await csrfFetch('/api/line-auth', {
   method: 'POST',
   headers: addCSRFHeaders(),
-  body: JSON.stringify({ phoneNumber })
+  body: JSON.stringify({ lineUserId })
 }, csrfToken);
 ```
 
@@ -78,8 +78,8 @@ const response = await csrfFetch('/api/send-otp', {
 ### 1. 保護対象API
 
 #### 電話番号認証
-- **POST /api/send-otp**: SMS送信
-- **POST /api/verify-otp**: OTP検証
+- **POST /api/line-auth**: LINE認証開始
+- **POST /api/line-callback**: LINE認証コールバック
 
 #### 管理画面
 - **POST /api/admin-login**: 管理者ログイン
@@ -87,7 +87,7 @@ const response = await csrfFetch('/api/send-otp', {
 ### 2. ミドルウェア統合
 ```typescript
 // middleware.ts
-const csrfProtectedPaths = ['/api/send-otp', '/api/verify-otp', '/api/admin-login'];
+const csrfProtectedPaths = ['/api/line-auth', '/api/line-callback', '/api/admin-login'];
 if (csrfProtectedPaths.some(path => pathname.startsWith(path))) {
   const csrfResponse = csrfMiddleware({
     excludePaths: ['/api/csrf-token'],
@@ -111,10 +111,10 @@ if (!csrfToken) {
 }
 
 // CSRF保護付きAPIコール
-const response = await csrfFetch('/api/send-otp', {
+const response = await csrfFetch('/api/line-auth', {
   method: 'POST',
   headers: addCSRFHeaders(),
-  body: JSON.stringify({ phoneNumber })
+  body: JSON.stringify({ lineUserId })
 }, csrfToken);
 ```
 
@@ -217,10 +217,10 @@ console.warn('CSRF validation failed:', {
 // 有効なCSRFトークンでのAPI呼び出し
 test('Valid CSRF token should allow API access', async () => {
   const token = await getCSRFToken();
-  const response = await fetch('/api/send-otp', {
+  const response = await fetch('/api/line-auth', {
     method: 'POST',
     headers: { 'X-CSRF-Token': token },
-    body: JSON.stringify({ phoneNumber: '09012345678' })
+    body: JSON.stringify({ lineUserId: '09012345678' })
   });
   expect(response.status).toBe(200);
 });
@@ -230,19 +230,19 @@ test('Valid CSRF token should allow API access', async () => {
 ```javascript
 // CSRFトークンなしでのAPI呼び出し
 test('Missing CSRF token should be rejected', async () => {
-  const response = await fetch('/api/send-otp', {
+  const response = await fetch('/api/line-auth', {
     method: 'POST',
-    body: JSON.stringify({ phoneNumber: '09012345678' })
+    body: JSON.stringify({ lineUserId: '09012345678' })
   });
   expect(response.status).toBe(403);
 });
 
 // 無効なCSRFトークンでのAPI呼び出し
 test('Invalid CSRF token should be rejected', async () => {
-  const response = await fetch('/api/send-otp', {
+  const response = await fetch('/api/line-auth', {
     method: 'POST',
     headers: { 'X-CSRF-Token': 'invalid-token' },
-    body: JSON.stringify({ phoneNumber: '09012345678' })
+    body: JSON.stringify({ lineUserId: '09012345678' })
   });
   expect(response.status).toBe(403);
 });

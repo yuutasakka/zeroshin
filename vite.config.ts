@@ -11,7 +11,7 @@ const secretsProtectionPlugin = () => {
       const secretPatterns = [
         /JWT_SECRET/gi,
         /SESSION_SECRET/gi,
-        /TWILIO_AUTH_TOKEN/gi,
+        /LINE_CHANNEL_SECRET/gi,
         /ENCRYPTION_KEY/gi,
         /CSRF_SECRET/gi,
         /SERVICE_ROLE_KEY/gi,
@@ -116,7 +116,7 @@ export default defineConfig(({ mode }) => {
       // 以下の環境変数はクライアントに露出させない
       'process.env.JWT_SECRET': '""',
       'process.env.SESSION_SECRET': '""',
-      'process.env.TWILIO_AUTH_TOKEN': '""',
+      'process.env.LINE_CHANNEL_SECRET': '""',
       'process.env.ENCRYPTION_KEY': '""',
       'process.env.CSRF_SECRET': '""',
       'process.env.SUPABASE_SERVICE_ROLE_KEY': '""',
@@ -125,6 +125,7 @@ export default defineConfig(({ mode }) => {
       // VITE_プレフィックスでも機密情報は空文字列に
       'import.meta.env.VITE_JWT_SECRET': '""',
       'import.meta.env.VITE_SESSION_SECRET': '""',
+      'import.meta.env.VITE_LINE_CHANNEL_SECRET': '""',
       'import.meta.env.VITE_ENCRYPTION_KEY': '""',
       'import.meta.env.VITE_SUPABASE_SERVICE_ROLE_KEY': '""'
     },

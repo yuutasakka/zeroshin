@@ -1,7 +1,6 @@
 import express, { Request, Response } from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
-import twilio from 'twilio';
 import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
 import { body, validationResult } from 'express-validator';
@@ -187,37 +186,7 @@ const checkIPRateLimit = (ip: string): boolean => {
   return true;
 };
 
-// Twilioクライアントの初期化（セキュリティ強化）
-let client: any = null;
-let twilioPhoneNumber: string = '';
-
-const initializeTwilio = async () => {
-  try {
-    // Supabaseの環境設定から取得（本番環境用）
-    const accountSid = await SecureConfigManager.getSecureConfig('twilio_account_sid') || process.env.TWILIO_ACCOUNT_SID;
-    const authToken = await SecureConfigManager.getSecureConfig('twilio_auth_token') || process.env.TWILIO_AUTH_TOKEN;
-    twilioPhoneNumber = await SecureConfigManager.getSecureConfig('twilio_phone_number') || process.env.TWILIO_PHONE_NUMBER || '';
-
-    if (!accountSid || !authToken || !twilioPhoneNumber) {
-      logger.error('Twilioの設定が不完全です', {
-        accountSid: !!accountSid,
-        authToken: !!authToken,
-        twilioPhoneNumber: !!twilioPhoneNumber
-      });
-      throw new Error('Twilio設定が不完全です');
-    }
-
-    client = twilio(accountSid, authToken);
-    logger.info('Twilio設定確認完了');
-  } catch (error) {
-    logger.error('Twilio初期化エラー', error);
-    
-    // 開発環境では警告のみ、本番環境では終了
-    if (NODE_ENV === 'production') {
-      process.exit(1);
-    }
-  }
-};
+// LINE認証システム（SMS認証から変更）
 
 // ミドルウェア
 app.use(express.json({ limit: '1mb' })); // リクエストサイズ制限
@@ -292,236 +261,8 @@ function generateSecureCode(): string {
 }
 
 // SMS送信エンドポイント（セキュリティ強化版）
-app.post('/api/sms/send', smsLimiter, phoneValidation, async (req: Request, res: Response) => {
-  try {
-    // IPアドレス制限チェック
-    const clientIP = req.ip || 'unknown';
-    if (!checkIPRateLimit(clientIP)) {
-      logger.warn('IP rate limit exceeded for SMS send', { ip: clientIP });
-      return res.status(429).json({
-        error: 'IP アドレスからの送信回数が上限に達しました。しばらく待ってから再試行してください。'
-      });
-    }
-
-    // 入力検証
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      logger.warn('SMS送信: 入力検証エラー', {
-        errors: errors.array(),
-        ip: clientIP
-      });
-      return res.status(400).json({
-        error: '入力データが無効です',
-        details: errors.array()
-      });
-    }
-
-    const { phoneNumber } = req.body;
-    const normalizedPhoneNumber = normalizeJapanesePhoneNumber(phoneNumber);
-    
-    // 既存のコードがある場合の制限チェック
-    const existing = verificationCodes.get(normalizedPhoneNumber);
-    if (existing && existing.attempts >= 3) {
-      logger.warn('SMS送信: 試行回数上限', {
-        // 電話番号は最後の4桁のみ記録
-        phoneNumberLast4: normalizedPhoneNumber.slice(-4),
-        attempts: existing.attempts,
-        ip: clientIP
-      });
-      return res.status(429).json({
-        error: '認証コードの送信回数が上限に達しました。しばらく待ってから再試行してください。'
-      });
-    }
-
-    const verificationCode = generateSecureCode();
-    const expiry = Date.now() + 5 * 60 * 1000; // 5分後に期限切れ
-
-    // 認証コードを一時保存（IPアドレス付き）
-    verificationCodes.set(normalizedPhoneNumber, {
-      code: verificationCode,
-      expiry: expiry,
-      attempts: existing ? existing.attempts + 1 : 1,
-      ip: clientIP
-    });
-
-    // SMSメッセージの内容
-    const message = `タスカル認証コード: ${verificationCode}\n5分以内にご入力ください。このコードを他人に教えないでください。`;
-
-    // Twilioが初期化されていない場合は初期化
-    if (!client) {
-      await initializeTwilio();
-    }
-
-    if (!client) {
-      throw new Error('Twilio client not initialized');
-    }
-
-    try {
-      // TwilioでSMS送信
-      const smsResult = await client.messages.create({
-        body: message,
-        from: twilioPhoneNumber,
-        to: normalizedPhoneNumber,
-      });
-
-      logger.info('SMS送信成功', {
-        // 電話番号は最後の4桁のみ記録（プライバシー保護）
-        phoneNumberLast4: normalizedPhoneNumber.slice(-4),
-        messageSid: smsResult.sid,
-        ip: clientIP
-      });
-
-      return res.json({
-        success: true,
-        message: 'SMS認証コードを送信しました',
-        phoneNumber: normalizedPhoneNumber
-      });
-
-    } catch (twilioError) {
-      const isDevelopment = NODE_ENV === 'development';
-      const errorMessage = twilioError instanceof Error ? twilioError.message : 'Unknown error';
-      
-      // 開発環境でもTwilioエラーは上位にスロー
-      throw twilioError;
-
-      // その他のTwilioエラーは上位にスロー
-      throw twilioError;
-    }
-
-  } catch (error) {
-    const isDevelopment = NODE_ENV === 'development';
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-
-    logger.error('SMS送信エラー', {
-      error: errorMessage,
-      stack: error instanceof Error ? error.stack : undefined,
-      ip: req.ip
-    });
-
-    
-    res.status(500).json({
-      error: 'SMS送信に失敗しました',
-      details: isDevelopment ? errorMessage : 'Internal server error'
-    });
-  }
-});
 
 // SMS認証コード検証エンドポイント（セキュリティ強化版）
-app.post('/api/sms/verify', authLimiter, verificationValidation, async (req: Request, res: Response) => {
-  try {
-    // 入力検証
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      logger.warn('SMS認証: 入力検証エラー', {
-        errors: errors.array(),
-        ip: req.ip
-      });
-      return res.status(400).json({
-        error: '入力データが無効です',
-        details: errors.array()
-      });
-    }
-
-    const { phoneNumber, code } = req.body;
-    const normalizedPhoneNumber = normalizeJapanesePhoneNumber(phoneNumber);
-    const stored = verificationCodes.get(normalizedPhoneNumber);
-    const clientIP = req.ip || 'unknown';
-    
-    if (!stored) {
-      logger.warn('SMS認証: コードが見つからない', {
-        phoneNumber: normalizedPhoneNumber,
-        ip: clientIP
-      });
-      return res.status(400).json({
-        error: '認証コードが見つかりません',
-        verified: false
-      });
-    }
-
-    // IPアドレスチェック（セキュリティ強化）
-    if (stored.ip !== clientIP) {
-      logger.warn('SMS認証: IPアドレス不一致', {
-        phoneNumber: normalizedPhoneNumber,
-        storedIP: stored.ip,
-        currentIP: clientIP
-      });
-      return res.status(400).json({
-        error: 'セキュリティエラー: 認証コードの送信元と異なるIPアドレスです',
-        verified: false
-      });
-    }
-    
-    // 有効期限をチェック
-    if (Date.now() > stored.expiry) {
-      verificationCodes.delete(normalizedPhoneNumber);
-      logger.warn('SMS認証: コード期限切れ', {
-        phoneNumber: normalizedPhoneNumber,
-        ip: clientIP
-      });
-      return res.status(400).json({
-        error: '認証コードの有効期限が切れています',
-        verified: false
-      });
-    }
-    
-    // コードが一致するかチェック
-    if (stored.code === code) {
-      verificationCodes.delete(normalizedPhoneNumber);
-      
-      // JWTトークンを生成（動的シークレット使用）
-      const jwtSecret = await SecureConfigManager.getJWTSecret();
-      // JWTトークンの生成（有効期限を短縮）
-      const token = jwt.sign(
-        { 
-          phoneNumber: normalizedPhoneNumber, 
-          verified: true, 
-          ip: clientIP,
-          iat: Math.floor(Date.now() / 1000),
-          exp: Math.floor(Date.now() / 1000) + (15 * 60) // 15分
-        },
-        jwtSecret,
-        { 
-          algorithm: 'HS256',
-          audience: 'moneyticket-app',
-          issuer: 'moneyticket-auth'
-        }
-      );
-
-      logger.info('SMS認証成功', {
-        phoneNumber: normalizedPhoneNumber,
-        ip: clientIP
-      });
-      
-      return res.json({
-        success: true,
-        message: '認証が完了しました',
-        verified: true,
-        token: token
-      });
-    } else {
-      logger.warn('SMS認証: コード不一致', {
-        phoneNumber: normalizedPhoneNumber,
-        providedCode: code,
-        ip: clientIP
-      });
-      return res.status(400).json({
-        error: '認証コードが正しくありません',
-        verified: false
-      });
-    }
-
-  } catch (error) {
-    logger.error('SMS認証エラー', {
-      error: error instanceof Error ? error.message : 'Unknown error',
-      stack: error instanceof Error ? error.stack : undefined,
-      ip: req.ip
-    });
-
-    res.status(500).json({
-      error: '認証処理に失敗しました'
-    });
-  }
-});
 
 // ヘルスチェックエンドポイント
 app.get('/health', (req: Request, res: Response) => {
@@ -573,11 +314,6 @@ process.on('SIGINT', () => {
 // サーバー起動
 const startServer = async () => {
   try {
-    // Twilio初期化（エラーが発生しても継続）
-    try {
-      await initializeTwilio();
-    } catch (twilioError) {
-    }
     
     // APIバージョニングミドルウェア
     app.use(apiVersioning());

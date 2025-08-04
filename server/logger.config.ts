@@ -110,7 +110,7 @@ export const logger = winston.createLogger({
     }),
     winston.format.errors({ stack: true })
   ),
-  defaultMeta: { service: 'taskal-auth' },
+  defaultMeta: { service: 'zeroshin-auth' },
   transports: [
     rotateTransport,
     errorRotateTransport

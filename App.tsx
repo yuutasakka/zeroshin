@@ -4,18 +4,17 @@ import Header from './src/components/Header';
 // 要件定義書に基づく新しいコンポーネント
 import Hero from './src/components/Hero';
 import DiagnosisForm from './src/components/DiagnosisForm';
-// 診断回答の型定義
+// 診断回答の型定義（LINE認証対応）
 type DiagnosisAnswers = {
   age: string;
   experience: string;
   purpose: string;
   amount: string;
   timing: string;
-  phone?: string;
+  lineUserId?: string;
 };
 import LineAuthFlow from './src/components/LineAuthFlow';
-import WasteDiagnosisForm from './src/components/WasteDiagnosisForm';
-import WasteDiagnosisResults from './src/components/WasteDiagnosisResults';
+// WasteDiagnosisコンポーネントはLINE認証化により使用されていない - 削除済み
 import ReliabilitySection from './src/components/ReliabilitySection';
 import SecurityTrustSection from './src/components/SecurityTrustSection';
 import CallToActionSection from './src/components/CallToActionSection';
@@ -24,9 +23,7 @@ import FixedCTA from './src/components/FixedCTA';
 import CombatPowerResults from './src/components/CombatPowerResults';
 import FAQSection from './src/components/FAQSection';
 
-// 動的インポート（Code Splitting） - 管理機能を除去
-const PhoneVerificationPage = lazy(() => import('./src/components/PhoneVerificationPage'));
-const DiagnosisResultsPage = lazy(() => import('./src/components/DiagnosisResultsPage'));
+// DiagnosisResultsPageはCombatPowerResultsに置き換えられたため使用されていない - 削除済み
 // 管理者関連のインポートを削除（完全分離のため）
 
 // 基本コンポーネント（即時読み込み）
@@ -55,14 +52,14 @@ const LoadingSpinner = () => (
     justifyContent: 'center', 
     alignItems: 'center', 
     height: '100vh',
-    background: '#2C3E50' // 戦闘力をイメージした深いグレー
+    backgroundColor: 'var(--color-secondary)' // 統一されたセカンダリ
   }}>
     <div style={{
       width: '60px',
       height: '60px',
-      border: '4px solid #F39C12', // 金色のアクセント
-      borderRadius: '4px',
-      backgroundColor: '#E74C3C', // 戦闘を象徴する赤
+      border: '4px solid var(--color-accent)', // 統一されたアクセント
+      borderRadius: 'var(--radius-lg)',
+      backgroundColor: 'var(--color-primary)', // 統一されたプライマリ
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
@@ -78,7 +75,7 @@ const LoadingSpinner = () => (
 const App: React.FC = () => {
   // 要件定義書に基づくページ状態の更新（管理機能を除去）
   const [currentPage, setCurrentPage] = useState<PageView>('home');
-  const [phoneNumberToVerify, setPhoneNumberToVerify] = useState<string | null>(null);
+  const [lineUserToVerify, setLineUserToVerify] = useState<string | null>(null);
   const [diagnosisData, setDiagnosisData] = useState<DiagnosisFormState | null>(null);
   // 新しい診断答えの状態
   const [diagnosisAnswers, setDiagnosisAnswers] = useState<DiagnosisAnswers | null>(null);
@@ -163,41 +160,16 @@ const App: React.FC = () => {
     }
   };
 
-  const handleDiagnosisComplete = (answers: DiagnosisAnswers) => {
-    setDiagnosisAnswers(answers);
-    setCurrentPage('smsAuth');
-  };
+  // 古いhandleDiagnosisComplete関数は使用されていない - 削除済み
 
   const handleDiagnosisCancel = () => {
     setCurrentPage('home');
     setDiagnosisAnswers(null);
   };
 
-  const handleSMSAuthComplete = (phoneNumber: string) => {
-    setPhoneNumberToVerify(phoneNumber);
-    // 診断データを従来の形式に変換（既存のDiagnosisResultsPageとの互換性のため）
-    if (diagnosisAnswers) {
-      const legacyDiagnosisData: DiagnosisFormState = {
-        age: diagnosisAnswers.age || '',
-        investmentExperience: diagnosisAnswers.experience || '',
-        investmentGoal: diagnosisAnswers.purpose || '',
-        monthlyInvestment: diagnosisAnswers.amount || '',
-        investmentHorizon: diagnosisAnswers.timing || '',
-        // 既存のフィールドもデフォルト値で埋める
-        annualIncome: '',
-        riskTolerance: '',
-        investmentPreference: '',
-        financialKnowledge: ''
-      };
-      setDiagnosisData(legacyDiagnosisData);
-    }
-    setCurrentPage('results');
-    return; // 明示的なreturn追加
-  };
+  // 古いhandleSMSAuthComplete関数は使用されていない - 削除済み
 
-  const handleSMSAuthCancel = () => {
-    setCurrentPage('diagnosis');
-  };
+  // 古いhandleSMSAuthCancel関数は使用されていない - 削除済み
 
   // 既存のハンドラー（後方互換性のため保持）
   const handleVerificationComplete = () => {
@@ -211,7 +183,7 @@ const App: React.FC = () => {
   }
 
   const handleReturnToStart = () => {
-    setPhoneNumberToVerify(null);
+    setLineUserToVerify(null);
     setDiagnosisData(null);
     setDiagnosisAnswers(null);
     setRawDiagnosisAnswers(null);
@@ -258,7 +230,7 @@ const App: React.FC = () => {
                     purpose: answers[4] || '',
                     amount: answers[2] || '',
                     timing: 'now',
-                    phone: ''
+                    lineUserId: ''
                   };
                   
                   setDiagnosisAnswers(convertedAnswers);
@@ -278,7 +250,7 @@ const App: React.FC = () => {
                   };
                   setDiagnosisData(legacyDiagnosisData);
                   
-                  setCurrentPage('smsAuth');
+                  setCurrentPage('lineAuth');
                 }}
               />
             </div>
@@ -298,9 +270,9 @@ const App: React.FC = () => {
           <style>{`
             /* 診断フォーカス効果（戦闘力テーマ） */
             .diagnosis-focus-animation {
-              box-shadow: 0 10px 20px rgba(231, 76, 60, 0.3);
-              border: 2px solid #E74C3C;
-              background: linear-gradient(135deg, #2C3E50 0%, #34495E 100%);
+              box-shadow: var(--shadow-lg);
+              border: 2px solid var(--color-primary);
+              background: var(--color-bg-accent);
             }
             
             /* 新しい縦型レイアウト - 視認性向上 */
@@ -325,7 +297,7 @@ const App: React.FC = () => {
               left: 0;
               right: 0;
               height: 2px;
-              background: linear-gradient(90deg, transparent, #E74C3C, #F39C12, #E74C3C, transparent);
+              background: linear-gradient(90deg, transparent, var(--color-primary), var(--color-accent), var(--color-primary), transparent);
             }
             
             .additional-sections {
@@ -431,21 +403,26 @@ const App: React.FC = () => {
       );
     }
 
-    // 既存の電話認証ページ（後で削除予定）
-    if (currentPage === 'verification') {
+    // LINE認証ページ
+    if (currentPage === 'lineAuth') {
       return (
-        <Suspense fallback={<LoadingSpinner />}>
-          <PhoneVerificationPage
-            userSession={{
-              id: `verification-${Date.now()}`,
-              timestamp: new Date().toISOString(),
-              phoneNumber: phoneNumberToVerify || '',
-              diagnosisAnswers: diagnosisData || {}
+        <ErrorBoundary>
+          <LineAuthFlow
+            diagnosisAnswers={diagnosisAnswers || {}}
+            onAuthComplete={(lineUserId: string, userData: any) => {
+              setLineUserToVerify(lineUserId);
+              // diagnosisAnswersにLINE情報を追加
+              if (diagnosisAnswers) {
+                setDiagnosisAnswers({
+                  ...diagnosisAnswers,
+                  lineUserId: lineUserId
+                });
+              }
+              setCurrentPage('results');
             }}
-            onVerificationSuccess={handleVerificationComplete}
-            onBack={handleVerificationCancel}
+            onCancel={handleVerificationCancel}
           />
-        </Suspense>
+        </ErrorBoundary>
       );
     }
 
@@ -493,8 +470,8 @@ const App: React.FC = () => {
                   experience: answers[3] || '',
                   purpose: answers[4] || '',
                   amount: answers[2] || '',
-                  timing: 'now',
-                  phone: ''
+                  timing: 'now'
+                  // phone フィールドは不要 - 削除済み
                 };
                 
                 handleDiagnosisComplete(convertedAnswers);
@@ -505,15 +482,7 @@ const App: React.FC = () => {
       );
     }
 
-    if (currentPage === 'smsAuth') {
-      return (
-        <SMSAuthFlow
-          diagnosisAnswers={diagnosisAnswers!}
-          onAuthComplete={handleSMSAuthComplete}
-          onCancel={handleSMSAuthCancel}
-        />
-      );
-    }
+    // 古いsmsAuthページレンダリングは使用されていない - 削除済み
 
     // デフォルト: ホームページ（要件定義書準拠）
     return (

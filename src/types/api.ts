@@ -29,12 +29,13 @@ export interface DiagnosisRequestData {
   phone?: string;
 }
 
-export interface SMSResponse {
+export interface LineAuthResponse {
   success: boolean;
   message: string;
-  sid?: string;
-  to?: string;
-  status?: 'queued' | 'sending' | 'sent' | 'failed' | 'delivered';
+  lineUserId?: string;
+  displayName?: string;
+  pictureUrl?: string;
+  accessToken?: string;
   error_code?: string;
   error_message?: string;
 }
@@ -78,10 +79,10 @@ export interface AppError {
   details?: Record<string, unknown>;
 }
 
-export interface SMSError extends AppError {
+export interface LineAuthError extends AppError {
   rateLimitExceeded?: boolean;
   retryAfter?: number;
-  sid?: string;
+  authState?: string;
 }
 
 export interface ValidationError extends AppError {
@@ -114,14 +115,16 @@ export interface DesignSettings {
 export interface UserSession {
   id: string;
   timestamp: string;
-  phoneNumber: string;
+  lineUserId: string;
+  displayName?: string;
+  pictureUrl?: string;
   userName?: string;
   email?: string;
   diagnosisAnswers: DiagnosisRequestData;
   diagnosisResult?: ProductResponse[];
   notes?: string;
-  smsVerified?: boolean;
-  verifiedPhoneNumber?: string;
+  lineVerified?: boolean;
+  verifiedLineUserId?: string;
   verificationTimestamp?: string;
 }
 
@@ -187,9 +190,9 @@ export function isAppError(error: unknown): error is AppError {
          typeof (error as AppError).message === 'string';
 }
 
-export function isSMSError(error: unknown): error is SMSError {
+export function isLineAuthError(error: unknown): error is LineAuthError {
   return isAppError(error) && 
-         ('rateLimitExceeded' in error || 'retryAfter' in error);
+         ('rateLimitExceeded' in error || 'retryAfter' in error || 'authState' in error);
 }
 
 export function isAuthError(error: unknown): error is AuthError {

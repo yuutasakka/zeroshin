@@ -82,7 +82,7 @@ export interface Product {
 }
 
 // APIクライアントクラス
-export class TaskalAPIClient {
+export class ZeroshinAPIClient {
   private baseURL: string;
   private accessToken: string | null = null;
   
@@ -211,4 +211,4 @@ export class TaskalAPIClient {
 }
 
 // シングルトンインスタンス
-export const apiClient = new TaskalAPIClient();
+export const apiClient = new ZeroshinAPIClient();

@@ -71,19 +71,19 @@ export interface RecommendedProductWithReason extends FinancialProduct {
   recommendationReasons: string[];
 }
 
-export type PageView = 'home' | 'diagnosis' | 'smsAuth' | 'verification' | 'results' | 'loginSelection' | 'traditionalLogin' | 'supabaseLogin' | 'adminDashboard' | 'registrationRequest' | 'changePassword' | 'passwordReset';
+export type PageView = 'home' | 'diagnosis' | 'lineAuth' | 'results' | 'loginSelection' | 'traditionalLogin' | 'supabaseLogin' | 'adminDashboard' | 'registrationRequest' | 'changePassword' | 'passwordReset';
 
 export interface UserSessionData {
   id: string; // Unique ID for the session
   timestamp: string; // ISO string format
-  phoneNumber: string;
+  lineUserId: string;
   userName?: string; // ユーザー名
   email?: string; // メールアドレス
   diagnosisAnswers: DiagnosisFormState;
   diagnosisResult?: any; // 診断結果
   notes?: string; // 備考
-  smsVerified?: boolean; // SMS認証済みフラグ
-  verifiedPhoneNumber?: string; // 認証済み電話番号
+  lineVerified?: boolean; // LINE認証済みフラグ
+  verifiedLineUserId?: string; // 認証済みLINE ID
   verificationTimestamp?: string; // 認証完了時刻
 }
 

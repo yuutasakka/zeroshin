@@ -67,7 +67,7 @@ export const setupSecurityMiddleware = (app: any) => {
           "'self'",
           "https://*.supabase.co",
           "wss://*.supabase.co",
-          "https://api.twilio.com",
+          "https://api.line.me",
           "https://www.google-analytics.com",
           "https://api.stripe.com",
           "https://*.stripe.com"
@@ -289,7 +289,7 @@ export const setupSecurityMiddleware = (app: any) => {
   
   // API routes with specific rate limits
   app.use('/api/auth/*', applyRateLimit('auth'));
-  app.use('/api/sms/*', applyRateLimit('sms'));
+  app.use('/api/line-*', applyRateLimit('auth'));
   app.use('/api/diagnosis/*', applyRateLimit('diagnosis'));
   app.use('/api/admin/*', applyRateLimit('admin'));
   

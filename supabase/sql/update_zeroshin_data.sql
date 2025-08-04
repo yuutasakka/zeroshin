@@ -1,4 +1,4 @@
--- タスカル用データ更新SQL
+-- Zero神用データ更新SQL
 -- 既存の投資系データを資金調達系データに更新
 
 -- 1. product_settings テーブルの更新
@@ -66,10 +66,10 @@ WHERE id = 1;
 
 -- 2. expert_contact_settings テーブルの更新
 UPDATE expert_contact_settings 
-SET expert_name = 'タスカル専門アドバイザー',
-    description = 'タスカルの認定資金調達コンサルタントが、お客様の資金調達に関するご相談を承ります。',
+SET expert_name = 'Zero神専門アドバイザー',
+    description = 'Zero神の認定資金調達コンサルタントが、お客様の資金調達に関するご相談を承ります。',
     phone_number = '0120-123-456',
-    email = 'support@taskal.jp',
+    email = 'support@zeroshin.jp',
     available_hours = '平日 9:00-18:00'
 WHERE id = 1;
 
@@ -77,7 +77,7 @@ WHERE id = 1;
 DELETE FROM testimonials WHERE id IN (1, 2, 3);
 
 INSERT INTO testimonials (id, name, age, occupation, testimonial, rating, created_at) VALUES
-(1, '田中 一郎', 45, '製造業経営者', 'コロナ禍で売上が激減し困っていましたが、タスカルの診断で最適な資金調達方法を提案していただき、3週間で2,000万円の融資を受けることができました。おかげで事業を継続できています。', 5, NOW()),
+(1, '田中 一郎', 45, '製造業経営者', 'コロナ禍で売上が激減し困っていましたが、Zero神の診断で最適な資金調達方法を提案していただき、3週間で2,000万円の融資を受けることができました。おかげで事業を継続できています。', 5, NOW()),
 (2, '佐藤 美咲', 38, 'IT企業代表', '創業2年目で銀行からの融資が難しい状況でしたが、ファクタリングという方法を教えていただき、即日で500万円の資金調達に成功。新規案件を受注できました。', 5, NOW()),
 (3, '鈴木 健太', 52, '飲食店オーナー', '5店舗展開のための設備資金で悩んでいましたが、補助金とビジネスローンを組み合わせた提案で、総額5,000万円の調達に成功。計画通り出店できました。', 4, NOW()),
 (4, '山田 花子', 41, '建設業経営者', 'リスケ中で新規融資は無理だと思っていましたが、ファクタリングで月々1,000万円の資金繰り改善ができ、経営が安定しました。', 5, NOW()),
@@ -88,7 +88,7 @@ UPDATE homepage_content_settings
 SET content_data = jsonb_set(
   content_data,
   '{company_name}',
-  '"タスカル株式会社"'
+  '"ゼロ神株式会社"'
 )
 WHERE setting_name = 'main_content';
 
@@ -111,12 +111,12 @@ WHERE setting_name = 'main_content';
 -- 5. financial_planners テーブルを funding_advisors として更新
 -- テーブル名は変更せず、内容のみ更新
 UPDATE financial_planners 
-SET name = 'タスカル専門アドバイザー',
+SET name = 'Zero神専門アドバイザー',
     title = '資金調達シニアコンサルタント',
-    bio = 'タスカルの認定資金調達コンサルタント。銀行・ノンバンク・公的機関での豊富な経験を活かし、お客様に最適な資金調達方法をご提案します。',
+    bio = 'Zero神の認定資金調達コンサルタント。銀行・ノンバンク・公的機関での豊富な経験を活かし、お客様に最適な資金調達方法をご提案します。',
     specialties = '{"創業融資", "ビジネスローン", "ファクタリング", "補助金申請", "事業計画策定"}',
     experience_years = 15,
-    contact_email = 'advisor@taskal.jp',
+    contact_email = 'advisor@zeroshin.jp',
     phone_number = '0120-123-456'
 WHERE id = 1;
 
@@ -193,8 +193,8 @@ CREATE TABLE IF NOT EXISTS faq_items (
 
 -- FAQ データを挿入
 INSERT INTO faq_items (category, question, answer, display_order) VALUES
-('basics', 'タスカルのサービスは本当に無料ですか？', 'はい、診断から資金調達のご提案まで完全無料です。成功報酬もいただきません。提携金融機関から紹介料をいただくビジネスモデルのため、お客様からは一切費用をいただきません。', 1),
-('basics', '他の資金調達サービスとの違いは何ですか？', 'タスカルは「資金調達力診断」により、お客様の現在の調達可能性を可視化します。30秒の診断で、どの資金調達方法が最適か、審査通過の可能性はどの程度かを判定し、最適な金融機関をご紹介します。', 2),
+('basics', 'Zero神のサービスは本当に無料ですか？', 'はい、診断から資金調達のご提案まで完全無料です。成功報酬もいただきません。提携金融機関から紹介料をいただくビジネスモデルのため、お客様からは一切費用をいただきません。', 1),
+('basics', '他の資金調達サービスとの違いは何ですか？', 'Zero神は「資金調達力診断」により、お客様の現在の調達可能性を可視化します。30秒の診断で、どの資金調達方法が最適か、審査通過の可能性はどの程度かを判定し、最適な金融機関をご紹介します。', 2),
 ('basics', '個人事業主でも利用できますか？', 'はい、法人・個人事業主問わずご利用いただけます。それぞれの事業形態に合わせた最適な資金調達方法をご提案いたします。', 3),
 ('screening', '診断結果が低かった場合、資金調達は難しいですか？', '診断結果は現時点での目安です。結果が低くても、適切な準備と対策により資金調達は可能です。無料の攻略本では、各スコアを改善する具体的な方法をご紹介しています。', 4),
 ('screening', '赤字決算でも資金調達は可能ですか？', '可能です。ファクタリングや補助金など、決算内容に左右されにくい資金調達方法があります。また、事業計画をしっかり作成することで、将来性を評価してもらえる融資もあります。', 5),
@@ -203,11 +203,11 @@ INSERT INTO faq_items (category, question, answer, display_order) VALUES
 
 -- 8. 会社設定の更新
 UPDATE company_settings 
-SET company_name = 'タスカル株式会社',
-    service_name = 'タスカル',
+SET company_name = 'ゼロ神株式会社',
+    service_name = 'Zero神',
     description = '30秒で分かる資金調達力診断サービス',
-    contact_email = 'info@taskal.jp',
-    support_email = 'support@taskal.jp',
+    contact_email = 'info@zeroshin.jp',
+    support_email = 'support@zeroshin.jp',
     phone_number = '0120-123-456'
 WHERE id = 1;
 
@@ -219,9 +219,9 @@ CREATE INDEX IF NOT EXISTS idx_faq_items_active ON faq_items(is_active);
 
 -- 更新日時を記録
 INSERT INTO data_migrations (migration_name, executed_at, description) VALUES
-('update_taskal_data', NOW(), 'Convert investment platform data to funding/loan platform data for Taskal service')
+('update_zeroshin_data', NOW(), 'Convert investment platform data to funding/loan platform data for Zero神 service')
 ON CONFLICT (migration_name) DO UPDATE SET 
   executed_at = NOW(), 
-  description = 'Convert investment platform data to funding/loan platform data for Taskal service';
+  description = 'Convert investment platform data to funding/loan platform data for Zero神 service';
 
 COMMIT;

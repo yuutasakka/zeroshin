@@ -48,8 +48,8 @@ async function testAPIEndpoints() {
   
   const endpoints = [
     '/api/csrf-token',
-    '/api/send-otp', 
-    '/api/verify-otp',
+    '/api/line-auth', 
+    '/api/line-callback',
     '/api/admin-login'
   ];
   
@@ -63,8 +63,8 @@ async function testAPIEndpoints() {
       // 簡易的な存在確認（実際のHTTPリクエストは行わない）
       const exists = [
         '/api/csrf-token',
-        '/api/send-otp',
-        '/api/verify-otp', 
+        '/api/line-auth',
+        '/api/line-callback', 
         '/api/admin-login'
       ].includes(endpoint);
       

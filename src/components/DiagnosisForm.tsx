@@ -104,7 +104,7 @@ const DiagnosisForm: React.FC<DiagnosisFormProps> = ({ onComplete }) => {
             left: '24px',
             right: '24px',
             height: '2px',
-            backgroundColor: '#E5E7EB',
+            backgroundColor: 'var(--color-bg-tertiary)',
             zIndex: 0
           }} />
           {/* アクティブライン */}
@@ -113,7 +113,7 @@ const DiagnosisForm: React.FC<DiagnosisFormProps> = ({ onComplete }) => {
             top: '12px',
             left: '24px',
             height: '2px',
-            backgroundColor: '#3174F3',
+            backgroundColor: 'var(--color-primary)',
             width: `calc(${(currentQuestion / (questions.length - 1)) * 100}% - 48px)`,
             transition: 'width 0.5s ease',
             zIndex: 0
@@ -135,13 +135,13 @@ const DiagnosisForm: React.FC<DiagnosisFormProps> = ({ onComplete }) => {
                 width: '24px',
                 height: '24px',
                 borderRadius: '50%',
-                backgroundColor: index <= currentQuestion ? '#3174F3' : '#FFFFFF',
-                border: index <= currentQuestion ? 'none' : '2px solid #E5E7EB',
+                backgroundColor: index <= currentQuestion ? 'var(--color-primary)' : 'var(--color-bg-primary)',
+                border: index <= currentQuestion ? 'none' : '2px solid var(--color-bg-tertiary)',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
                 transition: 'all 0.3s ease',
-                boxShadow: index === currentQuestion ? '0 0 0 4px rgba(49, 116, 243, 0.2)' : 'none'
+                boxShadow: index === currentQuestion ? '0 0 0 4px rgba(var(--color-primary-rgb), 0.2)' : 'none'
               }}>
                 {index < currentQuestion && (
                   <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
@@ -153,13 +153,13 @@ const DiagnosisForm: React.FC<DiagnosisFormProps> = ({ onComplete }) => {
                     width: '8px',
                     height: '8px',
                     borderRadius: '50%',
-                    backgroundColor: '#FFFFFF'
+                    backgroundColor: 'var(--color-text-inverse)'
                   }} />
                 )}
               </div>
               <span style={{
                 fontSize: '12px',
-                color: index <= currentQuestion ? '#3174F3' : '#999999',
+                color: index <= currentQuestion ? 'var(--color-primary)' : 'var(--color-text-tertiary)',
                 marginTop: '4px',
                 fontWeight: index === currentQuestion ? 600 : 400
               }}>
@@ -173,7 +173,7 @@ const DiagnosisForm: React.FC<DiagnosisFormProps> = ({ onComplete }) => {
         <div style={{
           textAlign: 'center',
           fontSize: '14px',
-          color: '#666666',
+          color: 'var(--color-text-secondary)',
           marginTop: '8px'
         }}>
           進捗: {Math.round(progress)}%
@@ -184,10 +184,10 @@ const DiagnosisForm: React.FC<DiagnosisFormProps> = ({ onComplete }) => {
       <div 
         key={currentQuestion}
         style={{
-          backgroundColor: '#FFFFFF',
-          borderRadius: '16px',
+          backgroundColor: 'var(--color-bg-primary)',
+          borderRadius: 'var(--radius-2xl)',
           padding: '32px',
-          boxShadow: '0 4px 16px rgba(0, 0, 0, 0.08)',
+          boxShadow: 'var(--shadow-lg)',
           marginBottom: '24px',
           animation: 'slideIn 0.4s ease-out'
         }}
@@ -202,7 +202,7 @@ const DiagnosisForm: React.FC<DiagnosisFormProps> = ({ onComplete }) => {
           <h2 style={{
             fontSize: '20px',
             fontWeight: 700,
-            color: '#333333',
+            color: 'var(--color-text-primary)',
             margin: 0,
             flex: 1
           }}>
@@ -215,7 +215,7 @@ const DiagnosisForm: React.FC<DiagnosisFormProps> = ({ onComplete }) => {
                 width: '32px',
                 height: '32px',
                 borderRadius: '50%',
-                backgroundColor: showHelpText ? '#3174F3' : '#F7F9FC',
+                backgroundColor: showHelpText ? 'var(--color-primary)' : 'var(--color-bg-secondary)',
                 border: 'none',
                 cursor: 'pointer',
                 display: 'flex',
@@ -230,7 +230,7 @@ const DiagnosisForm: React.FC<DiagnosisFormProps> = ({ onComplete }) => {
               <span style={{
                 fontSize: '16px',
                 fontWeight: 700,
-                color: showHelpText ? '#FFFFFF' : '#3174F3'
+                color: showHelpText ? 'var(--color-text-inverse)' : 'var(--color-primary)'
               }}>
                 ℹ
               </span>
@@ -241,8 +241,8 @@ const DiagnosisForm: React.FC<DiagnosisFormProps> = ({ onComplete }) => {
         {/* ヘルプテキスト */}
         {showHelpText && questions[currentQuestion].helpText && (
           <div style={{
-            backgroundColor: '#F7F9FC',
-            borderLeft: '4px solid #3174F3',
+            backgroundColor: 'var(--color-bg-secondary)',
+            borderLeft: '4px solid var(--color-primary)',
             borderRadius: '8px',
             padding: '16px',
             marginBottom: '24px',
@@ -250,7 +250,7 @@ const DiagnosisForm: React.FC<DiagnosisFormProps> = ({ onComplete }) => {
           }}>
             <p style={{
               fontSize: '14px',
-              color: '#666666',
+              color: 'var(--color-text-secondary)',
               lineHeight: 1.6,
               margin: 0
             }}>
@@ -273,10 +273,10 @@ const DiagnosisForm: React.FC<DiagnosisFormProps> = ({ onComplete }) => {
               style={{
                 width: '100%',
                 padding: '20px 24px',
-                borderRadius: '12px',
-                border: selectedOption === option ? '2px solid #3174F3' : '2px solid #E5E7EB',
-                backgroundColor: selectedOption === option ? '#F0F5FF' : '#FFFFFF',
-                color: selectedOption === option ? '#3174F3' : '#333333',
+                borderRadius: 'var(--radius-xl)',
+                border: selectedOption === option ? '2px solid var(--color-primary)' : '2px solid var(--color-bg-tertiary)',
+                backgroundColor: selectedOption === option ? 'var(--color-bg-accent)' : 'var(--color-bg-primary)',
+                color: selectedOption === option ? 'var(--color-primary)' : 'var(--color-text-primary)',
                 fontSize: '16px',
                 fontWeight: selectedOption === option ? 600 : 500,
                 cursor: 'pointer',
@@ -287,14 +287,14 @@ const DiagnosisForm: React.FC<DiagnosisFormProps> = ({ onComplete }) => {
               }}
               onMouseEnter={(e) => {
                 if (selectedOption !== option) {
-                  e.currentTarget.style.borderColor = '#B8D0FF';
-                  e.currentTarget.style.backgroundColor = '#F7FAFF';
+                  e.currentTarget.style.borderColor = 'var(--color-primary-light)';
+                  e.currentTarget.style.backgroundColor = 'var(--color-bg-accent)';
                 }
               }}
               onMouseLeave={(e) => {
                 if (selectedOption !== option) {
-                  e.currentTarget.style.borderColor = '#E5E7EB';
-                  e.currentTarget.style.backgroundColor = '#FFFFFF';
+                  e.currentTarget.style.borderColor = 'var(--color-bg-tertiary)';
+                  e.currentTarget.style.backgroundColor = 'var(--color-bg-primary)';
                 }
               }}
             >
@@ -312,7 +312,7 @@ const DiagnosisForm: React.FC<DiagnosisFormProps> = ({ onComplete }) => {
                   viewBox="0 0 20 20" 
                   fill="none"
                 >
-                  <circle cx="10" cy="10" r="10" fill="#3174F3" />
+                  <circle cx="10" cy="10" r="10" fill="var(--color-primary)" />
                   <path d="M6 10L8.5 12.5L14 7" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                 </svg>
               )}
@@ -333,10 +333,10 @@ const DiagnosisForm: React.FC<DiagnosisFormProps> = ({ onComplete }) => {
             onClick={handleBack}
             style={{
               padding: '12px 24px',
-              borderRadius: '8px',
-              border: '2px solid #E5E7EB',
-              backgroundColor: '#FFFFFF',
-              color: '#666666',
+              borderRadius: 'var(--radius-lg)',
+              border: '2px solid var(--color-bg-tertiary)',
+              backgroundColor: 'var(--color-bg-primary)',
+              color: 'var(--color-text-secondary)',
               fontSize: '16px',
               fontWeight: 500,
               cursor: 'pointer',
@@ -346,12 +346,12 @@ const DiagnosisForm: React.FC<DiagnosisFormProps> = ({ onComplete }) => {
               gap: '8px'
             }}
             onMouseEnter={(e) => {
-              e.currentTarget.style.borderColor = '#3174F3';
-              e.currentTarget.style.color = '#3174F3';
+              e.currentTarget.style.borderColor = 'var(--color-primary)';
+              e.currentTarget.style.color = 'var(--color-primary)';
             }}
             onMouseLeave={(e) => {
               e.currentTarget.style.borderColor = '#E5E7EB';
-              e.currentTarget.style.color = '#666666';
+              e.currentTarget.style.color = 'var(--color-text-secondary)';
             }}
           >
             <svg width="16" height="16" viewBox="0 0 16 16" fill="none">

@@ -110,9 +110,9 @@ const SecurityTrustSection: React.FC = () => {
             justify-content: center;
             margin: 0 auto 1rem auto;
             font-size: 1.5rem;
-            color: #2C3E50;
+            color: var(--color-secondary);
             transition: all 0.3s ease;
-            border: 2px solid #2C3E50;
+            border: 2px solid var(--color-secondary);
           }
           
           .security-badge-icon-container:hover {
@@ -147,7 +147,7 @@ const SecurityTrustSection: React.FC = () => {
           }
         `}</style>
         <div className="luxury-card">
-          <h3 className="text-2xl md:text-3xl lg:text-4xl text-center mb-12 font-bold leading-tight" style={{ color: '#2C3E50' }}>
+          <h3 className="text-2xl md:text-3xl lg:text-4xl text-center mb-12 font-bold leading-tight" style={{ color: 'var(--color-secondary)' }}>
             安心・安全への取り組み
           </h3>
           
@@ -157,7 +157,7 @@ const SecurityTrustSection: React.FC = () => {
                 <div className="security-badge-icon-container" aria-hidden="true">
                   <i className={item.iconClass}></i>
                 </div>
-                <div className="security-badge mb-3" style={{ color: '#F39C12', fontWeight: 'bold' }}>{item.title}</div>
+                <div className="security-badge mb-3" style={{ color: 'var(--color-accent)', fontWeight: 'bold' }}>{item.title}</div>
                 <p className="text-sm" style={{ color: '#34495E' }}>{item.description}</p>
               </div>
             ))}

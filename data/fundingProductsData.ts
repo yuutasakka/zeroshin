@@ -1,4 +1,4 @@
-// タスカル - 資金調達商品データ
+// Zero神 - 資金調達商品データ
 export interface FundingProduct {
   id: string;
   name: string;

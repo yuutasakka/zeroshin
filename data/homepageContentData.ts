@@ -58,7 +58,7 @@ export interface CTAButtonConfig {
 }
 
 export const defaultReasonsToChooseData: ReasonsToChooseData = {
-  title: "タスカルが選ばれる理由",
+  title: "Zero神が選ばれる理由",
   subtitle: "多くのお客様から信頼をいただいている、確かな実績をご紹介します",
   reasons: [
     {
@@ -95,7 +95,7 @@ export const defaultFirstConsultationOffer: FirstConsultationOffer = {
 
 // デフォルトヘッダー情報
 export const defaultHeaderData: HeaderData = {
-  title: "タスカル",
+  title: "Zero神",
   subtitle: "資金調達力診断"
 };
 
@@ -108,11 +108,11 @@ export const defaultMainVisualData: MainVisualData = {
 
 // デフォルトフッター情報
 export const defaultFooterData: FooterData = {
-  siteName: "タスカル",
+  siteName: "Zero神",
   description: "30秒であなたの資金調達力をチェック！",
-  companyInfo: "運営会社：タスカル株式会社",
-  contactInfo: "お問い合わせ：support@taskal.jp",
-  copyright: "タスカル. All rights reserved."
+  companyInfo: "運営会社：ゼロ神株式会社",
+  contactInfo: "お問い合わせ：support@zeroshin.jp",
+  copyright: "Zero神. All rights reserved."
 };
 
 // デフォルトCTAボタン設定

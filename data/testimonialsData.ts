@@ -29,7 +29,7 @@ export const defaultTestimonialsData: Testimonial[] = [
     nameAndRole: '田中 美咲 様 30代主婦',
     avatarEmoji: '👩',
     ratingStars: 5,
-    text: '教育資金の不足に気づき「タスカル」で診断。機動力スコアが低かったのでファクタリングを選択し、最短即日入金で家計を安定させることができました。'
+    text: '教育資金の不足に気づき「Zero神」で診断。機動力スコアが低かったのでファクタリングを選択し、最短即日入金で家計を安定させることができました。'
   },
   {
     id: 'testimonial_5',

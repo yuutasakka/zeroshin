@@ -308,12 +308,12 @@ export const SECURITY_CONFIG = {
     }
   },
   
-  // SMS/Twilio設定
-  SMS_CONFIG: {
-    enabled: !!(process.env.TWILIO_ACCOUNT_SID && process.env.TWILIO_AUTH_TOKEN),
-    accountSid: process.env.TWILIO_ACCOUNT_SID,
-    authToken: process.env.TWILIO_AUTH_TOKEN,
-    phoneNumber: process.env.TWILIO_PHONE_NUMBER
+  // LINE認証設定
+  LINE_CONFIG: {
+    enabled: !!(process.env.LINE_CHANNEL_ID && process.env.LINE_CHANNEL_SECRET),
+    channelId: process.env.LINE_CHANNEL_ID,
+    channelSecret: process.env.LINE_CHANNEL_SECRET,
+    redirectUri: process.env.LINE_REDIRECT_URI
   },
   
   // 通知設定

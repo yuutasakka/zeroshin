@@ -65,11 +65,11 @@ const CallToActionSection: React.FC = () => {
           className="text-2xl md:text-4xl lg:text-5xl mb-6 font-bold leading-tight"
           style={{
             letterSpacing: '-0.02em',
-            color: '#2C3E50'
+            color: 'var(--color-secondary)'
           }}
         >
           急な資金ニーズ<br />
-          <span style={{ color: '#F39C12' }}>今すぐ解決しませんか？</span>
+          <span style={{ color: 'var(--color-accent)' }}>今すぐ解決しませんか？</span>
         </h3>
         <p className="text-lg md:text-xl mb-8 leading-relaxed" style={{ color: '#34495E' }}>
             キャッシング・ファクタリングのプロが、あなたの収支状況や緊急度に合わせて<br />
@@ -86,7 +86,7 @@ const CallToActionSection: React.FC = () => {
               style={{
                 padding: '1rem 3rem',
                 fontSize: '1.125rem',
-                background: 'linear-gradient(135deg, #F39C12 0%, #D68910 100%)',
+                background: 'linear-gradient(135deg, var(--color-accent) 0%, #D68910 100%)',
                 minWidth: '280px',
                 height: '64px'
               }}
@@ -98,7 +98,7 @@ const CallToActionSection: React.FC = () => {
             <div 
               className="text-white rounded-lg shadow-lg transform hover:scale-105 transition-transform duration-200"
               style={{
-                background: 'linear-gradient(135deg, #E74C3C 0%, #C0392B 100%)',
+                background: 'linear-gradient(135deg, var(--color-error) 0%, #C0392B 100%)',
                 boxShadow: '0 4px 15px rgba(231, 76, 60, 0.3)',
                 animation: 'pulse 2s infinite',
                 padding: '12px 20px',
@@ -137,7 +137,7 @@ const CallToActionSection: React.FC = () => {
             WebkitBackdropFilter: 'blur(10px)'
           }}
         >
-            <h4 className="font-bold mb-3 text-lg md:text-xl" style={{ color: '#2C3E50' }}>
+            <h4 className="font-bold mb-3 text-lg md:text-xl" style={{ color: 'var(--color-secondary)' }}>
                 {consultationOffer.title}
             </h4>
             <p style={{ color: '#34495E' }}>

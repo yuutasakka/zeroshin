@@ -142,10 +142,10 @@ JWT_SECRET=your-super-secret-jwt-key-minimum-32-characters
 ### オプション環境変数
 
 ```bash
-# Twilio SMS設定（SMS認証を使用する場合）
-TWILIO_ACCOUNT_SID=your-twilio-account-sid
-TWILIO_AUTH_TOKEN=your-twilio-auth-token
-TWILIO_PHONE_NUMBER=your-twilio-phone-number
+# LINE Login設定（LINE認証を使用する場合）
+LINE_CHANNEL_ID=your-line-channel-id
+LINE_CHANNEL_SECRET=your-line-channel-secret
+LINE_REDIRECT_URI=https://your-domain.com/api/line-callback
 
 # 監視設定
 GRAFANA_USER=admin

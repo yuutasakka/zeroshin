@@ -71,7 +71,7 @@ export const MCPFinancialAssistant: React.FC<MCPFinancialAssistantProps> = ({ cl
       id: 'welcome',
       role: 'assistant',
       content: `こんにちは！🤖
-私はタスカルのAI財務アドバイザーです。
+私はZero神のAI財務アドバイザーです。
 
 お客様の財務状況を分析して、最適なアドバイスをお届けします✨
 
@@ -121,10 +121,10 @@ export const MCPFinancialAssistant: React.FC<MCPFinancialAssistantProps> = ({ cl
         
         // デフォルト値を設定
         setExpertContact({
-          expert_name: 'タスカル専門アドバイザー',
+          expert_name: 'Zero神専門アドバイザー',
           phone_number: '0120-123-456',
           business_hours: '平日 9:00-18:00',
-          description: 'タスカルの認定ファイナンシャルプランナーが、お客様の資産運用に関するご相談を承ります。'
+          description: 'Zero神の認定ファイナンシャルプランナーが、お客様の資産運用に関するご相談を承ります。'
         });
         return;
       }
@@ -164,20 +164,20 @@ export const MCPFinancialAssistant: React.FC<MCPFinancialAssistantProps> = ({ cl
 
       // デフォルト値を設定
       setExpertContact({
-        expert_name: 'タスカル専門アドバイザー',
+        expert_name: 'Zero神専門アドバイザー',
         phone_number: '0120-123-456',
         business_hours: '平日 9:00-18:00',
-        description: 'タスカルの認定ファイナンシャルプランナーが、お客様の資産運用に関するご相談を承ります。'
+        description: 'Zero神の認定ファイナンシャルプランナーが、お客様の資産運用に関するご相談を承ります。'
       });
     } catch (error) {
       secureLog('専門家連絡先の読み込みエラー:', error);
       
       // エラー時はデフォルト値を設定
       setExpertContact({
-        expert_name: 'タスカル専門アドバイザー',
+        expert_name: 'Zero神専門アドバイザー',
         phone_number: '0120-123-456',
         business_hours: '平日 9:00-18:00',
-        description: 'タスカルの認定ファイナンシャルプランナーが、お客様の資産運用に関するご相談を承ります。'
+        description: 'Zero神の認定ファイナンシャルプランナーが、お客様の資産運用に関するご相談を承ります。'
       });
     }
   };
@@ -250,14 +250,14 @@ AI財務アドバイザーは3回まで無料でご利用いただけます。
 
 📞 専門家による個別相談をご利用ください
 
-より詳細なアドバイスが必要でしたら、タスカルの専門家が直接お電話でご相談を承ります。
+より詳細なアドバイスが必要でしたら、Zero神の専門家が直接お電話でご相談を承ります。
 
 📋 専門家情報
-• 担当者: ${expertContact?.expert_name || 'タスカル専門アドバイザー'}
+• 担当者: ${expertContact?.expert_name || 'Zero神専門アドバイザー'}
 • 電話番号: ${expertContact?.phone_number || '0120-123-456'}
 • 受付時間: ${expertContact?.business_hours || '平日 9:00-18:00'}
 
-${expertContact?.description || 'タスカルの認定ファイナンシャルプランナーが、お客様の資産運用に関するご相談を承ります。'}
+${expertContact?.description || 'Zero神の認定ファイナンシャルプランナーが、お客様の資産運用に関するご相談を承ります。'}
 
 お気軽にお電話ください！😊`,
         timestamp: new Date()
@@ -344,7 +344,7 @@ ${expertContact?.description || 'タスカルの認定ファイナンシャル�
         <div className="flex-1">
           <h2 className="text-lg font-bold">AI財務アドバイザー</h2>
           <p className="text-green-100 text-sm">
-            オンライン - タスカル専属AI
+            オンライン - Zero神専属AI
           </p>
         </div>
         <div className="text-sm bg-green-600 px-3 py-1 rounded-full">

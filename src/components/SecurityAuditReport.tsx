@@ -89,7 +89,7 @@ const SecurityAuditReport: React.FC<SecurityAuditReportProps> = ({ onClose }) =>
           reportType: 'COMPREHENSIVE',
           status: 'COMPLETED',
           severity: 'HIGH',
-          executiveSummary: 'タスカルアプリケーションの包括的なセキュリティ評価を実施しました。全体的なセキュリティ態勢は良好ですが、いくつかの重要な改善点が特定されました。',
+          executiveSummary: 'Zero神アプリケーションの包括的なセキュリティ評価を実施しました。全体的なセキュリティ態勢は良好ですが、いくつかの重要な改善点が特定されました。',
           technicalDetails: '詳細な技術評価により、認証システム、データ暗号化、API セキュリティなどの領域で強化が必要であることが判明しました。',
           findings: [
             {

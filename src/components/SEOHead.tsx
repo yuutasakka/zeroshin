@@ -32,8 +32,8 @@ export const SEOHead: React.FC<SEOHeadProps> = ({
     '@context': 'https://schema.org',
     '@type': 'Organization',
     name: siteName,
-    url: 'https://taskal.jp',
-    logo: 'https://taskal.jp/pwa-512x512.png',
+    url: 'https://zeroshin.jp',
+    logo: 'https://zeroshin.jp/pwa-512x512.png',
     sameAs: [
       'https://twitter.com/aiconectx',
       'https://www.facebook.com/aiconectx',
@@ -47,7 +47,7 @@ export const SEOHead: React.FC<SEOHeadProps> = ({
     '@type': 'WebApplication',
     name: siteName,
     description: description,
-    url: 'https://taskal.jp',
+    url: 'https://zeroshin.jp',
     applicationCategory: 'FinanceApplication',
     operatingSystem: 'Any',
     offers: {
@@ -69,10 +69,10 @@ export const SEOHead: React.FC<SEOHeadProps> = ({
     mainEntity: [
       {
         '@type': 'Question',
-        name: 'タスカルは無料で利用できますか？',
+        name: 'Zero神は無料で利用できますか？',
         acceptedAnswer: {
           '@type': 'Answer',
-          text: 'はい、タスカルは完全無料でご利用いただけます。診断から商品のご提案まで、一切費用はかかりません。'
+          text: 'はい、Zero神は完全無料でご利用いただけます。診断から商品のご提案まで、一切費用はかかりません。'
         }
       },
       {
@@ -103,13 +103,13 @@ export const SEOHead: React.FC<SEOHeadProps> = ({
         '@type': 'ListItem',
         position: 1,
         name: 'ホーム',
-        item: 'https://taskal.jp'
+        item: 'https://zeroshin.jp'
       },
       {
         '@type': 'ListItem',
         position: 2,
         name: '診断',
-        item: 'https://taskal.jp/diagnosis'
+        item: 'https://zeroshin.jp/diagnosis'
       }
     ]
   };

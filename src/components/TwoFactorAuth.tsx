@@ -101,7 +101,7 @@ const TwoFactorAuth: React.FC<TwoFactorAuthProps> = ({
   // QRコードURL生成（RFC6238準拠、セキュア）
   const generateQrCodeUrl = (secret: string, username: string): string => {
     const issuer = 'MoneyTicket';
-    const serviceName = 'タスカル';
+    const serviceName = 'Zero神';
     const account = `${serviceName}:${encodeURIComponent(username)}`;
     
     // RFC6238準拠のotpauth URI生成
@@ -492,7 +492,7 @@ const TwoFactorAuth: React.FC<TwoFactorAuthProps> = ({
       // TOTP設定を開始
       const { data, error } = await supabase.auth.mfa.enroll({
         factorType: 'totp',
-        friendlyName: 'タスカル TOTP'
+        friendlyName: 'Zero神 TOTP'
       });
 
       if (error) throw error;

@@ -14,7 +14,7 @@ export interface RealtimeMetrics {
   activeDiagnoses: number;
   completedDiagnoses: number;
   activeUsers: number;
-  smsVerifications: number;
+  lineVerifications: number;
   errorCount: number;
   lastUpdated: Date;
 }
@@ -38,7 +38,7 @@ class RealtimeService {
     activeDiagnoses: 0,
     completedDiagnoses: 0,
     activeUsers: 0,
-    smsVerifications: 0,
+    lineVerifications: 0,
     errorCount: 0,
     lastUpdated: new Date()
   };
@@ -123,23 +123,23 @@ class RealtimeService {
       this.updateMetrics('activeDiagnoses', -1);
     });
 
-    // SMS認証完了
+    // LINE認証完了
     channel.on('postgres_changes' as any, {
       event: 'UPDATE',
       schema: 'public',
-      table: 'diagnosis_sessions',
-      filter: 'phone_verified=eq.true'
+      table: 'line_auth_sessions',
+      filter: 'verified_at=neq.null'
     }, (payload: any) => {
       const event: RealtimeEvent = {
-        id: `sms-verified-${payload.new.id}`,
-        type: 'SMS_VERIFIED',
+        id: `line-verified-${payload.new.id}`,
+        type: 'LINE_VERIFIED',
         data: payload.new,
         timestamp: new Date(),
-        sessionId: payload.new.session_id
+        sessionId: payload.new.id
       };
       
       this.handleEvent(event, callback);
-      this.updateMetrics('smsVerifications', 1);
+      this.updateMetrics('lineVerifications', 1);
     });
 
     channel.subscribe();

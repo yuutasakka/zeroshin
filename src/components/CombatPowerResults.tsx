@@ -114,7 +114,7 @@ const CombatPowerResults: React.FC<CombatPowerResultsProps> = ({ diagnosisAnswer
   const getRankColor = (rank: string) => {
     switch (rank) {
       case 'S': return '#F5A623'; // ゴールド
-      case 'A': return '#3174F3'; // ブルー
+      case 'A': return 'var(--color-primary)'; // ブルー
       case 'B': return '#10B981'; // グリーン
       case 'C': return '#6B7280'; // グレー
       default: return '#6B7280';
@@ -387,7 +387,7 @@ const CombatPowerResults: React.FC<CombatPowerResultsProps> = ({ diagnosisAnswer
               justifyContent: 'center',
               width: '32px',
               height: '32px',
-              backgroundColor: '#3174F3',
+              backgroundColor: 'var(--color-primary)',
               color: '#FFFFFF',
               borderRadius: '50%',
               fontSize: '16px'

@@ -91,13 +91,13 @@ export class SecureConfigManager {
     }
   }
 
-  // Twilio設定の取得
-  static async getTwilioConfig() {
-    const accountSid = await this.getSecureConfig('twilio_account_sid') || process.env.TWILIO_ACCOUNT_SID;
-    const authToken = await this.getSecureConfig('twilio_auth_token') || process.env.TWILIO_AUTH_TOKEN;
-    const phoneNumber = await this.getSecureConfig('twilio_phone_number') || process.env.TWILIO_PHONE_NUMBER;
+  // LINE認証設定の取得
+  static async getLineConfig() {
+    const channelId = await this.getSecureConfig('line_channel_id') || process.env.LINE_CHANNEL_ID;
+    const channelSecret = await this.getSecureConfig('line_channel_secret') || process.env.LINE_CHANNEL_SECRET;
+    const redirectUri = await this.getSecureConfig('line_redirect_uri') || process.env.LINE_REDIRECT_URI;
 
-    return { accountSid, authToken, phoneNumber };
+    return { channelId, channelSecret, redirectUri };
   }
 
   // JWT設定の取得
@@ -139,7 +139,7 @@ export class SecureConfigManager {
 
   // アプリケーション設定の取得
   static async getAppConfig() {
-    const title = await this.getSecureConfig('app_title') || process.env.VITE_APP_TITLE || 'タスカル';
+    const title = await this.getSecureConfig('app_title') || process.env.VITE_APP_TITLE || 'Zero神';
     const version = await this.getSecureConfig('app_version') || process.env.VITE_APP_VERSION || '1.0.0';
     const description = await this.getSecureConfig('app_description') || process.env.VITE_APP_DESCRIPTION || '資産運用診断アプリケーション';
     
@@ -169,7 +169,7 @@ export class SecureConfigManager {
   // 設定の初期化（必要な設定がSupabaseに存在しない場合の初期化）
   static async initializeDefaultConfigs(): Promise<void> {
     const defaultConfigs = [
-      { key: 'app_title', value: 'タスカル', encrypt: false },
+      { key: 'app_title', value: 'Zero神', encrypt: false },
       { key: 'app_version', value: '1.0.0', encrypt: false },
       { key: 'app_description', value: '資産運用診断アプリケーション', encrypt: false },
       { key: 'rate_limit_window_ms', value: '900000', encrypt: false },

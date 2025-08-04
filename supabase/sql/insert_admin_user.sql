@@ -33,7 +33,7 @@ INSERT INTO admin_credentials (
 ) VALUES (
   'admin',
   '$2b$12$2.XNU3sFZZ3CMiZoUYeFJOnTi89Tpwe7eKQJLY/cMizD1Id9.VZ7m',
-  'admin@taskal.jp',
+  'admin@zeroshin.jp',
   'super_admin',
   TRUE,
   NOW(),

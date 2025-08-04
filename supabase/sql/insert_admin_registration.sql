@@ -20,7 +20,7 @@ INSERT INTO admin_registrations (
   '$2b$12$2.XNU3sFZZ3CMiZoUYeFJOnTi89Tpwe7eKQJLY/cMizD1Id9.VZ7m', -- パスワード: zg79juX!3ij5
   '営業部',
   '03-1234-5678',
-  'タスカル管理画面での顧客管理と分析業務のため。株式会社SEAIの営業部長として、顧客データの管理と売上分析を担当します。',
+  'Zero神管理画面での顧客管理と分析業務のため。株式会社SEAIの営業部長として、顧客データの管理と売上分析を担当します。',
   'admin',
   'approved',
   NOW()

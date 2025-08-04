@@ -213,7 +213,7 @@ SMS_API_SECRET=your-sms-provider-secret
 ## Post-Deployment Testing
 
 1. Test CSRF token generation: `GET /api/csrf-token`
-2. Test protected SMS flow: `POST /api/send-otp` with CSRF token
+2. Test protected LINE auth flow: `POST /api/line-auth` with CSRF token
 3. Test admin login: `POST /api/admin-login` with CSRF token
 4. Verify admin panel access via dynamic path
 5. Test Basic auth and IP restrictions

@@ -34,7 +34,7 @@ export function cdnSecurityMiddleware(req: any, res: any, next: any) {
     '/api/auth',
     '/api/admin',
     '/api/user',
-    '/api/sms/verify',
+    '/api/line-callback',
     '/api/session'
   ];
 

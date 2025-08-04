@@ -94,12 +94,12 @@ Cypress.Commands.add('completeDiagnosisFlow', (data) => {
 // 電話番号認証完了（モック）
 Cypress.Commands.add('completePhoneVerification', (phoneNumber: string) => {
   // APIをインターセプト
-  cy.intercept('POST', '**/api/send-otp', {
+  cy.intercept('POST', '**/api/line-auth', {
     statusCode: 200,
-    body: { success: true, message: 'OTP sent successfully' },
-  }).as('sendOTP');
+    body: { success: true, authUrl: 'https://line.me/auth', state: 'mock-state' },
+  }).as('lineAuth');
 
-  cy.intercept('POST', '**/api/verify-otp', {
+  cy.intercept('POST', '**/api/line-callback', {
     statusCode: 200,
     body: { success: true, token: 'mock-token' },
   }).as('verifyOTP');

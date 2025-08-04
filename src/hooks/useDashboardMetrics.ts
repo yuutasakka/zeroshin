@@ -84,8 +84,8 @@ export const useDashboardMetrics = (config?: {
       threshold: { warning: 200, danger: 500 }
     },
     {
-      key: 'smsVerifications',
-      label: 'SMS認証',
+      key: 'lineVerifications',
+      label: 'LINE認証',
       format: (value) => value.toString(),
       color: '#F59E0B',
     },
@@ -207,11 +207,11 @@ export const useDashboardMetrics = (config?: {
     const stats = getEventStats(60); // 過去1時間
     const diagnosisStarted = stats.eventsByType['DIAGNOSIS_STARTED'] || 0;
     const diagnosisCompleted = stats.eventsByType['DIAGNOSIS_COMPLETED'] || 0;
-    const smsVerified = stats.eventsByType['SMS_VERIFIED'] || 0;
+    const lineVerified = stats.eventsByType['LINE_VERIFIED'] || 0;
 
     return {
       completionRate: diagnosisStarted > 0 ? (diagnosisCompleted / diagnosisStarted) * 100 : 0,
-      verificationRate: diagnosisStarted > 0 ? (smsVerified / diagnosisStarted) * 100 : 0,
+      verificationRate: diagnosisStarted > 0 ? (lineVerified / diagnosisStarted) * 100 : 0,
       averageSessionTime: 0, // これは実際のセッションデータから計算する必要があります
       throughput: stats.eventsPerMinute
     };

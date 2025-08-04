@@ -202,9 +202,9 @@ ON CONFLICT (setting_name) DO NOTHING;
 INSERT INTO secure_config (key, value, description, is_encrypted) VALUES
 ('jwt_secret', 'CHANGE_IN_PRODUCTION_' || extract(epoch from now())::text, 'JWT署名用秘密鍵', true),
 ('encryption_key', 'CHANGE_IN_PRODUCTION_' || extract(epoch from now())::text, 'データ暗号化キー', true),
-('twilio_account_sid', '', 'Twilio Account SID', true),
-('twilio_auth_token', '', 'Twilio Auth Token', true),
-('twilio_phone_number', '', 'Twilio Phone Number', true)
+('line_channel_id', '', 'LINE Channel ID', true),
+('line_channel_secret', '', 'LINE Channel Secret', true),
+('line_redirect_uri', '', 'LINE Redirect URI', true)
 ON CONFLICT (key) DO NOTHING;
 
 -- システム監査ログの初期エントリ
