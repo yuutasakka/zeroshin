@@ -28,6 +28,14 @@ const createSupabaseHelper = () => {
                 return { data: null, error: { message: `HTTP ${response.status}: ${response.statusText}`, status: response.status } };
               }
               
+              // レスポンスがJSONかチェック
+              const contentType = response.headers.get('content-type');
+              if (!contentType || !contentType.includes('application/json')) {
+                const textData = await response.text();
+                secureLog('Non-JSON response received:', textData);
+                return { data: null, error: { message: 'Invalid response format', details: textData.substring(0, 100) } };
+              }
+              
               const data = await response.json();
               
               if (Array.isArray(data)) {

@@ -66,8 +66,20 @@ const SecurityTrustSection: React.FC = () => {
             }
           }
         );
+        
+        if (!response.ok) {
+          console.warn(`Supabase request failed: ${response.status} ${response.statusText}`);
+          return; // デフォルトデータを使用
+        }
 
         if (response.ok) {
+          // レスポンスがJSONかチェック
+          const contentType = response.headers.get('content-type');
+          if (!contentType || !contentType.includes('application/json')) {
+            console.warn('Non-JSON response from Supabase:', await response.text());
+            return; // デフォルトデータを使用
+          }
+          
           const data = await response.json();
           if (data && data.length > 0) {
             const formattedData = data.map((item: any) => ({
@@ -80,9 +92,12 @@ const SecurityTrustSection: React.FC = () => {
             setSecurityData(formattedData);
           }
         } else if (response.status === 400) {
+          console.warn('Bad request to Supabase API');
         } else {
+          console.warn('Unexpected response from Supabase API');
         }
       } catch (error) {
+        console.warn('SecurityTrustSection fetch error:', error instanceof Error ? error.message : 'Unknown error');
       }
     };
 
