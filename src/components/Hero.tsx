@@ -115,7 +115,8 @@ const Hero: React.FC<HeroProps> = ({ onStartDiagnosis }) => {
               fontSize: 'clamp(2rem, 5vw, 3.5rem)',
               lineHeight: 1.2,
               marginBottom: 'var(--ds-space-300)',
-              letterSpacing: '-0.02em'
+              letterSpacing: '-0.02em',
+              textAlign: 'center'
             }}
           >
             あなたの
@@ -141,7 +142,8 @@ const Hero: React.FC<HeroProps> = ({ onStartDiagnosis }) => {
               lineHeight: 1.6,
               marginBottom: 'var(--ds-space-400)',
               maxWidth: '600px',
-              margin: `0 auto var(--ds-space-400)`
+              margin: `0 auto var(--ds-space-400)`,
+              textAlign: 'center'
             }}
           >
             ムダ遣いを見つけて節約の神になろう！<br className="desktop-break" />
@@ -156,7 +158,8 @@ const Hero: React.FC<HeroProps> = ({ onStartDiagnosis }) => {
             style={{
               fontSize: 'clamp(0.875rem, 1.5vw, 1rem)',
               lineHeight: 1.6,
-              marginBottom: 'var(--ds-space-300)'
+              marginBottom: 'var(--ds-space-300)',
+              textAlign: 'center'
             }}
           >
             診断で"自分のムダ遣いパターン"を理解すれば、<br />
