@@ -458,7 +458,7 @@ function TopGiftBanner({ onStart }: { onStart: () => void }) {
 
 // Result PDF CTA component for download
 function ResultPdfCTA() {
-  const PDF_URL = process.env.NEXT_PUBLIC_PDF_BEGINNERS_GUIDE_URL || "";
+  const PDF_URL = import.meta.env.VITE_PDF_BEGINNERS_GUIDE_URL || "";
   const disabled = !PDF_URL;
 
   const onClick = () => {
