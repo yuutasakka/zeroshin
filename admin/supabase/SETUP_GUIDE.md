@@ -29,19 +29,22 @@ VITE_SUPABASE_ANON_KEY=your-supabase-anon-key
 
 **Supabaseコンソール**の**SQL Editor**で以下のスクリプトを順番に実行：
 
-#### Step 1: メインスキーマの作成
+#### Step 1: メインスキーマの作成（UUID対応版）
 ```sql
--- schema.sqlの内容をコピー&ペーストして実行
+-- schema_fixed.sqlの内容をコピー&ペーストして実行
+-- ⚠️ 重要: schema.sqlではなく schema_fixed.sql を使用してください
 ```
 
-#### Step 2: セキュリティポリシーの設定
+#### Step 2: セキュリティポリシーの設定（UUID対応版）
 ```sql
--- rls_policies.sqlの内容をコピー&ペーストして実行
+-- rls_policies_fixed.sqlの内容をコピー&ペーストして実行
+-- ⚠️ 重要: rls_policies.sqlではなく rls_policies_fixed.sql を使用してください
 ```
 
-#### Step 3: 初期管理者ユーザーの作成
+#### Step 3: 初期管理者ユーザーの作成（UUID対応版）
 ```sql
--- create_initial_admin.sqlの内容をコピー&ペーストして実行
+-- create_initial_admin_fixed.sqlの内容をコピー&ペーストして実行
+-- ⚠️ 重要: create_initial_admin.sqlではなく create_initial_admin_fixed.sql を使用してください
 ```
 
 ### 4. 認証設定
@@ -163,13 +166,36 @@ console.log('Admin access test:', { data, error });
 
 ```
 admin/supabase/
-├── schema.sql                 # データベーススキーマ
-├── rls_policies.sql          # セキュリティポリシー
-├── create_initial_admin.sql  # 初期管理者作成
-└── SETUP_GUIDE.md           # このガイド
+├── schema_fixed.sql                 # UUID対応データベーススキーマ ⭐
+├── rls_policies_fixed.sql          # UUID対応セキュリティポリシー ⭐
+├── create_initial_admin_fixed.sql  # UUID対応初期管理者作成 ⭐
+├── schema.sql                      # 旧版（使用しないでください）
+├── rls_policies.sql               # 旧版（使用しないでください）
+├── create_initial_admin.sql       # 旧版（使用しないでください）
+└── SETUP_GUIDE.md                # このガイド
 
 .env.local.template           # 環境変数テンプレート
 ```
+
+## 🔧 重要な修正事項
+
+### UUID統一による修正
+
+**問題**: 外部キー制約のデータ型不整合
+```
+ERROR: 42804: foreign key constraint cannot be implemented
+DETAIL: Key columns are of incompatible types: uuid and integer.
+```
+
+**解決済み**: 
+- 全てのプライマリキーをUUIDに統一
+- 外部キー参照の整合性を確保
+- `*_fixed.sql`ファイルを使用
+
+### 修正されたファイル
+- ✅ `schema_fixed.sql` - UUID対応データベーススキーマ
+- ✅ `rls_policies_fixed.sql` - UUID対応セキュリティポリシー
+- ✅ `create_initial_admin_fixed.sql` - UUID対応初期管理者作成
 
 ## 🚨 トラブルシューティング
 
@@ -234,6 +260,8 @@ REINDEX INDEX CONCURRENTLY idx_phone_verifications_phone;
 - [ ] 定期バックアップの設定
 - [ ] 監査ログの監視システム構築
 - [ ] レート制限の適切な設定
+- [ ] UUID外部キー制約の動作確認
+- [ ] セキュリティ監査レポートの実行: `SELECT * FROM security_audit_report();`
 
 ### パフォーマンス最適化
 
