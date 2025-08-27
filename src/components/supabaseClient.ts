@@ -103,17 +103,58 @@ const createSupabaseClient = async () => {
 };
 
 // 設定がロードされた後にSupabaseクライアントを初期化
-let supabase: any;
+let supabaseInstance: any;
 
 export const getSupabaseClient = async () => {
-  if (!supabase) {
-    supabase = await createSupabaseClient();
+  if (!supabaseInstance) {
+    supabaseInstance = await createSupabaseClient();
   }
-  return supabase;
+  return supabaseInstance;
 };
 
-// 後方互換性のためのエクスポート（非推奨）
-export { supabase };
+// 同期的なSupabaseクライアントを取得（既存コードとの互換性）
+const createSyncSupabaseClient = () => {
+  // 環境変数から直接取得（フォールバック）
+  const url = getEnvVar('VITE_SUPABASE_URL', '');
+  const key = getEnvVar('VITE_SUPABASE_ANON_KEY', '');
+  
+  if (!url || !key || url.includes('your-project') || key.includes('your-key')) {
+    console.warn('Supabase credentials not configured properly');
+    // モッククライアントを返す
+    return {
+      from: () => ({
+        select: () => Promise.resolve({ data: [], error: null }),
+        insert: () => Promise.resolve({ data: null, error: new Error('Supabase not configured') }),
+        update: () => Promise.resolve({ data: null, error: new Error('Supabase not configured') }),
+        delete: () => Promise.resolve({ data: null, error: new Error('Supabase not configured') }),
+        eq: function() { return this; },
+        single: function() { return this; },
+        order: function() { return this; },
+        limit: function() { return this; }
+      }),
+      auth: {
+        signInWithPassword: () => Promise.resolve({ data: { user: null }, error: new Error('Supabase not configured') }),
+        signOut: () => Promise.resolve({ error: null }),
+        getUser: () => Promise.resolve({ data: { user: null }, error: null }),
+        resetPasswordForEmail: () => Promise.resolve({ error: new Error('Supabase not configured') }),
+        updateUser: () => Promise.resolve({ error: new Error('Supabase not configured') })
+      },
+      storage: {
+        from: () => ({
+          upload: () => Promise.resolve({ data: null, error: new Error('Supabase not configured') }),
+          remove: () => Promise.resolve({ error: new Error('Supabase not configured') }),
+          getPublicUrl: () => ({ publicUrl: '' }),
+          list: () => Promise.resolve({ data: [], error: new Error('Supabase not configured') })
+        })
+      }
+    } as any;
+  }
+  
+  return createClient(url, key);
+};
+
+// 後方互換性のためのエクスポート
+export const supabase = createSyncSupabaseClient();
 
 // 管理者認証情報の型定義
 export interface AdminCredentials {
