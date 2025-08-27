@@ -1,5 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { supabase } from '../../src/components/supabaseClient';
+import { logger } from '../utils/logger';
+import { errorHandler, ErrorTypes } from '../utils/errorHandler';
+import { validateForm } from '../utils/validation';
+import { navigateTo } from '../utils/navigation';
 
 interface SystemSettings {
   maintenanceMode: boolean;
@@ -21,35 +25,69 @@ const AdminSettings: React.FC = () => {
 
   useEffect(() => {
     loadSettings();
-  }, []);
+  }, [loadSettings]);
 
-  const loadSettings = async () => {
+  const loadSettings = useCallback(async () => {
     try {
+      logger.info('Loading system settings', {}, 'AdminSettings');
+      
       const { data, error } = await supabase
         .from('system_settings')
         .select('*')
         .single();
 
-      if (!error && data) {
-        setSettings({
+      if (error) {
+        // 設定が存在しない場合は新規作成として扱う
+        if (error.code === 'PGRST116') {
+          logger.info('System settings not found, using defaults', {}, 'AdminSettings');
+          setLoading(false);
+          return;
+        }
+        
+        const appError = errorHandler.handleSupabaseError(error, 'AdminSettings');
+        logger.error('Failed to load settings', { error }, 'AdminSettings');
+        throw appError;
+      }
+
+      if (data) {
+        const loadedSettings: SystemSettings = {
           maintenanceMode: data.maintenance_mode || false,
           maxUsersPerDay: data.max_users_per_day || 1000,
           smsEnabled: data.sms_enabled || true,
           debugMode: data.debug_mode || false
-        });
+        };
+        
+        setSettings(loadedSettings);
+        logger.info('System settings loaded successfully', loadedSettings, 'AdminSettings');
       }
     } catch (error) {
-      console.error('設定の読み込みエラー:', error);
+      const appError = errorHandler.handleError(error, 'AdminSettings');
+      logger.error('Settings loading failed', { error }, 'AdminSettings');
+      setMessage(`設定の読み込みに失敗しました: ${errorHandler.getUserMessage(appError)}`);
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
-  const handleSave = async () => {
+  // 設定の検証をメモ化
+  const validationResult = useMemo(() => {
+    return validateForm.systemSettings(settings);
+  }, [settings]);
+
+  const handleSave = useCallback(async () => {
     setSaving(true);
     setMessage('');
 
+    // 保存前の検証
+    if (!validationResult.isValid) {
+      setMessage(`設定エラー: ${validationResult.errors.join(', ')}`);
+      setSaving(false);
+      return;
+    }
+
     try {
+      logger.info('Saving system settings', settings, 'AdminSettings');
+      
       const { error } = await supabase
         .from('system_settings')
         .upsert({
@@ -62,21 +100,25 @@ const AdminSettings: React.FC = () => {
         });
 
       if (error) {
-        setMessage('設定の保存に失敗しました: ' + error.message);
+        const appError = errorHandler.handleSupabaseError(error, 'AdminSettings');
+        logger.error('Failed to save settings', { error, settings }, 'AdminSettings');
+        setMessage(`設定の保存に失敗しました: ${appError.userMessage}`);
       } else {
+        logger.info('System settings saved successfully', settings, 'AdminSettings');
         setMessage('設定が正常に保存されました');
       }
     } catch (error) {
-      console.error('設定保存エラー:', error);
-      setMessage('設定の保存中にエラーが発生しました');
+      const appError = errorHandler.handleError(error, 'AdminSettings');
+      logger.error('Settings save failed', { error, settings }, 'AdminSettings');
+      setMessage(`設定の保存中にエラーが発生しました: ${errorHandler.getUserMessage(appError)}`);
     } finally {
       setSaving(false);
     }
-  };
+  }, [settings, validationResult]);
 
-  const handleBack = () => {
-    window.location.href = '/dashboard';
-  };
+  const handleBack = useCallback(() => {
+    navigateTo.dashboard();
+  }, []);
 
   if (loading) {
     return (
@@ -103,8 +145,14 @@ const AdminSettings: React.FC = () => {
       <main className="settings-main">
         <div className="settings-container">
           {message && (
-            <div className={`message ${message.includes('失敗') ? 'error' : 'success'}`}>
+            <div className={`message ${message.includes('失敗') || message.includes('エラー') ? 'error' : 'success'}`}>
               {message}
+            </div>
+          )}
+
+          {!validationResult.isValid && validationResult.errors.length > 0 && (
+            <div className="message error">
+              設定に問題があります: {validationResult.errors.join(', ')}
             </div>
           )}
 
@@ -474,4 +522,7 @@ const AdminSettings: React.FC = () => {
   );
 };
 
-export default AdminSettings;
+// パフォーマンス向上のためのメモ化
+const MemoizedAdminSettings = React.memo(AdminSettings);
+
+export default MemoizedAdminSettings;

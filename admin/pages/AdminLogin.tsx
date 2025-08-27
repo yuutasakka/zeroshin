@@ -1,6 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback, useMemo } from 'react';
 import { supabase } from '../../src/components/supabaseClient';
 import { useCSRF, csrfFetch } from '../../src/hooks/useCSRF';
+import { logger } from '../utils/logger';
+import { errorHandler, ErrorTypes } from '../utils/errorHandler';
+import { validateForm, sanitizeInput } from '../utils/validation';
+import { navigateTo } from '../utils/navigation';
+import styles from '../styles/AdminLogin.module.css';
 
 const AdminLogin: React.FC = () => {
   const [email, setEmail] = useState('');
@@ -11,14 +16,30 @@ const AdminLogin: React.FC = () => {
   // CSRF保護
   const { csrfToken, isLoading: csrfLoading, addCSRFHeaders, refreshToken } = useCSRF();
 
-  const handleLogin = async (e: React.FormEvent) => {
+  const handleLogin = useCallback(async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError('');
 
+    // 入力検証
+    const sanitizedEmail = sanitizeInput.email(email);
+    const validationResult = validateForm.loginForm(sanitizedEmail, password);
+    
+    if (!validationResult.isValid) {
+      setError(validationResult.errors[0]);
+      setLoading(false);
+      return;
+    }
+
     // CSRFトークンの確認
     if (!csrfToken) {
+      const appError = errorHandler.createError(
+        ErrorTypes.VALIDATION_ERROR,
+        'AdminLogin',
+        'CSRF token not available'
+      );
       setError('セキュリティトークンの取得に失敗しました。ページを再読み込みしてください。');
+      logger.warn('CSRF token not available during login attempt', { email: sanitizedEmail });
       await refreshToken();
       setLoading(false);
       return;
@@ -29,67 +50,103 @@ const AdminLogin: React.FC = () => {
       const response = await csrfFetch('/api/admin-login', {
         method: 'POST',
         headers: addCSRFHeaders(),
-        body: JSON.stringify({ email, password })
+        body: JSON.stringify({ email: sanitizedEmail, password })
       }, csrfToken);
 
       const result = await response.json();
 
       if (!response.ok) {
+        let appError;
+        
         if (result.code === 'CSRF_INVALID') {
+          appError = errorHandler.createError(ErrorTypes.VALIDATION_ERROR, 'AdminLogin');
           setError('セキュリティエラー: ページを再読み込みしてください');
           await refreshToken();
         } else if (result.code === 'AUTH_FAILED') {
-          setError('メールアドレスまたはパスワードが正しくありません');
+          appError = errorHandler.createError(ErrorTypes.AUTH_FAILED, 'AdminLogin');
+          setError(ErrorTypes.AUTH_FAILED.userMessage);
         } else if (result.code === 'INSUFFICIENT_PRIVILEGES') {
-          setError('管理者権限がありません');
+          appError = errorHandler.createError(ErrorTypes.INSUFFICIENT_PRIVILEGES, 'AdminLogin');
+          setError(ErrorTypes.INSUFFICIENT_PRIVILEGES.userMessage);
         } else {
+          appError = errorHandler.createError(ErrorTypes.UNKNOWN_ERROR, 'AdminLogin', result);
           setError(result.error || 'ログインに失敗しました');
         }
+        
+        logger.error('Admin login failed', { 
+          code: result.code, 
+          email: sanitizedEmail,
+          userAgent: navigator.userAgent 
+        });
         return;
       }
 
       // ログイン成功
       if (result.success) {
+        logger.info('Admin login successful', { email: sanitizedEmail });
+        
         // Supabaseセッションも設定（互換性のため）
         const { data, error: authError } = await supabase.auth.signInWithPassword({
-          email,
+          email: sanitizedEmail,
           password,
         });
 
         if (!authError && data.user) {
           // ダッシュボードにリダイレクト
-          window.location.href = '/dashboard';
+          navigateTo.dashboard();
         } else {
+          const appError = errorHandler.handleSupabaseError(authError, 'AdminLogin');
           setError('セッション設定に失敗しました');
+          logger.error('Supabase session setup failed', { email: sanitizedEmail, error: authError });
         }
       } else {
+        const appError = errorHandler.createError(ErrorTypes.AUTH_FAILED, 'AdminLogin');
         setError('ログインに失敗しました');
       }
     } catch (error) {
-      console.error('ログインエラー:', error);
-      setError('ログイン処理中にエラーが発生しました');
+      const appError = errorHandler.handleNetworkError(error, 'AdminLogin');
+      setError(errorHandler.getUserMessage(appError));
+      logger.error('Login network error', { email: sanitizedEmail, error });
     } finally {
       setLoading(false);
     }
-  };
+  }, [email, password, csrfToken, addCSRFHeaders, refreshToken]);
+
+  // フォームの無効状態をメモ化
+  const isFormDisabled = useMemo(() => {
+    return loading || csrfLoading || !email.trim() || !password || !csrfToken;
+  }, [loading, csrfLoading, email, password, csrfToken]);
+
+  // フォーム検証状態をメモ化
+  const validationStatus = useMemo(() => {
+    if (!email || !password) return null;
+    const sanitizedEmail = sanitizeInput.email(email);
+    return validateForm.loginForm(sanitizedEmail, password);
+  }, [email, password]);
 
   return (
-    <div className="admin-login">
-      <div className="login-container">
-        <div className="login-header">
+    <div className={styles.adminLogin}>
+      <div className={styles.loginContainer}>
+        <div className={styles.loginHeader}>
           <h1>管理者ログイン</h1>
           <p>システム管理者専用のログインページです</p>
         </div>
 
-        <form onSubmit={handleLogin} className="login-form">
+        <form onSubmit={handleLogin} className={styles.loginForm}>
           {error && (
-            <div className="error-message">
+            <div className={styles.errorMessage}>
               <span className="error-icon">⚠️</span>
               {error}
             </div>
           )}
 
-          <div className="form-group">
+          {validationStatus && !validationStatus.isValid && (
+            <div className={styles.validationMessage}>
+              {validationStatus.errors.join(', ')}
+            </div>
+          )}
+
+          <div className={styles.formGroup}>
             <label htmlFor="email">メールアドレス</label>
             <input
               type="email"
@@ -99,10 +156,14 @@ const AdminLogin: React.FC = () => {
               required
               disabled={loading}
               placeholder="admin@example.com"
+              className={validationStatus && email ? 
+                (validationStatus.isValid ? styles.valid : styles.invalid) : 
+                ''
+              }
             />
           </div>
 
-          <div className="form-group">
+          <div className={styles.formGroup}>
             <label htmlFor="password">パスワード</label>
             <input
               type="password"
@@ -117,12 +178,12 @@ const AdminLogin: React.FC = () => {
 
           <button
             type="submit"
-            className="login-button"
-            disabled={loading || csrfLoading || !email || !password || !csrfToken}
+            className={styles.loginButton}
+            disabled={isFormDisabled}
           >
             {loading ? (
-              <span className="loading-text">
-                <span className="spinner"></span>
+              <span className={styles.loadingText}>
+                <span className={styles.spinner}></span>
                 ログイン中...
               </span>
             ) : (
@@ -131,176 +192,15 @@ const AdminLogin: React.FC = () => {
           </button>
         </form>
 
-        <div className="login-footer">
+        <div className={styles.loginFooter}>
           <p>※ 管理者認証が必要です</p>
         </div>
       </div>
-
-      <style jsx>{`
-        .admin-login {
-          min-height: 100vh;
-          background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
-          display: flex;
-          justify-content: center;
-          align-items: center;
-          padding: 2rem;
-          font-family: 'Inter', sans-serif;
-        }
-
-        .login-container {
-          background: rgba(255, 255, 255, 0.1);
-          backdrop-filter: blur(20px);
-          border: 1px solid rgba(255, 255, 255, 0.1);
-          border-radius: 16px;
-          padding: 2.5rem;
-          width: 100%;
-          max-width: 400px;
-          box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
-        }
-
-        .login-header {
-          text-align: center;
-          margin-bottom: 2rem;
-          color: #ffffff;
-        }
-
-        .login-header h1 {
-          margin: 0 0 0.5rem 0;
-          font-size: 1.8rem;
-          font-weight: 600;
-        }
-
-        .login-header p {
-          margin: 0;
-          opacity: 0.8;
-          font-size: 0.9rem;
-        }
-
-        .login-form {
-          display: flex;
-          flex-direction: column;
-          gap: 1.5rem;
-        }
-
-        .error-message {
-          background: rgba(220, 53, 69, 0.2);
-          border: 1px solid rgba(220, 53, 69, 0.5);
-          border-radius: 8px;
-          padding: 1rem;
-          color: #ff6b6b;
-          display: flex;
-          align-items: center;
-          gap: 0.5rem;
-          font-size: 0.9rem;
-        }
-
-        .form-group {
-          display: flex;
-          flex-direction: column;
-          gap: 0.5rem;
-        }
-
-        .form-group label {
-          color: #ffffff;
-          font-weight: 500;
-          font-size: 0.9rem;
-        }
-
-        .form-group input {
-          padding: 0.75rem;
-          background: rgba(255, 255, 255, 0.1);
-          border: 1px solid rgba(255, 255, 255, 0.2);
-          border-radius: 8px;
-          color: #ffffff;
-          font-size: 1rem;
-          transition: all 0.2s ease;
-        }
-
-        .form-group input::placeholder {
-          color: rgba(255, 255, 255, 0.5);
-        }
-
-        .form-group input:focus {
-          outline: none;
-          border-color: #007acc;
-          background: rgba(255, 255, 255, 0.15);
-        }
-
-        .form-group input:disabled {
-          opacity: 0.6;
-          cursor: not-allowed;
-        }
-
-        .login-button {
-          padding: 1rem;
-          background: linear-gradient(135deg, #007acc 0%, #0056b3 100%);
-          border: none;
-          border-radius: 8px;
-          color: #ffffff;
-          font-size: 1rem;
-          font-weight: 600;
-          cursor: pointer;
-          transition: all 0.2s ease;
-          display: flex;
-          justify-content: center;
-          align-items: center;
-        }
-
-        .login-button:hover:not(:disabled) {
-          transform: translateY(-1px);
-          box-shadow: 0 4px 12px rgba(0, 122, 204, 0.3);
-        }
-
-        .login-button:disabled {
-          opacity: 0.6;
-          cursor: not-allowed;
-          transform: none;
-          box-shadow: none;
-        }
-
-        .loading-text {
-          display: flex;
-          align-items: center;
-          gap: 0.5rem;
-        }
-
-        .spinner {
-          width: 16px;
-          height: 16px;
-          border: 2px solid rgba(255, 255, 255, 0.3);
-          border-top: 2px solid #ffffff;
-          border-radius: 50%;
-          animation: spin 1s linear infinite;
-        }
-
-        @keyframes spin {
-          0% { transform: rotate(0deg); }
-          100% { transform: rotate(360deg); }
-        }
-
-        .login-footer {
-          text-align: center;
-          margin-top: 2rem;
-          color: rgba(255, 255, 255, 0.6);
-          font-size: 0.8rem;
-        }
-
-        @media (max-width: 480px) {
-          .admin-login {
-            padding: 1rem;
-          }
-
-          .login-container {
-            padding: 2rem;
-          }
-
-          .login-header h1 {
-            font-size: 1.5rem;
-          }
-        }
-      `}</style>
     </div>
   );
 };
 
-export default AdminLogin;
+// パフォーマンス向上のためのコンポーネントメモ化
+const MemoizedAdminLogin = React.memo(AdminLogin);
+
+export default MemoizedAdminLogin;

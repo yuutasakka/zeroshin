@@ -1,5 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { supabase } from '../../src/components/supabaseClient';
+import { logger } from '../utils/logger';
+import { errorHandler, ErrorTypes } from '../utils/errorHandler';
+import { sanitizeInput } from '../utils/validation';
+import { navigateTo } from '../utils/navigation';
 
 interface User {
   id: string;
@@ -13,63 +17,110 @@ const UserManagement: React.FC = () => {
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
-  const [filteredUsers, setFilteredUsers] = useState<User[]>([]);
 
   useEffect(() => {
     loadUsers();
-  }, []);
+  }, [loadUsers]);
 
-  useEffect(() => {
-    // 検索フィルター
+  // 検索フィルターのメモ化
+  const filteredUsers = useMemo(() => {
+    if (!searchTerm) return users;
+    
+    const sanitizedSearch = sanitizeInput.searchQuery(searchTerm);
+    logger.debug('Filtering users', { searchTerm: sanitizedSearch, totalUsers: users.length }, 'UserManagement');
+    
     const filtered = users.filter(user =>
-      user.phone_number.includes(searchTerm) ||
-      user.id.includes(searchTerm)
+      user.phone_number.includes(sanitizedSearch) ||
+      user.id.toLowerCase().includes(sanitizedSearch.toLowerCase())
     );
-    setFilteredUsers(filtered);
+    
+    return filtered;
   }, [users, searchTerm]);
 
-  const loadUsers = async () => {
+  // 統計情報のメモ化
+  const statistics = useMemo(() => ({
+    total: users.length,
+    verified: users.filter(u => u.verified).length,
+    unverified: users.filter(u => !u.verified).length
+  }), [users]);
+
+  const loadUsers = useCallback(async () => {
     try {
+      logger.info('Loading user data', {}, 'UserManagement');
+      
       const { data, error } = await supabase
         .from('phone_verifications')
         .select('*')
         .order('created_at', { ascending: false });
 
-      if (!error && data) {
+      if (error) {
+        const appError = errorHandler.handleSupabaseError(error, 'UserManagement');
+        logger.error('Failed to load user data', { error }, 'UserManagement');
+        throw appError;
+      }
+
+      if (data) {
         setUsers(data);
+        logger.info('User data loaded successfully', { count: data.length }, 'UserManagement');
       }
     } catch (error) {
-      console.error('ユーザーデータの読み込みエラー:', error);
+      const appError = errorHandler.handleError(error, 'UserManagement');
+      logger.error('User data loading failed', { error }, 'UserManagement');
+      // エラーは上位コンポーネントで処理
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
-  const handleDeleteUser = async (userId: string) => {
-    if (!confirm('このユーザーを削除してもよろしいですか？')) {
+  const handleDeleteUser = useCallback(async (userId: string) => {
+    const userToDelete = users.find(u => u.id === userId);
+    if (!userToDelete) {
+      logger.warn('User to delete not found', { userId }, 'UserManagement');
+      return;
+    }
+
+    const confirmMessage = `ユーザー "${userToDelete.phone_number}" を削除してもよろしいですか？この操作は取り消せません。`;
+    if (!confirm(confirmMessage)) {
+      logger.info('User deletion cancelled by user', { userId }, 'UserManagement');
       return;
     }
 
     try {
+      logger.info('Deleting user', { userId, phoneNumber: userToDelete.phone_number }, 'UserManagement');
+      
       const { error } = await supabase
         .from('phone_verifications')
         .delete()
         .eq('id', userId);
 
-      if (!error) {
-        setUsers(users.filter(user => user.id !== userId));
-      } else {
-        alert('ユーザーの削除に失敗しました: ' + error.message);
+      if (error) {
+        const appError = errorHandler.handleSupabaseError(error, 'UserManagement');
+        logger.error('Failed to delete user', { userId, error }, 'UserManagement');
+        alert(`ユーザーの削除に失敗しました: ${appError.userMessage}`);
+        return;
       }
-    } catch (error) {
-      console.error('ユーザー削除エラー:', error);
-      alert('ユーザーの削除中にエラーが発生しました');
-    }
-  };
 
-  const handleBack = () => {
-    window.location.href = '/dashboard';
-  };
+      // ローカル状態を更新
+      setUsers(prevUsers => {
+        const updatedUsers = prevUsers.filter(user => user.id !== userId);
+        logger.info('User deleted successfully', { 
+          userId, 
+          phoneNumber: userToDelete.phone_number,
+          remainingUsers: updatedUsers.length 
+        }, 'UserManagement');
+        return updatedUsers;
+      });
+      
+    } catch (error) {
+      const appError = errorHandler.handleError(error, 'UserManagement');
+      logger.error('User deletion failed', { userId, error }, 'UserManagement');
+      alert(`ユーザーの削除中にエラーが発生しました: ${errorHandler.getUserMessage(appError)}`);
+    }
+  }, [users]);
+
+  const handleBack = useCallback(() => {
+    navigateTo.dashboard();
+  }, []);
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleString('ja-JP');
@@ -113,19 +164,15 @@ const UserManagement: React.FC = () => {
             <div className="stats-section">
               <div className="stat-item">
                 <span className="stat-label">総ユーザー数:</span>
-                <span className="stat-value">{users.length}</span>
+                <span className="stat-value">{statistics.total}</span>
               </div>
               <div className="stat-item">
                 <span className="stat-label">認証済み:</span>
-                <span className="stat-value">
-                  {users.filter(u => u.verified).length}
-                </span>
+                <span className="stat-value">{statistics.verified}</span>
               </div>
               <div className="stat-item">
                 <span className="stat-label">未認証:</span>
-                <span className="stat-value">
-                  {users.filter(u => !u.verified).length}
-                </span>
+                <span className="stat-value">{statistics.unverified}</span>
               </div>
             </div>
           </div>
@@ -447,4 +494,7 @@ const UserManagement: React.FC = () => {
   );
 };
 
-export default UserManagement;
+// パフォーマンス向上のためのメモ化
+const MemoizedUserManagement = React.memo(UserManagement);
+
+export default MemoizedUserManagement;

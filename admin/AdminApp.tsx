@@ -1,7 +1,11 @@
-import React, { useState, useEffect, lazy, Suspense } from 'react';
+import React, { useState, useEffect, lazy, Suspense, useCallback } from 'react';
 import { createBrowserRouter, RouterProvider, Navigate } from 'react-router-dom';
 import { supabase } from '../src/components/supabaseClient';
 import type { User } from '@supabase/supabase-js';
+import { logger } from './utils/logger';
+import { errorHandler, ErrorTypes } from './utils/errorHandler';
+import NavigationWrapper from './components/NavigationWrapper';
+import ErrorBoundary from './components/ErrorBoundary';
 
 // Admin専用コンポーネントのlazy loading
 const AdminDashboard = lazy(() => import('./pages/AdminDashboard'));
@@ -38,54 +42,79 @@ const AdminLoadingSpinner = () => (
   </div>
 );
 
-// 認証ガード
+// 認証ガード（改善版）
 const AuthGuard: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [isAuthorized, setIsAuthorized] = useState(false);
 
-  useEffect(() => {
-    const checkAuth = async () => {
-      try {
-        // 現在のセッションを確認
-        const { data: { session }, error } = await supabase.auth.getSession();
+  const checkAuth = useCallback(async () => {
+    try {
+      // 現在のセッションを確認
+      const { data: { session }, error } = await supabase.auth.getSession();
+      
+      if (error) {
+        const appError = errorHandler.handleSupabaseError(error, 'AuthGuard');
+        logger.error('Session check failed', { error }, 'AuthGuard');
+        setLoading(false);
+        return;
+      }
+
+      if (!session?.user) {
+        logger.info('No active session found', {}, 'AuthGuard');
+        setLoading(false);
+        return;
+      }
+
+      // 管理者権限の確認
+      const { data: adminData, error: adminError } = await supabase
+        .from('admin_credentials')
+        .select('*')
+        .or(`username.eq.${session.user.email},phone_number.eq.${session.user.phone}`)
+        .eq('is_active', true)
+        .maybeSingle();
+
+      if (adminData && !adminError) {
+        setUser(session.user);
+        setIsAuthorized(true);
+        logger.info('Admin authentication successful', { 
+          email: session.user.email,
+          adminId: adminData.id 
+        }, 'AuthGuard');
+      } else {
+        // 管理者でない場合は強制ログアウト
+        const appError = errorHandler.createError(
+          ErrorTypes.INSUFFICIENT_PRIVILEGES, 
+          'AuthGuard',
+          adminError
+        );
+        logger.warn('Insufficient admin privileges', { 
+          email: session.user.email,
+          error: adminError 
+        }, 'AuthGuard');
         
-        if (error || !session?.user) {
-          setLoading(false);
-          return;
-        }
-
-        // 管理者権限の確認
-        const { data: adminData, error: adminError } = await supabase
-          .from('admin_credentials')
-          .select('*')
-          .or(`username.eq.${session.user.email},phone_number.eq.${session.user.phone}`)
-          .eq('is_active', true)
-          .maybeSingle();
-
-        if (adminData && !adminError) {
-          setUser(session.user);
-          setIsAuthorized(true);
-        } else {
-          // 管理者でない場合は強制ログアウト
-          await supabase.auth.signOut();
-          setUser(null);
-          setIsAuthorized(false);
-        }
-      } catch (error) {
-        console.error('認証エラー:', error);
+        await supabase.auth.signOut();
         setUser(null);
         setIsAuthorized(false);
-      } finally {
-        setLoading(false);
       }
-    };
+    } catch (error) {
+      const appError = errorHandler.handleError(error, 'AuthGuard');
+      logger.error('Authentication check failed', { error }, 'AuthGuard');
+      setUser(null);
+      setIsAuthorized(false);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
+  useEffect(() => {
     checkAuth();
 
     // 認証状態の監視
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
+        logger.info('Auth state change', { event, hasSession: !!session }, 'AuthGuard');
+        
         if (event === 'SIGNED_OUT' || !session) {
           setUser(null);
           setIsAuthorized(false);
@@ -97,7 +126,7 @@ const AuthGuard: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     );
 
     return () => subscription.unsubscribe();
-  }, []);
+  }, [checkAuth]);
 
   if (loading) {
     return <AdminLoadingSpinner />;
@@ -115,49 +144,59 @@ const adminRouter = createBrowserRouter([
   {
     path: "/login",
     element: (
-      <Suspense fallback={<AdminLoadingSpinner />}>
-        <AdminLogin />
-      </Suspense>
+      <NavigationWrapper>
+        <Suspense fallback={<AdminLoadingSpinner />}>
+          <AdminLogin />
+        </Suspense>
+      </NavigationWrapper>
     ),
   },
   {
     path: "/",
     element: (
-      <AuthGuard>
-        <Suspense fallback={<AdminLoadingSpinner />}>
-          <AdminDashboard />
-        </Suspense>
-      </AuthGuard>
+      <NavigationWrapper>
+        <AuthGuard>
+          <Suspense fallback={<AdminLoadingSpinner />}>
+            <AdminDashboard />
+          </Suspense>
+        </AuthGuard>
+      </NavigationWrapper>
     ),
   },
   {
     path: "/dashboard",
     element: (
-      <AuthGuard>
-        <Suspense fallback={<AdminLoadingSpinner />}>
-          <AdminDashboard />
-        </Suspense>
-      </AuthGuard>
+      <NavigationWrapper>
+        <AuthGuard>
+          <Suspense fallback={<AdminLoadingSpinner />}>
+            <AdminDashboard />
+          </Suspense>
+        </AuthGuard>
+      </NavigationWrapper>
     ),
   },
   {
     path: "/settings",
     element: (
-      <AuthGuard>
-        <Suspense fallback={<AdminLoadingSpinner />}>
-          <AdminSettings />
-        </Suspense>
-      </AuthGuard>
+      <NavigationWrapper>
+        <AuthGuard>
+          <Suspense fallback={<AdminLoadingSpinner />}>
+            <AdminSettings />
+          </Suspense>
+        </AuthGuard>
+      </NavigationWrapper>
     ),
   },
   {
     path: "/users",
     element: (
-      <AuthGuard>
-        <Suspense fallback={<AdminLoadingSpinner />}>
-          <UserManagement />
-        </Suspense>
-      </AuthGuard>
+      <NavigationWrapper>
+        <AuthGuard>
+          <Suspense fallback={<AdminLoadingSpinner />}>
+            <UserManagement />
+          </Suspense>
+        </AuthGuard>
+      </NavigationWrapper>
     ),
   },
   {
@@ -169,13 +208,15 @@ const adminRouter = createBrowserRouter([
 // メインのAdmin App
 const AdminApp: React.FC = () => {
   return (
-    <div style={{ 
-      minHeight: '100vh',
-      background: 'linear-gradient(135deg, #1a1a2e 0%, #16213e 100%)',
-      fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif'
-    }}>
-      <RouterProvider router={adminRouter} />
-    </div>
+    <ErrorBoundary>
+      <div style={{ 
+        minHeight: '100vh',
+        background: 'linear-gradient(135deg, #1a1a2e 0%, #16213e 100%)',
+        fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif'
+      }}>
+        <RouterProvider router={adminRouter} />
+      </div>
+    </ErrorBoundary>
   );
 };
 

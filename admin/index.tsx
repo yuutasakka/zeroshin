@@ -12,26 +12,5 @@ if (!container) {
 const root = createRoot(container);
 root.render(<AdminApp />);
 
-// 管理画面用の追加セキュリティ設定
-if (process.env.NODE_ENV === 'production') {
-  // 開発者ツールの無効化
-  document.addEventListener('keydown', (e) => {
-    if (e.key === 'F12' || 
-        (e.ctrlKey && e.shiftKey && e.key === 'I') ||
-        (e.ctrlKey && e.shiftKey && e.key === 'C') ||
-        (e.ctrlKey && e.key === 'u')) {
-      e.preventDefault();
-      return false;
-    }
-  });
-
-  // 右クリック無効化
-  document.addEventListener('contextmenu', (e) => {
-    e.preventDefault();
-  });
-
-  // ソース表示の無効化
-  document.addEventListener('selectstart', (e) => {
-    e.preventDefault();
-  });
-}
+// セキュリティは適切なサーバーサイド認証で実装
+// クライアントサイドでの開発者ツール制限は推奨されません

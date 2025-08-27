@@ -1,5 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { supabase } from '../../src/components/supabaseClient';
+import { logger } from '../utils/logger';
+import { errorHandler, ErrorTypes } from '../utils/errorHandler';
+import { navigateTo } from '../utils/navigation';
 
 interface DashboardStats {
   totalUsers: number;
@@ -17,45 +20,93 @@ const AdminDashboard: React.FC = () => {
   });
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    const loadDashboardData = async () => {
-      try {
-        // ユーザー統計を取得
-        const { data: users, error: usersError } = await supabase
-          .from('phone_verifications')
-          .select('*');
+  const loadDashboardData = useCallback(async () => {
+    try {
+      logger.info('Loading dashboard data', {}, 'AdminDashboard');
+      
+      // ユーザー統計を取得
+      const { data: users, error: usersError } = await supabase
+        .from('phone_verifications')
+        .select('*');
 
-        if (!usersError && users) {
-          const today = new Date().toISOString().split('T')[0];
-          const todayUsers = users.filter(user => 
-            user.created_at?.startsWith(today)
-          );
-
-          setStats({
-            totalUsers: users.length,
-            todayRegistrations: todayUsers.length,
-            activeAnalyses: users.filter(u => u.verified).length,
-            systemHealth: 'healthy'
-          });
-        }
-      } catch (error) {
-        console.error('ダッシュボードデータの読み込みエラー:', error);
-      } finally {
-        setLoading(false);
+      if (usersError) {
+        const appError = errorHandler.handleSupabaseError(usersError, 'AdminDashboard');
+        logger.error('Failed to load user statistics', { error: usersError }, 'AdminDashboard');
+        throw appError;
       }
-    };
 
-    loadDashboardData();
+      if (users) {
+        const today = new Date().toISOString().split('T')[0];
+        const todayUsers = users.filter(user => 
+          user.created_at?.startsWith(today)
+        );
+
+        const newStats: DashboardStats = {
+          totalUsers: users.length,
+          todayRegistrations: todayUsers.length,
+          activeAnalyses: users.filter(u => u.verified).length,
+          systemHealth: 'healthy'
+        };
+
+        setStats(newStats);
+        
+        logger.info('Dashboard data loaded successfully', {
+          totalUsers: newStats.totalUsers,
+          todayRegistrations: newStats.todayRegistrations,
+          activeAnalyses: newStats.activeAnalyses
+        }, 'AdminDashboard');
+      }
+    } catch (error) {
+      const appError = errorHandler.handleError(error, 'AdminDashboard');
+      logger.error('Dashboard data loading failed', { error }, 'AdminDashboard');
+      
+      // エラー状態をUIに反映
+      setStats(prevStats => ({
+        ...prevStats,
+        systemHealth: 'critical'
+      }));
+    } finally {
+      setLoading(false);
+    }
   }, []);
 
-  const handleLogout = async () => {
-    try {
-      await supabase.auth.signOut();
-      window.location.reload();
-    } catch (error) {
-      console.error('ログアウトエラー:', error);
+  // システムヘルスの色を計算（メモ化）
+  const healthColor = useMemo(() => {
+    switch (stats.systemHealth) {
+      case 'healthy': return '#28a745';
+      case 'warning': return '#ffc107';
+      case 'critical': return '#dc3545';
+      default: return '#6c757d';
     }
-  };
+  }, [stats.systemHealth]);
+
+  // 統計情報の表示テキスト（メモ化）
+  const statusText = useMemo(() => {
+    switch (stats.systemHealth) {
+      case 'healthy': return '正常';
+      case 'warning': return '警告';
+      case 'critical': return 'エラー';
+      default: return '不明';
+    }
+  }, [stats.systemHealth]);
+
+  useEffect(() => {
+    loadDashboardData();
+  }, [loadDashboardData]);
+
+  const handleLogout = useCallback(async () => {
+    try {
+      logger.info('Admin logout initiated', {}, 'AdminDashboard');
+      await supabase.auth.signOut();
+      logger.info('Admin logout successful', {}, 'AdminDashboard');
+      navigateTo.reload();
+    } catch (error) {
+      const appError = errorHandler.handleSupabaseError(error, 'AdminDashboard');
+      logger.error('Logout failed', { error }, 'AdminDashboard');
+      // ログアウトエラーでも強制的にリダイレクト
+      navigateTo.login();
+    }
+  }, []);
 
   if (loading) {
     return (
@@ -74,7 +125,7 @@ const AdminDashboard: React.FC = () => {
         <div className="header-content">
           <h1>管理者ダッシュボード</h1>
           <div className="header-actions">
-            <button className="settings-btn" onClick={() => window.location.href = '/settings'}>
+            <button className="settings-btn" onClick={() => navigateTo.settings()}>
               設定
             </button>
             <button className="logout-btn" onClick={handleLogout}>
@@ -114,9 +165,8 @@ const AdminDashboard: React.FC = () => {
             <div className="stat-icon">🔧</div>
             <div className="stat-content">
               <h3>システム状態</h3>
-              <p className={`stat-status ${stats.systemHealth}`}>
-                {stats.systemHealth === 'healthy' ? '正常' : 
-                 stats.systemHealth === 'warning' ? '警告' : 'エラー'}
+              <p className={`stat-status ${stats.systemHealth}`} style={{ color: healthColor }}>
+                {statusText}
               </p>
             </div>
           </div>
@@ -133,13 +183,13 @@ const AdminDashboard: React.FC = () => {
           <section className="quick-actions">
             <h2>クイックアクション</h2>
             <div className="action-buttons">
-              <button className="action-btn" onClick={() => window.location.href = '/users'}>
+              <button className="action-btn" onClick={() => navigateTo.users()}>
                 ユーザー管理
               </button>
-              <button className="action-btn" onClick={() => window.location.href = '/settings'}>
+              <button className="action-btn" onClick={() => navigateTo.settings()}>
                 システム設定
               </button>
-              <button className="action-btn" onClick={() => window.location.href = '/reports'}>
+              <button className="action-btn" onClick={() => navigateTo.reports()}>
                 レポート表示
               </button>
             </div>
@@ -357,4 +407,7 @@ const AdminDashboard: React.FC = () => {
   );
 };
 
-export default AdminDashboard;
+// パフォーマンス向上のためのメモ化
+const MemoizedAdminDashboard = React.memo(AdminDashboard);
+
+export default MemoizedAdminDashboard;
