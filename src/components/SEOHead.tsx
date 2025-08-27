@@ -14,9 +14,9 @@ interface SEOHeadProps {
 }
 
 export const SEOHead: React.FC<SEOHeadProps> = ({
-  title = 'Zero神 - ムダ陃い診断アプリ',
-  description = 'あなたのムダ陃い度を診断して節約の神になろう。簡単な質問に答えるだけで、個別の節約アドバイスと改善提案をご提供。',
-  keywords = 'ムダ陃い診断,節約,家計管理,支出見直し,貯金,ライフスタイル,ファイナンシャルプランニング,コスパ',
+  title = 'CoinChoice診断 - 暗号資産トレード適性診断',
+  description = 'あなたのリスク許容度・時間・知識・セキュリティ意識から最適な始め方を提案。全30秒の簡単診断であなたにおすすめの国内取引所を紹介。',
+  keywords = '暗号資産,ビットコイン,トレード適性診断,取引所比較,Coincheck,GMOコイン,bitFlyer,初心者,リスク管理',
   image = '/pwa-512x512.png',
   url = typeof window !== 'undefined' ? window.location.href : 'https://zeroshin.vercel.app',
   type = 'website',
@@ -24,7 +24,7 @@ export const SEOHead: React.FC<SEOHeadProps> = ({
   publishedTime,
   modifiedTime
 }) => {
-  const siteName = 'Zero神';
+  const siteName = 'CoinChoice診断';
   const twitterHandle = '@aiconectx';
   
   // 構造化データ - Organization
@@ -45,7 +45,7 @@ export const SEOHead: React.FC<SEOHeadProps> = ({
   const webAppSchema = {
     '@context': 'https://schema.org',
     '@type': 'WebApplication',
-    name: siteName,
+    name: 'CoinChoice診断',
     description: description,
     url: 'https://zeroshin.jp',
     applicationCategory: 'FinanceApplication',
@@ -69,10 +69,10 @@ export const SEOHead: React.FC<SEOHeadProps> = ({
     mainEntity: [
       {
         '@type': 'Question',
-        name: 'Zero神は無料で利用できますか？',
+        name: 'CoinChoice診断は無料で利用できますか？',
         acceptedAnswer: {
           '@type': 'Answer',
-          text: 'はい、Zero神は完全無料でご利用いただけます。診断から商品のご提案まで、一切費用はかかりません。'
+          text: 'はい、CoinChoice診断は完全無料でご利用いただけます。診断から結果のご提案まで、一切費用はかかりません。'
         }
       },
       {

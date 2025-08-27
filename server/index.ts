@@ -1,19 +1,14 @@
-import express, { Request, Response } from 'express';
 import cors from 'cors';
-import dotenv from 'dotenv';
-import helmet from 'helmet';
-import rateLimit from 'express-rate-limit';
-import { body, validationResult } from 'express-validator';
-import winston from 'winston';
-import bcrypt from 'bcrypt';
-import jwt from 'jsonwebtoken';
-import * as fs from 'fs';
-import * as path from 'path';
 import { randomBytes } from 'crypto';
-import { SecureConfigManager, SECURITY_CONFIG } from '../security.config';
-import { setupSwagger, setupMockEndpoints, apiVersioning } from './swagger';
-import { comprehensiveSecurityHeaders, productionSecurityHeaders, developmentSecurityHeaders } from './security/comprehensive-headers';
-import { DataEncryption, DatabaseEncryption, encryptionMiddleware } from './security/data-encryption';
+import dotenv from 'dotenv';
+import express, { Request, Response } from 'express';
+import rateLimit from 'express-rate-limit';
+import { body } from 'express-validator';
+import helmet from 'helmet';
+import winston from 'winston';
+import { SECURITY_CONFIG } from './config/security.config.ts';
+import { comprehensiveSecurityHeaders, developmentSecurityHeaders, productionSecurityHeaders } from './security/comprehensive-headers.ts';
+import { apiVersioning, setupMockEndpoints, setupSwagger } from './swagger.ts';
 
 // 環境変数を読み込み (.env.local を優先)
 dotenv.config({ path: '.env.local' });
@@ -147,6 +142,9 @@ const authLimiter = rateLimit({
 
 // 一般的なレート制限を適用
 app.use(generalLimiter);
+
+// CORS設定を適用
+app.use(cors(corsOptions));
 
 // IPアドレス制限用のマップ
 const ipRateLimits = new Map<string, { attempts: number; lastAttempt: number; blockedUntil?: number }>();

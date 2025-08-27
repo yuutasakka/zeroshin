@@ -71,20 +71,6 @@ const Header: React.FC = () => {
           gap: '32px'
         }}>
           <a 
-            href="#faq" 
-            style={{
-              color: 'var(--color-text-primary)',
-              textDecoration: 'none',
-              fontSize: '16px',
-              fontWeight: 500,
-              transition: 'color 0.2s ease'
-            }}
-            onMouseEnter={(e) => e.currentTarget.style.color = 'var(--color-primary)'}
-            onMouseLeave={(e) => e.currentTarget.style.color = 'var(--color-text-primary)'}
-          >
-            FAQ
-          </a>
-          <a 
             href="#contact" 
             style={{
               color: 'var(--color-text-primary)',
@@ -196,23 +182,6 @@ const Header: React.FC = () => {
             flexDirection: 'column',
             padding: '16px'
           }}>
-            <a 
-              href="#faq"
-              onClick={() => setIsMobileMenuOpen(false)}
-              style={{
-                padding: '16px',
-                color: 'var(--color-text-primary)',
-                textDecoration: 'none',
-                fontSize: '16px',
-                fontWeight: 500,
-                borderBottom: '1px solid #F7F9FC',
-                transition: 'background-color 0.2s ease'
-              }}
-              onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#F7F9FC'}
-              onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
-            >
-              FAQ
-            </a>
             <a 
               href="#contact"
               onClick={() => setIsMobileMenuOpen(false)}

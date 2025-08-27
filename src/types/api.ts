@@ -26,18 +26,6 @@ export interface DiagnosisRequestData {
   purpose: string;
   amount: string;
   timing: string;
-  phone?: string;
-}
-
-export interface LineAuthResponse {
-  success: boolean;
-  message: string;
-  lineUserId?: string;
-  displayName?: string;
-  pictureUrl?: string;
-  accessToken?: string;
-  error_code?: string;
-  error_message?: string;
 }
 
 export interface VerificationResponse {
@@ -115,17 +103,12 @@ export interface DesignSettings {
 export interface UserSession {
   id: string;
   timestamp: string;
-  lineUserId: string;
   displayName?: string;
-  pictureUrl?: string;
   userName?: string;
   email?: string;
   diagnosisAnswers: DiagnosisRequestData;
   diagnosisResult?: ProductResponse[];
   notes?: string;
-  lineVerified?: boolean;
-  verifiedLineUserId?: string;
-  verificationTimestamp?: string;
 }
 
 // ページネーション

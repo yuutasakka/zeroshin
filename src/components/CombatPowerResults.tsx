@@ -133,7 +133,7 @@ const CombatPowerResults: React.FC<CombatPowerResultsProps> = ({ diagnosisAnswer
       scores.defensePower,
       scores.mobility
     ].map((score, index) => {
-      const angle = angles[index] * Math.PI / 180;
+      const angle = (angles[index] ?? 0) * Math.PI / 180;
       const r = (score / 100) * radius;
       const x = centerX + r * Math.cos(angle);
       const y = centerY + r * Math.sin(angle);
@@ -147,7 +147,7 @@ const CombatPowerResults: React.FC<CombatPowerResultsProps> = ({ diagnosisAnswer
     <div style={{
       minHeight: '100vh',
       backgroundColor: '#F7F9FC',
-      padding: '80px 20px 40px',
+      padding: 'clamp(60px, 8vw, 80px) clamp(16px, 4vw, 20px) 40px',
       position: 'relative'
     }}>
       <div style={{
@@ -157,11 +157,11 @@ const CombatPowerResults: React.FC<CombatPowerResultsProps> = ({ diagnosisAnswer
         {/* タイトル */}
         <div style={{
           textAlign: 'center',
-          marginBottom: '48px',
+          marginBottom: 'clamp(32px, 6vw, 48px)',
           animation: 'fadeIn 0.8s ease-out'
         }}>
           <h1 style={{
-            fontSize: 'clamp(2rem, 4vw, 2.5rem)',
+            fontSize: 'clamp(1.75rem, 5vw, 2.5rem)',
             fontWeight: 700,
             color: 'var(--color-text-primary)',
             marginBottom: '8px'
@@ -169,7 +169,7 @@ const CombatPowerResults: React.FC<CombatPowerResultsProps> = ({ diagnosisAnswer
             診断結果
           </h1>
           <p style={{
-            fontSize: '18px',
+            fontSize: 'clamp(16px, 3vw, 18px)',
             color: 'var(--color-text-secondary)'
           }}>
             あなたの資金調達力
@@ -179,16 +179,16 @@ const CombatPowerResults: React.FC<CombatPowerResultsProps> = ({ diagnosisAnswer
         {/* メインスコアカード */}
         <div style={{
           backgroundColor: '#FFFFFF',
-          borderRadius: '24px',
-          padding: '48px',
-          marginBottom: '32px',
+          borderRadius: 'clamp(16px, 3vw, 24px)',
+          padding: 'clamp(24px, 6vw, 48px)',
+          marginBottom: 'clamp(20px, 4vw, 32px)',
           boxShadow: '0 8px 24px rgba(0, 0, 0, 0.08)',
           textAlign: 'center',
           animation: 'slideUp 0.8s ease-out 0.2s both'
         }}>
           {/* 総合スコア */}
           <div style={{
-            fontSize: 'clamp(3rem, 8vw, 5rem)',
+            fontSize: 'clamp(2.5rem, 12vw, 5rem)',
             fontWeight: 700,
             lineHeight: 1,
             marginBottom: '16px',
@@ -201,13 +201,13 @@ const CombatPowerResults: React.FC<CombatPowerResultsProps> = ({ diagnosisAnswer
           {/* ランク表示 */}
           <div style={{
             display: 'inline-block',
-            padding: '12px 32px',
+            padding: 'clamp(8px, 2vw, 12px) clamp(20px, 5vw, 32px)',
             backgroundColor: getRankColor(rank),
             color: '#FFFFFF',
             borderRadius: '999px',
-            fontSize: '24px',
+            fontSize: 'clamp(18px, 4vw, 24px)',
             fontWeight: 700,
-            marginBottom: '40px',
+            marginBottom: 'clamp(24px, 5vw, 40px)',
             boxShadow: `0 4px 16px ${getRankColor(rank)}40`
           }}>
             {rank}ランク
@@ -217,9 +217,19 @@ const CombatPowerResults: React.FC<CombatPowerResultsProps> = ({ diagnosisAnswer
           <div style={{
             display: 'flex',
             justifyContent: 'center',
-            marginBottom: '40px'
+            marginBottom: 'clamp(24px, 5vw, 40px)',
+            overflow: 'hidden'
           }}>
-            <svg width="300" height="300" viewBox="0 0 300 300" style={{ maxWidth: '100%' }}>
+            <svg 
+              width="300" 
+              height="300" 
+              viewBox="0 0 300 300" 
+              style={{ 
+                maxWidth: '100%',
+                width: 'clamp(250px, 60vw, 300px)',
+                height: 'auto'
+              }}
+            >
               {/* 背景グリッド */}
               <g opacity="0.3">
                 {[20, 40, 60, 80, 100].map((size) => (
@@ -293,43 +303,43 @@ const CombatPowerResults: React.FC<CombatPowerResultsProps> = ({ diagnosisAnswer
           {/* サブスコア詳細 */}
           <div style={{
             display: 'grid',
-            gridTemplateColumns: 'repeat(3, 1fr)',
-            gap: '24px',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))',
+            gap: 'clamp(16px, 3vw, 24px)',
             maxWidth: '500px',
             margin: '0 auto'
           }}>
-            <div>
-              <div style={{ fontSize: '12px', color: 'var(--color-text-tertiary)', marginBottom: '4px' }}>
+            <div style={{ textAlign: 'center' }}>
+              <div style={{ fontSize: 'clamp(10px, 2vw, 12px)', color: 'var(--color-text-tertiary)', marginBottom: '4px' }}>
                 攻撃力
               </div>
-              <div style={{ fontSize: '20px', fontWeight: 700, color: 'var(--color-text-primary)' }}>
+              <div style={{ fontSize: 'clamp(18px, 4vw, 20px)', fontWeight: 700, color: 'var(--color-text-primary)' }}>
                 {Math.round(subScores.attackPower)}
               </div>
-              <div style={{ fontSize: '12px', color: 'var(--color-text-secondary)' }}>
+              <div style={{ fontSize: 'clamp(10px, 2vw, 12px)', color: 'var(--color-text-secondary)' }}>
                 調達ポテンシャル
               </div>
             </div>
             
-            <div>
-              <div style={{ fontSize: '12px', color: 'var(--color-text-tertiary)', marginBottom: '4px' }}>
+            <div style={{ textAlign: 'center' }}>
+              <div style={{ fontSize: 'clamp(10px, 2vw, 12px)', color: 'var(--color-text-tertiary)', marginBottom: '4px' }}>
                 防御力
               </div>
-              <div style={{ fontSize: '20px', fontWeight: 700, color: 'var(--color-text-primary)' }}>
+              <div style={{ fontSize: 'clamp(18px, 4vw, 20px)', fontWeight: 700, color: 'var(--color-text-primary)' }}>
                 {Math.round(subScores.defensePower)}
               </div>
-              <div style={{ fontSize: '12px', color: 'var(--color-text-secondary)' }}>
+              <div style={{ fontSize: 'clamp(10px, 2vw, 12px)', color: 'var(--color-text-secondary)' }}>
                 返済余力
               </div>
             </div>
             
-            <div>
-              <div style={{ fontSize: '12px', color: 'var(--color-text-tertiary)', marginBottom: '4px' }}>
+            <div style={{ textAlign: 'center' }}>
+              <div style={{ fontSize: 'clamp(10px, 2vw, 12px)', color: 'var(--color-text-tertiary)', marginBottom: '4px' }}>
                 機動力
               </div>
-              <div style={{ fontSize: '20px', fontWeight: 700, color: 'var(--color-text-primary)' }}>
+              <div style={{ fontSize: 'clamp(18px, 4vw, 20px)', fontWeight: 700, color: 'var(--color-text-primary)' }}>
                 {Math.round(subScores.mobility)}
               </div>
-              <div style={{ fontSize: '12px', color: 'var(--color-text-secondary)' }}>
+              <div style={{ fontSize: 'clamp(10px, 2vw, 12px)', color: 'var(--color-text-secondary)' }}>
                 資金入手スピード
               </div>
             </div>
@@ -339,14 +349,14 @@ const CombatPowerResults: React.FC<CombatPowerResultsProps> = ({ diagnosisAnswer
         {/* パーソナライズドコメント */}
         <div style={{
           backgroundColor: '#FFFFFF',
-          borderRadius: '16px',
-          padding: '32px',
-          marginBottom: '32px',
+          borderRadius: 'clamp(12px, 2vw, 16px)',
+          padding: 'clamp(20px, 4vw, 32px)',
+          marginBottom: 'clamp(20px, 4vw, 32px)',
           boxShadow: '0 4px 12px rgba(0, 0, 0, 0.05)',
           animation: 'slideUp 0.8s ease-out 0.4s both'
         }}>
           <h3 style={{
-            fontSize: '20px',
+            fontSize: 'clamp(18px, 3vw, 20px)',
             fontWeight: 700,
             color: 'var(--color-text-primary)',
             marginBottom: '16px'
@@ -354,7 +364,7 @@ const CombatPowerResults: React.FC<CombatPowerResultsProps> = ({ diagnosisAnswer
             総合評価
           </h3>
           <p style={{
-            fontSize: '16px',
+            fontSize: 'clamp(14px, 2.5vw, 16px)',
             color: 'var(--color-text-secondary)',
             lineHeight: 1.8,
             margin: 0
@@ -366,14 +376,14 @@ const CombatPowerResults: React.FC<CombatPowerResultsProps> = ({ diagnosisAnswer
         {/* ミニアドバイス */}
         <div style={{
           backgroundColor: '#FFFFFF',
-          borderRadius: '16px',
-          padding: '32px',
-          marginBottom: '48px',
+          borderRadius: 'clamp(12px, 2vw, 16px)',
+          padding: 'clamp(20px, 4vw, 32px)',
+          marginBottom: 'clamp(32px, 6vw, 48px)',
           boxShadow: '0 4px 12px rgba(0, 0, 0, 0.05)',
           animation: 'slideUp 0.8s ease-out 0.6s both'
         }}>
           <h3 style={{
-            fontSize: '20px',
+            fontSize: 'clamp(18px, 3vw, 20px)',
             fontWeight: 700,
             color: 'var(--color-text-primary)',
             marginBottom: '16px',
@@ -385,22 +395,22 @@ const CombatPowerResults: React.FC<CombatPowerResultsProps> = ({ diagnosisAnswer
               display: 'inline-flex',
               alignItems: 'center',
               justifyContent: 'center',
-              width: '32px',
-              height: '32px',
+              width: 'clamp(28px, 5vw, 32px)',
+              height: 'clamp(28px, 5vw, 32px)',
               backgroundColor: 'var(--color-primary)',
               color: '#FFFFFF',
               borderRadius: '50%',
-              fontSize: '16px'
+              fontSize: 'clamp(12px, 3vw, 16px)'
             }}>
               ✓
             </span>
             調査前にここをチェック！
           </h3>
           <ul style={{
-            paddingLeft: '20px',
+            paddingLeft: 'clamp(16px, 3vw, 20px)',
             margin: 0,
             color: 'var(--color-text-secondary)',
-            fontSize: '16px',
+            fontSize: 'clamp(14px, 2.5vw, 16px)',
             lineHeight: 2
           }}>
             <li>必要書類を事前に準備（本人確認書類、収入証明書など）</li>
@@ -421,20 +431,20 @@ const CombatPowerResults: React.FC<CombatPowerResultsProps> = ({ diagnosisAnswer
               display: 'inline-flex',
               alignItems: 'center',
               justifyContent: 'center',
-              gap: '12px',
-              padding: '20px 48px',
+              gap: 'clamp(8px, 2vw, 12px)',
+              padding: 'clamp(16px, 3vw, 20px) clamp(24px, 6vw, 48px)',
               backgroundColor: '#F5A623',
               color: '#FFFFFF',
-              fontSize: '18px',
+              fontSize: 'clamp(16px, 3vw, 18px)',
               fontWeight: 700,
               border: 'none',
-              borderRadius: '12px',
+              borderRadius: 'clamp(8px, 2vw, 12px)',
               cursor: 'pointer',
               transition: 'all 0.3s ease',
               boxShadow: '0 4px 16px rgba(245, 166, 35, 0.3)',
               position: 'relative',
               width: '100%',
-              maxWidth: '400px'
+              maxWidth: 'clamp(280px, 70vw, 400px)'
             }}
             onMouseEnter={(e) => {
               e.currentTarget.style.backgroundColor = '#E89100';
@@ -447,7 +457,7 @@ const CombatPowerResults: React.FC<CombatPowerResultsProps> = ({ diagnosisAnswer
               e.currentTarget.style.boxShadow = '0 4px 16px rgba(245, 166, 35, 0.3)';
             }}
           >
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+            <svg width="clamp(20px, 4vw, 24px)" height="clamp(20px, 4vw, 24px)" viewBox="0 0 24 24" fill="none">
               <path d="M12 2L2 7V12C2 16.5 4.5 20.5 12 22C19.5 20.5 22 16.5 22 12V7L12 2Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
               <path d="M12 11V15M12 8V8.01" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
             </svg>
@@ -455,10 +465,11 @@ const CombatPowerResults: React.FC<CombatPowerResultsProps> = ({ diagnosisAnswer
           </button>
           
           <div style={{
-            marginTop: '24px',
-            fontSize: '16px',
+            marginTop: 'clamp(16px, 3vw, 24px)',
+            fontSize: 'clamp(14px, 2.5vw, 16px)',
             color: 'var(--color-text-secondary)',
-            lineHeight: 1.6
+            lineHeight: 1.6,
+            padding: '0 clamp(16px, 3vw, 0)'
           }}>
             <strong style={{ color: 'var(--color-text-primary)' }}>完全無料</strong>のPDFマニュアル<br />
             5分で読める資金調達の成功法則

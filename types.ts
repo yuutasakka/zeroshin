@@ -71,20 +71,16 @@ export interface RecommendedProductWithReason extends FinancialProduct {
   recommendationReasons: string[];
 }
 
-export type PageView = 'home' | 'diagnosis' | 'lineAuth' | 'results' | 'loginSelection' | 'traditionalLogin' | 'supabaseLogin' | 'adminDashboard' | 'registrationRequest' | 'changePassword' | 'passwordReset';
+export type PageView = 'home' | 'diagnosis' | 'results' | 'loginSelection' | 'traditionalLogin' | 'supabaseLogin' | 'adminDashboard' | 'registrationRequest' | 'changePassword' | 'passwordReset' | 'article' | 'cryptoAptitude';
 
 export interface UserSessionData {
   id: string; // Unique ID for the session
   timestamp: string; // ISO string format
-  lineUserId: string;
   userName?: string; // ユーザー名
   email?: string; // メールアドレス
   diagnosisAnswers: DiagnosisFormState;
   diagnosisResult?: any; // 診断結果
   notes?: string; // 備考
-  lineVerified?: boolean; // LINE認証済みフラグ
-  verifiedLineUserId?: string; // 認証済みLINE ID
-  verificationTimestamp?: string; // 認証完了時刻
 }
 
 // Notification Settings Types

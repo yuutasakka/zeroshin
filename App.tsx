@@ -1,27 +1,26 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import ErrorBoundary from './src/components/ErrorBoundary';
 import Header from './src/components/Header';
 // 要件定義書に基づく新しいコンポーネント
-import Hero from './src/components/Hero';
+import ArticlePage from './src/components/ArticlePage';
 import DiagnosisForm from './src/components/DiagnosisForm';
-// 診断回答の型定義（LINE認証対応）
+import Hero from './src/components/Hero';
+// 診断回答の型定義（簡素化）
 type DiagnosisAnswers = {
   age: string;
   experience: string;
   purpose: string;
   amount: string;
   timing: string;
-  lineUserId?: string;
 };
-import LineAuthFlow from './src/components/LineAuthFlow';
 // WasteDiagnosisコンポーネントはLINE認証化により使用されていない - 削除済み
-import ReliabilitySection from './src/components/ReliabilitySection';
-import SecurityTrustSection from './src/components/SecurityTrustSection';
+// ReliabilitySection と SecurityTrustSection を削除（記事スタイル変更のため）
 import CallToActionSection from './src/components/CallToActionSection';
-import Footer from './src/components/Footer';
-import FixedCTA from './src/components/FixedCTA';
 import CombatPowerResults from './src/components/CombatPowerResults';
-import FAQSection from './src/components/FAQSection';
+import CryptoAptitudeApp from './src/components/CryptoAptitudeApp';
+import FixedCTA from './src/components/FixedCTA';
+import Footer from './src/components/Footer';
+// FAQSection を削除（記事スタイル変更のため）
 
 // DiagnosisResultsPageはCombatPowerResultsに置き換えられたため使用されていない - 削除済み
 // 管理者関連のインポートを削除（完全分離のため）
@@ -29,20 +28,20 @@ import FAQSection from './src/components/FAQSection';
 // 基本コンポーネント（即時読み込み）
 import { OneTimeUsageNotice } from './src/components/OneTimeUsageNotice';
 // supabaseインポートは使用されていない - 削除済み
-import { ColorThemeProvider } from './src/components/ColorThemeContext';
-import { DesignSettingsProvider } from './src/contexts/DesignSettingsContext';
-import TemplateStyleProvider from './src/components/TemplateStyleProvider';
-import { DiagnosisFormState, PageView } from './types';
+import { HelmetProvider } from 'react-helmet-async';
 import { initializeSampleData } from './data/sampleData';
-import ProductionSecurityValidator from './src/components/ProductionSecurityValidator';
+import AccessibilityAnnouncer from './src/components/AccessibilityAnnouncer';
+import { AccessibilityProvider } from './src/components/AccessibilityProvider';
+import { ColorThemeProvider } from './src/components/ColorThemeContext';
 import { measurePageLoad } from './src/components/PerformanceMonitor';
+import ProductionSecurityValidator from './src/components/ProductionSecurityValidator';
 import PWAInstallPrompt from './src/components/PWAInstallPrompt';
 import PWAUpdatePrompt from './src/components/PWAUpdatePrompt';
 import SEOHead from './src/components/SEOHead';
-import { HelmetProvider } from 'react-helmet-async';
-import { AccessibilityProvider } from './src/components/AccessibilityProvider';
 import SkipLinks from './src/components/SkipLinks';
-import AccessibilityAnnouncer from './src/components/AccessibilityAnnouncer';
+import TemplateStyleProvider from './src/components/TemplateStyleProvider';
+import { DesignSettingsProvider } from './src/contexts/DesignSettingsContext';
+import { DiagnosisFormState, PageView } from './types';
 
 // ローディングコンポーネント（アニメーションなし）
 const LoadingSpinner = () => (
@@ -72,9 +71,8 @@ const LoadingSpinner = () => (
 );
 
 const App: React.FC = () => {
-  // 要件定義書に基づくページ状態の更新（管理機能を除去）
-  const [currentPage, setCurrentPage] = useState<PageView>('home');
-  const [lineUserToVerify, setLineUserToVerify] = useState<string | null>(null);
+  // 要件定義書に基づくページ状態の更新（暗号資産診断がメイン）
+  const [currentPage, setCurrentPage] = useState<PageView>('cryptoAptitude');
   const [diagnosisData, setDiagnosisData] = useState<DiagnosisFormState | null>(null);
   // 新しい診断答えの状態
   const [diagnosisAnswers, setDiagnosisAnswers] = useState<DiagnosisAnswers | null>(null);
@@ -85,8 +83,8 @@ const App: React.FC = () => {
   // 管理者関連の状態を削除（完全分離のため）
   
   useEffect(() => {
-    // Apply body class for verification and results pages for consistent styling
-    if (currentPage === 'verification' || currentPage === 'results') {
+    // Apply body class for results pages for consistent styling
+    if (currentPage === 'results') {
       document.body.classList.add('verification-page-active'); // This class now applies premium dark gradient
     } else {
       document.body.classList.remove('verification-page-active');
@@ -126,6 +124,25 @@ const App: React.FC = () => {
 
   // 要件定義書に基づく新しいナビゲーション関数
   const handleStartDiagnosis = () => {
+    // If we're on the article page, navigate to home first
+    if (currentPage === 'article') {
+      setCurrentPage('home');
+      // Wait for the page to render, then scroll to diagnosis
+      setTimeout(() => {
+        const diagnosisSection = document.getElementById('diagnosis-form-section');
+        if (diagnosisSection) {
+          const yOffset = -80;
+          const elementPosition = diagnosisSection.getBoundingClientRect().top;
+          const offsetPosition = elementPosition + window.pageYOffset + yOffset;
+          window.scrollTo({
+            top: Math.max(0, offsetPosition),
+            behavior: 'smooth'
+          });
+        }
+      }, 100);
+      return;
+    }
+
     // 診断フォームへのスムーズスクロール（新しいレイアウト対応）
     const diagnosisSection = document.getElementById('diagnosis-form-section');
     if (diagnosisSection) {
@@ -182,7 +199,6 @@ const App: React.FC = () => {
   }
 
   const handleReturnToStart = () => {
-    setLineUserToVerify(null);
     setDiagnosisData(null);
     setDiagnosisAnswers(null);
     setRawDiagnosisAnswers(null);
@@ -192,6 +208,16 @@ const App: React.FC = () => {
   
   const navigateToHome = () => {
     setCurrentPage('home');
+    window.scrollTo(0,0);
+  };
+
+  const navigateToArticle = () => {
+    setCurrentPage('article');
+    window.scrollTo(0,0);
+  };
+
+  const navigateToCryptoAptitude = () => {
+    setCurrentPage('cryptoAptitude');
     window.scrollTo(0,0);
   };
 
@@ -205,12 +231,12 @@ const App: React.FC = () => {
           <div style={{ minHeight: '100vh', background: '#ffffff', padding: 0, margin: 0, width: '100%', maxWidth: '100vw', boxSizing: 'border-box', overflowX: 'hidden' }}>
           <Header />
           
-          {/* 1番目: メインヒーロー（あなたの未来の資産を診断！） */}
+          {/* メインコンテンツ */}
           <div className="hero-section">
-            <Hero onStartDiagnosis={handleStartDiagnosis} />
+            <Hero onStartDiagnosis={handleStartDiagnosis} onNavigateToArticle={navigateToArticle} />
           </div>
           
-          {/* 2番目: 診断フォーム */}
+          {/* 診断フォーム */}
           <div className="diagnosis-section" id="diagnosis-form-section" style={{
             backgroundColor: '#F7F9FC',
             padding: '80px 20px',
@@ -228,8 +254,7 @@ const App: React.FC = () => {
                     experience: answers[3] || '',
                     purpose: answers[4] || '',
                     amount: answers[2] || '',
-                    timing: 'now',
-                    lineUserId: ''
+                    timing: 'now'
                   };
                   
                   setDiagnosisAnswers(convertedAnswers);
@@ -249,22 +274,14 @@ const App: React.FC = () => {
                   };
                   setDiagnosisData(legacyDiagnosisData);
                   
-                  setCurrentPage('lineAuth');
+                  // LINE認証をスキップして直接結果ページへ
+                  setCurrentPage('results');
                 }}
               />
             </div>
           </div>
           
-          {/* 3番目: FAQセクション */}
-          <FAQSection />
-          
-          {/* 4番目以降: その他のセクション */}
-          <div className="additional-sections">
-            <ReliabilitySection />
-            <SecurityTrustSection />
-            <CallToActionSection />
-          </div>
-          
+          <CallToActionSection />
           <Footer />
           <style>{`
             /* 診断フォーカス効果（戦闘力テーマ） */
@@ -402,29 +419,6 @@ const App: React.FC = () => {
       );
     }
 
-    // LINE認証ページ
-    if (currentPage === 'lineAuth') {
-      return (
-        <ErrorBoundary>
-          <LineAuthFlow
-            diagnosisAnswers={diagnosisAnswers || {}}
-            onAuthComplete={(lineUserId: string, userData: any) => {
-              setLineUserToVerify(lineUserId);
-              // diagnosisAnswersにLINE情報を追加
-              if (diagnosisAnswers) {
-                setDiagnosisAnswers({
-                  ...diagnosisAnswers,
-                  lineUserId: lineUserId
-                });
-              }
-              setCurrentPage('results');
-            }}
-            onCancel={handleVerificationCancel}
-          />
-        </ErrorBoundary>
-      );
-    }
-
     if (currentPage === 'results') {
       // 新しい戦闘力結果画面を使用
       // 生の診断回答を使用（rawDiagnosisAnswersが存在しない場合はデフォルト値）
@@ -470,10 +464,11 @@ const App: React.FC = () => {
                   purpose: answers[4] || '',
                   amount: answers[2] || '',
                   timing: 'now'
-                  // phone フィールドは不要 - 削除済み
                 };
                 
-                handleDiagnosisComplete(convertedAnswers);
+                setDiagnosisAnswers(convertedAnswers);
+                // LINE認証をスキップして直接結果ページへ
+                setCurrentPage('results');
               }}
             />
           </div>
@@ -483,14 +478,32 @@ const App: React.FC = () => {
 
     // 古いsmsAuthページレンダリングは使用されていない - 削除済み
 
-    // デフォルト: ホームページ（要件定義書準拠）
+    // 記事ページ
+    if (currentPage === 'article') {
+      return (
+        <ArticlePage onStartDiagnosis={handleStartDiagnosis} />
+      );
+    }
+
+    // 暗号資産トレード適性診断ページ
+    if (currentPage === 'cryptoAptitude') {
+      return (
+        <ErrorBoundary>
+          <CryptoAptitudeApp />
+        </ErrorBoundary>
+      );
+    }
+
+    // デフォルト: ホームページ（記事スタイルに変更）
     return (
       <>
         <Header />
         <main>
-          <Hero onStartDiagnosis={handleStartDiagnosis} />
-          <ReliabilitySection />
-          <SecurityTrustSection />
+          <Hero 
+            onStartDiagnosis={handleStartDiagnosis} 
+            onNavigateToArticle={navigateToArticle}
+            onNavigateToCryptoAptitude={navigateToCryptoAptitude}
+          />
           <CallToActionSection />
         </main>
         <Footer />

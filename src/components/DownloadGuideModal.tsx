@@ -86,15 +86,17 @@ const DownloadGuideModal: React.FC<DownloadGuideModalProps> = ({ isOpen, onClose
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
-      padding: '1rem',
+      padding: 'clamp(1rem, 4vw, 1rem)',
       animation: 'fadeIn 0.3s ease-out'
     }}>
       <div style={{
         backgroundColor: '#fff',
-        borderRadius: '1.5rem',
-        maxWidth: '500px',
+        borderRadius: 'clamp(1rem, 3vw, 1.5rem)',
+        maxWidth: 'clamp(350px, 90vw, 500px)',
         width: '100%',
-        padding: '2.5rem',
+        maxHeight: '90vh',
+        overflowY: 'auto',
+        padding: 'clamp(1.5rem, 5vw, 2.5rem)',
         position: 'relative',
         animation: 'slideUp 0.3s ease-out',
         boxShadow: '0 20px 60px rgba(0, 0, 0, 0.3)'
@@ -104,15 +106,15 @@ const DownloadGuideModal: React.FC<DownloadGuideModalProps> = ({ isOpen, onClose
           onClick={onClose}
           style={{
             position: 'absolute',
-            top: '1rem',
-            right: '1rem',
+            top: 'clamp(0.75rem, 2vw, 1rem)',
+            right: 'clamp(0.75rem, 2vw, 1rem)',
             background: 'none',
             border: 'none',
-            fontSize: '1.5rem',
+            fontSize: 'clamp(1.25rem, 3vw, 1.5rem)',
             cursor: 'pointer',
             color: '#6B7280',
-            width: '32px',
-            height: '32px',
+            width: 'clamp(28px, 6vw, 32px)',
+            height: 'clamp(28px, 6vw, 32px)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
@@ -134,36 +136,37 @@ const DownloadGuideModal: React.FC<DownloadGuideModalProps> = ({ isOpen, onClose
         {!isSuccess ? (
           <>
             {/* ヘッダー */}
-            <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
+            <div style={{ textAlign: 'center', marginBottom: 'clamp(1.5rem, 4vw, 2rem)' }}>
               <div style={{
                 display: 'inline-block',
-                padding: '0.5rem 1.5rem',
+                padding: 'clamp(0.375rem, 1vw, 0.5rem) clamp(1rem, 3vw, 1.5rem)',
                 background: 'linear-gradient(135deg, #FFD700 0%, #FFA000 100%)',
                 borderRadius: '9999px',
-                marginBottom: '1rem',
+                marginBottom: 'clamp(0.75rem, 2vw, 1rem)',
                 boxShadow: '0 4px 15px rgba(255, 215, 0, 0.3)'
               }}>
                 <span style={{
                   color: '#000',
                   fontWeight: 800,
-                  fontSize: '1.125rem'
+                  fontSize: 'clamp(0.875rem, 2.5vw, 1.125rem)'
                 }}>
                   攻略本を無料でお届け！
                 </span>
               </div>
               
               <h2 style={{
-                fontSize: '1.75rem',
+                fontSize: 'clamp(1.25rem, 4vw, 1.75rem)',
                 fontWeight: 800,
                 color: '#1F2937',
-                marginBottom: '0.5rem'
+                marginBottom: 'clamp(0.375rem, 1vw, 0.5rem)',
+                lineHeight: 1.3
               }}>
                 資金調達完全攻略マニュアル
               </h2>
               
               <p style={{
                 color: '#6B7280',
-                fontSize: '1rem',
+                fontSize: 'clamp(0.875rem, 2vw, 1rem)',
                 lineHeight: 1.6
               }}>
                 あなたの戦闘力{combatScore}点（{rank}ランク）に合わせた<br />
@@ -174,15 +177,15 @@ const DownloadGuideModal: React.FC<DownloadGuideModalProps> = ({ isOpen, onClose
             {/* 特典内容 */}
             <div style={{
               background: '#F9FAFB',
-              borderRadius: '1rem',
-              padding: '1.5rem',
-              marginBottom: '1.5rem'
+              borderRadius: 'clamp(0.75rem, 2vw, 1rem)',
+              padding: 'clamp(1rem, 3vw, 1.5rem)',
+              marginBottom: 'clamp(1rem, 3vw, 1.5rem)'
             }}>
               <h3 style={{
-                fontSize: '1.125rem',
+                fontSize: 'clamp(1rem, 2.5vw, 1.125rem)',
                 fontWeight: 700,
                 color: '#374151',
-                marginBottom: '1rem'
+                marginBottom: 'clamp(0.75rem, 2vw, 1rem)'
               }}>
                 📘 攻略本の内容
               </h3>
@@ -190,7 +193,7 @@ const DownloadGuideModal: React.FC<DownloadGuideModalProps> = ({ isOpen, onClose
                 listStyle: 'none',
                 padding: 0,
                 margin: 0,
-                fontSize: '0.875rem',
+                fontSize: 'clamp(0.75rem, 2vw, 0.875rem)',
                 color: '#4B5563',
                 lineHeight: 1.8
               }}>
@@ -204,13 +207,13 @@ const DownloadGuideModal: React.FC<DownloadGuideModalProps> = ({ isOpen, onClose
 
             {/* フォーム */}
             <form onSubmit={handleSubmit}>
-              <div style={{ marginBottom: '1.5rem' }}>
+              <div style={{ marginBottom: 'clamp(1rem, 3vw, 1.5rem)' }}>
                 <label style={{
                   display: 'block',
-                  fontSize: '0.875rem',
+                  fontSize: 'clamp(0.75rem, 2vw, 0.875rem)',
                   fontWeight: 600,
                   color: '#374151',
-                  marginBottom: '0.5rem'
+                  marginBottom: 'clamp(0.375rem, 1vw, 0.5rem)'
                 }}>
                   メールアドレス
                 </label>
@@ -222,12 +225,13 @@ const DownloadGuideModal: React.FC<DownloadGuideModalProps> = ({ isOpen, onClose
                   required
                   style={{
                     width: '100%',
-                    padding: '0.75rem 1rem',
-                    fontSize: '1rem',
+                    padding: 'clamp(0.625rem, 2vw, 0.75rem) clamp(0.75rem, 2vw, 1rem)',
+                    fontSize: 'clamp(0.875rem, 2.5vw, 1rem)',
                     border: '2px solid #E5E7EB',
-                    borderRadius: '0.5rem',
+                    borderRadius: 'clamp(0.375rem, 1vw, 0.5rem)',
                     outline: 'none',
-                    transition: 'all 0.3s ease'
+                    transition: 'all 0.3s ease',
+                    boxSizing: 'border-box'
                   }}
                   onFocus={(e) => {
                     e.target.style.borderColor = '#FFD700';
@@ -243,14 +247,14 @@ const DownloadGuideModal: React.FC<DownloadGuideModalProps> = ({ isOpen, onClose
                 disabled={isSubmitting}
                 style={{
                   width: '100%',
-                  padding: '1rem',
+                  padding: 'clamp(0.875rem, 2.5vw, 1rem)',
                   background: isSubmitting 
                     ? '#9CA3AF' 
                     : 'linear-gradient(135deg, #FFD700 0%, #FFA000 100%)',
                   color: isSubmitting ? '#fff' : '#000',
                   border: 'none',
-                  borderRadius: '0.75rem',
-                  fontSize: '1.125rem',
+                  borderRadius: 'clamp(0.5rem, 1.5vw, 0.75rem)',
+                  fontSize: 'clamp(1rem, 2.5vw, 1.125rem)',
                   fontWeight: 800,
                   cursor: isSubmitting ? 'not-allowed' : 'pointer',
                   transition: 'all 0.3s ease',
@@ -273,8 +277,8 @@ const DownloadGuideModal: React.FC<DownloadGuideModalProps> = ({ isOpen, onClose
               </button>
 
               <p style={{
-                marginTop: '1rem',
-                fontSize: '0.75rem',
+                marginTop: 'clamp(0.75rem, 2vw, 1rem)',
+                fontSize: 'clamp(0.625rem, 1.5vw, 0.75rem)',
                 color: '#9CA3AF',
                 textAlign: 'center',
                 lineHeight: 1.5
@@ -285,13 +289,13 @@ const DownloadGuideModal: React.FC<DownloadGuideModalProps> = ({ isOpen, onClose
               
               {error && (
                 <div style={{
-                  marginTop: '1rem',
-                  padding: '0.75rem',
+                  marginTop: 'clamp(0.75rem, 2vw, 1rem)',
+                  padding: 'clamp(0.5rem, 1.5vw, 0.75rem)',
                   backgroundColor: '#FEE2E2',
                   border: '1px solid #FECACA',
-                  borderRadius: '0.5rem',
+                  borderRadius: 'clamp(0.375rem, 1vw, 0.5rem)',
                   color: '#DC2626',
-                  fontSize: '0.875rem',
+                  fontSize: 'clamp(0.75rem, 2vw, 0.875rem)',
                   textAlign: 'center'
                 }}>
                   {error}
@@ -303,12 +307,12 @@ const DownloadGuideModal: React.FC<DownloadGuideModalProps> = ({ isOpen, onClose
           /* 成功メッセージ */
           <div style={{
             textAlign: 'center',
-            padding: '2rem 0'
+            padding: 'clamp(1.5rem, 4vw, 2rem) 0'
           }}>
             <div style={{
-              width: '80px',
-              height: '80px',
-              margin: '0 auto 1.5rem',
+              width: 'clamp(60px, 12vw, 80px)',
+              height: 'clamp(60px, 12vw, 80px)',
+              margin: '0 auto clamp(1rem, 3vw, 1.5rem)',
               background: 'linear-gradient(135deg, #10B981 0%, #059669 100%)',
               borderRadius: '50%',
               display: 'flex',
@@ -316,24 +320,25 @@ const DownloadGuideModal: React.FC<DownloadGuideModalProps> = ({ isOpen, onClose
               justifyContent: 'center',
               animation: 'scaleIn 0.5s ease-out'
             }}>
-              <svg width="40" height="40" fill="none" stroke="white" strokeWidth="3">
+              <svg width="clamp(30px, 6vw, 40px)" height="clamp(30px, 6vw, 40px)" fill="none" stroke="white" strokeWidth="3">
                 <path d="M5 20 L15 30 L35 10" strokeLinecap="round" strokeLinejoin="round" />
               </svg>
             </div>
             
             <h3 style={{
-              fontSize: '1.5rem',
+              fontSize: 'clamp(1.25rem, 3vw, 1.5rem)',
               fontWeight: 800,
               color: '#059669',
-              marginBottom: '0.5rem'
+              marginBottom: 'clamp(0.375rem, 1vw, 0.5rem)'
             }}>
               送信完了しました！
             </h3>
             
             <p style={{
               color: '#4B5563',
-              fontSize: '1rem',
-              lineHeight: 1.6
+              fontSize: 'clamp(0.875rem, 2vw, 1rem)',
+              lineHeight: 1.6,
+              padding: '0 clamp(0.5rem, 2vw, 0)'
             }}>
               診断結果のダウンロードが開始されました。<br />
               ダウンロードが始まらない場合は、ポップアップブロックを解除してください。
@@ -343,13 +348,13 @@ const DownloadGuideModal: React.FC<DownloadGuideModalProps> = ({ isOpen, onClose
               <button
                 onClick={() => window.open(downloadUrl, '_blank')}
                 style={{
-                  marginTop: '1rem',
-                  padding: '0.75rem 1.5rem',
+                  marginTop: 'clamp(0.75rem, 2vw, 1rem)',
+                  padding: 'clamp(0.625rem, 1.5vw, 0.75rem) clamp(1rem, 2.5vw, 1.5rem)',
                   background: 'linear-gradient(135deg, #3B82F6 0%, #2563EB 100%)',
                   color: 'white',
                   border: 'none',
-                  borderRadius: '0.5rem',
-                  fontSize: '0.875rem',
+                  borderRadius: 'clamp(0.375rem, 1vw, 0.5rem)',
+                  fontSize: 'clamp(0.75rem, 2vw, 0.875rem)',
                   fontWeight: 600,
                   cursor: 'pointer',
                   transition: 'all 0.3s ease'

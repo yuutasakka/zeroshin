@@ -1,15 +1,15 @@
 import express from 'express';
-import swaggerUi from 'swagger-ui-express';
-import YAML from 'yamljs';
 import path from 'path';
+import swaggerUi from 'swagger-ui-express';
 import { fileURLToPath } from 'url';
+import YAML from 'yamljs';
 
 // ESモジュール用の__dirname代替
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 // OpenAPI仕様書を読み込み
-const swaggerDocument = YAML.load(path.join(__dirname, '../src/api/openapi.yaml'));
+const swaggerDocument = YAML.load(path.join(__dirname, 'api/openapi.yaml'));
 
 // Swagger UIのカスタムCSS
 const customCss = `

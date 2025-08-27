@@ -1,9 +1,16 @@
 import React, { useState } from 'react';
+import { wasteQuestions } from '../../data/wasteQuestions';
 
 interface Question {
   id: number;
   question: string;
-  options: string[];
+  subtitle?: string;
+  options: {
+    id: string;
+    text: string;
+    emoji: string;
+    description?: string;
+  }[];
   helpText?: string;
 }
 
@@ -11,38 +18,14 @@ interface DiagnosisFormProps {
   onComplete: (answers: Record<number, string>) => void;
 }
 
-const questions: Question[] = [
-  {
-    id: 1,
-    question: "年間収入レンジを教えてください",
-    options: ["～300万円", "300～500万円", "500～800万円", "800万円～"],
-    helpText: "年収は審査の重要ポイント。安定収入があれば低金利の選択肢が広がります。"
-  },
-  {
-    id: 2,
-    question: "普段の口座残高（現金＋預金）は？",
-    options: ["～10万円", "10～50万円", "50～100万円", "100万円～"],
-    helpText: "預金残高は返済能力の証明に。多いほど審査通過率がアップします。"
-  },
-  {
-    id: 3,
-    question: "現在の借入件数（クレジット含む）は？",
-    options: ["0件", "1～2件", "3件以上"],
-    helpText: "借入件数が少ないほど有利。3件以上は「おまとめ」も検討を。"
-  },
-  {
-    id: 4,
-    question: "月々の返済負担率は？",
-    options: ["収入に対して返済が10%未満", "10～30%", "30%以上"],
-    helpText: "返済負担率＝（毎月の借入返済合計）÷（月収）。30%以下が理想的です。"
-  },
-  {
-    id: 5,
-    question: "資金が必要な緊急度は？",
-    options: ["今すぐ", "1週間以内", "1ヶ月以内"],
-    helpText: "急ぎの場合は即日融資可能な業者を、余裕があれば低金利サービスを選べます。"
-  }
-];
+// Convert wasteQuestions to the format expected by the form
+const questions: Question[] = wasteQuestions.map(wq => ({
+  id: wq.id,
+  question: wq.title,
+  subtitle: wq.subtitle,
+  options: wq.options,
+  helpText: wq.subtitle
+}));
 
 const DiagnosisForm: React.FC<DiagnosisFormProps> = ({ onComplete }) => {
   const [currentQuestion, setCurrentQuestion] = useState(0);
@@ -52,13 +35,16 @@ const DiagnosisForm: React.FC<DiagnosisFormProps> = ({ onComplete }) => {
   const [showHelpText, setShowHelpText] = useState(false);
 
   const progress = ((currentQuestion + 1) / questions.length) * 100;
+  const currentQ = questions[currentQuestion];
 
-  const handleAnswer = (answer: string) => {
-    setSelectedOption(answer);
+  const handleAnswer = (optionId: string) => {
+    if (!currentQ) return;
+    
+    setSelectedOption(optionId);
     setIsAnimating(true);
     
     setTimeout(() => {
-      const newAnswers = { ...answers, [questions[currentQuestion].id]: answer };
+      const newAnswers = { ...answers, [currentQ.id]: optionId };
       setAnswers(newAnswers);
       
       if (currentQuestion < questions.length - 1) {
@@ -79,6 +65,10 @@ const DiagnosisForm: React.FC<DiagnosisFormProps> = ({ onComplete }) => {
       setShowHelpText(false);
     }
   };
+
+  if (!currentQ) {
+    return <div>Loading...</div>;
+  }
 
   return (
     <div style={{
@@ -194,52 +184,68 @@ const DiagnosisForm: React.FC<DiagnosisFormProps> = ({ onComplete }) => {
       >
         {/* 質問文 */}
         <div style={{
-          display: 'flex',
-          alignItems: 'flex-start',
-          justifyContent: 'space-between',
           marginBottom: '24px'
         }}>
-          <h2 style={{
-            fontSize: '20px',
-            fontWeight: 700,
-            color: 'var(--color-text-primary)',
-            margin: 0,
-            flex: 1
+          <div style={{
+            display: 'flex',
+            alignItems: 'flex-start',
+            justifyContent: 'space-between',
+            marginBottom: currentQ.subtitle ? '8px' : '0'
           }}>
-            {questions[currentQuestion].question}
-          </h2>
-          {questions[currentQuestion].helpText && (
-            <button
-              onClick={() => setShowHelpText(!showHelpText)}
-              style={{
-                width: '32px',
-                height: '32px',
-                borderRadius: '50%',
-                backgroundColor: showHelpText ? 'var(--color-primary)' : 'var(--color-bg-secondary)',
-                border: 'none',
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                marginLeft: '16px',
-                transition: 'all 0.2s ease',
-                flexShrink: 0
-              }}
-              aria-label="ヘルプを表示"
-            >
-              <span style={{
-                fontSize: '16px',
-                fontWeight: 700,
-                color: showHelpText ? 'var(--color-text-inverse)' : 'var(--color-primary)'
-              }}>
-                ℹ
-              </span>
-            </button>
+            <h2 style={{
+              fontSize: '20px',
+              fontWeight: 700,
+              color: 'var(--color-text-primary)',
+              margin: 0,
+              flex: 1
+            }}>
+              {currentQ.question}
+            </h2>
+            {currentQ.helpText && (
+              <button
+                onClick={() => setShowHelpText(!showHelpText)}
+                style={{
+                  width: '32px',
+                  height: '32px',
+                  borderRadius: '50%',
+                  backgroundColor: showHelpText ? 'var(--color-primary)' : 'var(--color-bg-secondary)',
+                  border: 'none',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  marginLeft: '16px',
+                  transition: 'all 0.2s ease',
+                  flexShrink: 0
+                }}
+                aria-label="ヘルプを表示"
+              >
+                <span style={{
+                  fontSize: '16px',
+                  fontWeight: 700,
+                  color: showHelpText ? 'var(--color-text-inverse)' : 'var(--color-primary)'
+                }}>
+                  ℹ
+                </span>
+              </button>
+            )}
+          </div>
+          
+          {/* サブタイトル */}
+          {currentQ.subtitle && (
+            <p style={{
+              fontSize: '14px',
+              color: 'var(--color-text-secondary)',
+              margin: 0,
+              marginTop: '4px'
+            }}>
+              {currentQ.subtitle}
+            </p>
           )}
         </div>
 
         {/* ヘルプテキスト */}
-        {showHelpText && questions[currentQuestion].helpText && (
+        {showHelpText && currentQ.helpText && (
           <div style={{
             backgroundColor: 'var(--color-bg-secondary)',
             borderLeft: '4px solid var(--color-primary)',
@@ -254,7 +260,7 @@ const DiagnosisForm: React.FC<DiagnosisFormProps> = ({ onComplete }) => {
               lineHeight: 1.6,
               margin: 0
             }}>
-              {questions[currentQuestion].helpText}
+              {currentQ.helpText}
             </p>
           </div>
         )}
@@ -265,20 +271,20 @@ const DiagnosisForm: React.FC<DiagnosisFormProps> = ({ onComplete }) => {
           flexDirection: 'column',
           gap: '12px'
         }}>
-          {questions[currentQuestion].options.map((option, index) => (
+          {currentQ.options.map((option, index) => (
             <button
-              key={index}
-              onClick={() => handleAnswer(option)}
+              key={option.id}
+              onClick={() => handleAnswer(option.id)}
               disabled={isAnimating}
               style={{
                 width: '100%',
                 padding: '20px 24px',
                 borderRadius: 'var(--radius-xl)',
-                border: selectedOption === option ? '2px solid var(--color-primary)' : '2px solid var(--color-bg-tertiary)',
-                backgroundColor: selectedOption === option ? 'var(--color-bg-accent)' : 'var(--color-bg-primary)',
-                color: selectedOption === option ? 'var(--color-primary)' : 'var(--color-text-primary)',
+                border: selectedOption === option.id ? '2px solid var(--color-primary)' : '2px solid var(--color-bg-tertiary)',
+                backgroundColor: selectedOption === option.id ? 'var(--color-bg-accent)' : 'var(--color-bg-primary)',
+                color: selectedOption === option.id ? 'var(--color-primary)' : 'var(--color-text-primary)',
                 fontSize: '16px',
-                fontWeight: selectedOption === option ? 600 : 500,
+                fontWeight: selectedOption === option.id ? 600 : 500,
                 cursor: 'pointer',
                 textAlign: 'left',
                 transition: 'all 0.2s ease',
@@ -286,20 +292,52 @@ const DiagnosisForm: React.FC<DiagnosisFormProps> = ({ onComplete }) => {
                 animation: `fadeIn 0.3s ease-out ${index * 0.1}s both`
               }}
               onMouseEnter={(e) => {
-                if (selectedOption !== option) {
+                if (selectedOption !== option.id) {
                   e.currentTarget.style.borderColor = 'var(--color-primary-light)';
                   e.currentTarget.style.backgroundColor = 'var(--color-bg-accent)';
                 }
               }}
               onMouseLeave={(e) => {
-                if (selectedOption !== option) {
+                if (selectedOption !== option.id) {
                   e.currentTarget.style.borderColor = 'var(--color-bg-tertiary)';
                   e.currentTarget.style.backgroundColor = 'var(--color-bg-primary)';
                 }
               }}
             >
-              <span>{option}</span>
-              {selectedOption === option && (
+              <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '12px'
+              }}>
+                <span style={{
+                  fontSize: '20px',
+                  display: 'flex',
+                  alignItems: 'center'
+                }}>
+                  {option.emoji}
+                </span>
+                <div style={{
+                  flex: 1
+                }}>
+                  <div style={{
+                    fontSize: '16px',
+                    fontWeight: selectedOption === option.id ? 600 : 500,
+                    marginBottom: option.description ? '4px' : '0'
+                  }}>
+                    {option.text}
+                  </div>
+                  {option.description && (
+                    <div style={{
+                      fontSize: '13px',
+                      color: selectedOption === option.id ? 'var(--color-primary)' : 'var(--color-text-secondary)',
+                      opacity: 0.8
+                    }}>
+                      {option.description}
+                    </div>
+                  )}
+                </div>
+              </div>
+              {selectedOption === option.id && (
                 <svg 
                   style={{
                     position: 'absolute',

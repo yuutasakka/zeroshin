@@ -160,6 +160,10 @@ try {
 }
 
 export const SECURITY_CONFIG = {
+  // Rate limiting settings
+  SMS_RATE_LIMIT_WINDOW: 60 * 60 * 1000, // 1 hour in milliseconds
+  SMS_RATE_LIMIT_PER_IP: 3, // Maximum SMS attempts per IP
+  
   // 暗号化設定（サーバーサイドでのみ使用）
   ENCRYPTION_KEY: (() => {
     // クライアントサイドでは常にnullを返す
@@ -355,17 +359,12 @@ export const SECURITY_CONFIG = {
 export const SUPABASE_CONFIG = {
   url: (typeof import.meta !== 'undefined' && (import.meta as any).env?.VITE_SUPABASE_URL) || 
        process.env.VITE_SUPABASE_URL || 
-       process.env.NEXT_PUBLIC_SUPABASE_URL || (() => {
-         throw new Error('Supabase URL not configured');
-       })(),
+       process.env.NEXT_PUBLIC_SUPABASE_URL || 
+       'https://localhost:54321', // フォールバック値
   anonKey: (typeof import.meta !== 'undefined' && (import.meta as any).env?.VITE_SUPABASE_ANON_KEY) || 
            process.env.VITE_SUPABASE_ANON_KEY || 
-           process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || (() => {
-    if (process.env.NODE_ENV === 'production') {
-      return '';
-    }
-    return '';
-  })(),
+           process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 
+           'dev-anon-key', // フォールバック値,
   serviceRoleKey: (() => {
     // クライアントサイドでは使用しない
     if (typeof window !== 'undefined') {
