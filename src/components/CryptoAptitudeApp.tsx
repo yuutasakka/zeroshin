@@ -426,7 +426,364 @@ function InlineHelp({ text }: { text?: string }) {
   );
 }
 
-// Top Gift Banner component for PDF promotion
+// Micro Analysis component for quick AI thinking animation
+function MicroAnalysis() {
+  const [step, setStep] = useState(0); // 0..2
+  useEffect(() => {
+    const id = setInterval(() => setStep(s => Math.min(2, s + 1)), 200);
+    return () => clearInterval(id);
+  }, []);
+
+  const messages = [
+    "回答集計",
+    "適性解析", 
+    "候補選定"
+  ];
+
+  return (
+    <main className="flex items-center justify-center min-h-[400px]" aria-live="polite">
+      <div className="text-center">
+        <div className="w-8 h-8 border-2 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+        <div className="text-lg font-semibold text-gray-900 mb-2">
+          {messages[step]}...
+        </div>
+        <div className="text-sm text-gray-600">
+          診断結果を準備中
+        </div>
+      </div>
+    </main>
+  );
+}
+
+// Analysis Loading component for AI thinking animation
+function AnalysisLoading() {
+  const [step, setStep] = useState(0); // 0..2
+  useEffect(() => {
+    const id = setInterval(() => setStep(s => Math.min(2, s + 1)), 1000);
+    return () => clearInterval(id);
+  }, []);
+  const progress = [33, 66, 100][step];
+
+  const messages = [
+    "回答内容を集計中…",
+    "適性（セキュリティ／余剰資金）を解析中…",
+    "最適な口座候補を選定中…"
+  ];
+
+  return (
+    <main aria-live="polite">
+      {/* 線形プログレス */}
+      <div className="h-2 bg-gray-200 rounded-full overflow-hidden mb-6">
+        <div className="h-full bg-gray-900 transition-all duration-1000" style={{ width: `${progress}%` }} />
+      </div>
+
+      <section className="grid grid-cols-1 md:grid-cols-3 gap-4 items-stretch">
+        {/* 左：メッセージ */}
+        <div className="p-6 rounded-2xl bg-white border border-gray-200 shadow-sm h-full flex flex-col">
+          <div className="text-sm text-gray-500 mb-2">分析中</div>
+          <h2 className="text-lg md:text-xl font-semibold tracking-tight text-gray-900 leading-relaxed">{messages[step]}</h2>
+          <p className="mt-3 text-gray-700 leading-relaxed">
+            数秒で結果をご案内します。投資助言ではありません。公式情報のご確認をおすすめします。
+          </p>
+          <div className="mt-auto text-xs text-gray-500">CoinChoice診断</div>
+        </div>
+
+        {/* 右：スケルトン×2 */}
+        <div className="p-6 rounded-2xl bg-white border border-gray-200 shadow-sm h-full animate-pulse">
+          <div className="h-4 w-32 bg-gray-200 rounded mb-4" />
+          <div className="h-7 w-56 bg-gray-200 rounded mb-3" />
+          <div className="h-3 w-full bg-gray-200 rounded mb-2" />
+          <div className="h-3 w-5/6 bg-gray-200 rounded mb-6" />
+          <div className="h-8 w-40 bg-gray-200 rounded" />
+        </div>
+        <div className="p-6 rounded-2xl bg-white border border-gray-200 shadow-sm h-full animate-pulse">
+          <div className="h-4 w-28 bg-gray-200 rounded mb-4" />
+          <div className="space-y-2 mb-6">
+            <div className="h-3 w-full bg-gray-200 rounded" />
+            <div className="h-3 w-11/12 bg-gray-200 rounded" />
+            <div className="h-3 w-10/12 bg-gray-200 rounded" />
+          </div>
+          <div className="h-9 w-44 bg-gray-200 rounded" />
+        </div>
+      </section>
+    </main>
+  );
+}
+
+// Primary CTA Card with reasoning chips
+function PrimaryCTA({ persona, categories, answers }: { persona: PersonaKey, categories: Record<CategoryKey, number>, answers: Answers }) {
+  const recommendedExchange = RECO_BY_PERSONA[persona]?.[0];
+  const exchange = recommendedExchange ? EXCHANGES[recommendedExchange] : null;
+  
+  if (!exchange) return null;
+
+  // Generate reasoning chips based on categories and answers
+  const reasoningChips: string[] = [];
+  if (categories.capital > 0.7) reasoningChips.push("余剰資金◎");
+  if (categories.security > 0.7) reasoningChips.push("2FA◎");
+  if (categories.knowledge > 0.6) reasoningChips.push("基本操作◎");
+  if (categories.discipline > 0.6) reasoningChips.push("少額から◎");
+  if (categories.compliance > 0.7) reasoningChips.push("コンプラ◎");
+  
+  // Ensure we have at least 3 chips
+  if (reasoningChips.length < 3) {
+    const fallbacks = ["初心者向け", "信頼性◎", "使いやすさ◎"];
+    fallbacks.forEach(chip => {
+      if (reasoningChips.length < 3 && !reasoningChips.includes(chip)) {
+        reasoningChips.push(chip);
+      }
+    });
+  }
+
+  const handleClick = () => {
+    if (typeof window !== 'undefined' && (window as any).gtag) {
+      (window as any).gtag('event', 'primary_cta_click', {
+        exchange: exchange.key,
+        persona: persona,
+        position: 'primary'
+      });
+    }
+  };
+
+  return (
+    <section className="mt-8 p-8 rounded-2xl bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-200 shadow-lg">
+      <div className="flex items-start justify-between mb-4">
+        <div className="flex-1">
+          <div className="flex items-center gap-2 mb-3">
+            <span className="text-xs px-2 py-0.5 rounded-full border border-red-300 bg-red-100 text-red-700 font-medium">
+              広告
+            </span>
+            <span className="text-sm text-blue-700 font-medium">
+              あなたにおすすめ
+            </span>
+          </div>
+          <h3 className="text-xl md:text-2xl font-bold text-gray-900 mb-2">
+            最初の一歩におすすめの口座
+          </h3>
+          <div className="text-2xl font-bold text-blue-600 mb-3">
+            {exchange.name}
+          </div>
+          <div className="flex flex-wrap gap-2 mb-4">
+            {reasoningChips.slice(0, 3).map((chip) => (
+              <span key={chip} className="inline-block rounded-full bg-green-100 text-green-800 border border-green-200 px-3 py-1 text-sm font-medium">
+                {chip}
+              </span>
+            ))}
+          </div>
+        </div>
+      </div>
+      <a 
+        href={exchange.link} 
+        target="_blank" 
+        rel="noopener noreferrer"
+        onClick={handleClick}
+        className="inline-block w-full text-center px-8 py-4 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-bold text-lg hover:from-blue-700 hover:to-indigo-700 transition-all duration-300 shadow-lg hover:shadow-xl"
+        aria-label={`${exchange.name}の口座開設（公式）`}
+      >
+        口座開設へ（公式）
+      </a>
+      <p className="text-xs text-gray-600 mt-3 text-center">
+        ※本表示は診断結果に基づく一般的な提案であり、投資助言ではありません。
+      </p>
+    </section>
+  );
+}
+
+// Comparison table component
+function ComparisonTable({ persona }: { persona: PersonaKey }) {
+  const keys = (RECO_BY_PERSONA[persona] || []).slice(0, 3);
+  const exchanges = keys.map(k => EXCHANGES[k]).filter((ex): ex is Exchange => ex !== undefined);
+
+  const handleExchangeClick = (exchangeKey: string) => {
+    if (typeof window !== 'undefined' && (window as any).gtag) {
+      (window as any).gtag('event', 'comparison_table_click', {
+        exchange: exchangeKey,
+        persona: persona,
+        position: 'comparison'
+      });
+    }
+  };
+
+  return (
+    <section className="mt-8 p-6 rounded-2xl bg-white border border-gray-200 shadow-sm">
+      <div className="flex items-center justify-between mb-4">
+        <h3 className="text-lg md:text-xl font-semibold tracking-tight text-gray-900">
+          上位3社の比較
+        </h3>
+        <span className="text-xs px-2 py-0.5 rounded-full border border-red-300 bg-red-100 text-red-700 font-medium">
+          広告
+        </span>
+      </div>
+      <p className="text-sm text-gray-600 mb-6">
+        このセクションにはアフィリエイトリンクが含まれます。最新情報・手数料・取扱商品は必ず公式サイトでご確認ください。
+      </p>
+      
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        {exchanges.map((ex, index) => (
+          <div key={ex.key} className={`p-6 rounded-2xl border ${index === 0 ? 'border-blue-300 bg-blue-50' : 'border-gray-200 bg-white'} shadow-sm h-full flex flex-col`}>
+            <div className="mb-4">
+              <div className="font-semibold text-lg text-gray-900 mb-1">{ex.name}</div>
+              {index === 0 && (
+                <div className="text-xs text-blue-600 font-medium bg-blue-100 px-2 py-1 rounded-full inline-block">
+                  おすすめ
+                </div>
+              )}
+            </div>
+            
+            <div className="mb-6 flex-grow">
+              <h4 className="text-sm font-medium text-gray-700 mb-2">特徴</h4>
+              <ul className="text-sm text-gray-600 space-y-1">
+                {ex.notes?.slice(0, 2).map((note) => (
+                  <li key={note} className="flex items-start">
+                    <span className="text-blue-500 mr-2 flex-shrink-0">•</span>
+                    <span>{note}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+            
+            <a 
+              href={ex.link} 
+              target="_blank" 
+              rel="noopener noreferrer"
+              onClick={() => handleExchangeClick(ex.key)}
+              className={`inline-block w-full text-center px-4 py-3 rounded-lg font-medium transition-colors text-sm ${
+                index === 0 
+                  ? 'bg-blue-600 text-white hover:bg-blue-700' 
+                  : 'bg-gray-900 text-white hover:bg-gray-800'
+              }`}
+              aria-label={`${ex.name}の公式サイトへ`}
+            >
+              公式サイトへ
+            </a>
+          </div>
+        ))}
+      </div>
+      
+      <p className="text-xs text-gray-600 mt-6">
+        ※本表示は診断結果に基づく一般的な提案であり、投資助言ではありません。
+      </p>
+    </section>
+  );
+}
+
+function ExchangeTable({ persona }: { persona: PersonaKey }) {
+  const keys = (RECO_BY_PERSONA[persona] || []).slice(0, 3);
+  const rows = keys.map(k => EXCHANGES[k]).filter((ex): ex is Exchange => ex !== undefined);
+
+  const handleExchangeClick = (exchangeKey: string) => {
+    if (typeof window !== 'undefined' && (window as any).gtag) {
+      (window as any).gtag('event', 'aff_click', {
+        exchange: exchangeKey,
+        persona: persona,
+        position: 'recommendations'
+      });
+    }
+  };
+
+  return (
+    <section className="mt-8 p-6 rounded-2xl bg-white border border-gray-200 shadow-sm">
+      <div className="flex items-center justify-between mb-4">
+        <h3 className="text-lg md:text-xl font-semibold tracking-tight text-gray-900">あなたにおすすめの国内取引所</h3>
+        <span className="text-xs px-2 py-0.5 rounded-full border border-gray-300 bg-gray-50 text-gray-600 font-medium">広告</span>
+      </div>
+      <p className="text-sm text-gray-600 mb-6 leading-relaxed">このセクションにはアフィリエイトリンクが含まれます。最新情報・手数料・取扱商品は必ず公式サイトでご確認ください。</p>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 items-stretch content-stretch">
+        {rows.map((ex) => (
+          <div key={ex.key} className="p-5 rounded-2xl border border-gray-200 bg-white shadow-sm h-full flex flex-col">
+            <div className="font-semibold text-[15px] md:text-base text-gray-900 mb-3 break-words break-keep min-w-0">{ex.name}</div>
+            {ex.notes && (
+              <ul className="mt-2 text-sm leading-relaxed text-gray-700 space-y-1 list-disc list-inside mb-4 grow min-h-[64px]">
+                {ex.notes.map((n) => <li key={n}>{n}</li>)}
+                <li>詳細仕様・手数料は公式を確認</li>
+              </ul>
+            )}
+            <a 
+              href={ex.link} 
+              target="_blank" 
+              rel="noopener noreferrer"
+              onClick={() => handleExchangeClick(ex.key)}
+              className="inline-block w-full text-center px-4 py-3 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-semibold hover:from-blue-700 hover:to-indigo-700 transition-all duration-300 shadow-lg hover:shadow-xl mt-auto"
+              aria-label={`${ex.name}の口座開設（公式）`}
+            >
+              口座開設へ（公式）
+            </a>
+          </div>
+        ))}
+      </div>
+      <p className="text-xs text-gray-600 mt-6 leading-relaxed">
+        ※本表示は診断結果に基づく一般的な提案であり、投資助言ではありません。
+      </p>
+    </section>
+  );
+}
+// Sticky bottom bar component
+function StickyBottomBar({ persona }: { persona: PersonaKey }) {
+  const [isVisible, setIsVisible] = useState(false);
+  const [isDismissed, setIsDismissed] = useState(false);
+  
+  const recommendedExchange = RECO_BY_PERSONA[persona]?.[0];
+  const exchange = recommendedExchange ? EXCHANGES[recommendedExchange] : null;
+  
+  useEffect(() => {
+    const handleScroll = () => {
+      const scrolled = (window.scrollY / (document.body.scrollHeight - window.innerHeight)) * 100;
+      setIsVisible(scrolled > 50 && !isDismissed);
+    };
+    
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, [isDismissed]);
+  
+  if (!exchange || !isVisible) return null;
+  
+  const handleClick = () => {
+    if (typeof window !== 'undefined' && (window as any).gtag) {
+      (window as any).gtag('event', 'sticky_bar_click', {
+        exchange: exchange.key,
+        persona: persona,
+        position: 'sticky'
+      });
+    }
+  };
+  
+  return (
+    <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-lg z-50 p-4">
+      <div className="max-w-screen-lg mx-auto flex items-center justify-between">
+        <div className="flex-1">
+          <div className="flex items-center gap-2 mb-1">
+            <span className="text-xs px-2 py-0.5 rounded-full border border-red-300 bg-red-100 text-red-700 font-medium">
+              広告
+            </span>
+            <span className="text-sm font-medium text-gray-900">
+              あなたの結果に合う口座：{exchange.name}
+            </span>
+          </div>
+        </div>
+        <div className="flex items-center gap-3">
+          <a 
+            href={exchange.link} 
+            target="_blank" 
+            rel="noopener noreferrer"
+            onClick={handleClick}
+            className="px-6 py-2 rounded-lg bg-blue-600 text-white font-semibold hover:bg-blue-700 transition-colors text-sm"
+            aria-label={`${exchange.name}の口座開設へ`}
+          >
+            口座開設へ
+          </a>
+          <button 
+            onClick={() => setIsDismissed(true)}
+            className="p-1 text-gray-400 hover:text-gray-600"
+            aria-label="閉じる"
+          >
+            ×
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function TopGiftBanner({ onStart }: { onStart: () => void }) {
   return (
     <section className="mt-8">
@@ -442,7 +799,7 @@ function TopGiftBanner({ onStart }: { onStart: () => void }) {
         <p className="text-gray-700 leading-relaxed mb-6">
           {COPY.pdfGift.subtitle}
         </p>
-        <div>
+        <div className="flex justify-center">
           <button
             onClick={onStart}
             className="px-6 py-3 rounded-2xl bg-red-600 text-white font-semibold hover:from-blue-700 hover:to-indigo-700 transition-all duration-300 shadow-lg hover:shadow-xl"
@@ -460,6 +817,8 @@ function TopGiftBanner({ onStart }: { onStart: () => void }) {
 function ResultPdfCTA() {
   const PDF_URL = import.meta.env.VITE_PDF_BEGINNERS_GUIDE_URL || "";
   const disabled = !PDF_URL;
+  const LINE_URL = import.meta.env.VITE_LINE_GUIDE_URL || "";
+  const lineDisabled = !LINE_URL;
 
   const onClick = () => {
     try {
@@ -472,37 +831,82 @@ function ResultPdfCTA() {
   };
 
   return (
-    <section className="mt-10">
-      <div className="p-6 rounded-2xl bg-gradient-to-br from-purple-50 to-violet-50 border border-purple-200 shadow-sm">
-        <h3 className="text-lg md:text-xl font-semibold tracking-tight text-gray-900 mb-3">
-          {COPY.pdfGift.title}
-        </h3>
-        <p className="text-gray-700 text-[15px] md:text-[16px] leading-relaxed mb-6">
-          {COPY.pdfGift.subtitle}
-        </p>
-        <div className="mb-4">
-          <a
-            href={disabled ? undefined : PDF_URL}
-            onClick={disabled ? (e) => e.preventDefault() : onClick}
-            target="_blank"
-            rel="noopener noreferrer"
-            aria-disabled={disabled}
-            className={
-              "inline-block px-6 py-3 rounded-2xl font-semibold transition-colors " +
-              (disabled
-                ? "bg-gray-200 text-gray-500 cursor-not-allowed"
-                : "bg-red-500 text-white cursor-not-allowed")
-            }
-            aria-label="仮想通貨の始め方 完全ガイド（PDF）をダウンロード"
-          >
-            {COPY.pdfGift.ctaResult}
-          </a>
+    <>
+      <section className="mt-10">
+        <div className="p-6 rounded-2xl bg-gradient-to-br from-purple-50 to-violet-50 border border-purple-200 shadow-sm">
+          <h3 className="text-lg md:text-xl font-semibold tracking-tight text-gray-900 mb-3">
+            {COPY.pdfGift.title}
+          </h3>
+          <p className="text-gray-700 text-[15px] md:text-[16px] leading-relaxed mb-6">
+            {COPY.pdfGift.subtitle}
+          </p>
+          <div className="flex justify-center mb-4">
+            <a
+              href={disabled ? undefined : PDF_URL}
+              onClick={disabled ? (e) => e.preventDefault() : onClick}
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-disabled={disabled}
+              className={
+                "inline-block px-6 py-3 rounded-2xl font-semibold transition-all duration-300 " +
+                (disabled
+                  ? "bg-gray-200 text-gray-500 cursor-not-allowed"
+                  : "bg-red-600 text-white hover:bg-red-700 shadow-lg hover:shadow-xl")
+              }
+              aria-label="仮想通貨の始め方 完全ガイド（PDF）をダウンロード"
+            >
+              {COPY.pdfGift.ctaResult}
+            </a>
+          </div>
+          <p className="text-xs text-gray-600 leading-relaxed">
+            {COPY.pdfGift.note}
+          </p>
         </div>
-        <p className="text-xs text-gray-600 leading-relaxed">
-          {COPY.pdfGift.note}
-        </p>
-      </div>
-    </section>
+      </section>
+
+      {/* LINE guide card below */}
+      <section className="mt-6">
+        <div className="p-6 rounded-2xl bg-gradient-to-br from-purple-50 to-violet-50 border border-purple-200 shadow-sm">
+          <h3 className="text-lg md:text-xl font-semibold tracking-tight text-gray-900 mb-3">
+            公式LINEで「口座開設から初回取引」まで一緒に進めましょう
+          </h3>
+          <p className="text-gray-700 text-[15px] md:text-[16px] leading-relaxed mb-4">
+            あなたの診断結果タイプに合わせて、必要なチェックリストと公式リンクをステップごとに配信。最短で安全にスタートできるよう設計しています。
+          </p>
+          <ul className="list-disc pl-5 text-gray-700 text-[15px] md:text-[16px] leading-relaxed space-y-1 mb-6">
+            <li><span className="font-semibold">STEP0：</span>事前準備（メール・本人確認書類・余剰資金の確認）</li>
+            <li><span className="font-semibold">STEP1：</span>口座開設（公式リンク／注意点）</li>
+            <li><span className="font-semibold">STEP2：</span>本人確認（よくあるNG例）</li>
+            <li><span className="font-semibold">STEP3：</span>2FA設定（認証アプリ・バックアップ）</li>
+            <li><span className="font-semibold">STEP4：</span>初回入金（反映が遅い時の対処）</li>
+            <li><span className="font-semibold">STEP5：</span>はじめての購入（少額・指値の基本）</li>
+            <li><span className="font-semibold">STEP6：</span>保管と安全対策（フィッシング対策／公式URLブックマーク）</li>
+            <li><span className="font-semibold">STEP7：</span>よくあるエラーとQ&A</li>
+          </ul>
+          <div className="flex justify-center mb-4">
+            <a
+              href={lineDisabled ? undefined : LINE_URL}
+              onClick={lineDisabled ? (e) => e.preventDefault() : undefined}
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-disabled={lineDisabled}
+              className={
+                "inline-block px-6 py-3 rounded-2xl font-semibold transition-all duration-300 " +
+                (lineDisabled
+                  ? "bg-gray-200 text-gray-500 cursor-not-allowed"
+                  : "bg-red-600 text-white hover:bg-red-700 shadow-lg hover:shadow-xl")
+              }
+              aria-label="LINEで受け取る（無料）"
+            >
+              LINEで受け取る（無料）
+            </a>
+          </div>
+          <p className="text-xs text-gray-600 leading-relaxed">
+            この配信は情報提供を目的としたもので、特定の暗号資産の勧誘や投資助言ではありません。手数料・取扱銘柄・各種条件は必ず最新の公式情報をご確認ください。配信停止はいつでも可能です。
+          </p>
+        </div>
+      </section>
+    </>
   );
 }
 
@@ -537,7 +941,7 @@ function Pill({ children }: { children: React.ReactNode }) {
 }
 
 export default function CryptoAptitudeApp() {
-  const [stage, setStage] = useState<"home" | "quiz" | "result">("home");
+  const [stage, setStage] = useState<"home" | "micro-analysis" | "result">("home");
   const [idx, setIdx] = useState(0);
   const [answers, setAnswers] = useState<Answers>({});
 
@@ -548,9 +952,15 @@ export default function CryptoAptitudeApp() {
   const persona = useMemo(() => decidePersona(cats, total), [cats, total]);
 
   const start = () => {
-    setStage("quiz");
     setIdx(0);
     setAnswers({});
+    // Scroll to diagnosis form section
+    setTimeout(() => {
+      const diagnosisSection = document.querySelector('.diagnosis-form-section');
+      if (diagnosisSection) {
+        diagnosisSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    }, 100);
   };
 
   const onSelect = (choice: Choice3) => {
@@ -562,7 +972,10 @@ export default function CryptoAptitudeApp() {
         if (idx < QUESTIONS.length - 1) {
           setIdx(idx + 1);
         } else {
-          setStage("result");
+          setStage("micro-analysis");
+          // 0.6〜1.2秒のマイクロ分析演出
+          const delay = 600 + Math.floor(Math.random() * 600);
+          setTimeout(() => setStage("result"), delay);
         }
       }, 120);
     }
@@ -608,14 +1021,6 @@ export default function CryptoAptitudeApp() {
                 {COPY.title}
               </h2>
               <p className="mt-6 text-gray-600 max-w-2xl mx-auto leading-relaxed">{COPY.subtitle}</p>
-              <div className="mt-8">
-                <button
-                  onClick={start}
-                  className="px-6 py-3 rounded-2xl bg-gradient-to-r from-blue-600 to-blue-700 text-white font-semibold hover:from-blue-700 hover:to-blue-800 transition-all duration-300 shadow-lg hover:shadow-xl"
-                >
-                  {COPY.cta}
-                </button>
-              </div>
               <div className="mt-8 flex flex-wrap justify-center gap-2">
                 {COPY.trust.map((t) => (
                   <Pill key={t}>{t}</Pill>
@@ -623,7 +1028,59 @@ export default function CryptoAptitudeApp() {
               </div>
             </section>
 
-            {/* PDF Gift Banner */}
+            {/* Diagnosis Form - Now placed before PDF Gift Banner */}
+            <section className="mt-12 diagnosis-form-section">
+              <div className="mb-6">
+                <div className="flex items-center justify-center mb-4">
+                  <div className="text-sm text-gray-500">
+                    {idx + 1}/{QUESTIONS.length}
+                  </div>
+                </div>
+                <Progress value={progress} />
+              </div>
+
+              <div className="bg-white border border-gray-200 rounded-2xl p-8 shadow-sm">
+                <div className="text-sm text-gray-500 mb-2">質問 {idx + 1}</div>
+                <h2 className="text-xl font-semibold mt-1 text-gray-900 leading-relaxed flex items-start">
+                  {current.text}
+                  <InlineHelp text={current.help} />
+                </h2>
+                <div className="mt-6 grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  {CHOICES_3.map((label, i) => {
+                    const selected = (answers[current.id] ?? -1) === i;
+                    return (
+                      <button
+                        key={i}
+                        onClick={() => onSelect(i as Choice3)}
+                        className={
+                          "text-center rounded-2xl border p-4 text-base transition-all min-h-[60px] font-medium break-words break-keep " +
+                          (selected 
+                            ? "border-blue-500 bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-lg" 
+                            : "border-gray-200 hover:border-blue-300 hover:bg-blue-50")
+                        }
+                      >
+                        {label}
+                      </button>
+                    );
+                  })}
+                </div>
+
+                <div className="mt-8 flex items-center justify-between">
+                  <button
+                    onClick={() => setIdx((v) => Math.max(0, v - 1))}
+                    disabled={idx === 0}
+                    className="px-3 py-1.5 text-sm rounded-xl border border-gray-200 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                  >
+                    戻る
+                  </button>
+                  <div className="text-sm text-gray-500">
+                    回答を選択すると自動で次の質問へ進みます
+                  </div>
+                </div>
+              </div>
+            </section>
+
+            {/* PDF Gift Banner - Now placed after Diagnosis Form */}
             <TopGiftBanner onStart={start} />
 
             {/* How it works */}
@@ -668,64 +1125,7 @@ export default function CryptoAptitudeApp() {
           </main>
         )}
 
-        {stage === "quiz" && (
-          <main>
-            <div className="flex items-center gap-4 mb-6 min-h-[28px]">
-              <button
-                onClick={() => setStage("home")}
-                className="text-sm text-gray-600 hover:text-gray-900 transition-colors"
-              >
-                ← トップへ
-              </button>
-              <div className="flex-1" />
-              <div className="text-sm text-gray-500">
-                {idx + 1}/{QUESTIONS.length}
-              </div>
-            </div>
-
-            <Progress value={progress} />
-
-            <div className="mt-8 bg-white border border-gray-200 rounded-2xl p-8 shadow-sm">
-              <div className="text-sm text-gray-500 mb-2">質問 {idx + 1}</div>
-              <h2 className="text-xl font-semibold mt-1 text-gray-900 leading-relaxed flex items-start">
-                {current.text}
-                <InlineHelp text={current.help} />
-              </h2>
-              <div className="mt-6 grid grid-cols-1 sm:grid-cols-3 gap-3">
-                {CHOICES_3.map((label, i) => {
-                  const selected = (answers[current.id] ?? -1) === i;
-                  return (
-                    <button
-                      key={i}
-                      onClick={() => onSelect(i as Choice3)}
-                      className={
-                        "text-center rounded-2xl border p-4 text-base transition-all min-h-[60px] font-medium break-words break-keep " +
-                        (selected 
-                          ? "border-blue-500 bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-lg" 
-                          : "border-gray-200 hover:border-blue-300 hover:bg-blue-50")
-                      }
-                    >
-                      {label}
-                    </button>
-                  );
-                })}
-              </div>
-
-              <div className="mt-8 flex items-center justify-between">
-                <button
-                  onClick={() => setIdx((v) => Math.max(0, v - 1))}
-                  disabled={idx === 0}
-                  className="px-3 py-1.5 text-sm rounded-xl border border-gray-200 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
-                >
-                  戻る
-                </button>
-                <div className="text-sm text-gray-500">
-                  回答を選択すると自動で次の質問へ進みます
-                </div>
-              </div>
-            </div>
-          </main>
-        )}
+        {stage === "micro-analysis" && <MicroAnalysis />}
 
         {stage === "result" && (
           <main>
@@ -733,105 +1133,39 @@ export default function CryptoAptitudeApp() {
               <button onClick={() => setStage("home")} className="text-sm text-gray-600 hover:text-gray-900 transition-colors">
                 ← トップへ
               </button>
-              <button onClick={() => setStage("quiz")} className="text-sm text-gray-600 hover:text-gray-900 transition-colors">
-                設問に戻る
-              </button>
-              <div className="flex-1" />
-              <button
-                onClick={() => {
-                  navigator.clipboard?.writeText(shareText);
-                  alert("結果テキストをコピーしました");
-                }}
-                className="text-sm px-4 py-2 rounded-2xl border border-gray-200 hover:bg-gray-50 transition-colors"
-              >
-                結果をコピー
-              </button>
             </div>
 
             <section className="bg-white border border-gray-200 rounded-2xl p-8 shadow-sm">
               <div className="text-sm text-gray-500">総合スコア</div>
               <div className="flex items-end gap-4 mt-3">
-                <div className="text-3xl md:text-4xl font-bold tracking-tight text-gray-900">{total}</div>
+                <div className="text-3xl md:text-4xl font-bold tracking-tight text-gray-900" tabIndex={-1} ref={(el) => el?.focus()}>{total}</div>
                 <div className="text-gray-600 mb-2">/ 100</div>
               </div>
               <div className="mt-4">
                 <Progress value={total} />
               </div>
 
+              {/* Persona Card */}
               <PersonaCard persona={persona} />
 
-              <PrimaryCTA persona={persona} />
+              {/* Primary CTA Card with reasoning chips */}
+              <PrimaryCTA persona={persona} categories={cats} answers={answers} />
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 items-stretch content-stretch mt-8">
-                {(Object.keys(cats) as CategoryKey[]).map((k, index) => {
-                  const colors = [
-                    "bg-gradient-to-r from-blue-500 to-blue-600",
-                    "bg-gradient-to-r from-green-500 to-green-600",
-                    "bg-gradient-to-r from-purple-500 to-purple-600",
-                    "bg-gradient-to-r from-yellow-500 to-yellow-600",
-                    "bg-gradient-to-r from-indigo-500 to-indigo-600",
-                    "bg-gradient-to-r from-pink-500 to-pink-600",
-                    "bg-gradient-to-r from-cyan-500 to-cyan-600",
-                    "bg-gradient-to-r from-red-500 to-red-600"
-                  ];
-                  return (
-                    <div key={k} className="p-5 rounded-2xl bg-white border border-gray-200 shadow-sm h-full flex flex-col">
-                      <div className="flex items-center justify-between mb-3">
-                        <div className="text-xs text-gray-500 break-words break-keep min-w-0">{CATEGORY_LABEL[k]}</div>
-                        <div className="text-xs font-semibold text-gray-700">{Math.round(cats[k] * 100)} / 100</div>
-                      </div>
-                      <div className="h-2 bg-gray-100 rounded-full overflow-hidden grow">
-                        <div
-                          className={`h-full transition-all duration-300 ${colors[index % colors.length]}`}
-                          style={{ width: `${Math.round(cats[k] * 100)}%` }}
-                        />
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
+              {/* Comparison Table */}
+              <ComparisonTable persona={persona} />
 
-              {/* Secondary Exchange Recommendations */}
-              <ExchangeRecommendations persona={persona} />
+              {/* Sub Recommendation Cards (existing ExchangeTable) */}
+              <ExchangeTable persona={persona} />
 
-              <div className="text-xs text-gray-600 leading-relaxed space-y-2">
+              <div className="text-xs text-gray-600 leading-relaxed space-y-2 mt-8">
                 ※ スコアは自己申告に基づく簡易評価です。投資判断の基礎資料としては使用できません。
               </div>
             </section>
 
-            <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 items-stretch content-stretch mt-6">
-              <div className="p-6 rounded-2xl bg-white border border-gray-200 shadow-sm h-full flex flex-col">
-                <div className="text-xs text-gray-500 mb-2">次の一歩</div>
-                <div className="font-semibold text-gray-900 mb-3 break-words break-keep min-w-0">学ぶ</div>
-                <ul className="text-sm list-disc list-inside text-gray-700 space-y-1 leading-relaxed grow min-h-[64px]">
-                  <li>基本用語：成行/指値/逆指値、ボラティリティ、ポジションサイズ</li>
-                  <li>安全：2FA/パス管理/詐欺対策（偽サイト/DMに注意）</li>
-                  <li>記録：トレード日誌テンプレで振り返り</li>
-                </ul>
-              </div>
-              <div className="p-6 rounded-2xl bg-white border border-gray-200 shadow-sm h-full flex flex-col">
-                <div className="text-xs text-gray-500 mb-2">次の一歩</div>
-                <div className="font-semibold text-gray-900 mb-3 break-words break-keep min-w-0">はじめる</div>
-                <ul className="text-sm list-disc list-inside text-gray-700 space-y-1 leading-relaxed grow min-h-[64px]">
-                  <li>本人確認/セキュリティ設定→少額現物で操作確認</li>
-                  <li>自動積立 or 小額・低頻度のスイングから</li>
-                  <li>税申告フローの把握（ツール活用）</li>
-                </ul>
-              </div>
-              <div className="p-6 rounded-2xl bg-white border border-gray-200 shadow-sm h-full flex flex-col">
-                <div className="text-xs text-gray-500 mb-2">次の一歩</div>
-                <div className="font-semibold text-gray-900 mb-3 break-words break-keep min-w-0">守る</div>
-                <ul className="text-sm list-disc list-inside text-gray-700 space-y-1 leading-relaxed grow min-h-[64px]">
-                  <li>2FA必須/機種変更時のバックアップ運用</li>
-                  <li>公式URLのブックマーク、検索広告の偽サイトに注意</li>
-                  <li>SNSの勧誘/高利回り案件は原則スルー</li>
-                </ul>
-              </div>
-            </section>
-
-            {/* PDF Download CTA */}
+            {/* PDF Download CTA (Red button) */}
             <ResultPdfCTA />
 
+            {/* Disclaimers */}
             <section id="disclaimers" className="mt-16">
               <div className="text-sm text-gray-600 space-y-3 leading-relaxed">
                 {COPY.disclaimers.map((d, i) => (
@@ -848,8 +1182,8 @@ export default function CryptoAptitudeApp() {
         </footer>
       </div>
       
-      {/* Sticky CTA for result stage */}
-      {stage === "result" && <StickyCTA persona={persona} />}
+      {/* Sticky bottom bar for result stage */}
+      {stage === "result" && <StickyBottomBar persona={persona} />}
     </div>
     </>
   );
@@ -867,56 +1201,6 @@ function PersonaCard({ persona }: { persona: PersonaKey }) {
           <li key={t}>{t}</li>
         ))}
       </ul>
-    </div>
-  );
-}
-
-// Primary CTA component for enhanced conversion
-function PrimaryCTA({ persona }: { persona: PersonaKey }) {
-  const primaryKey = (RECO_BY_PERSONA[persona] || [])[0];
-  if (!primaryKey) return null;
-  const ex = EXCHANGES[primaryKey];
-  if (!ex) return null;
-
-  const handleClick = () => {
-    if (typeof window !== 'undefined' && (window as any).gtag) {
-      (window as any).gtag('event', 'aff_click', {
-        exchange: primaryKey,
-        persona: persona,
-        position: 'primary'
-      });
-    }
-  };
-
-  return (
-    <div className="mt-8 p-6 rounded-2xl bg-gradient-to-br from-purple-50 to-indigo-50 border border-purple-200 shadow-sm">
-      <div className="flex items-center justify-between mb-4">
-        <h3 className="text-lg md:text-xl font-semibold tracking-tight text-gray-900">最初の一歩におすすめの口座</h3>
-        <span className="text-xs px-2 py-0.5 rounded-full border border-purple-300 bg-purple-100 text-purple-700 font-medium">広告</span>
-      </div>
-      <p className="text-gray-700 text-[15px] md:text-[16px] leading-relaxed mb-6">
-        CoinChoice診断のあなたの結果に基づく提案です。手数料・取扱銘柄・最新情報は必ず公式でご確認ください。
-      </p>
-      <div className="p-5 rounded-2xl border border-gray-200 bg-gray-50 h-full flex flex-col">
-        <div className="font-semibold text-[15px] md:text-base text-gray-900 mb-3 break-words break-keep min-w-0">{ex.name}</div>
-        <ul className="text-sm text-gray-700 list-disc list-inside space-y-1 mb-4 leading-relaxed grow min-h-[64px]">
-          {(ex.notes || []).map(n => <li key={n}>{n}</li>)}
-          <li>本人確認で準備：身分証／メール／2段階認証</li>
-        </ul>
-        <a 
-          href={ex.link} 
-          target="_blank" 
-          rel="noopener noreferrer"
-          onClick={handleClick}
-          aria-label={`${ex.name}の口座開設（公式）`}
-          className="inline-block w-full text-center px-6 py-3 rounded-2xl bg-gradient-to-r from-purple-600 to-indigo-600 text-white font-semibold hover:from-purple-700 hover:to-indigo-700 transition-all duration-300 shadow-lg hover:shadow-xl mt-auto"
-        >
-          口座開設へ（公式）
-        </a>
-        <p className="text-xs font-medium text-gray-600 leading-relaxed mt-3">
-          ※このリンクはアフィリエイトを含みます。投資判断はご自身の責任で行ってください。
-        </p>
-      </div>
     </div>
   );
 }

@@ -69,7 +69,7 @@ const Footer: React.FC<FooterProps> = () => {
             maxWidth: '600px',
             margin: '0 auto'
           }}>
-            30秒で分かる資金調達力診断
+            30秒で分かる暗号資産適性診断
           </p>
         </div>
 

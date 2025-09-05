@@ -5,7 +5,6 @@
 User-agent: *
 Allow: /
 Disallow: /api/
-Disallow: /admin/
 Disallow: /.well-known/
 Disallow: /private/
 Disallow: /temp/

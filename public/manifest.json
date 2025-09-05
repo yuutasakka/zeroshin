@@ -1,7 +1,7 @@
 {
-  "name": "Zero神 - ムダ遣い診断",
+  "name": "Zero神 - 暗号資産適性診断",
   "short_name": "Zero神",
-  "description": "30秒であなたのムダ遣い度をチェック！節約の神になろう",
+  "description": "30秒であなたの暗号資産トレード適性をチェック！資産形成の神になろう",
   "start_url": "/",
   "display": "standalone",
   "orientation": "portrait",
@@ -41,9 +41,9 @@
   "prefer_related_applications": false,
   "shortcuts": [
     {
-      "name": "ムダ遣い診断を開始",
+      "name": "暗号資産適性診断を開始",
       "short_name": "診断開始",
-      "description": "ムダ遣い診断を今すぐ開始",
+      "description": "暗号資産適性診断を今すぐ開始",
       "url": "/",
       "icons": [{ "src": "/pwa-192x192.png", "sizes": "192x192" }]
     },
@@ -54,15 +54,5 @@
       "url": "/admin",
       "icons": [{ "src": "/pwa-192x192.png", "sizes": "192x192" }]
     }
-  ],
-  "features": [
-    "ムダ遣い診断",
-    "パーソナライズド節約アドバイス",
-    "LINE認証",
-    "節約ガイドダウンロード"
-  ],
-  "handle_links": "preferred",
-  "launch_handler": {
-    "client_mode": ["navigate-existing", "auto"]
-  }
+  ]
 }

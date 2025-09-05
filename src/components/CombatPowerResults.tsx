@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import DownloadGuideModal from './DownloadGuideModal';
+import { getPdfGuideUrl, getAffiliateLinksByCategory } from '../config/links';
 
 interface CombatPowerResultsProps {
   diagnosisAnswers: Record<number, string>;
@@ -7,65 +7,67 @@ interface CombatPowerResultsProps {
 }
 
 interface SubScores {
-  attackPower: number;
-  defensePower: number;
-  mobility: number;
+  marketUnderstanding: number;
+  riskManagement: number;
+  executionAbility: number;
 }
 
 const CombatPowerResults: React.FC<CombatPowerResultsProps> = ({ diagnosisAnswers, onDownloadGuide }) => {
   const [isAnimating, setIsAnimating] = useState(false);
   const [currentScore, setCurrentScore] = useState(0);
-  const [showDownloadModal, setShowDownloadModal] = useState(false);
+  const pdfGuideUrl = getPdfGuideUrl();
+  const exchangeLinks = getAffiliateLinksByCategory('exchange');
+  const walletLinks = getAffiliateLinksByCategory('wallet');
   
   // スコア計算ロジック
   const calculateScores = (): { total: number; rank: string; subScores: SubScores; comment: string } => {
-    let attackPower = 0;
-    let defensePower = 0;
-    let mobility = 0;
+    let marketUnderstanding = 0;
+    let riskManagement = 0;
+    let executionAbility = 0;
     
-    // 年収による攻撃力計算
+    // 経験による市場理解度計算
     switch (diagnosisAnswers[1]) {
-      case '～300万円': attackPower += 15; break;
-      case '300～500万円': attackPower += 25; break;
-      case '500～800万円': attackPower += 35; break;
-      case '800万円～': attackPower += 40; break;
+      case '～300万円': marketUnderstanding += 15; break;
+      case '300～500万円': marketUnderstanding += 25; break;
+      case '500～800万円': marketUnderstanding += 35; break;
+      case '800万円～': marketUnderstanding += 40; break;
     }
     
-    // 口座残高による防御力計算
+    // 投資金額によるリスク管理能力計算
     switch (diagnosisAnswers[2]) {
-      case '～10万円': defensePower += 10; break;
-      case '10～50万円': defensePower += 20; break;
-      case '50～100万円': defensePower += 30; break;
-      case '100万円～': defensePower += 40; break;
+      case '～10万円': riskManagement += 10; break;
+      case '10～50万円': riskManagement += 20; break;
+      case '50～100万円': riskManagement += 30; break;
+      case '100万円～': riskManagement += 40; break;
     }
     
-    // 借入件数による減点
+    // 経験件数による減点
     switch (diagnosisAnswers[3]) {
-      case '0件': defensePower += 20; attackPower += 10; break;
-      case '1～2件': defensePower += 10; break;
-      case '3件以上': defensePower -= 10; attackPower -= 5; break;
+      case '0件': riskManagement += 20; marketUnderstanding += 10; break;
+      case '1～2件': riskManagement += 10; break;
+      case '3件以上': riskManagement -= 10; marketUnderstanding -= 5; break;
     }
     
-    // 返済負担率による調整
+    // リスク許容度による調整
     switch (diagnosisAnswers[4]) {
-      case '収入に対して返済が10%未満': defensePower += 20; break;
-      case '10～30%': defensePower += 10; break;
-      case '30%以上': defensePower -= 10; break;
+      case '収入に対して返済が10%未満': riskManagement += 20; break;
+      case '10～30%': riskManagement += 10; break;
+      case '30%以上': riskManagement -= 10; break;
     }
     
-    // 緊急度による機動力
+    // 投資開始時期による実行力
     switch (diagnosisAnswers[5]) {
-      case '今すぐ': mobility = 30; break;
-      case '1週間以内': mobility = 20; break;
-      case '1ヶ月以内': mobility = 10; break;
+      case '今すぐ': executionAbility = 30; break;
+      case '1週間以内': executionAbility = 20; break;
+      case '1ヶ月以内': executionAbility = 10; break;
     }
     
     // スコアの正規化（各項目を0-100の範囲に）
-    attackPower = Math.max(0, Math.min(100, attackPower * 2));
-    defensePower = Math.max(0, Math.min(100, defensePower * 1.5));
-    mobility = Math.max(0, Math.min(100, mobility * 3.33));
+    marketUnderstanding = Math.max(0, Math.min(100, marketUnderstanding * 2));
+    riskManagement = Math.max(0, Math.min(100, riskManagement * 1.5));
+    executionAbility = Math.max(0, Math.min(100, executionAbility * 3.33));
     
-    const total = Math.round((attackPower + defensePower + mobility) / 3);
+    const total = Math.round((marketUnderstanding + riskManagement + executionAbility) / 3);
     
     // ランク判定
     let rank = 'C';
@@ -76,19 +78,19 @@ const CombatPowerResults: React.FC<CombatPowerResultsProps> = ({ diagnosisAnswer
     // パーソナライズドコメント
     let comment = '';
     if (rank === 'S') {
-      comment = `戦闘力${total}点！最高ランクです。多くの選択肢から最適な条件を選べる立場にあります。`;
+      comment = `適性スコア${total}点！最高ランクです。暗号資産投資に最適な状態です。`;
     } else if (rank === 'A') {
-      comment = `戦闘力${total}点！良好な状態です。${attackPower > defensePower ? '特に調達力が高く' : '特に返済余力があり'}、安心して資金調達を進められます。`;
+      comment = `適性スコア${total}点！良好な状態です。${marketUnderstanding > riskManagement ? '特に市場理解が高く' : '特にリスク管理ができ'}、安心して投資を進められます。`;
     } else if (rank === 'B') {
-      comment = `戦闘力${total}点！標準的な状態です。${defensePower < 30 ? '返済計画を見直すことで' : '収入証明を準備することで'}、より良い条件が期待できます。`;
+      comment = `適性スコア${total}点！標準的な状態です。${riskManagement < 30 ? 'リスク管理戦略を見直すことで' : '市場理解を深めることで'}、より良い結果が期待できます。`;
     } else {
-      comment = `戦闘力${total}点！まずは現状を整理しましょう。専門家への相談も検討してください。`;
+      comment = `適性スコア${total}点！まずは基本を学びましょう。専門書やセミナーの受講を検討してください。`;
     }
     
     return {
       total,
       rank,
-      subScores: { attackPower, defensePower, mobility },
+      subScores: { marketUnderstanding, riskManagement, executionAbility },
       comment
     };
   };
@@ -129,9 +131,9 @@ const CombatPowerResults: React.FC<CombatPowerResultsProps> = ({ diagnosisAnswer
     const angles = [-90, 30, 150]; // 上、右下、左下
     
     const points = [
-      scores.attackPower,
-      scores.defensePower,
-      scores.mobility
+      scores.marketUnderstanding,
+      scores.riskManagement,
+      scores.executionAbility
     ].map((score, index) => {
       const angle = (angles[index] ?? 0) * Math.PI / 180;
       const r = (score / 100) * radius;
@@ -172,7 +174,7 @@ const CombatPowerResults: React.FC<CombatPowerResultsProps> = ({ diagnosisAnswer
             fontSize: 'clamp(16px, 3vw, 18px)',
             color: 'var(--color-text-secondary)'
           }}>
-            あなたの資金調達力
+            あなたの暗号資産投資適性
           </p>
         </div>
         
@@ -201,300 +203,534 @@ const CombatPowerResults: React.FC<CombatPowerResultsProps> = ({ diagnosisAnswer
           {/* ランク表示 */}
           <div style={{
             display: 'inline-block',
-            padding: 'clamp(8px, 2vw, 12px) clamp(20px, 5vw, 32px)',
+            padding: '8px 24px',
             backgroundColor: getRankColor(rank),
-            color: '#FFFFFF',
-            borderRadius: '999px',
-            fontSize: 'clamp(18px, 4vw, 24px)',
+            color: 'white',
+            borderRadius: '50px',
             fontWeight: 700,
-            marginBottom: 'clamp(24px, 5vw, 40px)',
-            boxShadow: `0 4px 16px ${getRankColor(rank)}40`
+            fontSize: 'clamp(1.25rem, 3vw, 1.5rem)',
+            marginBottom: '24px',
+            boxShadow: '0 4px 12px rgba(0, 0, 0, 0.12)'
           }}>
-            {rank}ランク
+            ランク {rank}
           </div>
+          
+          {/* コメント */}
+          <p style={{
+            fontSize: 'clamp(16px, 2.5vw, 18px)',
+            lineHeight: 1.6,
+            color: 'var(--color-text-primary)',
+            marginBottom: '32px'
+          }}>
+            {comment}
+          </p>
+          
+          {/* アクションボタン */}
+          <div style={{
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '16px',
+            alignItems: 'center'
+          }}>
+            <a
+              href={pdfGuideUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white font-semibold py-3 px-8 rounded-lg transition-all duration-200 transform hover:scale-105 shadow-lg no-underline inline-flex"
+              aria-label="暗号資産投資完全ガイドをダウンロード"
+            >
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <span style={{ fontSize: '18px' }}>📚</span>
+                仮想通貨の始め方 完全ガイド（PDF）
+              </div>
+            </a>
+            
+            <button
+              onClick={onDownloadGuide}
+              className="bg-gradient-to-r from-gray-500 to-gray-600 hover:from-gray-600 hover:to-gray-700 text-white font-semibold py-2.5 px-6 rounded-lg transition-all duration-200 transform hover:scale-105"
+              aria-label="診断結果をシェア"
+            >
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <span style={{ fontSize: '16px' }}>📤</span>
+                結果をシェア
+              </div>
+            </button>
+          </div>
+        </div>
+        
+        {/* サブスコアセクション */}
+        <div style={{
+          backgroundColor: '#FFFFFF',
+          borderRadius: 'clamp(16px, 3vw, 24px)',
+          padding: 'clamp(24px, 6vw, 32px)',
+          marginBottom: 'clamp(20px, 4vw, 32px)',
+          boxShadow: '0 8px 24px rgba(0, 0, 0, 0.08)',
+          animation: 'slideUp 0.8s ease-out 0.4s both'
+        }}>
+          <h2 style={{
+            fontSize: 'clamp(1.25rem, 3vw, 1.5rem)',
+            fontWeight: 700,
+            color: 'var(--color-text-primary)',
+            marginBottom: '24px',
+            textAlign: 'center'
+          }}>
+            詳細スコア
+          </h2>
           
           {/* レーダーチャート */}
           <div style={{
             display: 'flex',
             justifyContent: 'center',
-            marginBottom: 'clamp(24px, 5vw, 40px)',
-            overflow: 'hidden'
+            marginBottom: '32px'
           }}>
-            <svg 
-              width="300" 
-              height="300" 
-              viewBox="0 0 300 300" 
-              style={{ 
-                maxWidth: '100%',
-                width: 'clamp(250px, 60vw, 300px)',
-                height: 'auto'
-              }}
-            >
-              {/* 背景グリッド */}
-              <g opacity="0.3">
-                {[20, 40, 60, 80, 100].map((size) => (
-                  <polygon
-                    key={size}
-                    points={calculateRadarPoints({ 
-                      attackPower: size, 
-                      defensePower: size, 
-                      mobility: size 
-                    })}
+            <div style={{ position: 'relative' }}>
+              <svg width="300" height="300" viewBox="0 0 300 300">
+                {/* グリッド */}
+                {[0.2, 0.4, 0.6, 0.8, 1.0].map((scale, idx) => (
+                  <circle
+                    key={idx}
+                    cx="150"
+                    cy="150"
+                    r={100 * scale}
                     fill="none"
                     stroke="#E5E7EB"
                     strokeWidth="1"
+                    strokeDasharray="4,4"
                   />
                 ))}
+                
                 {/* 軸線 */}
                 <line x1="150" y1="150" x2="150" y2="50" stroke="#E5E7EB" strokeWidth="1" />
-                <line x1="150" y1="150" x2="237" y2="200" stroke="#E5E7EB" strokeWidth="1" />
-                <line x1="150" y1="150" x2="63" y2="200" stroke="#E5E7EB" strokeWidth="1" />
-              </g>
-              
-              {/* データプロット */}
-              <polygon
-                points={calculateRadarPoints(subScores)}
-                fill={`${getRankColor(rank)}20`}
-                stroke={getRankColor(rank)}
-                strokeWidth="3"
-                strokeLinejoin="round"
-              />
-              
-              {/* データポイント */}
-              {calculateRadarPoints(subScores).split(' ').map((point, index) => {
-                const [x, y] = point.split(',').map(Number);
-                return (
-                  <circle
-                    key={index}
-                    cx={x}
-                    cy={y}
-                    r="6"
-                    fill={getRankColor(rank)}
-                    stroke="#FFFFFF"
-                    strokeWidth="2"
-                  />
-                );
-              })}
-              
-              {/* ラベル */}
-              <text x="150" y="30" textAnchor="middle" fill="var(--color-text-primary)" fontSize="14" fontWeight="600">
-                攻撃力
-              </text>
-              <text x="260" y="220" textAnchor="middle" fill="var(--color-text-primary)" fontSize="14" fontWeight="600">
-                防御力
-              </text>
-              <text x="40" y="220" textAnchor="middle" fill="var(--color-text-primary)" fontSize="14" fontWeight="600">
-                機動力
-              </text>
-              
-              {/* スコア表示 */}
-              <text x="150" y="70" textAnchor="middle" fill="var(--color-text-secondary)" fontSize="12">
-                {Math.round(subScores.attackPower)}
-              </text>
-              <text x="230" y="190" textAnchor="middle" fill="var(--color-text-secondary)" fontSize="12">
-                {Math.round(subScores.defensePower)}
-              </text>
-              <text x="70" y="190" textAnchor="middle" fill="var(--color-text-secondary)" fontSize="12">
-                {Math.round(subScores.mobility)}
-              </text>
-            </svg>
+                <line x1="150" y1="150" x2="236.6" y2="200" stroke="#E5E7EB" strokeWidth="1" />
+                <line x1="150" y1="150" x2="63.4" y2="200" stroke="#E5E7EB" strokeWidth="1" />
+                
+                {/* データポリゴン */}
+                <polygon
+                  points={calculateRadarPoints(subScores)}
+                  fill="rgba(59, 130, 246, 0.2)"
+                  stroke="var(--color-primary)"
+                  strokeWidth="2"
+                />
+                
+                {/* データポイント */}
+                {[
+                  { value: subScores.marketUnderstanding, angle: -90, label: '市場理解' },
+                  { value: subScores.riskManagement, angle: 30, label: 'リスク管理' },
+                  { value: subScores.executionAbility, angle: 150, label: '実行力' }
+                ].map((item, idx) => {
+                  const angle = item.angle * Math.PI / 180;
+                  const r = (item.value / 100) * 100;
+                  const x = 150 + r * Math.cos(angle);
+                  const y = 150 + r * Math.sin(angle);
+                  
+                  return (
+                    <g key={idx}>
+                      <circle
+                        cx={x}
+                        cy={y}
+                        r="4"
+                        fill="var(--color-primary)"
+                      />
+                      <text
+                        x={150 + 110 * Math.cos(angle)}
+                        y={150 + 110 * Math.sin(angle)}
+                        textAnchor="middle"
+                        dominantBaseline="middle"
+                        fontSize="12"
+                        fontWeight="600"
+                        fill="var(--color-text-primary)"
+                      >
+                        {item.label}
+                      </text>
+                    </g>
+                  );
+                })}
+              </svg>
+            </div>
           </div>
           
-          {/* サブスコア詳細 */}
+          {/* スコア詳細 */}
           <div style={{
             display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))',
-            gap: 'clamp(16px, 3vw, 24px)',
-            maxWidth: '500px',
-            margin: '0 auto'
+            gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+            gap: '20px'
           }}>
-            <div style={{ textAlign: 'center' }}>
-              <div style={{ fontSize: 'clamp(10px, 2vw, 12px)', color: 'var(--color-text-tertiary)', marginBottom: '4px' }}>
-                攻撃力
+            {[
+              { label: '市場理解', value: subScores.marketUnderstanding, color: '#3B82F6' },
+              { label: 'リスク管理', value: subScores.riskManagement, color: '#10B981' },
+              { label: '実行力', value: subScores.executionAbility, color: '#8B5CF6' }
+            ].map((item, idx) => (
+              <div
+                key={idx}
+                style={{
+                  padding: '20px',
+                  backgroundColor: '#F9FAFB',
+                  borderRadius: '16px',
+                  textAlign: 'center',
+                  border: '1px solid #E5E7EB'
+                }}
+              >
+                <div style={{
+                  fontSize: '2rem',
+                  fontWeight: 700,
+                  color: item.color,
+                  marginBottom: '8px'
+                }}>
+                  {item.value}
+                </div>
+                <div style={{
+                  fontSize: '1rem',
+                  fontWeight: 600,
+                  color: 'var(--color-text-primary)'
+                }}>
+                  {item.label}
+                </div>
               </div>
-              <div style={{ fontSize: 'clamp(18px, 4vw, 20px)', fontWeight: 700, color: 'var(--color-text-primary)' }}>
-                {Math.round(subScores.attackPower)}
-              </div>
-              <div style={{ fontSize: 'clamp(10px, 2vw, 12px)', color: 'var(--color-text-secondary)' }}>
-                調達ポテンシャル
-              </div>
-            </div>
-            
-            <div style={{ textAlign: 'center' }}>
-              <div style={{ fontSize: 'clamp(10px, 2vw, 12px)', color: 'var(--color-text-tertiary)', marginBottom: '4px' }}>
-                防御力
-              </div>
-              <div style={{ fontSize: 'clamp(18px, 4vw, 20px)', fontWeight: 700, color: 'var(--color-text-primary)' }}>
-                {Math.round(subScores.defensePower)}
-              </div>
-              <div style={{ fontSize: 'clamp(10px, 2vw, 12px)', color: 'var(--color-text-secondary)' }}>
-                返済余力
-              </div>
-            </div>
-            
-            <div style={{ textAlign: 'center' }}>
-              <div style={{ fontSize: 'clamp(10px, 2vw, 12px)', color: 'var(--color-text-tertiary)', marginBottom: '4px' }}>
-                機動力
-              </div>
-              <div style={{ fontSize: 'clamp(18px, 4vw, 20px)', fontWeight: 700, color: 'var(--color-text-primary)' }}>
-                {Math.round(subScores.mobility)}
-              </div>
-              <div style={{ fontSize: 'clamp(10px, 2vw, 12px)', color: 'var(--color-text-secondary)' }}>
-                資金入手スピード
-              </div>
-            </div>
+            ))}
           </div>
         </div>
         
-        {/* パーソナライズドコメント */}
+        {/* アドバイスセクション */}
         <div style={{
           backgroundColor: '#FFFFFF',
-          borderRadius: 'clamp(12px, 2vw, 16px)',
-          padding: 'clamp(20px, 4vw, 32px)',
-          marginBottom: 'clamp(20px, 4vw, 32px)',
-          boxShadow: '0 4px 12px rgba(0, 0, 0, 0.05)',
-          animation: 'slideUp 0.8s ease-out 0.4s both'
-        }}>
-          <h3 style={{
-            fontSize: 'clamp(18px, 3vw, 20px)',
-            fontWeight: 700,
-            color: 'var(--color-text-primary)',
-            marginBottom: '16px'
-          }}>
-            総合評価
-          </h3>
-          <p style={{
-            fontSize: 'clamp(14px, 2.5vw, 16px)',
-            color: 'var(--color-text-secondary)',
-            lineHeight: 1.8,
-            margin: 0
-          }}>
-            {comment}
-          </p>
-        </div>
-        
-        {/* ミニアドバイス */}
-        <div style={{
-          backgroundColor: '#FFFFFF',
-          borderRadius: 'clamp(12px, 2vw, 16px)',
-          padding: 'clamp(20px, 4vw, 32px)',
-          marginBottom: 'clamp(32px, 6vw, 48px)',
-          boxShadow: '0 4px 12px rgba(0, 0, 0, 0.05)',
+          borderRadius: 'clamp(16px, 3vw, 24px)',
+          padding: 'clamp(24px, 6vw, 32px)',
+          boxShadow: '0 8px 24px rgba(0, 0, 0, 0.08)',
           animation: 'slideUp 0.8s ease-out 0.6s both'
         }}>
-          <h3 style={{
-            fontSize: 'clamp(18px, 3vw, 20px)',
+          <h2 style={{
+            fontSize: 'clamp(1.25rem, 3vw, 1.5rem)',
             fontWeight: 700,
             color: 'var(--color-text-primary)',
-            marginBottom: '16px',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '8px'
+            marginBottom: '24px',
+            textAlign: 'center'
           }}>
-            <span style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              width: 'clamp(28px, 5vw, 32px)',
-              height: 'clamp(28px, 5vw, 32px)',
-              backgroundColor: 'var(--color-primary)',
-              color: '#FFFFFF',
-              borderRadius: '50%',
-              fontSize: 'clamp(12px, 3vw, 16px)'
-            }}>
-              ✓
-            </span>
-            調査前にここをチェック！
-          </h3>
-          <ul style={{
-            paddingLeft: 'clamp(16px, 3vw, 20px)',
-            margin: 0,
-            color: 'var(--color-text-secondary)',
-            fontSize: 'clamp(14px, 2.5vw, 16px)',
-            lineHeight: 2
-          }}>
-            <li>必要書類を事前に準備（本人確認書類、収入証明書など）</li>
-            <li>借入希望額と返済期間を明確にする</li>
-            <li>複数の業者を比較して最適な条件を見つける</li>
-          </ul>
-        </div>
-        
-        {/* CTA - 攻略本ダウンロード */}
-        <div style={{
-          textAlign: 'center',
-          animation: 'slideUp 0.8s ease-out 0.8s both'
-        }}>
-          <button
-            onClick={() => setShowDownloadModal(true)}
-            className="btn-accent btn-pulse"
-            style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: 'clamp(8px, 2vw, 12px)',
-              padding: 'clamp(16px, 3vw, 20px) clamp(24px, 6vw, 48px)',
-              backgroundColor: '#F5A623',
-              color: '#FFFFFF',
-              fontSize: 'clamp(16px, 3vw, 18px)',
-              fontWeight: 700,
-              border: 'none',
-              borderRadius: 'clamp(8px, 2vw, 12px)',
-              cursor: 'pointer',
-              transition: 'all 0.3s ease',
-              boxShadow: '0 4px 16px rgba(245, 166, 35, 0.3)',
-              position: 'relative',
-              width: '100%',
-              maxWidth: 'clamp(280px, 70vw, 400px)'
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.backgroundColor = '#E89100';
-              e.currentTarget.style.transform = 'translateY(-2px)';
-              e.currentTarget.style.boxShadow = '0 6px 20px rgba(245, 166, 35, 0.4)';
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.backgroundColor = '#F5A623';
-              e.currentTarget.style.transform = 'translateY(0)';
-              e.currentTarget.style.boxShadow = '0 4px 16px rgba(245, 166, 35, 0.3)';
-            }}
-          >
-            <svg width="clamp(20px, 4vw, 24px)" height="clamp(20px, 4vw, 24px)" viewBox="0 0 24 24" fill="none">
-              <path d="M12 2L2 7V12C2 16.5 4.5 20.5 12 22C19.5 20.5 22 16.5 22 12V7L12 2Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-              <path d="M12 11V15M12 8V8.01" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-            </svg>
-            攻略本ダウンロード
-          </button>
+            あなたの適性に合ったアドバイス
+          </h2>
           
           <div style={{
-            marginTop: 'clamp(16px, 3vw, 24px)',
-            fontSize: 'clamp(14px, 2.5vw, 16px)',
-            color: 'var(--color-text-secondary)',
-            lineHeight: 1.6,
-            padding: '0 clamp(16px, 3vw, 0)'
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
+            gap: '24px'
           }}>
-            <strong style={{ color: 'var(--color-text-primary)' }}>完全無料</strong>のPDFマニュアル<br />
-            5分で読める資金調達の成功法則
+            {rank === 'S' && (
+              <>
+                <div style={{
+                  padding: '24px',
+                  backgroundColor: '#EFF6FF',
+                  borderRadius: '16px',
+                  border: '1px solid #DBEAFE'
+                }}>
+                  <h3 style={{
+                    fontSize: '1.125rem',
+                    fontWeight: 700,
+                    color: '#3B82F6',
+                    marginBottom: '16px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '8px'
+                  }}>
+                    <span>🚀</span>
+                    あなたにおすすめの戦略
+                  </h3>
+                  <p style={{
+                    color: 'var(--color-text-secondary)',
+                    lineHeight: 1.6
+                  }}>
+                    あなたの高い適性を活かして、積極的なポートフォolio構築をおすすめします。NFTやDeFiなど新しい分野にも挑戦してみましょう。
+                  </p>
+                </div>
+                
+                <div style={{
+                  padding: '24px',
+                  backgroundColor: '#ECFDF5',
+                  borderRadius: '16px',
+                  border: '1px solid #D1FAE5'
+                }}>
+                  <h3 style={{
+                    fontSize: '1.125rem',
+                    fontWeight: 700,
+                    color: '#10B981',
+                    marginBottom: '16px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '8px'
+                  }}>
+                    <span>🛡️</span>
+                    リスク管理のコツ
+                  </h3>
+                  <p style={{
+                    color: 'var(--color-text-secondary)',
+                    lineHeight: 1.6
+                  }}>
+                    高い適性を持つからこそ、他人の失敗事例から学ぶことが重要です。コミュニティや専門書を通じて常に学び続けてください。
+                  </p>
+                </div>
+              </>
+            )}
+            
+            {rank === 'A' && (
+              <>
+                <div style={{
+                  padding: '24px',
+                  backgroundColor: '#EFF6FF',
+                  borderRadius: '16px',
+                  border: '1px solid #DBEAFE'
+                }}>
+                  <h3 style={{
+                    fontSize: '1.125rem',
+                    fontWeight: 700,
+                    color: '#3B82F6',
+                    marginBottom: '16px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '8px'
+                  }}>
+                    <span>📈</span>
+                    あなたの強みを活かす方法
+                  </h3>
+                  <p style={{
+                    color: 'var(--color-text-secondary)',
+                    lineHeight: 1.6
+                  }}>
+                    あなたはバランスの取れた投資適性を持っています。{subScores.marketUnderstanding > subScores.riskManagement ? '市場の動きを読み取る能力' : '慎重なリスク管理'}をさらに磨くことで、より良い結果が期待できます。
+                  </p>
+                </div>
+                
+                <div style={{
+                  padding: '24px',
+                  backgroundColor: '#F0F9FF',
+                  borderRadius: '16px',
+                  border: '1px solid #E0F2FE'
+                }}>
+                  <h3 style={{
+                    fontSize: '1.125rem',
+                    fontWeight: 700,
+                    color: '#0EA5E9',
+                    marginBottom: '16px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '8px'
+                  }}>
+                    <span>🎯</span>
+                    改善ポイント
+                  </h3>
+                  <p style={{
+                    color: 'var(--color-text-secondary)',
+                    lineHeight: 1.6
+                  }}>
+                    {subScores.riskManagement < 30 ? 'リスク管理戦略を見直し、' : '市場理解を深め、'}損失を最小限に抑えながらリターンを最大化する戦略を構築しましょう。
+                  </p>
+                </div>
+              </>
+            )}
+            
+            {(rank === 'B' || rank === 'C') && (
+              <>
+                <div style={{
+                  padding: '24px',
+                  backgroundColor: '#FEF3C7',
+                  borderRadius: '16px',
+                  border: '1px solid #FDE68A'
+                }}>
+                  <h3 style={{
+                    fontSize: '1.125rem',
+                    fontWeight: 700,
+                    color: '#D97706',
+                    marginBottom: '16px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '8px'
+                  }}>
+                    <span>📚</span>
+                    基礎知識の習得
+                  </h3>
+                  <p style={{
+                    color: 'var(--color-text-secondary)',
+                    lineHeight: 1.6
+                  }}>
+                    まずは基本的な暗号資産の仕組みやリスクについて学びましょう。無料のオンラインコースや書籍から始めるのがおすすめです。
+                  </p>
+                </div>
+                
+                <div style={{
+                  padding: '24px',
+                  backgroundColor: '#F0F9FF',
+                  borderRadius: '16px',
+                  border: '1px solid #E0F2FE'
+                }}>
+                  <h3 style={{
+                    fontSize: '1.125rem',
+                    fontWeight: 700,
+                    color: '#0EA5E9',
+                    marginBottom: '16px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '8px'
+                  }}>
+                    <span>💡</span>
+                    実践的なアプローチ
+                  </h3>
+                  <p style={{
+                    color: 'var(--color-text-secondary)',
+                    lineHeight: 1.6
+                  }}>
+                    小額から始めて実践経験を積みましょう。デモ取引や小額投資を通じて、自分の適性を見つけていってください。
+                  </p>
+                </div>
+              </>
+            )}
           </div>
         </div>
       </div>
       
-      {/* ダウンロードモーダル */}
-      <DownloadGuideModal
-        isOpen={showDownloadModal}
-        onClose={() => setShowDownloadModal(false)}
-        combatScore={total}
-        rank={rank}
-        phoneNumber={sessionStorage.getItem('userPhoneNumber') || undefined}
-        diagnosisData={{
-          score: total,
-          rank: rank,
-          answers: diagnosisAnswers
-        }}
-      />
+      {/* おすすめの取引所・ウォレット */}
+      <div style={{
+        background: 'linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%)',
+        padding: '3rem 2rem',
+        textAlign: 'center'
+      }}>
+        <h3 style={{
+          fontSize: '2rem',
+          fontWeight: 'bold',
+          color: '#2d3748',
+          marginBottom: '1rem'
+        }}>
+          📈 おすすめの取引所
+        </h3>
+        <p style={{
+          color: '#718096',
+          marginBottom: '2rem',
+          fontSize: '1.1rem'
+        }}>
+          あなたに最適な暗号資産取引所で今すぐ始めましょう
+        </p>
+        
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
+          gap: '1.5rem',
+          maxWidth: '1000px',
+          margin: '0 auto 3rem auto'
+        }}>
+          {exchangeLinks.map((link, index) => (
+            <a
+              key={index}
+              href={link.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{
+                background: 'white',
+                padding: '2rem',
+                borderRadius: '12px',
+                boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
+                textDecoration: 'none',
+                color: 'inherit',
+                transition: 'transform 0.2s ease',
+                border: '1px solid #e2e8f0'
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.transform = 'translateY(-2px)';
+                e.currentTarget.style.boxShadow = '0 8px 15px rgba(0, 0, 0, 0.15)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.transform = 'translateY(0)';
+                e.currentTarget.style.boxShadow = '0 4px 6px rgba(0, 0, 0, 0.1)';
+              }}
+            >
+              <div style={{
+                fontSize: '1.5rem',
+                fontWeight: 'bold',
+                color: '#2d3748',
+                marginBottom: '0.5rem'
+              }}>
+                {link.name}
+              </div>
+              <div style={{
+                color: '#718096',
+                fontSize: '1rem'
+              }}>
+                {link.description}
+              </div>
+            </a>
+          ))}
+        </div>
+
+        <h3 style={{
+          fontSize: '2rem',
+          fontWeight: 'bold',
+          color: '#2d3748',
+          marginBottom: '1rem'
+        }}>
+          👛 おすすめのウォレット
+        </h3>
+        <p style={{
+          color: '#718096',
+          marginBottom: '2rem',
+          fontSize: '1.1rem'
+        }}>
+          安全に暗号資産を保管するためのウォレット
+        </p>
+        
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
+          gap: '1.5rem',
+          maxWidth: '1000px',
+          margin: '0 auto'
+        }}>
+          {walletLinks.map((link, index) => (
+            <a
+              key={index}
+              href={link.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{
+                background: 'white',
+                padding: '2rem',
+                borderRadius: '12px',
+                boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
+                textDecoration: 'none',
+                color: 'inherit',
+                transition: 'transform 0.2s ease',
+                border: '1px solid #e2e8f0'
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.transform = 'translateY(-2px)';
+                e.currentTarget.style.boxShadow = '0 8px 15px rgba(0, 0, 0, 0.15)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.transform = 'translateY(0)';
+                e.currentTarget.style.boxShadow = '0 4px 6px rgba(0, 0, 0, 0.1)';
+              }}
+            >
+              <div style={{
+                fontSize: '1.5rem',
+                fontWeight: 'bold',
+                color: '#2d3748',
+                marginBottom: '0.5rem'
+              }}>
+                {link.name}
+              </div>
+              <div style={{
+                color: '#718096',
+                fontSize: '1rem'
+              }}>
+                {link.description}
+              </div>
+            </a>
+          ))}
+        </div>
+      </div>
       
       <style>{`
         @keyframes fadeIn {
-          from { opacity: 0; }
-          to { opacity: 1; }
+          from {
+            opacity: 0;
+          }
+          to {
+            opacity: 1;
+          }
         }
         
         @keyframes slideUp {
@@ -506,15 +742,6 @@ const CombatPowerResults: React.FC<CombatPowerResultsProps> = ({ diagnosisAnswer
             opacity: 1;
             transform: translateY(0);
           }
-        }
-        
-        .btn-pulse {
-          animation: pulse 2s ease-in-out infinite;
-        }
-        
-        @keyframes pulse {
-          0%, 100% { transform: scale(1); }
-          50% { transform: scale(1.02); }
         }
       `}</style>
     </div>

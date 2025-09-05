@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import { wasteQuestions } from '../../data/wasteQuestions';
 
 interface Question {
   id: number;
@@ -18,14 +17,62 @@ interface DiagnosisFormProps {
   onComplete: (answers: Record<number, string>) => void;
 }
 
-// Convert wasteQuestions to the format expected by the form
-const questions: Question[] = wasteQuestions.map(wq => ({
-  id: wq.id,
-  question: wq.title,
-  subtitle: wq.subtitle,
-  options: wq.options,
-  helpText: wq.subtitle
-}));
+// Create questions for the crypto aptitude diagnosis
+const questions: Question[] = [
+  {
+    id: 1,
+    question: "あなたの年齢は？",
+    options: [
+      { id: "20s", text: "20代", emoji: "👶" },
+      { id: "30s", text: "30代", emoji: "👨" },
+      { id: "40s", text: "40代", emoji: "🧔" },
+      { id: "50s", text: "50代", emoji: "👨‍🦳" },
+      { id: "60plus", text: "60代以上", emoji: "👴" }
+    ]
+  },
+  {
+    id: 2,
+    question: "月々の投資可能額は？",
+    options: [
+      { id: "under_10k", text: "～1万円", emoji: "💰" },
+      { id: "10k_30k", text: "1万〜3万円", emoji: "💰💰" },
+      { id: "30k_50k", text: "3万〜5万円", emoji: "💰💰💰" },
+      { id: "50k_100k", text: "5万〜10万円", emoji: "💰💰💰💰" },
+      { id: "over_100k", text: "10万円以上", emoji: "💰💰💰💰💰" }
+    ]
+  },
+  {
+    id: 3,
+    question: "投資経験はありますか？",
+    options: [
+      { id: "beginner", text: "初心者", emoji: "🌱" },
+      { id: "intermediate", text: "中級者", emoji: "📈" },
+      { id: "advanced", text: "上級者", emoji: "🚀" }
+    ]
+  },
+  {
+    id: 4,
+    question: "投資の目的は？",
+    options: [
+      { id: "retirement", text: "老後資金", emoji: "🏖️" },
+      { id: "education", text: "教育資金", emoji: "🎓" },
+      { id: "house", text: "住宅資金", emoji: "🏠" },
+      { id: "wealth", text: "資産形成", emoji: "💎" },
+      { id: "speculation", text: "投機", emoji: "🎰" }
+    ]
+  },
+  {
+    id: 5,
+    question: "いつから始めたいですか？",
+    options: [
+      { id: "now", text: "すぐに", emoji: "⚡" },
+      { id: "within_month", text: "1ヶ月以内", emoji: "🕐" },
+      { id: "within_3months", text: "3ヶ月以内", emoji: "📅" },
+      { id: "within_year", text: "1年以内", emoji: "📆" },
+      { id: "not_sure", text: "まだ未定", emoji: "🤔" }
+    ]
+  }
+];
 
 const DiagnosisForm: React.FC<DiagnosisFormProps> = ({ onComplete }) => {
   const [currentQuestion, setCurrentQuestion] = useState(0);

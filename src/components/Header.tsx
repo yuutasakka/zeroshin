@@ -219,7 +219,7 @@ const Header: React.FC = () => {
               onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#E89100'}
               onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#F5A623'}
             >
-              無料診断を開始する
+              暗号資産適性診断
             </button>
           </nav>
         </div>
