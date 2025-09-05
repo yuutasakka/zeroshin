@@ -17,7 +17,6 @@ interface DiagnosisFormProps {
   onComplete: (answers: Record<number, string>) => void;
 }
 
-// Create questions for the crypto aptitude diagnosis
 const questions: Question[] = [
   {
     id: 1,
@@ -79,7 +78,6 @@ const DiagnosisForm: React.FC<DiagnosisFormProps> = ({ onComplete }) => {
   const [answers, setAnswers] = useState<Record<number, string>>({});
   const [selectedOption, setSelectedOption] = useState<string | null>(null);
   const [isAnimating, setIsAnimating] = useState(false);
-  const [showHelpText, setShowHelpText] = useState(false);
 
   const progress = ((currentQuestion + 1) / questions.length) * 100;
   const currentQ = questions[currentQuestion];
@@ -98,18 +96,16 @@ const DiagnosisForm: React.FC<DiagnosisFormProps> = ({ onComplete }) => {
         setCurrentQuestion(currentQuestion + 1);
         setSelectedOption(null);
         setIsAnimating(false);
-        setShowHelpText(false);
       } else {
         onComplete(newAnswers);
       }
-    }, 300);
+    }, 400);
   };
 
   const handleBack = () => {
     if (currentQuestion > 0) {
       setCurrentQuestion(currentQuestion - 1);
       setSelectedOption(null);
-      setShowHelpText(false);
     }
   };
 
@@ -119,204 +115,113 @@ const DiagnosisForm: React.FC<DiagnosisFormProps> = ({ onComplete }) => {
 
   return (
     <div style={{
-      maxWidth: '600px',
+      maxWidth: '700px',
       margin: '0 auto',
-      padding: '20px'
+      padding: '40px 20px'
     }}>
-      {/* プログレスステップバー */}
+      {/* Progress Section */}
       <div style={{
-        marginBottom: '40px'
+        marginBottom: '50px',
+        textAlign: 'center'
       }}>
-        {/* ステップインジケーター */}
+        {/* Progress Bar */}
+        <div style={{
+          width: '100%',
+          height: '8px',
+          backgroundColor: '#f1f5f9',
+          borderRadius: '50px',
+          overflow: 'hidden',
+          marginBottom: '20px',
+          position: 'relative'
+        }}>
+          <div style={{
+            height: '100%',
+            background: 'linear-gradient(90deg, #667eea 0%, #764ba2 100%)',
+            borderRadius: '50px',
+            width: `${progress}%`,
+            transition: 'width 0.6s cubic-bezier(0.4, 0, 0.2, 1)',
+            position: 'relative'
+          }}>
+            {/* Animated shine effect */}
+            <div style={{
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent)',
+              animation: 'progressShine 2s infinite'
+            }} />
+          </div>
+        </div>
+
+        {/* Progress Text */}
         <div style={{
           display: 'flex',
           justifyContent: 'space-between',
-          marginBottom: '12px',
-          position: 'relative'
-        }}>
-          {/* 背景ライン */}
-          <div style={{
-            position: 'absolute',
-            top: '12px',
-            left: '24px',
-            right: '24px',
-            height: '2px',
-            backgroundColor: 'var(--color-bg-tertiary)',
-            zIndex: 0
-          }} />
-          {/* アクティブライン */}
-          <div style={{
-            position: 'absolute',
-            top: '12px',
-            left: '24px',
-            height: '2px',
-            backgroundColor: 'var(--color-primary)',
-            width: `calc(${(currentQuestion / (questions.length - 1)) * 100}% - 48px)`,
-            transition: 'width 0.5s ease',
-            zIndex: 0
-          }} />
-          
-          {/* ステップドット */}
-          {[...Array(questions.length)].map((_, index) => (
-            <div
-              key={index}
-              style={{
-                position: 'relative',
-                zIndex: 1,
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center'
-              }}
-            >
-              <div style={{
-                width: '24px',
-                height: '24px',
-                borderRadius: '50%',
-                backgroundColor: index <= currentQuestion ? 'var(--color-primary)' : 'var(--color-bg-primary)',
-                border: index <= currentQuestion ? 'none' : '2px solid var(--color-bg-tertiary)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                transition: 'all 0.3s ease',
-                boxShadow: index === currentQuestion ? '0 0 0 4px rgba(var(--color-primary-rgb), 0.2)' : 'none'
-              }}>
-                {index < currentQuestion && (
-                  <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-                    <path d="M2 6L4.5 8.5L10 3" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                  </svg>
-                )}
-                {index === currentQuestion && (
-                  <div style={{
-                    width: '8px',
-                    height: '8px',
-                    borderRadius: '50%',
-                    backgroundColor: 'var(--color-text-inverse)'
-                  }} />
-                )}
-              </div>
-              <span style={{
-                fontSize: '12px',
-                color: index <= currentQuestion ? 'var(--color-primary)' : 'var(--color-text-tertiary)',
-                marginTop: '4px',
-                fontWeight: index === currentQuestion ? 600 : 400
-              }}>
-                {index + 1}
-              </span>
-            </div>
-          ))}
-        </div>
-
-        {/* 進捗率表示 */}
-        <div style={{
-          textAlign: 'center',
+          alignItems: 'center',
           fontSize: '14px',
-          color: 'var(--color-text-secondary)',
-          marginTop: '8px'
+          color: '#64748b'
         }}>
-          進捗: {Math.round(progress)}%
+          <span>質問 {currentQuestion + 1} / {questions.length}</span>
+          <span>{Math.round(progress)}% 完了</span>
         </div>
       </div>
 
-      {/* 質問カード */}
+      {/* Question Card */}
       <div 
         key={currentQuestion}
         style={{
-          backgroundColor: 'var(--color-bg-primary)',
-          borderRadius: 'var(--radius-2xl)',
-          padding: '32px',
-          boxShadow: 'var(--shadow-lg)',
-          marginBottom: '24px',
-          animation: 'slideIn 0.4s ease-out'
+          background: 'linear-gradient(145deg, #ffffff 0%, #f8fafc 100%)',
+          borderRadius: '24px',
+          padding: '40px',
+          boxShadow: '0 20px 40px rgba(0, 0, 0, 0.1), 0 0 0 1px rgba(255, 255, 255, 0.5)',
+          marginBottom: '30px',
+          animation: 'slideInUp 0.6s cubic-bezier(0.4, 0, 0.2, 1)',
+          border: '1px solid rgba(255, 255, 255, 0.2)'
         }}
       >
-        {/* 質問文 */}
+        {/* Question Header */}
         <div style={{
-          marginBottom: '24px'
+          marginBottom: '35px',
+          textAlign: 'center'
         }}>
           <div style={{
-            display: 'flex',
-            alignItems: 'flex-start',
-            justifyContent: 'space-between',
-            marginBottom: currentQ.subtitle ? '8px' : '0'
+            display: 'inline-flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            width: '60px',
+            height: '60px',
+            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+            borderRadius: '20px',
+            marginBottom: '20px',
+            boxShadow: '0 10px 25px rgba(102, 126, 234, 0.3)'
           }}>
-            <h2 style={{
-              fontSize: '20px',
-              fontWeight: 700,
-              color: 'var(--color-text-primary)',
-              margin: 0,
-              flex: 1
+            <span style={{
+              fontSize: '24px',
+              fontWeight: 800,
+              color: 'white'
             }}>
-              {currentQ.question}
-            </h2>
-            {currentQ.helpText && (
-              <button
-                onClick={() => setShowHelpText(!showHelpText)}
-                style={{
-                  width: '32px',
-                  height: '32px',
-                  borderRadius: '50%',
-                  backgroundColor: showHelpText ? 'var(--color-primary)' : 'var(--color-bg-secondary)',
-                  border: 'none',
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  marginLeft: '16px',
-                  transition: 'all 0.2s ease',
-                  flexShrink: 0
-                }}
-                aria-label="ヘルプを表示"
-              >
-                <span style={{
-                  fontSize: '16px',
-                  fontWeight: 700,
-                  color: showHelpText ? 'var(--color-text-inverse)' : 'var(--color-primary)'
-                }}>
-                  ℹ
-                </span>
-              </button>
-            )}
+              {currentQuestion + 1}
+            </span>
           </div>
           
-          {/* サブタイトル */}
-          {currentQ.subtitle && (
-            <p style={{
-              fontSize: '14px',
-              color: 'var(--color-text-secondary)',
-              margin: 0,
-              marginTop: '4px'
-            }}>
-              {currentQ.subtitle}
-            </p>
-          )}
+          <h2 style={{
+            fontSize: 'clamp(1.5rem, 3vw, 2rem)',
+            fontWeight: 700,
+            color: '#1e293b',
+            margin: 0,
+            lineHeight: 1.3
+          }}>
+            {currentQ.question}
+          </h2>
         </div>
 
-        {/* ヘルプテキスト */}
-        {showHelpText && currentQ.helpText && (
-          <div style={{
-            backgroundColor: 'var(--color-bg-secondary)',
-            borderLeft: '4px solid var(--color-primary)',
-            borderRadius: '8px',
-            padding: '16px',
-            marginBottom: '24px',
-            animation: 'fadeIn 0.3s ease-out'
-          }}>
-            <p style={{
-              fontSize: '14px',
-              color: 'var(--color-text-secondary)',
-              lineHeight: 1.6,
-              margin: 0
-            }}>
-              {currentQ.helpText}
-            </p>
-          </div>
-        )}
-
-        {/* 選択肢 */}
+        {/* Options */}
         <div style={{
-          display: 'flex',
-          flexDirection: 'column',
-          gap: '12px'
+          display: 'grid',
+          gap: '16px',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))'
         }}>
           {currentQ.options.map((option, index) => (
             <button
@@ -325,58 +230,76 @@ const DiagnosisForm: React.FC<DiagnosisFormProps> = ({ onComplete }) => {
               disabled={isAnimating}
               style={{
                 width: '100%',
-                padding: '20px 24px',
-                borderRadius: 'var(--radius-xl)',
-                border: selectedOption === option.id ? '2px solid var(--color-primary)' : '2px solid var(--color-bg-tertiary)',
-                backgroundColor: selectedOption === option.id ? 'var(--color-bg-accent)' : 'var(--color-bg-primary)',
-                color: selectedOption === option.id ? 'var(--color-primary)' : 'var(--color-text-primary)',
+                padding: '24px',
+                borderRadius: '20px',
+                border: selectedOption === option.id 
+                  ? '3px solid #667eea' 
+                  : '2px solid #e2e8f0',
+                backgroundColor: selectedOption === option.id 
+                  ? 'rgba(102, 126, 234, 0.05)' 
+                  : '#ffffff',
+                color: selectedOption === option.id ? '#667eea' : '#334155',
                 fontSize: '16px',
-                fontWeight: selectedOption === option.id ? 600 : 500,
+                fontWeight: selectedOption === option.id ? 700 : 600,
                 cursor: 'pointer',
                 textAlign: 'left',
-                transition: 'all 0.2s ease',
+                transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
                 position: 'relative',
-                animation: `fadeIn 0.3s ease-out ${index * 0.1}s both`
+                animation: `slideInUp 0.6s cubic-bezier(0.4, 0, 0.2, 1) ${index * 0.1}s both`,
+                boxShadow: selectedOption === option.id 
+                  ? '0 10px 30px rgba(102, 126, 234, 0.2)' 
+                  : '0 4px 15px rgba(0, 0, 0, 0.05)',
+                transform: selectedOption === option.id ? 'translateY(-2px)' : 'translateY(0)'
               }}
               onMouseEnter={(e) => {
-                if (selectedOption !== option.id) {
-                  e.currentTarget.style.borderColor = 'var(--color-primary-light)';
-                  e.currentTarget.style.backgroundColor = 'var(--color-bg-accent)';
+                if (selectedOption !== option.id && !isAnimating) {
+                  e.currentTarget.style.borderColor = '#667eea';
+                  e.currentTarget.style.backgroundColor = 'rgba(102, 126, 234, 0.02)';
+                  e.currentTarget.style.transform = 'translateY(-2px)';
+                  e.currentTarget.style.boxShadow = '0 8px 25px rgba(102, 126, 234, 0.15)';
                 }
               }}
               onMouseLeave={(e) => {
                 if (selectedOption !== option.id) {
-                  e.currentTarget.style.borderColor = 'var(--color-bg-tertiary)';
-                  e.currentTarget.style.backgroundColor = 'var(--color-bg-primary)';
+                  e.currentTarget.style.borderColor = '#e2e8f0';
+                  e.currentTarget.style.backgroundColor = '#ffffff';
+                  e.currentTarget.style.transform = 'translateY(0)';
+                  e.currentTarget.style.boxShadow = '0 4px 15px rgba(0, 0, 0, 0.05)';
                 }
               }}
             >
               <div style={{
                 display: 'flex',
                 alignItems: 'center',
-                gap: '12px'
+                gap: '16px'
               }}>
-                <span style={{
-                  fontSize: '20px',
+                <div style={{
+                  fontSize: '28px',
                   display: 'flex',
-                  alignItems: 'center'
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  width: '50px',
+                  height: '50px',
+                  borderRadius: '15px',
+                  backgroundColor: selectedOption === option.id 
+                    ? 'rgba(102, 126, 234, 0.1)' 
+                    : '#f8fafc',
+                  transition: 'all 0.3s ease'
                 }}>
                   {option.emoji}
-                </span>
-                <div style={{
-                  flex: 1
-                }}>
+                </div>
+                <div style={{ flex: 1 }}>
                   <div style={{
-                    fontSize: '16px',
-                    fontWeight: selectedOption === option.id ? 600 : 500,
+                    fontSize: '18px',
+                    fontWeight: selectedOption === option.id ? 700 : 600,
                     marginBottom: option.description ? '4px' : '0'
                   }}>
                     {option.text}
                   </div>
                   {option.description && (
                     <div style={{
-                      fontSize: '13px',
-                      color: selectedOption === option.id ? 'var(--color-primary)' : 'var(--color-text-secondary)',
+                      fontSize: '14px',
+                      color: selectedOption === option.id ? '#667eea' : '#64748b',
                       opacity: 0.8
                     }}>
                       {option.description}
@@ -384,59 +307,75 @@ const DiagnosisForm: React.FC<DiagnosisFormProps> = ({ onComplete }) => {
                   )}
                 </div>
               </div>
+              
+              {/* Selection indicator */}
               {selectedOption === option.id && (
-                <svg 
-                  style={{
-                    position: 'absolute',
-                    right: '24px',
-                    top: '50%',
-                    transform: 'translateY(-50%)',
-                    width: '20px',
-                    height: '20px'
-                  }}
-                  viewBox="0 0 20 20" 
-                  fill="none"
-                >
-                  <circle cx="10" cy="10" r="10" fill="var(--color-primary)" />
-                  <path d="M6 10L8.5 12.5L14 7" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                </svg>
+                <div style={{
+                  position: 'absolute',
+                  right: '20px',
+                  top: '50%',
+                  transform: 'translateY(-50%)',
+                  width: '24px',
+                  height: '24px',
+                  borderRadius: '50%',
+                  background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  animation: 'scaleIn 0.3s cubic-bezier(0.4, 0, 0.2, 1)'
+                }}>
+                  <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                    <path 
+                      d="M3 7L6 10L11 4" 
+                      stroke="white" 
+                      strokeWidth="2.5" 
+                      strokeLinecap="round" 
+                      strokeLinejoin="round"
+                    />
+                  </svg>
+                </div>
               )}
             </button>
           ))}
         </div>
       </div>
 
-      {/* ナビゲーション */}
+      {/* Navigation */}
       <div style={{
         display: 'flex',
         justifyContent: currentQuestion > 0 ? 'space-between' : 'flex-end',
         alignItems: 'center',
-        gap: '16px'
+        gap: '20px'
       }}>
         {currentQuestion > 0 && (
           <button
             onClick={handleBack}
             style={{
-              padding: '12px 24px',
-              borderRadius: 'var(--radius-lg)',
-              border: '2px solid var(--color-bg-tertiary)',
-              backgroundColor: 'var(--color-bg-primary)',
-              color: 'var(--color-text-secondary)',
-              fontSize: '16px',
-              fontWeight: 500,
-              cursor: 'pointer',
-              transition: 'all 0.2s ease',
               display: 'flex',
               alignItems: 'center',
-              gap: '8px'
+              gap: '8px',
+              padding: '14px 24px',
+              borderRadius: '50px',
+              border: '2px solid #e2e8f0',
+              backgroundColor: '#ffffff',
+              color: '#64748b',
+              fontSize: '16px',
+              fontWeight: 600,
+              cursor: 'pointer',
+              transition: 'all 0.3s ease',
+              boxShadow: '0 4px 15px rgba(0, 0, 0, 0.05)'
             }}
             onMouseEnter={(e) => {
-              e.currentTarget.style.borderColor = 'var(--color-primary)';
-              e.currentTarget.style.color = 'var(--color-primary)';
+              e.currentTarget.style.borderColor = '#667eea';
+              e.currentTarget.style.color = '#667eea';
+              e.currentTarget.style.transform = 'translateY(-1px)';
+              e.currentTarget.style.boxShadow = '0 6px 20px rgba(102, 126, 234, 0.15)';
             }}
             onMouseLeave={(e) => {
-              e.currentTarget.style.borderColor = '#E5E7EB';
-              e.currentTarget.style.color = 'var(--color-text-secondary)';
+              e.currentTarget.style.borderColor = '#e2e8f0';
+              e.currentTarget.style.color = '#64748b';
+              e.currentTarget.style.transform = 'translateY(0)';
+              e.currentTarget.style.boxShadow = '0 4px 15px rgba(0, 0, 0, 0.05)';
             }}
           >
             <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
@@ -445,24 +384,22 @@ const DiagnosisForm: React.FC<DiagnosisFormProps> = ({ onComplete }) => {
             前の質問へ
           </button>
         )}
+
+        <div style={{
+          fontSize: '14px',
+          color: '#64748b',
+          textAlign: 'right',
+          fontWeight: 500
+        }}>
+          選択すると自動で次へ進みます
+        </div>
       </div>
 
       <style>{`
-        @keyframes slideIn {
+        @keyframes slideInUp {
           from {
             opacity: 0;
-            transform: translateX(20px);
-          }
-          to {
-            opacity: 1;
-            transform: translateX(0);
-          }
-        }
-
-        @keyframes fadeIn {
-          from {
-            opacity: 0;
-            transform: translateY(10px);
+            transform: translateY(30px);
           }
           to {
             opacity: 1;
@@ -470,9 +407,33 @@ const DiagnosisForm: React.FC<DiagnosisFormProps> = ({ onComplete }) => {
           }
         }
 
+        @keyframes scaleIn {
+          from {
+            opacity: 0;
+            transform: translateY(-50%) scale(0.5);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(-50%) scale(1);
+          }
+        }
+
+        @keyframes progressShine {
+          0% { transform: translateX(-100%); }
+          100% { transform: translateX(100%); }
+        }
+
         @media (max-width: 768px) {
+          .diagnosis-form {
+            padding: 20px 16px !important;
+          }
+          
           .question-card {
-            padding: 24px 16px !important;
+            padding: 24px 20px !important;
+          }
+          
+          .options-grid {
+            grid-template-columns: 1fr !important;
           }
         }
       `}</style>
